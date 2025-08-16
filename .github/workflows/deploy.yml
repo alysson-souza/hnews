@@ -38,7 +38,7 @@ jobs:
           # Configure git
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          
+
           # Determine base href based on repository
           if [ "${{ github.repository }}" = "alysson-souza/hnews" ]; then
             BASE_HREF="/hnews/"
@@ -47,12 +47,12 @@ jobs:
             REPO_NAME="${{ github.event.repository.name }}"
             BASE_HREF="/${REPO_NAME}/"
           fi
-          
+
           echo "Building with base-href: $BASE_HREF"
-          
+
           # Build with the correct base href (API key will be available as env var)
           npm run build:prod -- --base-href="$BASE_HREF"
-          
+
           # Deploy using angular-cli-ghpages
           npx angular-cli-ghpages \
             --dir=dist/hnews/browser \

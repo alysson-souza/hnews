@@ -15,8 +15,8 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
-    path: 'newest',
-    redirectTo: '/new',
+    path: 'new',
+    redirectTo: '/newest',
     pathMatch: 'full',
   },
   {
@@ -46,7 +46,7 @@ export const routes: Routes = [
     data: { type: 'best' },
   },
   {
-    path: 'new',
+    path: 'newest',
     loadComponent: () =>
       import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
     data: { type: 'new' },

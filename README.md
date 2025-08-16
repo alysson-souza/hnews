@@ -8,7 +8,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 
 - Vote counts and thumbnails
 - Open Graph data fetching for link previews
-- Top, Best, New, Ask HN, Show HN, and Jobs stories
+- Top, Best, Newest, Ask HN, Show HN, and Jobs stories
 - Nested comment threads with voting
 - User profiles with karma, submissions, and comments
 - Search with filters and date ranges

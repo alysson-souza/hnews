@@ -19,7 +19,7 @@ Angular 20 Hacker News reader with:
 **HackernewsService** (`src/app/services/hackernews.service.ts`)
 
 - HN Firebase API integration
-- All story types (top, best, new, ask, show, jobs)
+- All story types (top, best, newest, ask, show, jobs)
 - Items and user data
 
 **CacheService** (`src/app/services/cache.service.ts`)
@@ -41,7 +41,7 @@ Angular 20 Hacker News reader with:
 - Components use `inject()` for DI
 - Recursive `CommentThread` component for nested comments
 - Signal-based reactive state
-- Routes: `/top`, `/best`, `/new`, `/ask`, `/show`, `/jobs`, `/item/:id`, `/user/:id`, `/search`
+- Routes: `/top`, `/best`, `/newest`, `/ask`, `/show`, `/jobs`, `/item/:id`, `/user/:id`, `/search`
 
 ## APIs
 
