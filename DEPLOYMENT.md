@@ -10,7 +10,8 @@ git commit -m "Your changes"
 git push origin main
 
 # Manual deployment (if not using GitHub Actions)
-npm run deploy
+npx ng build --configuration production --base-href /hnews/
+npx ng deploy --no-build
 ```
 
 The GitHub Actions workflow automatically handles deployment on push to main/master.
@@ -44,9 +45,9 @@ npm run build:prod -- --base-href=/myapp/
    - Detects if original repo or fork
    - Builds with correct base href
    - Deploys to gh-pages branch
-2. **Manual deploy** (`npm run deploy`):
-   - Builds the app first
-   - Uses angular-cli-ghpages to deploy to gh-pages branch
+2. **Manual deploy**:
+   - Build with base href: `npx ng build --configuration production --base-href /hnews/`
+   - Deploy: `npx ng deploy --no-build`
 
 ## Git Workflow
 
