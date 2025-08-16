@@ -20,9 +20,9 @@ export const API_CONFIG = new InjectionToken<ApiConfig>('API_CONFIG', {
   providedIn: 'root',
   factory: () => ({
     microlink: {
-      // Read from environment variable at build time
-      // This will be replaced by the build process with actual values
-      apiKey: (typeof process !== 'undefined' && process.env?.['MICROLINK_API_KEY']) || undefined,
+      // API key can be configured if needed
+      // For now, using the free tier without API key
+      apiKey: undefined,
       apiUrl: 'https://api.microlink.io',
     },
   }),
@@ -38,8 +38,7 @@ export function provideApiConfig(config?: ApiConfig) {
       provide: API_CONFIG,
       useValue: config || {
         microlink: {
-          apiKey:
-            (typeof process !== 'undefined' && process.env?.['MICROLINK_API_KEY']) || undefined,
+          apiKey: undefined,
           apiUrl: 'https://api.microlink.io',
         },
       },
