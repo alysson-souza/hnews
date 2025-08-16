@@ -149,16 +149,6 @@ src/
 - Safari (latest)
 - Mobile browsers (iOS Safari, Chrome Mobile)
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/feature-x`)
-3. Commit your changes (`git commit -m 'Add feature x'`)
-4. Push to the branch (`git push origin feature/feature-x`)
-5. Open a Pull Request
-
-See `CONTRIBUTING.md` for more details.
-
 ## License
 
 MIT License. See `LICENSE` for details.
