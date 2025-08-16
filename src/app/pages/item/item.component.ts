@@ -1,0 +1,273 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HackernewsService, HNItem } from '../../services/hackernews.service';
+import { CommentThread } from '../../components/comment-thread/comment-thread';
+import { VisitedService } from '../../services/visited.service';
+import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
+
+@Component({
+  selector: 'app-item',
+  standalone: true,
+  imports: [CommonModule, CommentThread, RouterLink, PageContainerComponent],
+  template: `
+    <app-page-container>
+      @if (loading()) {
+        <!-- Loading skeleton -->
+        <div class="animate-pulse">
+          <div class="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div class="space-y-4">
+            <div class="h-20 bg-gray-200 rounded"></div>
+            <div class="h-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      } @else if (item()) {
+        <!-- Story Details -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <!-- Title -->
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">
+            @if (item()!.url) {
+              <a
+                [href]="item()!.url"
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                class="hover:text-blue-600"
+              >
+                {{ item()!.title }}
+              </a>
+            } @else {
+              {{ item()!.title }}
+            }
+          </h1>
+
+          <!-- Metadata -->
+          <div class="flex items-center gap-3 text-sm text-gray-600 mb-4">
+            <span>{{ item()!.score || 0 }} points</span>
+            <span>•</span>
+            <span
+              >by
+              <a [routerLink]="['/user', item()!.by]" class="text-blue-600 hover:underline">
+                {{ item()!.by }}
+              </a>
+            </span>
+            <span>•</span>
+            <span>{{ getTimeAgo(item()!.time) }}</span>
+            <span>•</span>
+            <span>{{ item()!.descendants || 0 }} comments</span>
+          </div>
+
+          <!-- Story Text (for Ask HN, etc.) -->
+          @if (item()!.text) {
+            <div
+              class="prose prose-lg max-w-none text-gray-800 mb-4"
+              [innerHTML]="item()!.text"
+            ></div>
+          }
+        </div>
+
+        <!-- Comments Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            Comments ({{ item()!.descendants || 0 }})
+          </h2>
+
+          @if (visibleComments().length > 0) {
+            <div class="space-y-4">
+              @for (commentId of visibleComments(); track commentId; let i = $index) {
+                <app-comment-thread
+                  [commentId]="commentId"
+                  [depth]="0"
+                  [lazyLoad]="shouldLazyLoad(i)"
+                >
+                </app-comment-thread>
+              }
+            </div>
+
+            <!-- Load More Comments Button -->
+            @if (hasMoreComments()) {
+              <div class="mt-8 text-center">
+                <button
+                  (click)="loadMoreComments()"
+                  [disabled]="loadingMoreComments()"
+                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  @if (loadingMoreComments()) {
+                    <span class="flex items-center gap-2">
+                      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  } @else {
+                    Load {{ nextBatchSize() }} more comments
+                  }
+                </button>
+              </div>
+            }
+          } @else {
+            <p class="text-gray-500 text-center py-8">No comments yet</p>
+          }
+        </div>
+      } @else if (error()) {
+        <!-- Error State -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p class="text-red-800">{{ error() }}</p>
+          <button
+            (click)="loadItem()"
+            class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      }
+    </app-page-container>
+  `,
+})
+export class ItemComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private hnService = inject(HackernewsService);
+  private visitedService = inject(VisitedService);
+
+  item = signal<HNItem | null>(null);
+  loading = signal(true);
+  error = signal<string | null>(null);
+
+  readonly commentsPerPage = 10;
+  readonly immediateLoadCount = 3;
+  readonly maxInitialComments = 3;
+  private currentCommentsPage = signal(0);
+  loadingMoreComments = signal(false);
+
+  visibleComments = computed(() => {
+    const item = this.item();
+    if (!item?.kids) return [];
+
+    if (this.currentCommentsPage() === 0) {
+      return item.kids.slice(0, this.maxInitialComments);
+    }
+
+    const totalToShow = this.maxInitialComments + this.currentCommentsPage() * this.commentsPerPage;
+    return item.kids.slice(0, totalToShow);
+  });
+
+  hasMoreComments = computed(() => {
+    const item = this.item();
+    if (!item?.kids) return false;
+
+    const totalComments = item.kids.length;
+    const loadedComments =
+      this.currentCommentsPage() === 0
+        ? this.maxInitialComments
+        : this.maxInitialComments + this.currentCommentsPage() * this.commentsPerPage;
+    return loadedComments < totalComments;
+  });
+
+  remainingCommentsCount = computed(() => {
+    const item = this.item();
+    if (!item?.kids) return 0;
+
+    const totalComments = item.kids.length;
+    const loadedComments =
+      this.currentCommentsPage() === 0
+        ? this.maxInitialComments
+        : this.maxInitialComments + this.currentCommentsPage() * this.commentsPerPage;
+    return Math.max(0, totalComments - loadedComments);
+  });
+
+  nextBatchSize = computed(() => {
+    return Math.min(this.commentsPerPage, this.remainingCommentsCount());
+  });
+
+  shouldLazyLoad(index: number): boolean {
+    return index >= this.immediateLoadCount;
+  }
+
+  ngOnInit() {
+    // Check for both path params and query params (HN compatibility)
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (id) {
+        this.loadItem(+id);
+      } else {
+        // Check query params for HN-style URLs (?id=123)
+        this.route.queryParams.subscribe((queryParams) => {
+          const queryId = queryParams['id'];
+          if (queryId) {
+            this.loadItem(+queryId);
+          }
+        });
+      }
+    });
+  }
+
+  loadItem(id?: number) {
+    const itemId = id || +this.route.snapshot.params['id'];
+    if (!itemId) {
+      this.error.set('Invalid item ID');
+      this.loading.set(false);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+    // Reset pagination when loading new item
+    this.currentCommentsPage.set(0);
+
+    this.hnService.getItem(itemId).subscribe({
+      next: (item) => {
+        if (item) {
+          this.item.set(item);
+          // Mark as visited with current comment count
+          this.visitedService.markAsVisited(item.id, item.descendants);
+        } else {
+          this.error.set('Item not found');
+        }
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Failed to load item. Please try again.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  loadMoreComments() {
+    if (this.loadingMoreComments() || !this.hasMoreComments()) {
+      return;
+    }
+
+    this.loadingMoreComments.set(true);
+
+    setTimeout(() => {
+      this.currentCommentsPage.update((page) => page + 1);
+      this.loadingMoreComments.set(false);
+    }, 300);
+  }
+
+  getTimeAgo(timestamp: number): string {
+    const seconds = Math.floor(Date.now() / 1000 - timestamp);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'just now';
+  }
+}

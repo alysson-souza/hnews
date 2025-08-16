@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+/* Ensure proper text wrapping */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Fix for long URLs and code blocks */
+pre,
+code {
+  overflow-x: auto;
+  max-width: 100%;
+}

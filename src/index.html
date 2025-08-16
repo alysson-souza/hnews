@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>HNews - Hacker News Reader</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Alternative frontend for Hacker News with preview cards, comment threading, and caching"
+    />
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3B5998" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HNews" />
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+      // Single Page Apps for GitHub Pages redirect script
+      (function (l) {
+        if (l.search) {
+          var q = {};
+          l.search
+            .slice(1)
+            .split('&')
+            .forEach(function (v) {
+              var a = v.split('=');
+              q[a[0]] = a.slice(1).join('=').replace(/~and~/g, '&');
+            });
+          if (q.p !== undefined) {
+            window.history.replaceState(
+              null,
+              null,
+              l.pathname.slice(0, -1) + (q.p || '') + (q.q ? '?' + q.q : '') + l.hash,
+            );
+          }
+        }
+      })(window.location);
+    </script>
+    <link rel="manifest" href="manifest.webmanifest" />
+  </head>
+  <body class="bg-gray-50">
+    <!-- Skip to main content link for screen readers -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 m-2 rounded"
+    >
+      Skip to main content
+    </a>
+    <app-root></app-root>
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
+  </body>
+</html>
