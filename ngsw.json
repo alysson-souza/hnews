@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1755387009728,
+  "timestamp": 1755387638982,
   "index": "/hnews/index.html",
   "assetGroups": [
     {
@@ -27,7 +27,7 @@
         "/hnews/chunk-WACEX2KS.js",
         "/hnews/favicon.ico",
         "/hnews/index.html",
-        "/hnews/main-RIXDQ25Q.js",
+        "/hnews/main-WPVZKDG2.js",
         "/hnews/manifest.webmanifest",
         "/hnews/polyfills-B6TNHZQ6.js",
         "/hnews/styles-67VSQSSB.css"
@@ -124,8 +124,8 @@
     "/hnews/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
     "/hnews/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
     "/hnews/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
-    "/hnews/index.html": "b705690786a94c2c201650762bfc9b98262084cd",
-    "/hnews/main-RIXDQ25Q.js": "f24fbb41dc7596c77c645ab859ba24674bb1a663",
+    "/hnews/index.html": "11689b2e9a7a473cd1c4b4b1526080fae32e960b",
+    "/hnews/main-WPVZKDG2.js": "9bf8e0fd6e6fe45af33faf848478c6a9743850a7",
     "/hnews/manifest.webmanifest": "4d05c8f6eb7436db74b0bf9902a1433f77c679fc",
     "/hnews/polyfills-B6TNHZQ6.js": "bf76ac291d7f51c1139b7edcf86b359a30c08c64",
     "/hnews/styles-67VSQSSB.css": "b65769acf46b982a94d61e43f7a13bbdd51a48a0"
