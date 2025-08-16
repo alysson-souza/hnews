@@ -272,7 +272,8 @@ export class StoryItem implements OnInit {
     if (isShiftClick || isCmdClick || isCtrlClick) {
       // Open in new window if modifier key is pressed
       // Use LocationStrategy to get the correct external URL with base href
-      const url = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+      const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+      const url = `${window.location.origin}${path}`;
       window.open(url, '_blank');
     } else {
       // Open sidebar on desktop
