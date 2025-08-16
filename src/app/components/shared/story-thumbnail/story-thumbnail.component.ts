@@ -54,7 +54,7 @@ import { OpenGraphData } from '../../../services/opengraph.service';
           <img
             [src]="ogData?.favicon || '/assets/default-thumb.svg'"
             [alt]="'Favicon for ' + storyTitle"
-            class="w-full h-full object-contain p-2"
+            class="w-full h-full object-contain"
             loading="lazy"
             (error)="handleImageError($event)"
           />
