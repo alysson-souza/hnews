@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   Observable,
   of,
@@ -16,6 +16,7 @@ import {
 } from 'rxjs';
 import { CacheManagerService } from './cache-manager.service';
 import { RateLimiterService } from './rate-limiter.service';
+import { API_CONFIG } from '../config/api.config';
 
 export interface OpenGraphData {
   title?: string;
@@ -33,10 +34,13 @@ export class OpenGraphService {
   private http = inject(HttpClient);
   private cache = inject(CacheManagerService);
   private rateLimiter = inject(RateLimiterService);
+  private apiConfig = inject(API_CONFIG);
 
   // Uses the Microlink API to fetch Open Graph data
   // Alternative services: microlink.io, linkpreview.net, opengraph.io
-  private readonly API_URL = 'https://api.microlink.io';
+  private get API_URL(): string {
+    return this.apiConfig.microlink?.apiUrl || 'https://api.microlink.io';
+  }
 
   // Circuit breaker for failed URLs
   private failedUrls = new Set<string>();
@@ -112,10 +116,17 @@ export class OpenGraphService {
     }
     const apiUrl = `${this.API_URL}/?url=${encodeURIComponent(url)}`;
 
+    // Prepare headers with API key if available
+    let headers = new HttpHeaders();
+    const apiKey = this.apiConfig.microlink?.apiKey;
+    if (apiKey) {
+      headers = headers.set('x-api-key', apiKey);
+    }
+
     // Apply rate limiting
     return from(
       this.rateLimiter.throttle<MicroLinkResponse>('microlink', () =>
-        firstValueFrom(this.http.get<MicroLinkResponse>(apiUrl)),
+        firstValueFrom(this.http.get<MicroLinkResponse>(apiUrl, { headers })),
       ),
     ).pipe(
       map((response: MicroLinkResponse) => {

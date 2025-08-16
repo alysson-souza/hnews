@@ -1,5 +1,81 @@
 # HNews Deployment Guide
 
+## API Configuration
+
+### Microlink API Key (Optional)
+
+The app uses Microlink API for fetching Open Graph data (thumbnails and metadata). While the app works without an API key using the free tier, having a Pro API key provides:
+
+- Higher rate limits
+- Better performance
+- Priority processing
+
+#### Getting a Microlink API Key
+
+1. Visit [Microlink](https://microlink.io)
+2. Sign up for a Pro account
+3. Get your API key from the dashboard
+
+#### Setting the API Key
+
+The API key should be set as an environment variable `MICROLINK_API_KEY` during the build process. Never commit API keys to the repository.
+
+##### Local Development
+
+Create a `.env` file in the project root (copy from `.env.example`):
+
+```bash
+MICROLINK_API_KEY=your_api_key_here
+```
+
+Then build with:
+
+```bash
+npm run build
+```
+
+##### GitHub Actions
+
+1. Go to your repository Settings → Secrets and variables → Actions
+2. Click "New repository secret"
+3. Name: `MICROLINK_API_KEY`
+4. Value: Your Microlink API key
+5. The deployment workflow will automatically use this secret
+
+##### Netlify
+
+1. Go to Site Settings → Environment Variables
+2. Add variable:
+   - Key: `MICROLINK_API_KEY`
+   - Value: Your API key
+
+##### Vercel
+
+1. Go to Project Settings → Environment Variables
+2. Add:
+   - Name: `MICROLINK_API_KEY`
+   - Value: Your API key
+   - Environment: Production (and optionally Preview/Development)
+
+##### Docker
+
+Pass as environment variable:
+
+```bash
+docker build --build-arg MICROLINK_API_KEY=your_api_key .
+# or
+docker run -e MICROLINK_API_KEY=your_api_key your-image
+```
+
+##### Custom Server
+
+Set environment variable before building:
+
+```bash
+export MICROLINK_API_KEY=your_api_key
+npm run build:prod
+```
+
 ## Quick Start
 
 ### For GitHub Pages
