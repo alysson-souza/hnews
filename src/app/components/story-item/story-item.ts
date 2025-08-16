@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, LocationStrategy } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../services/hackernews.service';
 import { OpenGraphService, OpenGraphData } from '../../services/opengraph.service';
@@ -29,6 +29,7 @@ export class StoryItem implements OnInit {
   private visitedService = inject(VisitedService);
   private sidebarService = inject(SidebarService);
   private deviceService = inject(DeviceService);
+  private locationStrategy = inject(LocationStrategy);
 
   ogDataSignal = signal<OpenGraphData | null>(null);
   loadingOg = signal(true);
@@ -270,7 +271,9 @@ export class StoryItem implements OnInit {
 
     if (isShiftClick || isCmdClick || isCtrlClick) {
       // Open in new window if modifier key is pressed
-      window.open(`/item/${this.story.id}`, '_blank');
+      // Use LocationStrategy to get the correct external URL with base href
+      const url = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+      window.open(url, '_blank');
     } else {
       // Open sidebar on desktop
       event.preventDefault();

@@ -99,7 +99,8 @@
         "deploy": {
           "builder": "angular-cli-ghpages:deploy",
           "options": {
-            "noBuild": true
+            "noBuild": true,
+            "dir": "dist/hnews/browser"
           }
         }
       }
