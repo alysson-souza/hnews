@@ -6,31 +6,33 @@ Live demo: https://alysson-souza.github.io/hnews/
 
 ## Features
 
-- Vote counts and thumbnails
-- Open Graph data fetching for link previews
-- Top, Best, Newest, Ask HN, Show HN, and Jobs stories
-- Nested comment threads with voting
-- User profiles with karma, submissions, and comments
-- Search with filters and date ranges
-- Caching to reduce API calls
-- Responsive layout for desktop, tablet, and mobile
-- Vote persistence using localStorage
+- Story feeds: Top, Best, Newest, Ask HN, Show HN, Jobs
+- Link previews: Open Graph thumbnails and metadata via Microlink
+- Comments: Nested threads, lazy loading, auto-collapse for large threads
+- Voting UX: Local upvote state for comments (persisted in localStorage)
+- User profiles: Karma, member since, recent submissions with paging
+- Search: Algolia-powered with type, sort, and date range filters
+- Sidebar: Slide-over comments viewer for quick exploration
+- Theming: Light/Dark/Auto with one-click toggle and persistence
+- Caching: Multi-layer cache (memory, IndexedDB, Service Worker, localStorage)
+- PWA-ready: Angular Service Worker enabled in production builds
+- Responsive UI: Optimized for desktop, tablet, and mobile
 
 ## Tech Stack
 
-- **Angular 20**: With signals and standalone components
-- **Tailwind CSS v4**: Utility-first CSS framework
-- **TypeScript 5.8**: Type-safe development
-- **RxJS 7.8**: Reactive programming for data streams
-- **Hacker News API**: Firebase API for HN data
-- **Algolia Search API**: For search functionality
+- Angular 20 (standalone components, signals)
+- Tailwind CSS v4 (with @tailwind/postcss)
+- TypeScript 5.8, RxJS 7.8
+- Angular Service Worker (PWA)
+- ESLint (angular-eslint), Prettier, Husky + lint-staged
+- APIs: Hacker News Firebase, Algolia HN Search, Microlink (Open Graph)
 
-## Development
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
-- npm 10+
+- Node.js 22+ (LTS recommended; `.nvmrc` provided)
+- npm 11+
 
 ### Installation
 
@@ -42,11 +44,11 @@ cd hnews
 # Install dependencies
 npm install
 
-# Start development server
+# Start the dev server
 npm start
 ```
 
-Navigate to `http://localhost:4200/`
+App runs at `http://localhost:4200`.
 
 ### Build
 
@@ -54,103 +56,76 @@ Navigate to `http://localhost:4200/`
 # Development build
 npm run build
 
-# Production build
+# Production build (base href can be overridden)
 npm run build:prod
 ```
 
-### Common Scripts
+### Scripts
 
 ```bash
-npm start         # Run dev server (http://localhost:4200)
-npm run build     # Build for development
-npm run build:prod# Build for production with /hnews/ base href
-npm test          # Run unit tests (Karma + Jasmine)
-npm run lint      # ESLint (Angular + TS)
-npm run lint:fix  # ESLint with auto-fix
-npm run format    # Prettier write
-npm run deploy    # Build and push to gh-pages
+npm start            # Run dev server (http://localhost:4200)
+npm run watch        # Watch mode build
+npm run build        # Build (development)
+npm run build:prod   # Build (production)
+npm test             # Unit tests (Karma + Jasmine)
+npm run lint         # ESLint
+npm run lint:fix     # ESLint with autofix
+npm run format       # Prettier write
+npm run format:check # Prettier check only
+npm run deploy       # Deploy to GitHub Pages (gh-pages)
+npm run deploy:ci    # CI-friendly deploy
 ```
 
-## Deployment to GitHub Pages
+## Configuration
 
-### Automatic Deployment (GitHub Actions)
+Microlink API is optional. Without a key, the free tier is used.
 
-1. Push your code to GitHub
-2. Enable GitHub Pages in repository settings:
-   - Go to Settings > Pages
-   - Source: Deploy from GitHub Actions
-3. Push to main/master branch to trigger deployment
+- Env var: `MICROLINK_API_KEY`
+- Local: copy `.env.example` to `.env` and set your key
+- CI/Hosting: set `MICROLINK_API_KEY` in your provider’s secrets
 
-### Manual Deployment
+See DEPLOYMENT.md for platform-specific setup (GitHub Actions, Netlify, Vercel, etc.).
 
-```bash
-# Build and deploy to GitHub Pages
-npm run deploy
-```
+## Deployment
 
-This will:
-
-1. Build the app with the correct base href
-2. Deploy to the `gh-pages` branch
-3. Your app will be available at `https://alysson-souza.github.io/hnews/`
+- GitHub Pages is preconfigured via `.github/workflows/deploy.yml`
+- Push to `main`/`master` triggers a build and deploy to `gh-pages`
+- For manual or non-GitHub hosting, see DEPLOYMENT.md
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── components/
-│   │   ├── story-item/       # Individual story component
-│   │   ├── story-list/       # Story list with pagination
-│   │   └── comment-thread/   # Recursive comment component
-│   ├── pages/
-│   │   ├── stories/          # Main stories page
-│   │   ├── item/             # Story detail with comments
-│   │   ├── user/             # User profile page
-│   │   └── search/           # Search page
-│   ├── services/
-│   │   ├── hackernews.service.ts  # HN API integration
-│   │   ├── opengraph.service.ts   # Open Graph data fetching
-│   │   ├── cache.service.ts            # LocalStorage TTL cache
-│   │   └── cache-manager.service.ts    # Multi-layer cache (memory/IndexedDB/SW)
-│   └── app.routes.ts         # Application routing
+│   ├── components/            # UI building blocks (story, comments, shared)
+│   ├── pages/                 # top/best/newest, item, user, search, settings
+│   ├── services/              # HN API, caching, OpenGraph, tags, etc.
+│   ├── config/                # API config providers
+│   └── app.routes.ts          # Routes (HN-compatible aliases supported)
+└── public/                    # PWA manifest, icons, assets
 ```
 
-## API Services
+## API Endpoints
 
-### Hacker News Firebase API
-
-- Base URL: `https://hacker-news.firebaseio.com/v0/`
-- Used for: Stories, comments, user data
-
-### Algolia HN Search API
-
-- Base URL: `https://hn.algolia.com/api/v1/`
-- Used for: Search functionality
-
-### Microlink API
-
-- Base URL: `https://api.microlink.io/`
-- Used for: Open Graph data for rich preview cards
-- Notes: No API key required in the default configuration
+- Hacker News Firebase: `https://hacker-news.firebaseio.com/v0/`
+- Algolia HN Search: `https://hn.algolia.com/api/v1/`
+- Microlink (Open Graph): `https://api.microlink.io/`
 
 ## Caching Strategy
 
-- **Story Lists**: Cached for 5 minutes
-- **Individual Items**: Cached for 30 minutes
-- **User Profiles**: Cached for 1 hour
-- **Open Graph Data**: Cached for 24 hours
-- **Vote State**: Persisted indefinitely in localStorage
+- Story lists: ~5 minutes (IndexedDB + memory)
+- Items: ~30 minutes (IndexedDB + memory)
+- User profiles: ~1 hour (IndexedDB + memory)
+- Open Graph: ~24 hours (IndexedDB + SW fallback)
+- Preferences and vote state: localStorage (no expiry)
 
-## Browser Support
+## Notes
 
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-- Mobile browsers (iOS Safari, Chrome Mobile)
+- HN-compatible routes are supported (e.g., `/item?id=123`, `/user?id=pg`).
+- Service Worker is enabled only in production builds.
 
 ## License
 
-MIT License. See `LICENSE` for details.
+MIT — see `LICENSE`.
 
-Copyright (c) 2025 Alysson Souza
+© 2025 Alysson Souza
