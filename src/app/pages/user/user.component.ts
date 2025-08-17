@@ -7,11 +7,12 @@ import { HackernewsService, HNUser, HNItem } from '../../services/hackernews.ser
 import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
+import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent],
+  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent, UserTagComponent],
   template: `
     <app-page-container>
       @if (loading()) {
@@ -28,7 +29,9 @@ import { CardComponent } from '../../components/shared/card/card.component';
       } @else if (user()) {
         <!-- User Profile -->
         <app-card class="block mb-6">
-          <h1 class="user-title">{{ user()!.id }}</h1>
+          <h1 class="user-title">
+            <app-user-tag [username]="user()!.id"></app-user-tag>
+          </h1>
 
           <!-- User Stats -->
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
