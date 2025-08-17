@@ -24,8 +24,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
+
+      - name: Update npm to match local version
+        run: npm install -g npm@11.5.2
 
       - name: Install dependencies
         run: npm ci
