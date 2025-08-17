@@ -19,7 +19,7 @@ import { CommonModule } from '@angular/common';
       .card-base {
         @apply bg-white dark:bg-slate-900;
         @apply border border-gray-200 dark:border-slate-700;
-        @apply rounded-lg shadow-sm;
+        @apply rounded-lg shadow-sm dark:shadow-md;
       }
 
       .card-hoverable {

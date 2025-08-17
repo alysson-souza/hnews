@@ -28,7 +28,7 @@ import { DeviceService } from '../../services/device.service';
 
       <!-- Sidebar Panel -->
       <div
-        class="fixed right-0 top-0 lg:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white border-l border-gray-200 shadow-2xl transition-transform duration-300 overflow-hidden z-50 lg:z-30"
+        class="fixed right-0 top-0 lg:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700 shadow-2xl dark:shadow-2xl transition-transform duration-300 overflow-hidden z-50 lg:z-30"
         [class.translate-x-full]="!sidebarService.isOpen()"
         [class.translate-x-0]="sidebarService.isOpen()"
       >
@@ -36,12 +36,14 @@ import { DeviceService } from '../../services/device.service';
           <div class="h-full flex flex-col">
             <!-- Header -->
             <div
-              class="sticky top-0 bg-white border-b border-gray-200 p-3 sm:p-4 flex items-center justify-between"
+              class="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-3 sm:p-4 flex items-center justify-between shadow-sm dark:shadow-md"
             >
-              <h2 class="text-base sm:text-lg font-semibold text-gray-900">Comments</h2>
+              <h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Comments
+              </h2>
               <button
                 (click)="sidebarService.closeSidebar()"
-                class="p-2 text-gray-500 hover:text-gray-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -65,13 +67,15 @@ import { DeviceService } from '../../services/device.service';
               } @else if (item()) {
                 <!-- Story Details -->
                 <div class="mb-4 sm:mb-6">
-                  <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+                  <h3
+                    class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2"
+                  >
                     @if (item()!.url) {
                       <a
                         [href]="item()!.url"
                         target="_blank"
                         rel="noopener noreferrer nofollow"
-                        class="hover:text-blue-600"
+                        class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-300"
                       >
                         {{ item()!.title }}
                       </a>
@@ -108,10 +112,10 @@ import { DeviceService } from '../../services/device.service';
                   </div>
                 </div>
 
-                <hr class="my-4 border-gray-200" />
+                <hr class="my-4 border-gray-200 dark:border-slate-700" />
 
                 <!-- Comments -->
-                <h4 class="text-lg font-semibold text-gray-900 mb-4">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Comments ({{ item()!.descendants || 0 }})
                 </h4>
 

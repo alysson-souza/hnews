@@ -7,6 +7,7 @@ import { ThreadGutterComponent } from '../thread-gutter/thread-gutter.component'
 import { CommentHeaderComponent } from '../comment-header/comment-header.component';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { LazyLoadCardComponent } from '../lazy-load-card/lazy-load-card.component';
+import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
 
 @Component({
@@ -19,6 +20,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
     CommentHeaderComponent,
     CommentTextComponent,
     LazyLoadCardComponent,
+    AppButtonComponent,
     CommentSkeletonComponent,
   ],
   template: `
@@ -103,10 +105,12 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
 
                 @if (hasMoreReplies()) {
                   <div class="mt-3 ml-2 sm:ml-4">
-                    <button
-                      (click)="loadMoreReplies()"
+                    <app-button
+                      variant="secondary"
+                      size="sm"
                       [disabled]="loadingMore()"
-                      class="load-more-btn"
+                      [ariaLabel]="loadingMore() ? 'Loading more replies' : 'Load more replies'"
+                      (clicked)="loadMoreReplies()"
                     >
                       @if (loadingMore()) {
                         <span class="flex items-center gap-1">
@@ -130,7 +134,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
                       } @else {
                         Load {{ remainingRepliesCount }} more replies
                       }
-                    </button>
+                    </app-button>
                   </div>
                 }
               </div>
@@ -153,10 +157,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
       .replies-loading {
         @apply ml-2 sm:ml-4 py-2;
       }
-      /* Buttons */
-      .load-more-btn {
-        @apply px-3 py-1 text-xs sm:text-sm bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
-      }
+      /* Buttons: now use shared app-button */
       /* Misc */
       .collapsed-text {
         @apply text-sm text-gray-500 dark:text-gray-400 italic;

@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <article
-      class="relative flex bg-white border border-gray-200 rounded-lg shadow-sm mb-3 animate-pulse"
+      class="relative flex bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm dark:shadow-md mb-3 animate-pulse"
     >
       <!-- Vote Section Skeleton -->
       <div

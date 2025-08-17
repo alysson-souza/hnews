@@ -33,7 +33,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 
       /* Story Item Card */
       .story-card {
-        @apply relative flex flex-col sm:flex-row bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 mb-3 overflow-hidden;
+        @apply relative flex flex-col sm:flex-row bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg transition-shadow duration-200 mb-3 overflow-hidden;
       }
 
       /* Vote Sections */
@@ -119,7 +119,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
         @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
       .story-actions-menu {
-        @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 z-20;
+        @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg dark:shadow-2xl border border-gray-200 dark:border-slate-700 z-20;
       }
       .story-actions-menu-fixed {
         @apply fixed;

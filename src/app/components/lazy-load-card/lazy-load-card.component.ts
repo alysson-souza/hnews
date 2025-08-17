@@ -2,17 +2,24 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
 @Component({
   selector: 'app-lazy-load-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppButtonComponent],
   template: `
     <div
       class="comment-load-box"
       [ngClass]="depth > 0 ? 'thread-indent thread-container group' : ''"
     >
-      <button (click)="loadMore.emit()" [disabled]="loading" class="load-btn">
+      <app-button
+        variant="secondary"
+        size="sm"
+        [disabled]="loading"
+        ariaLabel="Load comment"
+        (clicked)="loadMore.emit()"
+      >
         @if (loading) {
           <span class="flex items-center gap-2">
             <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -35,7 +42,7 @@ import { CommonModule } from '@angular/common';
         } @else {
           Load comment
         }
-      </button>
+      </app-button>
     </div>
   `,
   styles: [
@@ -50,9 +57,6 @@ import { CommonModule } from '@angular/common';
       }
       .thread-indent {
         @apply ml-2 sm:ml-4 border-l-2 border-gray-200 dark:border-slate-700 pl-2 sm:pl-4;
-      }
-      .load-btn {
-        @apply px-3 py-1 text-xs sm:text-sm bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
     `,
   ],
