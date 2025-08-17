@@ -84,7 +84,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 
       /* Meta */
       .story-meta {
-        @apply flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
+        @apply flex flex-nowrap items-center gap-2 whitespace-nowrap leading-none text-xs sm:text-sm text-gray-600 dark:text-gray-400;
       }
       .story-points {
         @apply font-medium;
@@ -102,7 +102,12 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
         @apply text-gray-500 dark:text-gray-400;
       }
       .story-comments {
-        @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors;
+        @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors;
+      }
+
+      .story-meta app-user-tag {
+        display: inline-flex;
+        align-items: center;
       }
       .new-comments-badge {
         @apply text-gray-500 dark:text-gray-400 text-xs ml-1;
