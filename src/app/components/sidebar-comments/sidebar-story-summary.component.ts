@@ -14,34 +14,34 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
   template: `
     <section class="story">
       <h3 class="story-title">
-        @if (item?.url) {
+        @if (item.url) {
           <a
-            [href]="item!.url"
+            [href]="item.url"
             target="_blank"
             rel="noopener noreferrer nofollow"
             class="story-link"
           >
-            {{ item!.title }}
+            {{ item.title }}
           </a>
         } @else {
-          {{ item?.title }}
+          {{ item.title }}
         }
       </h3>
 
       <div class="meta">
-        <span>{{ item?.score || 0 }} points</span>
+        <span>{{ item.score || 0 }} points</span>
         <span>•</span>
-        <span>by {{ item?.by }}</span>
+        <span>by {{ item.by }}</span>
         <span>•</span>
-        <app-relative-time [timestamp]="item!.time"></app-relative-time>
+        <app-relative-time [timestamp]="item.time"></app-relative-time>
       </div>
 
-      @if (item?.text) {
-        <app-comment-text [html]="item!.text!"></app-comment-text>
+      @if (item.text) {
+        <app-comment-text [html]="item.text!"></app-comment-text>
       }
 
       <div class="actions">
-        <a [routerLink]="['/item', item!.id]" target="_blank" class="open-link">
+        <a [routerLink]="['/item', item.id]" target="_blank" class="open-link">
           Open in full view ↗
         </a>
       </div>
