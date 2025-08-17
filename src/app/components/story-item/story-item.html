@@ -128,9 +128,9 @@
         <!-- Metadata -->
         <div class="story-meta mt-2 overflow-hidden">
           @if (story.by) {
-            <span>
+            <span class="inline-flex items-center gap-1">
               by
-              <a [routerLink]="['/user', story.by!]" class="author-link">{{ story.by }}</a>
+              <app-user-tag [username]="story.by!"></app-user-tag>
             </span>
           }
           <span class="hidden sm:inline" aria-hidden="true">•</span>

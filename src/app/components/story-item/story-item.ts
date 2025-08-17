@@ -18,11 +18,12 @@ import { VisitedService } from '../../services/visited.service';
 import { StoryThumbnailComponent } from '../shared/story-thumbnail/story-thumbnail.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
+import { UserTagComponent } from '../user-tag/user-tag.component';
 
 @Component({
   selector: 'app-story-item',
   standalone: true,
-  imports: [CommonModule, RouterLink, StoryThumbnailComponent],
+  imports: [CommonModule, RouterLink, StoryThumbnailComponent, UserTagComponent],
   templateUrl: './story-item.html',
   styles: [
     `
