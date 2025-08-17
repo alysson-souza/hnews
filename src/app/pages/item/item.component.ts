@@ -169,7 +169,7 @@ import { CardComponent } from '../../components/shared/card/card.component';
 
       /* Buttons */
       .comments-load-btn {
-        @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
 
       /* Empty */
