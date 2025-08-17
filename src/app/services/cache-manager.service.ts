@@ -4,7 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
 import { HNItem, HNUser } from './hackernews.service';
-import { OpenGraphData } from './opengraph.service';
+import { OpenGraphData } from './opengraph/opengraph.types';
 
 export enum StorageType {
   MEMORY = 'memory',

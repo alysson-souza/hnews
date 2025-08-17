@@ -10,6 +10,14 @@ export interface ApiConfig {
     apiKey?: string;
     apiUrl?: string;
   };
+  linkpreview?: {
+    apiKey?: string;
+    apiUrl?: string;
+  };
+  opengraphio?: {
+    appId?: string;
+    apiUrl?: string;
+  };
 }
 
 /**
@@ -24,6 +32,16 @@ export const API_CONFIG = new InjectionToken<ApiConfig>('API_CONFIG', {
       // For now, using the free tier without API key
       apiKey: undefined,
       apiUrl: 'https://api.microlink.io',
+    },
+    linkpreview: {
+      // Provide your free-tier key if available
+      apiKey: undefined,
+      apiUrl: 'https://api.linkpreview.net',
+    },
+    opengraphio: {
+      // Provide your app id if available
+      appId: undefined,
+      apiUrl: 'https://opengraph.io/api/1.1/site',
     },
   }),
 });
@@ -40,6 +58,14 @@ export function provideApiConfig(config?: ApiConfig) {
         microlink: {
           apiKey: undefined,
           apiUrl: 'https://api.microlink.io',
+        },
+        linkpreview: {
+          apiKey: undefined,
+          apiUrl: 'https://api.linkpreview.net',
+        },
+        opengraphio: {
+          appId: undefined,
+          apiUrl: 'https://opengraph.io/api/1.1/site',
         },
       },
     },

@@ -21,7 +21,12 @@ export class RateLimiterService {
   private readonly limits: Record<string, RateLimitConfig> = {
     hackernews: { maxRequests: 30, windowMs: 60000 }, // 30 requests per minute
     algolia: { maxRequests: 100, windowMs: 60000 }, // 100 requests per minute
-    microlink: { maxRequests: 10, windowMs: 60000 }, // 10 requests per minute
+    // Microlink free: 50/day
+    microlink: { maxRequests: 50, windowMs: 24 * 60 * 60 * 1000 },
+    // LinkPreview free: 60/hour
+    linkpreview: { maxRequests: 60, windowMs: 60 * 60 * 1000 },
+    // OpenGraph.io: monthly quota handled in service; keep conservative burst cap
+    opengraphio: { maxRequests: 10, windowMs: 60 * 1000 },
   };
 
   async throttle<T = unknown>(key: string, fn: () => Promise<T>): Promise<T> {

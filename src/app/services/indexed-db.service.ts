@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable } from '@angular/core';
 import { HNItem, HNUser } from './hackernews.service';
-import { OpenGraphData } from './opengraph.service';
+import { OpenGraphData } from './opengraph/opengraph.types';
 
 export interface CachedItem<T> {
   key: string | number;

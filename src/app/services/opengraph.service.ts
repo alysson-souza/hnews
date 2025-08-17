@@ -1,31 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import {
-  Observable,
-  of,
-  catchError,
-  map,
-  from,
-  switchMap,
-  merge,
-  timer,
-  timeout,
-  firstValueFrom,
-} from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, catchError, map, from, switchMap, merge, timer, timeout } from 'rxjs';
 import { CacheManagerService } from './cache-manager.service';
 import { RateLimiterService } from './rate-limiter.service';
 import { API_CONFIG } from '../config/api.config';
-
-export interface OpenGraphData {
-  title?: string;
-  description?: string;
-  image?: string;
-  siteName?: string;
-  favicon?: string;
-  url?: string;
-}
+import { OpenGraphData } from './opengraph/opengraph.types';
+export type { OpenGraphData } from './opengraph/opengraph.types';
+import { OpenGraphProvider } from './opengraph/opengraph.provider';
+import { MicrolinkProvider } from './opengraph/providers/microlink.provider';
+import { LinkPreviewProvider } from './opengraph/providers/linkpreview.provider';
+import { OpenGraphIOProvider } from './opengraph/providers/opengraphio.provider';
+import { QuotaGuardService } from './opengraph/quota-guard.service';
 
 @Injectable({
   providedIn: 'root',
@@ -35,12 +22,7 @@ export class OpenGraphService {
   private cache = inject(CacheManagerService);
   private rateLimiter = inject(RateLimiterService);
   private apiConfig = inject(API_CONFIG);
-
-  // Uses the Microlink API to fetch Open Graph data
-  // Alternative services: microlink.io, linkpreview.net, opengraph.io
-  private get API_URL(): string {
-    return this.apiConfig.microlink?.apiUrl || 'https://api.microlink.io';
-  }
+  private quota = inject(QuotaGuardService);
 
   // Circuit breaker for failed URLs
   private failedUrls = new Set<string>();
@@ -78,7 +60,7 @@ export class OpenGraphService {
         // Fetch from API if not cached with timeout protection
         this.retryCount.set(url, retries + 1);
 
-        return this.fetchFromMicrolink(url).pipe(
+        return this.fetchViaProviders(url).pipe(
           timeout(10000), // 10 second timeout for individual requests
           switchMap((data) => {
             // Success: reset retry count and cache result
@@ -101,49 +83,108 @@ export class OpenGraphService {
     );
   }
 
-  private fetchFromMicrolink(url: string): Observable<OpenGraphData> {
-    interface MicroLinkResponse {
-      status: string;
-      data?: {
-        title?: string;
-        description?: string;
-        image?: { url?: string };
-        screenshot?: { url?: string };
-        publisher?: string;
-        logo?: { url?: string };
-        url?: string;
-      };
-    }
-    const apiUrl = `${this.API_URL}/?url=${encodeURIComponent(url)}`;
+  private fetchViaProviders(url: string): Observable<OpenGraphData> {
+    // Build active providers list based on config, weighted order
+    const providers: OpenGraphProvider[] = this.buildProviders();
 
-    // Prepare headers with API key if available
-    let headers = new HttpHeaders();
-    const apiKey = this.apiConfig.microlink?.apiKey;
-    if (apiKey) {
-      headers = headers.set('x-api-key', apiKey);
+    if (providers.length === 0) {
+      // Fallback to Microlink even if no keys configured
+      const microlinkOnly = new MicrolinkProvider(
+        this.http,
+        this.rateLimiter,
+        this.apiConfig,
+        this.quota,
+        {
+          getSafeFaviconUrl: (u) => this.getSafeFaviconUrl(u),
+          FALLBACK_ICON: this.FALLBACK_ICON,
+        },
+      );
+      return microlinkOnly.fetch(url);
     }
 
-    // Apply rate limiting
-    return from(
-      this.rateLimiter.throttle<MicroLinkResponse>('microlink', () =>
-        firstValueFrom(this.http.get<MicroLinkResponse>(apiUrl, { headers })),
+    // Hedged requests: start first provider immediately, then stagger others
+    const hedgeDelayMs = 700;
+    const streams = providers.map((p, i) =>
+      timer(i * hedgeDelayMs).pipe(
+        switchMap(() =>
+          p.fetch(url).pipe(
+            timeout(8000),
+            catchError(() => of(undefined as unknown as OpenGraphData)),
+          ),
+        ),
       ),
-    ).pipe(
-      map((response: MicroLinkResponse) => {
-        if (response.status === 'success' && response.data) {
-          const data = response.data;
-          return {
-            title: data.title || '',
-            description: data.description || '',
-            image: data.image?.url || data.screenshot?.url || '',
-            siteName: data.publisher || '',
-            favicon: data.logo?.url || this.getSafeFaviconUrl(url) || this.FALLBACK_ICON,
-            url: data.url || url,
-          };
-        }
-        return this.getDefaultData(url);
-      }),
     );
+
+    return new Observable<OpenGraphData>((subscriber) => {
+      let settled = false;
+      const subs = streams.map((s) =>
+        s.subscribe({
+          next: (data) => {
+            if (!settled && data && (data.title || data.description || data.image)) {
+              settled = true;
+              subscriber.next(data);
+              subscriber.complete();
+            }
+          },
+          error: () => {
+            // ignore; other streams may succeed
+          },
+          complete: () => {
+            // if all complete without emitting, fall back later
+          },
+        }),
+      );
+
+      // Fallback timeout in case every provider returns empty
+      const fallbackTimer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          subscriber.next(this.getDefaultData(url));
+          subscriber.complete();
+        }
+      }, 9000);
+
+      return () => {
+        clearTimeout(fallbackTimer);
+        subs.forEach((sub) => sub.unsubscribe());
+      };
+    });
+  }
+
+  private buildProviders(): OpenGraphProvider[] {
+    const fallbacks = {
+      getSafeFaviconUrl: (u: string) => this.getSafeFaviconUrl(u),
+      FALLBACK_ICON: this.FALLBACK_ICON,
+    };
+
+    const linkPreview = new LinkPreviewProvider(
+      this.http,
+      this.rateLimiter,
+      this.apiConfig,
+      this.quota,
+      fallbacks,
+    );
+    const microlink = new MicrolinkProvider(
+      this.http,
+      this.rateLimiter,
+      this.apiConfig,
+      this.quota,
+      fallbacks,
+    );
+    const ogio = new OpenGraphIOProvider(
+      this.http,
+      this.rateLimiter,
+      this.apiConfig,
+      this.quota,
+      fallbacks,
+    );
+
+    const ordered: OpenGraphProvider[] = [];
+    // Weighted preference: LinkPreview -> Microlink -> OpenGraph.io
+    if (linkPreview.isEnabled()) ordered.push(linkPreview);
+    if (microlink.isEnabled()) ordered.push(microlink);
+    if (ogio.isEnabled()) ordered.push(ogio);
+    return ordered;
   }
 
   private getDefaultData(url: string): OpenGraphData {
