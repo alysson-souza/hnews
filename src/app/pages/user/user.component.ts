@@ -7,12 +7,11 @@ import { HackernewsService, HNUser, HNItem } from '../../services/hackernews.ser
 import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
-import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent, UserTagComponent],
+  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent],
   template: `
     <app-page-container>
       @if (loading()) {
@@ -29,9 +28,7 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
       } @else if (user()) {
         <!-- User Profile -->
         <app-card class="block mb-6">
-          <h1 class="user-title">
-            <app-user-tag [username]="user()!.id"></app-user-tag>
-          </h1>
+          <h1 class="user-title">{{ user()!.id }}</h1>
 
           <!-- User Stats -->
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -165,9 +162,16 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
       .user-title {
         @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4;
       }
-      .about-title,
-      .subs-title {
+      .about-title {
         @apply text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 md:mb-4;
+      }
+      .subs-title {
+        @apply text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-2 md:mb-4;
+      }
+
+      /* Improve Recent Submissions header contrast specifically in dark mode */
+      :host-context(.dark) .subs-title {
+        @apply text-white;
       }
 
       /* Stats */
