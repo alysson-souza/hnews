@@ -14,7 +14,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       [class.text-gray-400]="voted"
       [class.opacity-50]="voted"
       class="vote-btn"
-      [attr.aria-label]="ariaLabel || (voted ? 'Already upvoted' : 'Upvote')"
+      [attr.aria-label]="ariaLabel || (voted ? 'Already Upvoted' : 'Upvote')"
       [attr.aria-pressed]="voted"
     >
       <svg class="icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">

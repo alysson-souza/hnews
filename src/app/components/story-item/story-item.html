@@ -1,7 +1,7 @@
 <article class="story-card" role="article">
   <!-- Visited indicator -->
   @if (isVisited()) {
-    <div class="visited-indicator" [title]="'You have visited this story'"></div>
+    <div class="visited-indicator" [title]="'You Have Visited This Story'"></div>
   }
 
   <!-- Mobile Layout Container -->
@@ -15,9 +15,9 @@
           [class.vote-button-active]="!hasVoted()"
           [class.vote-button-voted]="hasVoted()"
           [disabled]="hasVoted()"
-          [attr.aria-label]="hasVoted() ? 'Already upvoted' : 'Upvote story'"
+          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
           [attr.aria-pressed]="hasVoted()"
-          [title]="hasVoted() ? 'Already upvoted' : 'Upvote story'"
+          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
         >
           <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
@@ -42,9 +42,9 @@
       [class.vote-button-active]="!hasVoted()"
       [class.vote-button-voted]="hasVoted()"
       [disabled]="hasVoted()"
-      [attr.aria-label]="hasVoted() ? 'Already upvoted' : 'Upvote story'"
+      [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
       [attr.aria-pressed]="hasVoted()"
-      [title]="hasVoted() ? 'Already upvoted' : 'Upvote story'"
+      [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
     >
       <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
         <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
@@ -111,8 +111,8 @@
             (keyup.enter)="searchByDomain($event)"
             (keyup.space)="searchByDomain($event)"
             class="domain-btn"
-            [attr.aria-label]="'Search for more stories from ' + getDomain(story.url)"
-            [title]="'Search for more stories from ' + getDomain(story.url)"
+            [attr.aria-label]="'Search For More Stories From ' + getDomain(story.url)"
+            [title]="'Search For More Stories From ' + getDomain(story.url)"
           >
             ({{ ogDataSignal()?.siteName || getDomain(story.url) }})
           </button>
@@ -142,7 +142,7 @@
             (keyup.enter)="openComments($event)"
             (keyup.space)="openComments($event)"
             class="story-comments focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-            [attr.aria-label]="'View ' + (story.descendants || 0) + ' comments'"
+            [attr.aria-label]="'View ' + (story.descendants || 0) + ' Comments'"
             [title]="getCommentTooltip()"
           >
             {{ story.descendants || 0 }} {{ story.descendants === 1 ? 'comment' : 'comments' }}
@@ -153,45 +153,38 @@
         </div>
       </div>
 
-      <!-- Share Button -->
-      <div class="story-share-container relative ml-2 sm:ml-0 flex-shrink-0">
+      <!-- Actions Button -->
+      <div class="story-actions-container relative ml-2 sm:ml-0 flex-shrink-0">
         <button
-          #shareBtn
-          (click)="toggleShareMenu($event)"
-          class="story-share-btn"
-          [attr.aria-label]="'Share story'"
-          [attr.aria-expanded]="showShareMenu"
-          [title]="'Share story or comments'"
+          #actionsBtn
+          (click)="toggleActionsMenu($event)"
+          class="story-actions-btn"
+          [attr.aria-label]="'Open Actions Menu'"
+          [attr.aria-expanded]="showActionsMenu"
+          [title]="'More Actions'"
         >
-          <svg
-            class="w-4 h-4 sm:w-5 sm:h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-            ></path>
-          </svg>
+          <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]"></fa-icon>
         </button>
 
-        <!-- Share Menu Popup -->
-        @if (showShareMenu) {
+        <!-- Actions Menu Popup -->
+        @if (showActionsMenu) {
           <div
-            #shareMenu
-            class="story-share-menu story-share-menu-fixed"
-            [style.top.px]="shareMenuTop"
-            [style.left.px]="shareMenuLeft"
+            #actionsMenu
+            class="story-actions-menu story-actions-menu-fixed"
+            [style.top.px]="actionsMenuTop"
+            [style.left.px]="actionsMenuLeft"
           >
-            <button (click)="shareStory()" class="story-share-item story-share-item-top">
-              {{ getStoryShareText() }}
+            <button (click)="shareStory()" class="story-actions-item story-actions-item-top">
+              {{ getStoryActionText() }}
             </button>
-            <button (click)="shareComments()" class="story-share-item story-share-item-bottom">
-              {{ getCommentsShareText() }}
+            <button (click)="shareComments()" class="story-actions-item">
+              {{ getCommentsActionText() }}
+            </button>
+            <button
+              (click)="openCommentsInNewTab()"
+              class="story-actions-item story-actions-divider story-actions-item-bottom"
+            >
+              Open Comments in New Tab
             </button>
           </div>
         }

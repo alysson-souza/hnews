@@ -18,7 +18,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
       <a
         [routerLink]="['/user', username]"
         class="username-link"
-        [attr.aria-label]="'View profile of ' + username"
+        [attr.aria-label]="'View Profile Of ' + username"
       >
         {{ username }}
       </a>
@@ -43,7 +43,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
         <button
           (click)="startEdit($event)"
           class="text-gray-400 hover:text-gray-600 text-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
-          [attr.aria-label]="'Add tag for ' + username"
+          [attr.aria-label]="'Add Tag For ' + username"
         >
           <fa-icon [icon]="faUserTag" class="align-[-2px]"></fa-icon>
         </button>
@@ -60,13 +60,13 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
             (blur)="onInputBlur()"
             class="px-1 py-0 text-xs border border-gray-300 rounded w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Tag..."
-            [attr.aria-label]="'Enter tag for ' + username"
+            [attr.aria-label]="'Enter Tag For ' + username"
             #tagInput
           />
           <button
             (mousedown)="saveTag()"
             class="text-green-600 hover:text-green-800 text-xs cursor-pointer"
-            [attr.aria-label]="'Save tag'"
+            [attr.aria-label]="'Save Tag'"
           >
             ✓
           </button>
@@ -74,7 +74,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
             <button
               (click)="removeTag()"
               class="text-red-600 hover:text-red-800 text-xs cursor-pointer"
-              [attr.aria-label]="'Remove tag'"
+              [attr.aria-label]="'Remove Tag'"
             >
               ✗
             </button>

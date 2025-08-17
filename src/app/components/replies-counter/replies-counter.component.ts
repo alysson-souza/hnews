@@ -11,7 +11,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       class="expand-btn"
       (click)="expand.emit()"
       [disabled]="loading || count <= 0"
-      [attr.aria-label]="'Expand ' + count + ' replies'"
+      [attr.aria-label]="'Expand ' + count + ' Replies'"
     >
       @if (loading) {
         <span class="flex items-center gap-1">

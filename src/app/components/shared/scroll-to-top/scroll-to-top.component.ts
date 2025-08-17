@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
       *ngIf="isVisible()"
       (click)="scrollToTop()"
       class="fixed bottom-6 left-6 z-50 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 ease-in-out hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-300"
-      aria-label="Scroll to top"
+      aria-label="Scroll To Top"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path

@@ -48,11 +48,11 @@ export class ThemeToggleComponent {
   getTooltip(): string {
     const current = this.themeService.theme();
     if (current === 'auto') {
-      return 'Auto mode. Click for light mode';
+      return 'Auto Mode. Click For Light Mode';
     } else if (current === 'light') {
-      return 'Light mode. Click for dark mode';
+      return 'Light Mode. Click For Dark Mode';
     } else {
-      return 'Dark mode. Click for auto mode';
+      return 'Dark Mode. Click For Auto Mode';
     }
   }
 }

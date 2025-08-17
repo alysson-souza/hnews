@@ -40,7 +40,7 @@
       <nav
         class="hidden lg:flex items-center space-x-1"
         role="navigation"
-        aria-label="Main navigation"
+        aria-label="Main Navigation"
       >
         <a
           routerLink="/top"
@@ -69,10 +69,10 @@
             [(ngModel)]="searchQuery"
             placeholder="Search stories..."
             aria-label="Search Hacker News"
-            [title]="'Search for stories'"
+            [title]="'Search For Stories'"
             class="search-input"
           />
-          <button type="submit" class="search-button" aria-label="Submit search" [title]="'Search'">
+          <button type="submit" class="search-button" aria-label="Submit Search" [title]="'Search'">
             <svg
               class="w-5 h-5"
               fill="none"
@@ -98,7 +98,7 @@
           (click)="toggleMobileSearch()"
           class="mobile-menu-button"
           [attr.aria-expanded]="showMobileSearch()"
-          aria-label="Toggle search"
+          aria-label="Toggle Search"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -115,7 +115,7 @@
           (click)="toggleMobileMenu()"
           class="mobile-menu-button"
           [attr.aria-expanded]="mobileMenuOpen()"
-          aria-label="Toggle menu"
+          aria-label="Toggle Menu"
         >
           @if (mobileMenuOpen()) {
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
           <button
             type="submit"
             class="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700"
-            aria-label="Submit search"
+            aria-label="Submit Search"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -175,7 +175,7 @@
       <nav
         class="lg:hidden py-2 border-t border-blue-800"
         role="navigation"
-        aria-label="Mobile navigation"
+        aria-label="Mobile Navigation"
       >
         <a
           routerLink="/top"
@@ -256,8 +256,8 @@
     target="_blank"
     rel="noopener noreferrer"
     class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-white transition-colors"
-    aria-label="View source code on GitHub"
-    title="View on GitHub"
+    aria-label="View Source Code On GitHub"
+    title="View On GitHub"
   >
     <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path

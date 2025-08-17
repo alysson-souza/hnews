@@ -19,9 +19,9 @@ import { CommonModule } from '@angular/common';
             class="thread-overlay"
             (click)="toggleThread.emit()"
             [ngClass]="depth > 0 ? '-left-2 sm:-left-4' : 'left-0'"
-            [attr.aria-label]="collapsed ? 'Expand thread' : 'Collapse thread'"
+            [attr.aria-label]="collapsed ? 'Expand Thread' : 'Collapse Thread'"
             [attr.aria-expanded]="!collapsed"
-            title="Toggle thread"
+            title="Toggle Thread"
           ></button>
         }
         <ng-content select="[body]"></ng-content>

@@ -19,11 +19,13 @@ import { StoryThumbnailComponent } from '../shared/story-thumbnail/story-thumbna
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { UserTagComponent } from '../user-tag/user-tag.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-story-item',
   standalone: true,
-  imports: [CommonModule, RouterLink, StoryThumbnailComponent, UserTagComponent],
+  imports: [CommonModule, RouterLink, StoryThumbnailComponent, UserTagComponent, FontAwesomeModule],
   templateUrl: './story-item.html',
   styles: [
     `
@@ -112,23 +114,26 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         @apply inline-block text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all;
       }
 
-      /* Share */
-      .story-share-btn {
+      /* Actions */
+      .story-actions-btn {
         @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
-      .story-share-menu {
-        @apply w-48 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 z-20;
+      .story-actions-menu {
+        @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 z-20;
       }
-      .story-share-menu-fixed {
+      .story-actions-menu-fixed {
         @apply fixed;
       }
-      .story-share-item {
+      .story-actions-item {
         @apply w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500;
       }
-      .story-share-item-top {
+      .story-actions-item-top {
         @apply rounded-t-lg;
       }
-      .story-share-item-bottom {
+      .story-actions-divider {
+        @apply border-t border-gray-200 dark:border-slate-700;
+      }
+      .story-actions-item-bottom {
         @apply rounded-b-lg;
       }
 
@@ -157,6 +162,9 @@ export class StoryItem implements OnInit {
 
   ogDataSignal = signal<OpenGraphData | null>(null);
   loadingOg = signal(true);
+
+  // FontAwesome icons
+  faEllipsisVertical = faEllipsisVertical;
 
   constructor() {
     // Load voted items from localStorage
@@ -245,25 +253,25 @@ export class StoryItem implements OnInit {
     }
   }
 
-  showShareMenu = false;
+  showActionsMenu = false;
   copiedStory = false;
   copiedComments = false;
 
-  @ViewChild('shareBtn') shareBtn?: ElementRef<HTMLButtonElement>;
-  @ViewChild('shareMenu') shareMenu?: ElementRef<HTMLDivElement>;
-  shareMenuTop = 0;
-  shareMenuLeft = 0;
+  @ViewChild('actionsBtn') actionsBtn?: ElementRef<HTMLButtonElement>;
+  @ViewChild('actionsMenu') actionsMenu?: ElementRef<HTMLDivElement>;
+  actionsMenuTop = 0;
+  actionsMenuLeft = 0;
 
   canUseWebShare = computed(() => {
     return 'share' in navigator && typeof navigator.share === 'function';
   });
 
-  getStoryShareText = computed(() => {
+  getStoryActionText = computed(() => {
     if (this.copiedStory) return '✓ Copied!';
     return this.canUseWebShare() ? 'Share Story' : 'Copy Story Link';
   });
 
-  getCommentsShareText = computed(() => {
+  getCommentsActionText = computed(() => {
     if (this.copiedComments) return '✓ Copied!';
     return this.canUseWebShare() ? 'Share Comments' : 'Copy Comments Link';
   });
@@ -284,35 +292,35 @@ export class StoryItem implements OnInit {
     this.visitedService.markAsVisited(this.story.id, this.story.descendants);
   }
 
-  toggleShareMenu(event: Event): void {
+  toggleActionsMenu(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.showShareMenu = !this.showShareMenu;
+    this.showActionsMenu = !this.showActionsMenu;
 
     // Close menu when clicking outside
-    if (this.showShareMenu) {
+    if (this.showActionsMenu) {
       // Position the menu using viewport coordinates to avoid clipping
       setTimeout(() => {
-        const btn = this.shareBtn?.nativeElement;
-        const menu = this.shareMenu?.nativeElement;
+        const btn = this.actionsBtn?.nativeElement;
+        const menu = this.actionsMenu?.nativeElement;
         if (!btn) return;
         const rect = btn.getBoundingClientRect();
         const viewportPadding = 8;
-        const menuWidth = menu?.offsetWidth ?? 192;
+        const menuWidth = menu?.offsetWidth ?? 256;
         const menuHeight = menu?.offsetHeight ?? 0;
         const maxLeft = window.innerWidth - menuWidth - viewportPadding;
         const minLeft = viewportPadding;
         const desiredLeft = rect.right - menuWidth; // right-align to button
-        this.shareMenuLeft = Math.max(minLeft, Math.min(maxLeft, desiredLeft));
+        this.actionsMenuLeft = Math.max(minLeft, Math.min(maxLeft, desiredLeft));
         const maxTop = window.innerHeight - menuHeight - viewportPadding;
         const desiredTop = rect.bottom + viewportPadding;
-        this.shareMenuTop = Math.max(viewportPadding, Math.min(maxTop, desiredTop));
+        this.actionsMenuTop = Math.max(viewportPadding, Math.min(maxTop, desiredTop));
       }, 0);
 
       setTimeout(() => {
         const closeMenu = (e: MouseEvent) => {
-          if (!(e.target as HTMLElement).closest('.story-share-container')) {
-            this.showShareMenu = false;
+          if (!(e.target as HTMLElement).closest('.story-actions-container')) {
+            this.showActionsMenu = false;
             document.removeEventListener('click', closeMenu);
           }
         };
@@ -332,7 +340,7 @@ export class StoryItem implements OnInit {
     if (navigator.share && this.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        this.showShareMenu = false;
+        this.showActionsMenu = false;
         return;
       } catch (err) {
         // User cancelled or share failed, fall back to clipboard
@@ -350,7 +358,7 @@ export class StoryItem implements OnInit {
         this.copiedComments = false;
         setTimeout(() => {
           this.copiedStory = false;
-          this.showShareMenu = false;
+          this.showActionsMenu = false;
         }, 1500);
       })
       .catch((err) => {
@@ -370,7 +378,7 @@ export class StoryItem implements OnInit {
     if (navigator.share && this.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        this.showShareMenu = false;
+        this.showActionsMenu = false;
         return;
       } catch (err) {
         // User cancelled or share failed, fall back to clipboard
@@ -388,12 +396,19 @@ export class StoryItem implements OnInit {
         this.copiedStory = false;
         setTimeout(() => {
           this.copiedComments = false;
-          this.showShareMenu = false;
+          this.showActionsMenu = false;
         }, 1500);
       })
       .catch((err) => {
         console.error('Failed to copy: ', err);
       });
+  }
+
+  openCommentsInNewTab(): void {
+    const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+    const url = `${window.location.origin}${path}`;
+    window.open(url, '_blank');
+    this.showActionsMenu = false;
   }
 
   private canShare(data: ShareData): boolean {
@@ -432,8 +447,8 @@ export class StoryItem implements OnInit {
 
   getCommentTooltip(): string {
     if (!this.deviceService.shouldShowKeyboardHints()) {
-      return 'View comments';
+      return 'View Comments';
     }
-    return `View comments (${this.deviceService.getModifierKey()}+Click for new window)`;
+    return `View Comments (${this.deviceService.getModifierKey()}+Click for New Tab)`;
   }
 }

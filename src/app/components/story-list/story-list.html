@@ -4,7 +4,7 @@
 >
   <!-- Loading State with Skeletons -->
   @if (loading() && stories().length === 0) {
-    <div role="status" aria-live="polite" aria-label="Loading stories">
+    <div role="status" aria-live="polite" aria-label="Loading Stories">
       @for (i of [1, 2, 3, 4, 5, 6]; track i) {
         <app-story-skeleton></app-story-skeleton>
       }
@@ -30,7 +30,7 @@
   <!-- Load More Button -->
   @if (hasMore() && !loading()) {
     <div class="text-center mt-8">
-      <button (click)="loadMore()" class="load-more-btn" aria-label="Load more stories">
+      <button (click)="loadMore()" class="load-more-btn" aria-label="Load More Stories">
         Load More Stories
       </button>
     </div>
