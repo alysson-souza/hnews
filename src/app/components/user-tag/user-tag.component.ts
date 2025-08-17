@@ -5,11 +5,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserTagsService } from '../../services/user-tags.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faUserTag } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-user-tag',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, FontAwesomeModule],
   template: `
     <span class="inline-flex items-center gap-1">
       <!-- Username link -->
@@ -43,7 +45,7 @@ import { UserTagsService } from '../../services/user-tags.service';
           class="text-gray-400 hover:text-gray-600 text-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
           [attr.aria-label]="'Add tag for ' + username"
         >
-          [+]
+          <fa-icon [icon]="faUserTag" class="align-[-2px]"></fa-icon>
         </button>
       }
 
@@ -100,6 +102,7 @@ export class UserTagComponent implements OnInit {
   tag = signal(this.tagsService.getTag(this.username));
   editing = signal(false);
   editValue = '';
+  protected faUserTag = faUserTag;
 
   ngOnInit() {
     this.tag.set(this.tagsService.getTag(this.username));
