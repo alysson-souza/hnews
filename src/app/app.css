@@ -99,4 +99,5 @@
 .theme-toggle {
   @apply p-2 text-white rounded-lg transition-colors;
   @apply hover:bg-blue-800 dark:hover:bg-blue-800;
+  @apply cursor-pointer;
 }
