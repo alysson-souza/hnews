@@ -1,28 +1,19 @@
-<article
-  class="relative flex flex-col sm:flex-row bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 mb-3 overflow-hidden"
-  role="article"
->
+<article class="story-card" role="article">
   <!-- Visited indicator -->
   @if (isVisited()) {
-    <div
-      class="absolute top-0 right-0 w-0 h-0 border-t-[20px] border-t-blue-600 border-l-[20px] border-l-transparent"
-      [title]="'You have visited this story'"
-    ></div>
+    <div class="visited-indicator" [title]="'You have visited this story'"></div>
   }
 
   <!-- Mobile Layout Container -->
   <div class="flex sm:hidden items-stretch w-full">
     <!-- Mobile Vote Section (No Thumbnails) -->
-    <div
-      class="flex items-center justify-between px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-lg w-full overflow-hidden"
-    >
+    <div class="vote-section-mobile">
       <div class="flex items-center gap-3">
         <button
           (click)="upvote()"
-          [class.text-blue-600]="!hasVoted()"
-          [class.text-gray-400]="hasVoted()"
-          [class.opacity-50]="hasVoted()"
-          class="hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1"
+          class="vote-button"
+          [class.vote-button-active]="!hasVoted()"
+          [class.vote-button-voted]="hasVoted()"
           [disabled]="hasVoted()"
           [attr.aria-label]="hasVoted() ? 'Already upvoted' : 'Upvote story'"
           [attr.aria-pressed]="hasVoted()"
@@ -33,9 +24,9 @@
           </svg>
         </button>
         <span
-          class="text-xl font-bold"
-          [class.text-blue-600]="!hasVoted()"
-          [class.text-gray-500]="hasVoted()"
+          class="vote-count text-xl"
+          [class.vote-count-active]="!hasVoted()"
+          [class.vote-count-voted]="hasVoted()"
         >
           {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
         </span>
@@ -44,15 +35,12 @@
   </div>
 
   <!-- Desktop Vote Section -->
-  <div
-    class="hidden sm:flex flex-col items-center justify-center px-4 py-3 bg-gradient-to-b from-blue-50 to-blue-100 rounded-l-lg w-[100px] flex-shrink-0"
-  >
+  <div class="vote-section hidden sm:flex flex-col">
     <button
       (click)="upvote()"
-      [class.text-blue-600]="!hasVoted()"
-      [class.text-gray-400]="hasVoted()"
-      [class.opacity-50]="hasVoted()"
-      class="hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1"
+      class="vote-button"
+      [class.vote-button-active]="!hasVoted()"
+      [class.vote-button-voted]="hasVoted()"
       [disabled]="hasVoted()"
       [attr.aria-label]="hasVoted() ? 'Already upvoted' : 'Upvote story'"
       [attr.aria-pressed]="hasVoted()"
@@ -63,9 +51,9 @@
       </svg>
     </button>
     <span
-      class="text-2xl font-bold"
-      [class.text-blue-600]="!hasVoted()"
-      [class.text-gray-500]="hasVoted()"
+      class="vote-count text-2xl"
+      [class.vote-count-active]="!hasVoted()"
+      [class.vote-count-voted]="hasVoted()"
     >
       {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
     </span>
@@ -90,9 +78,9 @@
       <div class="flex-1 min-w-0 overflow-hidden">
         <!-- Title -->
         <h2
-          class="text-base sm:text-lg font-semibold mb-1 break-words"
-          [class.text-gray-900]="!isVisited()"
-          [class.text-gray-600]="isVisited()"
+          class="story-title"
+          [class.story-title-unread]="!isVisited()"
+          [class.story-title-visited]="isVisited()"
         >
           @if (story.url) {
             <a
@@ -100,7 +88,7 @@
               target="_blank"
               rel="noopener noreferrer nofollow"
               (click)="markAsVisited()"
-              class="hover:text-blue-600 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              class="story-title-link cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             >
               {{ story.title }}
             </a>
@@ -108,7 +96,7 @@
             <a
               [routerLink]="['/item', story.id]"
               (click)="markAsVisited()"
-              class="hover:text-blue-600 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              class="story-title-link cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             >
               {{ story.title }}
             </a>
@@ -122,7 +110,7 @@
             (click)="searchByDomain($event)"
             (keyup.enter)="searchByDomain($event)"
             (keyup.space)="searchByDomain($event)"
-            class="inline-block text-xs sm:text-sm text-gray-500 hover:text-blue-600 hover:underline cursor-pointer break-all"
+            class="domain-btn"
             [attr.aria-label]="'Search for more stories from ' + getDomain(story.url)"
             [title]="'Search for more stories from ' + getDomain(story.url)"
           >
@@ -132,46 +120,45 @@
 
         <!-- Description from OpenGraph - Hidden on mobile -->
         @if (ogDataSignal()?.description) {
-          <p class="hidden sm:block text-sm text-gray-600 mt-1 truncate">
+          <p class="story-desc">
             {{ ogDataSignal()!.description }}
           </p>
         }
 
         <!-- Metadata -->
-        <div
-          class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs sm:text-sm text-gray-600 overflow-hidden"
-        >
+        <div class="story-meta mt-2 overflow-hidden">
           @if (story.by) {
-            <span
-              >by
-              <app-user-tag [username]="story.by!"></app-user-tag>
+            <span>
+              by
+              <a [routerLink]="['/user', story.by!]" class="author-link">{{ story.by }}</a>
             </span>
           }
           <span class="hidden sm:inline" aria-hidden="true">•</span>
-          <span>{{ getTimeAgo(story.time) }}</span>
+          <span class="story-time">{{ getTimeAgo(story.time) }}</span>
           <span class="hidden sm:inline" aria-hidden="true">•</span>
           <button
             type="button"
             (click)="openComments($event)"
             (keyup.enter)="openComments($event)"
             (keyup.space)="openComments($event)"
-            class="text-blue-600 hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+            class="story-comments focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             [attr.aria-label]="'View ' + (story.descendants || 0) + ' comments'"
             [title]="getCommentTooltip()"
           >
             {{ story.descendants || 0 }} {{ story.descendants === 1 ? 'comment' : 'comments' }}
             @if (hasNewComments()) {
-              <span class="text-gray-500 text-xs ml-1">[+{{ getNewCommentCount() }}]</span>
+              <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
             }
           </button>
         </div>
       </div>
 
       <!-- Share Button -->
-      <div class="relative ml-2 sm:ml-0 flex-shrink-0">
+      <div class="story-share-container relative ml-2 sm:ml-0 flex-shrink-0">
         <button
+          #shareBtn
           (click)="toggleShareMenu($event)"
-          class="p-1 sm:p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          class="story-share-btn"
           [attr.aria-label]="'Share story'"
           [attr.aria-expanded]="showShareMenu"
           [title]="'Share story or comments'"
@@ -195,18 +182,15 @@
         <!-- Share Menu Popup -->
         @if (showShareMenu) {
           <div
-            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
+            #shareMenu
+            class="story-share-menu story-share-menu-fixed"
+            [style.top.px]="shareMenuTop"
+            [style.left.px]="shareMenuLeft"
           >
-            <button
-              (click)="shareStory()"
-              class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
-            >
+            <button (click)="shareStory()" class="story-share-item story-share-item-top">
               {{ getStoryShareText() }}
             </button>
-            <button
-              (click)="shareComments()"
-              class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
-            >
+            <button (click)="shareComments()" class="story-share-item story-share-item-bottom">
               {{ getCommentsShareText() }}
             </button>
           </div>

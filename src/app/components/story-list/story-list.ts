@@ -17,6 +17,40 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
   imports: [CommonModule, StoryItem, StorySkeletonComponent, PageContainerComponent],
   templateUrl: './story-list.html',
   styleUrl: './story-list.css',
+  styles: [
+    `
+      @reference '../../../styles.css';
+
+      .alert-error {
+        @apply bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4;
+      }
+      .alert-link {
+        @apply mt-2 text-sm underline hover:no-underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1;
+      }
+
+      .stories-space {
+        @apply space-y-2 sm:space-y-3;
+      }
+
+      .load-more-btn {
+        @apply px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 focus-visible:ring-blue-500 text-sm sm:text-base;
+      }
+
+      .loading-wrap {
+        @apply flex justify-center items-center py-8;
+      }
+      .loading-spin {
+        @apply inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+      }
+      .loading-text {
+        @apply ml-3 text-gray-600 dark:text-gray-400;
+      }
+
+      .empty {
+        @apply text-center py-8 text-gray-500 dark:text-gray-400;
+      }
+    `,
+  ],
 })
 export class StoryList implements OnInit {
   @Input() storyType: 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' = 'top';

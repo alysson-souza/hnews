@@ -1,9 +1,9 @@
 <!-- Offline/Online Status Banner -->
 @if (showOfflineMessage()) {
   <div
-    class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
-    [class.bg-yellow-500]="isOffline()"
-    [class.bg-green-500]="!isOffline()"
+    class="offline-banner"
+    [class.offline-banner-yellow]="isOffline()"
+    [class.offline-banner-green]="!isOffline()"
   >
     <div class="container mx-auto px-4 py-2 text-center text-white font-medium">
       @if (isOffline()) {
@@ -16,22 +16,14 @@
 }
 
 <!-- Header Navigation -->
-<header
-  class="sticky top-0 z-40 bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg"
-  [class.mt-10]="showOfflineMessage()"
-  role="banner"
->
+<header class="app-header" [class.mt-10]="showOfflineMessage()" role="banner">
   <div class="container mx-auto px-2 sm:px-4">
     <div class="flex items-center justify-between h-16">
       <!-- Logo -->
       <div class="flex items-center flex-1 sm:flex-none">
         <a routerLink="/" class="flex items-center gap-2 sm:gap-3">
-          <div class="bg-white rounded p-1">
-            <svg
-              class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+          <div class="app-logo-container">
+            <svg class="app-logo-icon" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
             </svg>
           </div>
@@ -52,58 +44,24 @@
       >
         <a
           routerLink="/top"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="nav-link-active"
           [attr.aria-current]="router.url === '/top' ? 'page' : null"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          class="nav-link"
         >
           Top
         </a>
-        <a
-          routerLink="/best"
-          routerLinkActive="bg-blue-800"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          Best
-        </a>
-        <a
-          routerLink="/newest"
-          routerLinkActive="bg-blue-800"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          Newest
-        </a>
-        <a
-          routerLink="/ask"
-          routerLinkActive="bg-blue-800"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          Ask HN
-        </a>
-        <a
-          routerLink="/show"
-          routerLinkActive="bg-blue-800"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          Show HN
-        </a>
-        <a
-          routerLink="/jobs"
-          routerLinkActive="bg-blue-800"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          Jobs
-        </a>
-        <a
-          routerLink="/settings"
-          routerLinkActive="bg-blue-800"
-          class="text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          Settings
-        </a>
+        <a routerLink="/best" routerLinkActive="nav-link-active" class="nav-link"> Best </a>
+        <a routerLink="/newest" routerLinkActive="nav-link-active" class="nav-link"> Newest </a>
+        <a routerLink="/ask" routerLinkActive="nav-link-active" class="nav-link"> Ask HN </a>
+        <a routerLink="/show" routerLinkActive="nav-link-active" class="nav-link"> Show HN </a>
+        <a routerLink="/jobs" routerLinkActive="nav-link-active" class="nav-link"> Jobs </a>
+        <a routerLink="/settings" routerLinkActive="nav-link-active" class="nav-link"> Settings </a>
       </nav>
 
       <!-- Desktop Search Bar -->
-      <div class="hidden lg:block">
+      <div class="hidden lg:flex items-center gap-4">
+        <!-- Theme Toggle -->
+        <app-theme-toggle></app-theme-toggle>
         <form (ngSubmit)="search()" class="relative">
           <input
             type="text"
@@ -112,14 +70,9 @@
             placeholder="Search stories..."
             aria-label="Search Hacker News"
             [title]="'Search for stories'"
-            class="w-64 px-4 py-2 rounded-lg text-gray-900 placeholder-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-white"
+            class="search-input"
           />
-          <button
-            type="submit"
-            class="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700 cursor-pointer"
-            aria-label="Submit search"
-            [title]="'Search'"
-          >
+          <button type="submit" class="search-button" aria-label="Submit search" [title]="'Search'">
             <svg
               class="w-5 h-5"
               fill="none"
@@ -143,7 +96,7 @@
         <!-- Mobile Search Button -->
         <button
           (click)="toggleMobileSearch()"
-          class="p-2 text-white hover:bg-blue-800 rounded-lg transition-colors"
+          class="mobile-menu-button"
           [attr.aria-expanded]="showMobileSearch()"
           aria-label="Toggle search"
         >
@@ -160,7 +113,7 @@
         <!-- Hamburger Menu Button -->
         <button
           (click)="toggleMobileMenu()"
-          class="p-2 text-white hover:bg-blue-800 rounded-lg transition-colors"
+          class="mobile-menu-button"
           [attr.aria-expanded]="mobileMenuOpen()"
           aria-label="Toggle menu"
         >
@@ -197,7 +150,7 @@
             [(ngModel)]="searchQuery"
             placeholder="Search stories..."
             aria-label="Search Hacker News"
-            class="w-full px-4 py-2 rounded-lg text-gray-900 placeholder-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-white"
+            class="search-input w-full"
           />
           <button
             type="submit"
@@ -226,57 +179,57 @@
       >
         <a
           routerLink="/top"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors"
+          class="mobile-nav-link"
         >
           Top
         </a>
         <a
           routerLink="/best"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors"
+          class="mobile-nav-link"
         >
           Best
         </a>
         <a
           routerLink="/newest"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors"
+          class="mobile-nav-link"
         >
           Newest
         </a>
         <a
           routerLink="/ask"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors"
+          class="mobile-nav-link"
         >
           Ask HN
         </a>
         <a
           routerLink="/show"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors"
+          class="mobile-nav-link"
         >
           Show HN
         </a>
         <a
           routerLink="/jobs"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors"
+          class="mobile-nav-link"
         >
           Jobs
         </a>
         <a
           routerLink="/settings"
-          routerLinkActive="bg-blue-800"
+          routerLinkActive="mobile-nav-link-active"
           (click)="closeMobileMenu()"
-          class="block text-white px-4 py-3 hover:bg-blue-800 transition-colors border-t border-blue-800 mt-2"
+          class="mobile-nav-link border-t border-blue-800 dark:border-blue-800 mt-2"
         >
           Settings
         </a>
@@ -286,18 +239,16 @@
 </header>
 
 <!-- Main Content -->
-<main class="min-h-screen bg-gray-50" role="main" id="main-content">
+<main class="main-content" role="main" id="main-content">
   <router-outlet></router-outlet>
 </main>
 
 <!-- Footer -->
-<footer class="bg-gray-800 text-white py-8 mt-12 relative" role="contentinfo">
+<footer class="app-footer" role="contentinfo">
   <div class="container mx-auto px-4">
     <div class="text-center">
-      <p class="text-sm">HNews — Hacker News Reader</p>
-      <p class="text-xs mt-2 text-gray-400">
-        Built with Angular & Tailwind CSS | Data from Hacker News API
-      </p>
+      <p class="footer-text">HNews — Hacker News Reader</p>
+      <p class="footer-subtext">Built with Angular & Tailwind CSS | Data from Hacker News API</p>
     </div>
   </div>
   <a

@@ -13,19 +13,14 @@
 
   <!-- Error State -->
   @if (error()) {
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+    <div class="alert-error">
       <p>{{ error() }}</p>
-      <button
-        (click)="refresh()"
-        class="mt-2 text-sm underline hover:no-underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
-      >
-        Try again
-      </button>
+      <button (click)="refresh()" class="alert-link">Try again</button>
     </div>
   }
 
   <!-- Stories List -->
-  <div class="space-y-2 sm:space-y-3">
+  <div class="stories-space">
     @for (story of stories(); track story.id; let i = $index) {
       <app-story-item [story]="story" [index]="i + 1" [ogData]="getOpenGraphForStory(story)">
       </app-story-item>
@@ -35,11 +30,7 @@
   <!-- Load More Button -->
   @if (hasMore() && !loading()) {
     <div class="text-center mt-8">
-      <button
-        (click)="loadMore()"
-        class="px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 text-sm sm:text-base"
-        aria-label="Load more stories"
-      >
+      <button (click)="loadMore()" class="load-more-btn" aria-label="Load more stories">
         Load More Stories
       </button>
     </div>
@@ -47,15 +38,15 @@
 
   <!-- Loading More Indicator -->
   @if (loading() && stories().length > 0) {
-    <div class="flex justify-center items-center py-8">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <span class="ml-3 text-gray-600">Loading more stories...</span>
+    <div class="loading-wrap">
+      <div class="loading-spin"></div>
+      <span class="loading-text">Loading more stories...</span>
     </div>
   }
 
   <!-- No More Stories -->
   @if (!hasMore() && stories().length > 0) {
-    <div class="text-center py-8 text-gray-500">
+    <div class="empty">
       <p>No more stories to load</p>
     </div>
   }

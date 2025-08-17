@@ -1,4 +1,91 @@
+/* Import Tailwind CSS */
 @import 'tailwindcss';
+
+/* Load legacy JavaScript config for theme values */
+@config '../tailwind.config.js';
+
+/* Define custom prose utilities for v4 compatibility */
+@utility prose {
+  color: var(--tw-prose-body);
+  max-width: 65ch;
+
+  --tw-prose-body: #374151;
+  --tw-prose-headings: #111827;
+  --tw-prose-lead: #4b5563;
+  --tw-prose-links: #111827;
+  --tw-prose-bold: #111827;
+  --tw-prose-counters: #6b7280;
+  --tw-prose-bullets: #d1d5db;
+  --tw-prose-hr: #e5e7eb;
+  --tw-prose-quotes: #111827;
+  --tw-prose-quote-borders: #e5e7eb;
+  --tw-prose-captions: #6b7280;
+  --tw-prose-code: #111827;
+  --tw-prose-pre-code: #e5e7eb;
+  --tw-prose-pre-bg: #1f2937;
+  --tw-prose-th-borders: #d1d5db;
+  --tw-prose-td-borders: #e5e7eb;
+}
+
+@utility prose-sm {
+  font-size: 0.875rem;
+  line-height: 1.7142857;
+}
+
+@utility prose-lg {
+  font-size: 1.125rem;
+  line-height: 1.7777778;
+}
+
+@utility prose-invert {
+  --tw-prose-body: #d1d5db;
+  --tw-prose-headings: #fff;
+  --tw-prose-lead: #9ca3af;
+  --tw-prose-links: #fff;
+  --tw-prose-bold: #fff;
+  --tw-prose-counters: #9ca3af;
+  --tw-prose-bullets: #4b5563;
+  --tw-prose-hr: #374151;
+  --tw-prose-quotes: #f3f4f6;
+  --tw-prose-quote-borders: #374151;
+  --tw-prose-captions: #9ca3af;
+  --tw-prose-code: #fff;
+  --tw-prose-pre-code: #d1d5db;
+  --tw-prose-pre-bg: #111827;
+  --tw-prose-th-borders: #4b5563;
+  --tw-prose-td-borders: #374151;
+}
+
+/* Override the dark variant to use class selector */
+@variant dark (&:where(.dark, .dark *));
+
+/* Dark mode transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Dark mode scrollbar (blue-tinted) */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar {
+    background-color: #0b1120; /* deep blue */
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #334155; /* slate-600 */
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #475569; /* slate-500 */
+  }
+}
+
+.dark ::-webkit-scrollbar {
+  background-color: #0b1120;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #334155;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
 
 /* Ensure proper text wrapping */
 h1,

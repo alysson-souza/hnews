@@ -15,7 +15,7 @@ import { UserTagsService } from '../../services/user-tags.service';
       <!-- Username link -->
       <a
         [routerLink]="['/user', username]"
-        class="text-blue-600 hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+        class="username-link"
         [attr.aria-label]="'View profile of ' + username"
       >
         {{ username }}
@@ -81,6 +81,16 @@ import { UserTagsService } from '../../services/user-tags.service';
       }
     </span>
   `,
+  styles: [
+    `
+      @reference '../../../styles.css';
+
+      .username-link {
+        @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+      }
+    `,
+  ],
 })
 export class UserTagComponent implements OnInit {
   @Input({ required: true }) username!: string;

@@ -5,56 +5,67 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
 import { CacheManagerService } from '../../services/cache-manager.service';
+import { ThemeService } from '../../services/theme.service';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
+import { StatCardComponent } from '../../components/shared/stat-card/stat-card.component';
+import { ThemeSelectorComponent } from '../../components/shared/theme-selector/theme-selector.component';
+import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppButtonComponent, CardComponent, PageContainerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AppButtonComponent,
+    CardComponent,
+    PageContainerComponent,
+    StatCardComponent,
+    ThemeSelectorComponent,
+    SectionTitleComponent,
+  ],
   template: `
     <app-page-container variant="narrow">
       <div class="space-y-6">
+        <!-- Theme Settings Section -->
+        <app-card class="block">
+          <app-section-title>Theme Settings</app-section-title>
+          <app-theme-selector></app-theme-selector>
+        </app-card>
+
         <!-- Cache Management Section -->
         <app-card class="block">
-          <h1 class="text-2xl font-bold text-gray-900 mb-6">Cache Management</h1>
+          <app-section-title>Cache Management</app-section-title>
 
           <div class="space-y-6">
             <!-- Cache Statistics -->
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Cache Statistics</h2>
+              <app-section-title variant="subtitle">Cache Statistics</app-section-title>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-4 rounded">
-                  <div class="text-sm text-gray-600">IndexedDB Storage</div>
-                  <div class="text-xl font-semibold text-gray-900">
-                    {{ formatBytes(cacheStats().indexedDB) }}
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded">
-                  <div class="text-sm text-gray-600">Service Worker Cache</div>
-                  <div class="text-xl font-semibold text-gray-900">
-                    {{ formatBytes(cacheStats().swCache) }}
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded">
-                  <div class="text-sm text-gray-600">Total Items Cached</div>
-                  <div class="text-xl font-semibold text-gray-900">
-                    {{ cacheStats().itemCount }}
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded">
-                  <div class="text-sm text-gray-600">Memory Cache</div>
-                  <div class="text-xl font-semibold text-gray-900">
-                    {{ cacheStats().memoryItems }} items
-                  </div>
-                </div>
+                <app-stat-card
+                  label="IndexedDB Storage"
+                  [value]="formatBytes(cacheStats().indexedDB)"
+                ></app-stat-card>
+                <app-stat-card
+                  label="Service Worker Cache"
+                  [value]="formatBytes(cacheStats().swCache)"
+                ></app-stat-card>
+                <app-stat-card
+                  label="Total Items Cached"
+                  [value]="cacheStats().itemCount.toString()"
+                ></app-stat-card>
+                <app-stat-card
+                  label="Memory Cache"
+                  [value]="cacheStats().memoryItems + ' items'"
+                ></app-stat-card>
               </div>
             </div>
 
             <!-- Cache Actions -->
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Cache Actions</h2>
+              <app-section-title variant="subtitle">Cache Actions</app-section-title>
               <div class="flex flex-wrap gap-4">
                 <app-button (clicked)="clearCache('all')" variant="danger">
                   Clear All Cache
@@ -72,13 +83,7 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
             </div>
 
             @if (cacheMessage()) {
-              <div
-                class="p-3 rounded"
-                [class.bg-green-100]="!cacheError()"
-                [class.text-green-800]="!cacheError()"
-                [class.bg-red-100]="cacheError()"
-                [class.text-red-800]="cacheError()"
-              >
+              <div [class]="cacheError() ? 'alert-danger' : 'alert-success'">
                 {{ cacheMessage() }}
               </div>
             }
@@ -87,7 +92,7 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 
         <!-- User Tags Section -->
         <app-card class="block">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">User Tags Management</h2>
+          <app-section-title>User Tags Management</app-section-title>
 
           <!-- Export/Import Section -->
           <div class="mb-8 space-y-4">
@@ -104,51 +109,35 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
             </div>
 
             @if (message()) {
-              <div
-                class="p-3 rounded"
-                [class.bg-green-100]="!isError()"
-                [class.text-green-800]="!isError()"
-                [class.bg-red-100]="isError()"
-                [class.text-red-800]="isError()"
-              >
-                {{ message() }}
-              </div>
+              <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
             }
           </div>
 
           <!-- Current Tags List -->
           <div>
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            <app-section-title variant="subtitle">
               Current Tags ({{ tags().length }})
-            </h2>
+            </app-section-title>
 
             @if (tags().length > 0) {
               <div class="space-y-2">
                 @for (tag of tags(); track tag.username) {
-                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                  <div class="tag-item">
                     <div class="flex items-center gap-3">
-                      <span class="font-medium text-gray-900">{{ tag.username }}</span>
-                      <span
-                        class="px-2 py-1 text-xs text-white rounded"
-                        [style.background-color]="tag.color"
-                      >
+                      <span class="tag-username">{{ tag.username }}</span>
+                      <span class="tag-pill" [style.background-color]="tag.color">
                         {{ tag.tag }}
                       </span>
                     </div>
-                    <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <div class="tag-meta">
                       <span>Added {{ getTimeAgo(tag.createdAt) }}</span>
-                      <button
-                        (click)="removeTag(tag.username)"
-                        class="text-red-600 hover:text-red-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded px-1"
-                      >
-                        Remove
-                      </button>
+                      <button (click)="removeTag(tag.username)" class="tag-remove">Remove</button>
                     </div>
                   </div>
                 }
               </div>
             } @else {
-              <p class="text-gray-500 text-center py-8">
+              <p class="empty">
                 No user tags yet. Tags will appear here when you tag users while browsing.
               </p>
             }
@@ -156,7 +145,7 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 
           <!-- Clear All Button -->
           @if (tags().length > 0) {
-            <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-slate-800">
               <app-button (clicked)="clearAll()" variant="danger"> Clear All Tags </app-button>
             </div>
           }
@@ -164,10 +153,43 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
       </div>
     </app-page-container>
   `,
+  styles: [
+    `
+      @reference '../../../styles.css';
+
+      .alert-success {
+        @apply p-3 rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
+      }
+      .alert-danger {
+        @apply p-3 rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
+      }
+
+      .tag-item {
+        @apply flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-900 rounded border border-transparent dark:border-slate-800;
+      }
+      .tag-username {
+        @apply font-medium text-gray-900 dark:text-gray-100;
+      }
+      .tag-pill {
+        @apply px-2 py-1 text-xs text-white rounded;
+      }
+      .tag-meta {
+        @apply flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400;
+      }
+      .tag-remove {
+        @apply text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded px-1;
+      }
+
+      .empty {
+        @apply text-gray-500 dark:text-gray-400 text-center py-8;
+      }
+    `,
+  ],
 })
 export class SettingsComponent implements OnInit {
   private tagsService = inject(UserTagsService);
   private cacheService = inject(CacheManagerService);
+  themeService = inject(ThemeService);
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');

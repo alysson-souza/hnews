@@ -6,7 +6,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-comments.component';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top.component';
+import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
 import { CacheManagerService } from './services/cache-manager.service';
+import { ThemeService } from './services/theme.service';
 import { VERSION } from './version';
 
 @Component({
@@ -20,6 +22,7 @@ import { VERSION } from './version';
     FormsModule,
     SidebarCommentsComponent,
     ScrollToTopComponent,
+    ThemeToggleComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -29,6 +32,7 @@ export class App implements OnInit, OnDestroy {
   searchQuery = '';
   router = inject(Router);
   cacheService = inject(CacheManagerService);
+  themeService = inject(ThemeService);
   version = VERSION;
 
   isOffline = signal(false);

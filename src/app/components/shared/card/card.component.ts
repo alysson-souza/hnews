@@ -12,6 +12,30 @@ import { CommonModule } from '@angular/common';
       <ng-content></ng-content>
     </div>
   `,
+  styles: [
+    `
+      @reference '../../../../styles.css';
+
+      .card-base {
+        @apply bg-white dark:bg-slate-900;
+        @apply border border-gray-200 dark:border-slate-700;
+        @apply rounded-lg shadow-sm;
+      }
+
+      .card-hoverable {
+        @apply hover:shadow-md dark:hover:shadow-lg;
+        @apply transition-shadow duration-200;
+      }
+
+      .card-clickable {
+        @apply cursor-pointer;
+      }
+
+      .card-padding {
+        @apply p-6;
+      }
+    `,
+  ],
 })
 export class CardComponent {
   @Input() noPadding = false;
@@ -19,11 +43,20 @@ export class CardComponent {
   @Input() clickable = false;
 
   getCardClasses(): string {
-    const baseClasses = 'bg-white border border-gray-200 rounded-lg shadow-sm';
-    const paddingClasses = this.noPadding ? '' : 'p-6';
-    const hoverClasses = this.hoverable ? 'hover:shadow-md transition-shadow duration-200' : '';
-    const clickableClasses = this.clickable ? 'cursor-pointer' : '';
+    const classes = ['card-base'];
 
-    return `${baseClasses} ${paddingClasses} ${hoverClasses} ${clickableClasses}`.trim();
+    if (!this.noPadding) {
+      classes.push('card-padding');
+    }
+
+    if (this.hoverable) {
+      classes.push('card-hoverable');
+    }
+
+    if (this.clickable) {
+      classes.push('card-clickable');
+    }
+
+    return classes.join(' ');
   }
 }

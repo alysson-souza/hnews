@@ -6,98 +6,94 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HackernewsService, HNUser, HNItem } from '../../services/hackernews.service';
 import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
+import { CardComponent } from '../../components/shared/card/card.component';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageContainerComponent],
+  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent],
   template: `
     <app-page-container>
       @if (loading()) {
         <!-- Loading skeleton -->
         <div class="animate-pulse">
-          <div class="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-          <div class="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
+          <div class="skel-title mb-4"></div>
+          <div class="skel-line mb-2"></div>
+          <div class="skel-line w-3/4 mb-8"></div>
           <div class="space-y-4">
-            <div class="h-20 bg-gray-200 rounded"></div>
-            <div class="h-20 bg-gray-200 rounded"></div>
+            <div class="skel-block"></div>
+            <div class="skel-block"></div>
           </div>
         </div>
       } @else if (user()) {
         <!-- User Profile -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ user()!.id }}</h1>
+        <app-card class="block mb-6">
+          <h1 class="user-title">{{ user()!.id }}</h1>
 
           <!-- User Stats -->
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-gray-50 rounded p-3">
-              <div class="text-sm text-gray-600">Karma</div>
-              <div class="text-xl font-semibold text-gray-900">{{ user()!.karma }}</div>
+            <div class="stat-box">
+              <div class="stat-label">Karma</div>
+              <div class="stat-value">{{ user()!.karma }}</div>
             </div>
-            <div class="bg-gray-50 rounded p-3">
-              <div class="text-sm text-gray-600">Member Since</div>
-              <div class="text-xl font-semibold text-gray-900">{{ getDate(user()!.created) }}</div>
+            <div class="stat-box">
+              <div class="stat-label">Member Since</div>
+              <div class="stat-value">{{ getDate(user()!.created) }}</div>
             </div>
-            <div class="bg-gray-50 rounded p-3">
-              <div class="text-sm text-gray-600">Submissions</div>
-              <div class="text-xl font-semibold text-gray-900">
-                {{ user()!.submitted?.length || 0 }}
-              </div>
+            <div class="stat-box">
+              <div class="stat-label">Submissions</div>
+              <div class="stat-value">{{ user()!.submitted?.length || 0 }}</div>
             </div>
           </div>
 
           <!-- About Section -->
           @if (user()!.about) {
             <div class="mb-6">
-              <h2 class="text-lg font-semibold text-gray-900 mb-2">About</h2>
-              <div
-                class="prose prose-sm max-w-none text-gray-800"
-                [innerHTML]="user()!.about"
-              ></div>
+              <h2 class="about-title">About</h2>
+              <div class="about-prose" [innerHTML]="user()!.about"></div>
             </div>
           }
-        </div>
+        </app-card>
 
         <!-- Recent Submissions -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Submissions</h2>
+        <app-card class="block">
+          <h2 class="subs-title">Recent Submissions</h2>
 
           @if (loadingSubmissions()) {
             <div class="animate-pulse space-y-4">
-              <div class="h-16 bg-gray-200 rounded"></div>
-              <div class="h-16 bg-gray-200 rounded"></div>
-              <div class="h-16 bg-gray-200 rounded"></div>
+              <div class="skel-item"></div>
+              <div class="skel-item"></div>
+              <div class="skel-item"></div>
             </div>
           } @else if (submissions().length > 0) {
             <div class="space-y-4">
               @for (item of submissions(); track item.id) {
-                <div class="border-b border-gray-200 pb-4 last:border-0">
+                <div class="sub-item">
                   @if (item.type === 'story') {
                     <!-- Story -->
                     <div>
-                      <h3 class="font-medium text-gray-900 mb-1">
+                      <h3 class="sub-title">
                         @if (item.url) {
                           <a
                             [href]="item.url"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="hover:text-blue-600"
+                            class="title-link"
                           >
                             {{ item.title }}
                           </a>
                         } @else {
-                          <a [routerLink]="['/item', item.id]" class="hover:text-blue-600">
+                          <a [routerLink]="['/item', item.id]" class="title-link">
                             {{ item.title }}
                           </a>
                         }
                       </h3>
-                      <div class="flex items-center gap-3 text-sm text-gray-600">
+                      <div class="sub-meta">
                         <span>{{ item.score || 0 }} points</span>
                         <span>•</span>
                         <span>{{ getTimeAgo(item.time) }}</span>
                         <span>•</span>
-                        <a [routerLink]="['/item', item.id]" class="text-blue-600 hover:underline">
+                        <a [routerLink]="['/item', item.id]" class="sub-meta-link">
                           {{ item.descendants || 0 }} comments
                         </a>
                       </div>
@@ -106,16 +102,13 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
                     <!-- Comment -->
                     <div>
                       <div
-                        class="prose prose-sm max-w-none text-gray-800 mb-2 line-clamp-3"
+                        class="sub-comment prose prose-sm max-w-none mb-2 line-clamp-3"
                         [innerHTML]="item.text"
                       ></div>
-                      <div class="flex items-center gap-3 text-sm text-gray-600">
+                      <div class="sub-meta">
                         <span>{{ getTimeAgo(item.time) }}</span>
                         <span>•</span>
-                        <a
-                          [routerLink]="['/item', item.parent]"
-                          class="text-blue-600 hover:underline"
-                        >
+                        <a [routerLink]="['/item', item.parent]" class="sub-meta-link">
                           View Context
                         </a>
                       </div>
@@ -129,29 +122,107 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
               <button
                 (click)="loadMoreSubmissions()"
                 [disabled]="loadingMore()"
-                class="mt-6 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                class="subs-load-btn"
               >
                 {{ loadingMore() ? 'Loading...' : 'Load More' }}
               </button>
             }
           } @else {
-            <p class="text-gray-500 text-center py-8">No submissions yet</p>
+            <p class="empty">No submissions yet</p>
           }
-        </div>
+        </app-card>
       } @else if (error()) {
         <!-- Error State -->
-        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p class="text-red-800">{{ error() }}</p>
-          <button
-            (click)="loadUser()"
-            class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
+        <div class="error-card">
+          <p class="error-text">{{ error() }}</p>
+          <button (click)="loadUser()" class="error-btn">Try Again</button>
         </div>
       }
     </app-page-container>
   `,
+  styles: [
+    `
+      @reference '../../../styles.css';
+
+      /* Skeleton */
+      .skel-title {
+        @apply h-8 bg-gray-200 dark:bg-slate-800 rounded w-1/4;
+      }
+      .skel-line {
+        @apply h-4 bg-gray-200 dark:bg-slate-800 rounded w-1/2;
+      }
+      .skel-block {
+        @apply h-20 bg-gray-200 dark:bg-slate-800 rounded;
+      }
+      .skel-item {
+        @apply h-16 bg-gray-200 dark:bg-slate-800 rounded;
+      }
+
+      /* Titles */
+      .user-title {
+        @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4;
+      }
+      .about-title,
+      .subs-title {
+        @apply text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 md:mb-4;
+      }
+
+      /* Stats */
+      .stat-box {
+        @apply rounded p-3 bg-gray-50 dark:bg-slate-900 border border-transparent dark:border-slate-800;
+      }
+      .stat-label {
+        @apply text-sm text-gray-600 dark:text-gray-400;
+      }
+      .stat-value {
+        @apply text-xl font-semibold text-gray-900 dark:text-gray-100;
+      }
+
+      /* About */
+      .about-prose {
+        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200;
+      }
+
+      /* Submissions */
+      .sub-item {
+        @apply border-b border-gray-200 dark:border-slate-800 pb-4 last:border-0;
+      }
+      .sub-title {
+        @apply font-medium text-gray-900 dark:text-gray-100 mb-1;
+      }
+      .title-link {
+        @apply hover:text-blue-600 dark:hover:text-blue-400;
+      }
+      .sub-meta {
+        @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
+      }
+      .sub-meta-link {
+        @apply text-blue-600 dark:text-blue-300 hover:underline;
+      }
+      .sub-comment {
+        @apply text-gray-800 dark:text-gray-200;
+      }
+      .subs-load-btn {
+        @apply mt-6 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50;
+      }
+
+      /* Empty */
+      .empty {
+        @apply text-gray-500 dark:text-gray-400 text-center py-8;
+      }
+
+      /* Error */
+      .error-card {
+        @apply bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center;
+      }
+      .error-text {
+        @apply text-red-800 dark:text-red-300;
+      }
+      .error-btn {
+        @apply mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500;
+      }
+    `,
+  ],
 })
 export class UserComponent implements OnInit {
   private route = inject(ActivatedRoute);

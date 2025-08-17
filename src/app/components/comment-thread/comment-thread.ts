@@ -3,14 +3,166 @@
 import { Component, Input, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HackernewsService, HNItem } from '../../services/hackernews.service';
-import { UserTagComponent } from '../user-tag/user-tag.component';
+import { ThreadGutterComponent } from '../thread-gutter/thread-gutter.component';
+import { CommentHeaderComponent } from '../comment-header/comment-header.component';
+import { CommentTextComponent } from '../comment-text/comment-text.component';
+import { LazyLoadCardComponent } from '../lazy-load-card/lazy-load-card.component';
+import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
 
 @Component({
   selector: 'app-comment-thread',
   standalone: true,
-  imports: [CommonModule, CommentThread, UserTagComponent],
-  templateUrl: './comment-thread.html',
-  styleUrl: './comment-thread.css',
+  imports: [
+    CommonModule,
+    CommentThread,
+    ThreadGutterComponent,
+    CommentHeaderComponent,
+    CommentTextComponent,
+    LazyLoadCardComponent,
+    CommentSkeletonComponent,
+  ],
+  template: `
+    @if (showLoadButton()) {
+      <app-lazy-load-card [depth]="depth" [loading]="loading()" (loadMore)="loadComment()" />
+    } @else if (loading()) {
+      <app-comment-skeleton [depth]="depth" />
+    } @else if (comment()) {
+      <app-thread-gutter
+        [depth]="depth"
+        [clickable]="true"
+        [collapsed]="isCollapsed()"
+        (toggleThread)="toggleCollapse()"
+      >
+        <div header>
+          <app-comment-header
+            [by]="comment()!.by || ''"
+            [timestamp]="comment()!.time"
+            [voted]="hasVoted()"
+            [repliesCount]="totalRepliesCount()"
+            [showExpand]="showExpandButton()"
+            [loadingReplies]="loadingReplies()"
+            (upvote)="upvoteComment()"
+            (expand)="expandReplies()"
+          />
+        </div>
+        <div body>
+          @if (!isCollapsed()) {
+            <app-comment-text [html]="comment()!.text || ''" />
+
+            @if (replies().length > 0 || loadingReplies()) {
+              <div class="mt-2">
+                @if (loadingReplies() && replies().length === 0) {
+                  <div class="replies-loading">
+                    <div class="loading-inline">
+                      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Loading replies...
+                    </div>
+                  </div>
+                }
+
+                @for (reply of replies(); track reply.id) {
+                  @if (reply.kids && reply.kids.length > 0) {
+                    <app-comment-thread
+                      [commentId]="reply.id"
+                      [depth]="depth + 1"
+                      [lazyLoad]="true"
+                    ></app-comment-thread>
+                  } @else {
+                    <app-thread-gutter [depth]="depth + 1" [clickable]="false" [collapsed]="false">
+                      <div header>
+                        <app-comment-header
+                          [by]="reply.by || ''"
+                          [timestamp]="reply.time"
+                          [voted]="hasVotedById(reply.id)"
+                          [repliesCount]="0"
+                          [showExpand]="false"
+                          [loadingReplies]="false"
+                          (upvote)="upvoteById(reply.id)"
+                        />
+                      </div>
+                      <div body>
+                        <app-comment-text [html]="reply.text || ''" />
+                      </div>
+                    </app-thread-gutter>
+                  }
+                }
+
+                @if (hasMoreReplies()) {
+                  <div class="mt-3 ml-2 sm:ml-4">
+                    <button
+                      (click)="loadMoreReplies()"
+                      [disabled]="loadingMore()"
+                      class="load-more-btn"
+                    >
+                      @if (loadingMore()) {
+                        <span class="flex items-center gap-1">
+                          <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle
+                              class="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                            ></circle>
+                            <path
+                              class="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Loading...
+                        </span>
+                      } @else {
+                        Load {{ remainingRepliesCount }} more replies
+                      }
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          } @else {
+            <span class="collapsed-text">[collapsed]</span>
+          }
+        </div>
+      </app-thread-gutter>
+    }
+  `,
+  styles: [
+    `
+      @reference '../../../styles.css';
+
+      /* Loading states */
+      .loading-inline {
+        @apply flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500;
+      }
+      .replies-loading {
+        @apply ml-2 sm:ml-4 py-2;
+      }
+      /* Buttons */
+      .load-more-btn {
+        @apply px-3 py-1 text-xs sm:text-sm bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-300 rounded-md hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+      }
+      /* Misc */
+      .collapsed-text {
+        @apply text-sm text-gray-500 dark:text-gray-400 italic;
+      }
+    `,
+  ],
 })
 export class CommentThread implements OnInit {
   @Input({ required: true }) commentId!: number;
@@ -179,6 +331,18 @@ export class CommentThread implements OnInit {
     this.votedComments.set(newVoted);
 
     // Save to localStorage
+    localStorage.setItem('votedComments', JSON.stringify(Array.from(newVoted)));
+  }
+
+  hasVotedById(id: number): boolean {
+    return this.votedComments().has(id);
+  }
+
+  upvoteById(id: number) {
+    if (this.votedComments().has(id)) return;
+    const newVoted = new Set(this.votedComments());
+    newVoted.add(id);
+    this.votedComments.set(newVoted);
     localStorage.setItem('votedComments', JSON.stringify(Array.from(newVoted)));
   }
 

@@ -7,34 +7,35 @@ import { HackernewsService, HNItem } from '../../services/hackernews.service';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
+import { CardComponent } from '../../components/shared/card/card.component';
 
 @Component({
   selector: 'app-item',
   standalone: true,
-  imports: [CommonModule, CommentThread, RouterLink, PageContainerComponent],
+  imports: [CommonModule, CommentThread, RouterLink, PageContainerComponent, CardComponent],
   template: `
     <app-page-container>
       @if (loading()) {
         <!-- Loading skeleton -->
         <div class="animate-pulse">
-          <div class="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div class="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div class="skel-title mb-4"></div>
+          <div class="skel-subtitle mb-8"></div>
           <div class="space-y-4">
-            <div class="h-20 bg-gray-200 rounded"></div>
-            <div class="h-20 bg-gray-200 rounded"></div>
+            <div class="skel-block"></div>
+            <div class="skel-block"></div>
           </div>
         </div>
       } @else if (item()) {
         <!-- Story Details -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <app-card class="block mb-6">
           <!-- Title -->
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">
+          <h1 class="item-title">
             @if (item()!.url) {
               <a
                 [href]="item()!.url"
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                class="hover:text-blue-600"
+                class="title-link"
               >
                 {{ item()!.title }}
               </a>
@@ -44,12 +45,12 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
           </h1>
 
           <!-- Metadata -->
-          <div class="flex items-center gap-3 text-sm text-gray-600 mb-4">
+          <div class="item-meta mb-4">
             <span>{{ item()!.score || 0 }} points</span>
             <span>•</span>
             <span
               >by
-              <a [routerLink]="['/user', item()!.by]" class="text-blue-600 hover:underline">
+              <a [routerLink]="['/user', item()!.by]" class="meta-link">
                 {{ item()!.by }}
               </a>
             </span>
@@ -61,18 +62,13 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 
           <!-- Story Text (for Ask HN, etc.) -->
           @if (item()!.text) {
-            <div
-              class="prose prose-lg max-w-none text-gray-800 mb-4"
-              [innerHTML]="item()!.text"
-            ></div>
+            <div class="item-prose" [innerHTML]="item()!.text"></div>
           }
-        </div>
+        </app-card>
 
         <!-- Comments Section -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-4">
-            Comments ({{ item()!.descendants || 0 }})
-          </h2>
+        <app-card class="block">
+          <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
 
           @if (visibleComments().length > 0) {
             <div class="space-y-4">
@@ -92,7 +88,7 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
                 <button
                   (click)="loadMoreComments()"
                   [disabled]="loadingMoreComments()"
-                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  class="comments-load-btn"
                 >
                   @if (loadingMoreComments()) {
                     <span class="flex items-center gap-2">
@@ -120,23 +116,79 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
               </div>
             }
           } @else {
-            <p class="text-gray-500 text-center py-8">No comments yet</p>
+            <p class="empty">No comments yet</p>
           }
-        </div>
+        </app-card>
       } @else if (error()) {
         <!-- Error State -->
-        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p class="text-red-800">{{ error() }}</p>
-          <button
-            (click)="loadItem()"
-            class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
+        <div class="error-card">
+          <p class="error-text">{{ error() }}</p>
+          <button (click)="loadItem()" class="error-btn">Try Again</button>
         </div>
       }
     </app-page-container>
   `,
+  styles: [
+    `
+      @reference '../../../styles.css';
+
+      /* Skeleton */
+      .skel-title {
+        @apply h-8 bg-gray-200 dark:bg-slate-800 rounded w-3/4;
+      }
+      .skel-subtitle {
+        @apply h-4 bg-gray-200 dark:bg-slate-800 rounded w-1/2;
+      }
+      .skel-block {
+        @apply h-20 bg-gray-200 dark:bg-slate-800 rounded;
+      }
+
+      /* Titles */
+      .item-title {
+        @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2;
+      }
+      .comments-title {
+        @apply text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4;
+      }
+      .title-link {
+        @apply hover:text-blue-600 dark:hover:text-blue-400;
+      }
+
+      /* Metadata */
+      .item-meta {
+        @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
+      }
+      .meta-link {
+        @apply text-blue-600 dark:text-blue-300 hover:underline;
+      }
+
+      /* Body */
+      .item-prose {
+        @apply prose prose-lg max-w-none text-gray-800 dark:text-gray-200 mb-4;
+      }
+
+      /* Buttons */
+      .comments-load-btn {
+        @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+      }
+
+      /* Empty */
+      .empty {
+        @apply text-gray-500 dark:text-gray-400 text-center py-8;
+      }
+
+      /* Error */
+      .error-card {
+        @apply bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center;
+      }
+      .error-text {
+        @apply text-red-800 dark:text-red-300;
+      }
+      .error-btn {
+        @apply mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500;
+      }
+    `,
+  ],
 })
 export class ItemComponent implements OnInit {
   private route = inject(ActivatedRoute);

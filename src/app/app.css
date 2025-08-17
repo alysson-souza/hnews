@@ -1,0 +1,102 @@
+@config '../../tailwind.config.js';
+@reference '../styles.css';
+
+/* Header Styles */
+.app-header {
+  @apply sticky top-0 z-40 shadow-lg;
+  @apply bg-gradient-to-r from-blue-600 to-blue-700;
+  @apply dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue;
+}
+
+.app-logo-container {
+  @apply bg-white dark:bg-slate-800 rounded p-1;
+}
+
+.app-logo-icon {
+  @apply w-6 h-6 sm:w-8 sm:h-8;
+  @apply text-blue-600 dark:text-blue-300;
+}
+
+/* Navigation Link Styles */
+.nav-link {
+  @apply text-white px-4 py-2 rounded;
+  @apply hover:bg-blue-800 dark:hover:bg-blue-800;
+  @apply transition-colors cursor-pointer;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white;
+}
+
+.nav-link-active {
+  @apply bg-blue-800 dark:bg-blue-800;
+}
+
+/* Search Input Styles */
+.search-input {
+  @apply w-64 px-4 py-2 rounded-lg;
+  @apply text-gray-900 dark:text-gray-100;
+  @apply placeholder-gray-500 dark:placeholder-gray-300;
+  @apply bg-white dark:bg-slate-900;
+  @apply focus:outline-none focus:ring-2;
+  @apply focus:ring-white dark:focus:ring-blue-300;
+}
+
+.search-button {
+  @apply absolute right-2 top-2.5;
+  @apply text-gray-500 dark:text-blue-300;
+  @apply hover:text-gray-700 dark:hover:text-blue-200;
+  @apply cursor-pointer;
+}
+
+/* Mobile Menu Styles */
+.mobile-menu-button {
+  @apply p-2 text-white rounded-lg transition-colors;
+  @apply hover:bg-blue-800 dark:hover:bg-blue-800;
+}
+
+.mobile-nav-link {
+  @apply block text-white px-4 py-3 transition-colors;
+  @apply hover:bg-blue-800 dark:hover:bg-blue-800;
+}
+
+.mobile-nav-link-active {
+  @apply bg-blue-800 dark:bg-blue-800;
+}
+
+/* Main Content Area */
+.main-content {
+  @apply min-h-screen;
+  @apply bg-gray-50 dark:bg-blue-950;
+}
+
+/* Footer Styles */
+.app-footer {
+  @apply bg-gray-800 dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue;
+  @apply text-white py-8 mt-12 relative;
+}
+
+.footer-text {
+  @apply text-sm;
+}
+
+.footer-subtext {
+  @apply text-xs mt-2;
+  @apply text-gray-400 dark:text-blue-200;
+}
+
+/* Status Banner Styles */
+.offline-banner {
+  @apply fixed top-0 left-0 right-0 z-50 transition-all duration-300;
+}
+
+.offline-banner-yellow {
+  @apply bg-yellow-500 dark:bg-yellow-600;
+}
+
+.offline-banner-green {
+  @apply bg-green-500 dark:bg-green-600;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  @apply p-2 text-white rounded-lg transition-colors;
+  @apply hover:bg-blue-800 dark:hover:bg-blue-800;
+}

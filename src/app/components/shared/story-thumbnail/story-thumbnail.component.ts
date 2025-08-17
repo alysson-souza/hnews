@@ -9,10 +9,10 @@ import { OpenGraphData } from '../../../services/opengraph.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="w-20 h-20 relative overflow-hidden">
+    <div class="thumb">
       @if (isTextPost) {
         <!-- Text post placeholder -->
-        <div class="w-full h-full bg-gray-100 flex items-center justify-center">
+        <div class="thumb-placeholder">
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -24,7 +24,7 @@ import { OpenGraphData } from '../../../services/opengraph.service';
         </div>
       } @else if (loading) {
         <!-- Loading skeleton -->
-        <div class="w-full h-full bg-gray-200 animate-pulse"></div>
+        <div class="thumb-skeleton"></div>
       } @else if (ogData?.image) {
         <!-- OpenGraph image -->
         <a
@@ -32,12 +32,12 @@ import { OpenGraphData } from '../../../services/opengraph.service';
           target="_blank"
           rel="noopener noreferrer nofollow"
           (click)="handleLinkClick()"
-          class="block w-full h-full hover:opacity-90 transition-opacity"
+          class="thumb-link"
         >
           <img
             [src]="ogData!.image"
             [alt]="'Thumbnail for ' + storyTitle"
-            class="w-full h-full object-cover"
+            class="thumb-img-cover"
             loading="lazy"
             (error)="handleImageError($event)"
           />
@@ -49,12 +49,12 @@ import { OpenGraphData } from '../../../services/opengraph.service';
           target="_blank"
           rel="noopener noreferrer nofollow"
           (click)="handleLinkClick()"
-          class="block w-full h-full bg-gray-100 hover:opacity-90 transition-opacity"
+          class="thumb-link"
         >
           <img
             [src]="ogData?.favicon || '/assets/default-thumb.svg'"
             [alt]="'Favicon for ' + storyTitle"
-            class="w-full h-full object-contain"
+            class="thumb-img-contain"
             loading="lazy"
             (error)="handleImageError($event)"
           />
@@ -62,6 +62,30 @@ import { OpenGraphData } from '../../../services/opengraph.service';
       }
     </div>
   `,
+  styles: [
+    `
+      @reference '../../../../styles.css';
+
+      .thumb {
+        @apply w-20 h-20 relative overflow-hidden rounded-md border border-gray-200 dark:border-slate-800 bg-gray-100 dark:bg-slate-700;
+      }
+      .thumb-link {
+        @apply block w-full h-full hover:opacity-90 transition-opacity;
+      }
+      .thumb-img-cover {
+        @apply w-full h-full object-cover;
+      }
+      .thumb-img-contain {
+        @apply w-full h-full object-contain;
+      }
+      .thumb-placeholder {
+        @apply w-full h-full flex items-center justify-center;
+      }
+      .thumb-skeleton {
+        @apply w-full h-full bg-gray-200 dark:bg-slate-800 animate-pulse;
+      }
+    `,
+  ],
 })
 export class StoryThumbnailComponent {
   @Input() storyUrl?: string;

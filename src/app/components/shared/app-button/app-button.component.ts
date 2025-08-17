@@ -19,6 +19,58 @@ import { CommonModule } from '@angular/common';
       <ng-content></ng-content>
     </button>
   `,
+  styles: [
+    `
+      @reference '../../../../styles.css';
+
+      .btn-base {
+        @apply font-medium rounded transition-all duration-200 cursor-pointer;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+        @apply dark:focus-visible:ring-offset-gray-900;
+      }
+
+      .btn-primary {
+        @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white;
+        @apply hover:from-blue-700 hover:to-blue-800;
+        @apply dark:from-blue-500 dark:to-blue-600;
+        @apply dark:hover:from-blue-600 dark:hover:to-blue-700;
+        @apply focus-visible:ring-blue-500;
+      }
+
+      .btn-secondary {
+        @apply bg-gray-200 text-gray-800;
+        @apply hover:bg-gray-300;
+        @apply dark:bg-slate-700 dark:text-gray-200;
+        @apply dark:hover:bg-slate-600;
+        @apply focus-visible:ring-gray-500;
+      }
+
+      .btn-danger {
+        @apply bg-gradient-to-r from-red-600 to-red-700 text-white;
+        @apply hover:from-red-700 hover:to-red-800;
+        @apply dark:from-red-500 dark:to-red-600;
+        @apply dark:hover:from-red-600 dark:hover:to-red-700;
+        @apply focus-visible:ring-red-500;
+      }
+
+      .btn-sm {
+        @apply px-3 py-1.5 text-sm;
+      }
+      .btn-md {
+        @apply px-4 py-2;
+      }
+      .btn-lg {
+        @apply px-6 py-3 text-lg;
+      }
+
+      .btn-disabled {
+        @apply opacity-50 cursor-not-allowed;
+      }
+      .btn-full {
+        @apply w-full;
+      }
+    `,
+  ],
 })
 export class AppButtonComponent {
   @Input() variant: 'primary' | 'secondary' | 'danger' = 'primary';
@@ -31,26 +83,16 @@ export class AppButtonComponent {
   @Output() clicked = new EventEmitter<Event>();
 
   getButtonClasses(): string {
-    const baseClasses =
-      'font-medium rounded transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+    const classes = ['btn-base', `btn-${this.variant}`, `btn-${this.size}`];
 
-    const sizeClasses = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2',
-      lg: 'px-6 py-3 text-lg',
-    };
+    if (this.disabled) {
+      classes.push('btn-disabled');
+    }
 
-    const variantClasses = {
-      primary:
-        'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 focus-visible:ring-blue-500',
-      secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus-visible:ring-gray-500',
-      danger:
-        'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus-visible:ring-red-500',
-    };
+    if (this.fullWidth) {
+      classes.push('btn-full');
+    }
 
-    const disabledClasses = this.disabled ? 'opacity-50 cursor-not-allowed' : '';
-    const widthClasses = this.fullWidth ? 'w-full' : '';
-
-    return `${baseClasses} ${sizeClasses[this.size]} ${variantClasses[this.variant]} ${disabledClasses} ${widthClasses}`.trim();
+    return classes.join(' ');
   }
 }
