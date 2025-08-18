@@ -4,60 +4,60 @@
     <div class="visited-indicator" [title]="'You Have Visited This Story'"></div>
   }
 
-  <!-- Mobile Layout Container -->
-  <div class="flex sm:hidden items-stretch w-full">
+  <!-- Responsive Vote Section -->
+  @if (!deviceService.isDesktop()) {
     <!-- Mobile Vote Section (No Thumbnails) -->
-    <div class="vote-section-mobile">
-      <div class="flex items-center gap-3">
-        <button
-          (click)="upvote()"
-          class="vote-button"
-          [class.vote-button-active]="!hasVoted()"
-          [class.vote-button-voted]="hasVoted()"
-          [disabled]="hasVoted()"
-          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-          [attr.aria-pressed]="hasVoted()"
-          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-        >
-          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-          </svg>
-        </button>
-        <span
-          class="vote-count text-xl"
-          [class.vote-count-active]="!hasVoted()"
-          [class.vote-count-voted]="hasVoted()"
-        >
-          {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
-        </span>
-      </div>
+    <div
+      class="vote-section-mobile flex items-center gap-3 w-full md:w-20 md:max-w-20 md:mx-auto md:px-0"
+    >
+      <button
+        (click)="upvote()"
+        class="vote-button"
+        [class.vote-button-active]="!hasVoted()"
+        [class.vote-button-voted]="hasVoted()"
+        [disabled]="hasVoted()"
+        [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+        [attr.aria-pressed]="hasVoted()"
+        [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+      >
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
+        </svg>
+      </button>
+      <span
+        class="vote-count text-xl"
+        [class.vote-count-active]="!hasVoted()"
+        [class.vote-count-voted]="hasVoted()"
+      >
+        {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
+      </span>
     </div>
-  </div>
-
-  <!-- Desktop Vote Section -->
-  <div class="vote-section hidden sm:flex flex-col">
-    <button
-      (click)="upvote()"
-      class="vote-button"
-      [class.vote-button-active]="!hasVoted()"
-      [class.vote-button-voted]="hasVoted()"
-      [disabled]="hasVoted()"
-      [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-      [attr.aria-pressed]="hasVoted()"
-      [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-    >
-      <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-      </svg>
-    </button>
-    <span
-      class="vote-count text-2xl"
-      [class.vote-count-active]="!hasVoted()"
-      [class.vote-count-voted]="hasVoted()"
-    >
-      {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
-    </span>
-  </div>
+  } @else {
+    <!-- Desktop Vote Section -->
+    <div class="vote-section flex flex-col w-[100px] flex-shrink-0">
+      <button
+        (click)="upvote()"
+        class="vote-button"
+        [class.vote-button-active]="!hasVoted()"
+        [class.vote-button-voted]="hasVoted()"
+        [disabled]="hasVoted()"
+        [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+        [attr.aria-pressed]="hasVoted()"
+        [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+      >
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
+        </svg>
+      </button>
+      <span
+        class="vote-count text-2xl"
+        [class.vote-count-active]="!hasVoted()"
+        [class.vote-count-voted]="hasVoted()"
+      >
+        {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
+      </span>
+    </div>
+  }
 
   <!-- Desktop Thumbnail -->
   <div class="hidden sm:flex flex-shrink-0 w-28 items-center justify-center p-3">
