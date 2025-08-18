@@ -17,6 +17,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 - Caching: Multi-layer cache (memory, IndexedDB, Service Worker, localStorage)
 - PWA-ready: Angular Service Worker enabled in production builds
 - Responsive UI: Optimized for desktop, tablet, and mobile
+- HN-compatible routes (e.g., `/item?id=123`, `/user?id=pg`)
 
 ## Tech Stack
 
@@ -60,39 +61,9 @@ App runs at `http://localhost:4200`.
 
 See `DEPLOYMENT.md` for deployment options.
 
-## Project Structure
+## Contributing
 
-```
-src/
-├── app/
-│   ├── components/            # UI building blocks (story, comments, shared)
-│   ├── pages/                 # top/best/newest, item, user, search, settings
-│   ├── services/              # HN API, caching, OpenGraph, tags, etc.
-│   ├── config/                # API config providers
-│   └── app.routes.ts          # Routes (HN-compatible aliases supported)
-└── public/                    # PWA manifest, icons, assets
-```
-
-## API Endpoints
-
-- Hacker News Firebase: `https://hacker-news.firebaseio.com/v0/`
-- Algolia HN Search: `https://hn.algolia.com/api/v1/`
-- Microlink (Open Graph): `https://api.microlink.io/`
-- LinkPreview (Open Graph): `https://api.linkpreview.net/`
-- OpenGraph.io (Open Graph): `https://opengraph.io/api/1.1/site/`
-
-## Caching Strategy
-
-- Story lists: ~5 minutes (IndexedDB + memory)
-- Items: ~30 minutes (IndexedDB + memory)
-- User profiles: ~1 hour (IndexedDB + memory)
-- Open Graph: ~24 hours (IndexedDB + SW fallback)
-- Preferences and vote state: localStorage (no expiry)
-
-## Notes
-
-- HN-compatible routes are supported (e.g., `/item?id=123`, `/user?id=pg`).
-- Service Worker is enabled only in production builds.
+See `CONTRIBUTING.md` for development scripts, testing, and code style.
 
 ## License
 
