@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main, master]
+    paths:
+      - '**/*.{ts,html,css,scss,sass,less,js,json,svg,png,jpg,jpeg,gif,webp,ico,webmanifest}'
+      - '!**/*.spec.ts'
+      - '!.vscode/**'
+      - '!.husky/**'
+      - '.nvmrc'
   workflow_dispatch:
 
 permissions:
