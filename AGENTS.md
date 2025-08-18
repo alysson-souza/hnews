@@ -1,60 +1,47 @@
-# AGENTS.md
+# Repository Guidelines
 
-This file provides guidance to LLMs when working with code in this repository.
+## Project Structure & Module Organization
 
-For commands and setup: @README.md
-For deployment: @DEPLOYMENT.md
+- `src/app/components`: Reusable UI (story list/item, comments, shared widgets).
+- `src/app/pages`: Route-level features (top/best/newest, item, user, search, settings).
+- `src/app/services`: Data, caching, and Open Graph providers.
+- `src/app/config`: API configuration providers.
+- `public/`: PWA manifest, icons, static assets.
+- Tests live next to code as `*.spec.ts` (e.g., `src/app/app.spec.ts`).
 
-## Architecture
+## Build, Test, and Development Commands
 
-Angular 20 Hacker News reader with:
+- `npm start`: Run dev server at `http://localhost:4200`.
+- `npm run build`: Development build (outputs to `dist/hnews`).
+- `npm run build:prod`: Production build; pass `--base-href` when needed (e.g., `-- --base-href=/hnews/`).
+- `npm test`: Unit tests (Karma + Jasmine).
+- `npm run lint` / `npm run lint:fix`: ESLint check/fix.
+- `npm run format` / `npm run format:check`: Prettier write/check.
+- `npm run deploy`: Deploy to GitHub Pages (via `angular-cli-ghpages`).
 
-- Standalone components with signals
-- Lazy-loaded routes via dynamic imports
-- Service-based state management with RxJS
-- LocalStorage for persistence (votes, visited stories, user tags)
+## Coding Style & Naming Conventions
 
-## Core Services
+- Indentation: 2 spaces; UTF‑8; trim trailing whitespace (`.editorconfig`).
+- TypeScript: single quotes; line width ~100 (Prettier).
+- Angular selectors: components `app-` (kebab-case), directives `app` (camelCase) per ESLint rules.
+- Filenames: `kebab-case` for files; classes use `PascalCase` with suffixes (`FooComponent`, `BarService`).
+- Tools: ESLint (angular-eslint), Prettier, Husky + lint-staged on pre-commit.
 
-**HackernewsService** (`src/app/services/hackernews.service.ts`)
+## Testing Guidelines
 
-- HN Firebase API integration
-- All story types (top, best, newest, ask, show, jobs)
-- Items and user data
+- Framework: Karma + Jasmine; ChromeHeadless/Safari launchers.
+- Place tests as `*.spec.ts` beside the unit under test.
+- Run `npm test` for watch mode; generate coverage with `ng test --watch=false --code-coverage` (outputs to `coverage/hnews`).
+- Prefer shallow tests for components and focused service specs; mock network calls.
 
-**CacheService** (`src/app/services/cache.service.ts`)
+## Commit & Pull Request Guidelines
 
-- TTL-based caching: Story lists (5m), Items (30m), Users (1h), Open Graph (24h)
+- Use Conventional Commits: `feat:`, `fix:`, `docs:`, `build:`, `test:`, `refactor:`… (see git history).
+- PRs: include a concise summary, linked issues (`Fixes #123`), and screenshots for UI changes.
+- CI: ensure `npm run lint` and `npm test` pass; verify `npm run build:prod` for critical UI changes.
 
-**OpengraphService** (`src/app/services/opengraph.service.ts`)
+## Security & Configuration Tips
 
-- Fetches Open Graph metadata via Microlink API
-
-**SidebarService** - Side-by-side comment viewing
-**UserTagsService** - Custom user tags in localStorage
-**VisitedService** - Track read/unread stories
-**RateLimiter** - Prevent API limit hits
-**DeviceService** - Mobile/tablet/desktop detection
-
-## Key Patterns
-
-- Components use `inject()` for DI
-- Recursive `CommentThread` component for nested comments
-- Signal-based reactive state
-- Routes: `/top`, `/best`, `/newest`, `/ask`, `/show`, `/jobs`, `/item/:id`, `/user/:id`, `/search`
-
-## APIs
-
-- HN Firebase: `https://hacker-news.firebaseio.com/v0/`
-- Algolia Search: `https://hn.algolia.com/api/v1/`
-- Microlink: `https://api.microlink.io/`
-
-## Linting
-
-```bash
-npm run lint       # ESLint
-npm run lint:fix   # ESLint with fix
-npm run format     # Prettier
-```
-
-Optional git hooks via Husky - see package.json for lint-staged config.
+- Never commit secrets. Copy `.env.example` to `.env` locally (e.g., `MICROLINK_API_KEY`).
+- For CI/CD and Pages deploys, use repository secrets; workflow infers `--base-href` for forks.
+- Node: use `.nvmrc` (Node 22.x). NPM 11+ recommended.
