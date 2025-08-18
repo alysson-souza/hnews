@@ -87,7 +87,8 @@
               "src/service-worker.js",
               "src/manifest.json"
             ],
-            "styles": ["src/styles.css"]
+            "styles": ["src/styles.css"],
+            "karmaConfig": "karma.conf.js"
           }
         },
         "lint": {
