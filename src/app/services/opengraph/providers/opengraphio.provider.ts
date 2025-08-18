@@ -33,7 +33,7 @@ export class OpenGraphIOProvider implements OpenGraphProvider {
   ) {}
 
   isEnabled(): boolean {
-    return !!this.apiConfig.opengraphio?.appId;
+    return !!this.apiConfig.opengraphio?.appId; // requires real App ID
   }
 
   fetch(url: string): Observable<OpenGraphData> {

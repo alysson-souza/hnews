@@ -4,16 +4,33 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../../services/theme.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-theme-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FontAwesomeModule],
   template: `
     <div class="theme-selector">
-      <h2 class="section-subtitle">Select Theme</h2>
+      <h2 class="section-subtitle">Theme</h2>
 
-      <div class="theme-options">
+      <div class="theme-options" role="radiogroup" aria-label="Theme selection">
+        <label class="theme-option">
+          <input
+            type="radio"
+            name="theme"
+            [checked]="themeService.theme() === 'auto'"
+            (change)="themeService.setTheme('auto')"
+            class="theme-radio"
+            aria-label="Auto theme"
+          />
+          <span class="theme-label">
+            <fa-icon [icon]="faCircleHalfStroke"></fa-icon>
+            <span class="ml-2">Auto (system)</span>
+          </span>
+        </label>
+
         <label class="theme-option">
           <input
             type="radio"
@@ -21,8 +38,12 @@ import { ThemeService } from '../../../services/theme.service';
             [checked]="themeService.theme() === 'light'"
             (change)="themeService.setTheme('light')"
             class="theme-radio"
+            aria-label="Light theme"
           />
-          <span class="theme-label"> ☀️ Light Mode </span>
+          <span class="theme-label">
+            <fa-icon [icon]="faSun"></fa-icon>
+            <span class="ml-2">Light</span>
+          </span>
         </label>
 
         <label class="theme-option">
@@ -32,29 +53,13 @@ import { ThemeService } from '../../../services/theme.service';
             [checked]="themeService.theme() === 'dark'"
             (change)="themeService.setTheme('dark')"
             class="theme-radio"
+            aria-label="Dark theme"
           />
-          <span class="theme-label"> 🌙 Dark Mode </span>
+          <span class="theme-label">
+            <fa-icon [icon]="faMoon"></fa-icon>
+            <span class="ml-2">Dark</span>
+          </span>
         </label>
-
-        <label class="theme-option">
-          <input
-            type="radio"
-            name="theme"
-            [checked]="themeService.theme() === 'auto'"
-            (change)="themeService.setTheme('auto')"
-            class="theme-radio"
-          />
-          <span class="theme-label"> 🔄 Auto (follows system preference) </span>
-        </label>
-      </div>
-
-      <div class="theme-status">
-        <p class="theme-status-text">
-          Current theme: <strong>{{ themeService.theme() }}</strong>
-          @if (themeService.theme() === 'auto') {
-            (currently <strong>{{ themeService.effectiveTheme() }}</strong> based on system)
-          }
-        </p>
       </div>
     </div>
   `,
@@ -86,16 +91,13 @@ import { ThemeService } from '../../../services/theme.service';
         @apply text-gray-700 dark:text-gray-300;
       }
 
-      .theme-status {
-        @apply mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg;
-      }
-
-      .theme-status-text {
-        @apply text-sm text-gray-600 dark:text-gray-400;
-      }
+      /* Removed redundant status block */
     `,
   ],
 })
 export class ThemeSelectorComponent {
   themeService = inject(ThemeService);
+  protected faSun = faSun;
+  protected faMoon = faMoon;
+  protected faCircleHalfStroke = faCircleHalfStroke;
 }

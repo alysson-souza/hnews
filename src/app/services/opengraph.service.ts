@@ -6,6 +6,7 @@ import { Observable, of, catchError, map, from, switchMap, merge, timer, timeout
 import { CacheManagerService } from './cache-manager.service';
 import { RateLimiterService } from './rate-limiter.service';
 import { API_CONFIG } from '../config/api.config';
+import type { ApiConfig } from '../config/api.config';
 import { OpenGraphData } from './opengraph/opengraph.types';
 export type { OpenGraphData } from './opengraph/opengraph.types';
 import { OpenGraphProvider } from './opengraph/opengraph.provider';
@@ -13,6 +14,7 @@ import { MicrolinkProvider } from './opengraph/providers/microlink.provider';
 import { LinkPreviewProvider } from './opengraph/providers/linkpreview.provider';
 import { OpenGraphIOProvider } from './opengraph/providers/opengraphio.provider';
 import { QuotaGuardService } from './opengraph/quota-guard.service';
+import { UserSettingsService } from './user-settings.service';
 
 @Injectable({
   providedIn: 'root',
@@ -23,6 +25,7 @@ export class OpenGraphService {
   private rateLimiter = inject(RateLimiterService);
   private apiConfig = inject(API_CONFIG);
   private quota = inject(QuotaGuardService);
+  private userSettings = inject(UserSettingsService);
 
   // Circuit breaker for failed URLs
   private failedUrls = new Set<string>();
@@ -88,18 +91,8 @@ export class OpenGraphService {
     const providers: OpenGraphProvider[] = this.buildProviders();
 
     if (providers.length === 0) {
-      // Fallback to Microlink even if no keys configured
-      const microlinkOnly = new MicrolinkProvider(
-        this.http,
-        this.rateLimiter,
-        this.apiConfig,
-        this.quota,
-        {
-          getSafeFaviconUrl: (u) => this.getSafeFaviconUrl(u),
-          FALLBACK_ICON: this.FALLBACK_ICON,
-        },
-      );
-      return microlinkOnly.fetch(url);
+      // No providers configured/enabled -> return default (no external calls)
+      return of(this.getDefaultData(url));
     }
 
     // Hedged requests: start first provider immediately, then stagger others
@@ -157,24 +150,29 @@ export class OpenGraphService {
       FALLBACK_ICON: this.FALLBACK_ICON,
     };
 
+    const effective = this.mergeApiConfig(
+      this.apiConfig,
+      this.userSettings.getApiConfigOverrides(),
+    );
+
     const linkPreview = new LinkPreviewProvider(
       this.http,
       this.rateLimiter,
-      this.apiConfig,
+      effective,
       this.quota,
       fallbacks,
     );
     const microlink = new MicrolinkProvider(
       this.http,
       this.rateLimiter,
-      this.apiConfig,
+      effective,
       this.quota,
       fallbacks,
     );
     const ogio = new OpenGraphIOProvider(
       this.http,
       this.rateLimiter,
-      this.apiConfig,
+      effective,
       this.quota,
       fallbacks,
     );
@@ -185,6 +183,24 @@ export class OpenGraphService {
     if (microlink.isEnabled()) ordered.push(microlink);
     if (ogio.isEnabled()) ordered.push(ogio);
     return ordered;
+  }
+
+  private mergeApiConfig(base: ApiConfig, overrides: ApiConfig): ApiConfig {
+    const out: ApiConfig = {
+      microlink: { ...(base?.microlink || {}) },
+      linkpreview: { ...(base?.linkpreview || {}) },
+      opengraphio: { ...(base?.opengraphio || {}) },
+    };
+    if (overrides?.microlink) {
+      out.microlink = { ...out.microlink, ...overrides.microlink };
+    }
+    if (overrides?.linkpreview) {
+      out.linkpreview = { ...out.linkpreview, ...overrides.linkpreview };
+    }
+    if (overrides?.opengraphio) {
+      out.opengraphio = { ...out.opengraphio, ...overrides.opengraphio };
+    }
+    return out;
   }
 
   private getDefaultData(url: string): OpenGraphData {

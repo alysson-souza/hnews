@@ -42,6 +42,8 @@
 
 ## Security & Configuration Tips
 
-- Never commit secrets. Copy `.env.example` to `.env` locally (e.g., `MICROLINK_API_KEY`).
+- Never commit secrets. Copy `.env.example` to `.env` locally.
+- Supported Open Graph env vars: `MICROLINK_API_KEY` (supports `free`), `LINKPREVIEW_API_KEY`, `OPENGRAPHIO_APP_ID`.
+- Providers are optional; when keys are empty, providers are disabled and no external calls are made.
 - For CI/CD and Pages deploys, use repository secrets; workflow infers `--base-href` for forks.
 - Node: use `.nvmrc` (Node 22.x). NPM 11+ recommended.

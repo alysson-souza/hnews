@@ -20,7 +20,9 @@ export class MicrolinkProvider implements OpenGraphProvider {
   ) {}
 
   isEnabled(): boolean {
-    return true; // Microlink works without a key
+    const key = this.apiConfig.microlink?.apiKey;
+    // Enabled when key is provided or explicitly 'free'
+    return key === 'free' || (typeof key === 'string' && key.length > 0);
   }
 
   fetch(url: string): Observable<OpenGraphData> {
@@ -40,7 +42,7 @@ export class MicrolinkProvider implements OpenGraphProvider {
     const apiUrl = `${this.apiConfig.microlink?.apiUrl || 'https://api.microlink.io'}/?url=${encodeURIComponent(url)}`;
     let headers = new HttpHeaders();
     const apiKey = this.apiConfig.microlink?.apiKey;
-    if (apiKey) headers = headers.set('x-api-key', apiKey);
+    if (apiKey && apiKey !== 'free') headers = headers.set('x-api-key', apiKey);
 
     return from(this.quota.tryConsume('microlink', 'day', 50)).pipe(
       switchMap((allowed) => {

@@ -20,7 +20,9 @@ export class LinkPreviewProvider implements OpenGraphProvider {
   ) {}
 
   isEnabled(): boolean {
-    return !!this.apiConfig.linkpreview?.apiKey;
+    const key = this.apiConfig.linkpreview?.apiKey;
+    // Treat 'free' as not a usable key for LinkPreview (requires actual key)
+    return !!(key && key !== 'free');
   }
 
   fetch(url: string): Observable<OpenGraphData> {
@@ -33,7 +35,7 @@ export class LinkPreviewProvider implements OpenGraphProvider {
     }
 
     const apiKey = this.apiConfig.linkpreview?.apiKey;
-    if (!apiKey) {
+    if (!apiKey || apiKey === 'free') {
       return of(this.toDefault(url));
     }
     const apiUrlBase = this.apiConfig.linkpreview?.apiUrl || 'https://api.linkpreview.net';

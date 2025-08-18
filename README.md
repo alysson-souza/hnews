@@ -50,77 +50,15 @@ npm start
 
 App runs at `http://localhost:4200`.
 
-### Build
+## Link Previews (Open Graph)
 
-```bash
-# Development build
-npm run build
-
-# Production build (base href can be overridden)
-npm run build:prod
-```
-
-### Scripts
-
-```bash
-npm start            # Run dev server (http://localhost:4200)
-npm run watch        # Watch mode build
-npm run build        # Build (development)
-npm run build:prod   # Build (production)
-npm test             # Unit tests (Karma + Jasmine)
-npm run lint         # ESLint
-npm run lint:fix     # ESLint with autofix
-npm run format       # Prettier write
-npm run format:check # Prettier check only
-npm run deploy       # Deploy to GitHub Pages (gh-pages)
-npm run deploy:ci    # CI-friendly deploy
-```
-
-## Configuration
-
-### Open Graph Provider Pool
-
-The app fetches Open Graph data using a provider pool with round‑robin ordering and parallel requests, returning the first successful result. Free‑tier quotas are respected with built‑in rate limits and persistent quota guards.
-
-Providers
-
-- Microlink: works without an API key (free tier). Limit used: 50 requests/day.
-- LinkPreview: requires API key. Limit used: 60 requests/hour.
-- OpenGraph.io: requires App ID. Limit used: 100 requests/month; enforced 1 concurrent request.
-
-Configure keys in `src/app/app.config.ts` via `provideApiConfig`:
-
-```ts
-import { provideApiConfig } from './config/api.config';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // ...
-    provideApiConfig({
-      microlink: { apiKey: 'YOUR_MICROLINK_KEY', apiUrl: 'https://api.microlink.io' },
-      linkpreview: { apiKey: 'YOUR_LINKPREVIEW_KEY', apiUrl: 'https://api.linkpreview.net' },
-      opengraphio: {
-        appId: 'YOUR_OPENGRAPHIO_APP_ID',
-        apiUrl: 'https://opengraph.io/api/1.1/site',
-      },
-    }),
-  ],
-};
-```
-
-Notes
-
-- You can omit any provider you don’t want to use; it will be skipped.
-- Quota guards persist usage counts per hour/day/month using IndexedDB/localStorage, helping avoid free‑tier overruns across sessions.
-- OpenGraph.io calls are serialized globally to honor the 1‑concurrent free‑tier limit.
-
-See DEPLOYMENT.md for platform-specific setup (GitHub Actions, Netlify, Vercel, etc.).
+- Configure keys in Settings → Open Graph Providers.
+- Microlink supports a free tier; set key to `free`. LinkPreview and OpenGraph.io require real keys.
+  For build‑time key preseed, see `DEPLOYMENT.md`.
 
 ## Deployment
 
-- GitHub Pages is preconfigured via `.github/workflows/deploy.yml`
-- Push to `main`/`master` triggers a build and deploy to `gh-pages`
-- For manual or non-GitHub hosting, see DEPLOYMENT.md
+See `DEPLOYMENT.md` for deployment options.
 
 ## Project Structure
 
@@ -140,6 +78,8 @@ src/
 - Hacker News Firebase: `https://hacker-news.firebaseio.com/v0/`
 - Algolia HN Search: `https://hn.algolia.com/api/v1/`
 - Microlink (Open Graph): `https://api.microlink.io/`
+- LinkPreview (Open Graph): `https://api.linkpreview.net/`
+- OpenGraph.io (Open Graph): `https://opengraph.io/api/1.1/site/`
 
 ## Caching Strategy
 

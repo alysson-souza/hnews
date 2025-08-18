@@ -12,6 +12,7 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 import { StatCardComponent } from '../../components/shared/stat-card/stat-card.component';
 import { ThemeSelectorComponent } from '../../components/shared/theme-selector/theme-selector.component';
 import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
+import { OpenGraphSettingsComponent } from '../../components/settings/opengraph-settings/opengraph-settings.component';
 
 @Component({
   selector: 'app-settings',
@@ -25,18 +26,95 @@ import { SectionTitleComponent } from '../../components/shared/section-title/sec
     StatCardComponent,
     ThemeSelectorComponent,
     SectionTitleComponent,
+    OpenGraphSettingsComponent,
   ],
   template: `
     <app-page-container variant="narrow">
       <div class="space-y-6">
+        <!-- Open Graph Providers Section -->
+        <app-card class="block" role="region" aria-label="Open Graph Providers">
+          <app-section-title>Open Graph Providers</app-section-title>
+          <app-opengraph-settings></app-opengraph-settings>
+        </app-card>
+
         <!-- Theme Settings Section -->
-        <app-card class="block">
+        <app-card class="block" role="region" aria-label="Theme Settings">
           <app-section-title>Theme Settings</app-section-title>
           <app-theme-selector></app-theme-selector>
         </app-card>
 
-        <!-- Cache Management Section -->
-        <app-card class="block">
+        <!-- User Tags Section -->
+        <app-card class="block" role="region" aria-label="User Tags Management">
+          <app-section-title>User Tags Management</app-section-title>
+
+          <!-- Export/Import/Clear Section -->
+          <div class="mb-8 space-y-4">
+            <div class="flex flex-wrap items-center gap-4">
+              <app-button (clicked)="exportTags()" variant="primary" ariaLabel="Export user tags">
+                Export Tags
+              </app-button>
+              <app-button
+                (clicked)="fileInput.click()"
+                variant="primary"
+                ariaLabel="Import user tags"
+              >
+                Import Tags
+              </app-button>
+              <input
+                #fileInput
+                type="file"
+                accept=".json"
+                (change)="importTags($event)"
+                class="hidden"
+                aria-hidden="true"
+              />
+              @if (tags().length > 0) {
+                <app-button (clicked)="clearAll()" variant="danger" ariaLabel="Clear all user tags">
+                  Clear All Tags
+                </app-button>
+              }
+            </div>
+
+            @if (message()) {
+              <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
+            }
+          </div>
+
+          <!-- Current Tags List -->
+          <div>
+            <app-section-title variant="subtitle">
+              Current Tags ({{ tags().length }})
+            </app-section-title>
+
+            @if (tags().length > 0) {
+              <div class="space-y-2">
+                @for (tag of tags(); track tag.username) {
+                  <div class="tag-item">
+                    <div class="flex items-center gap-3">
+                      <span class="tag-username">{{ tag.username }}</span>
+                      <span class="tag-pill" [style.background-color]="tag.color">
+                        {{ tag.tag }}
+                      </span>
+                    </div>
+                    <div class="tag-meta">
+                      <span>Added {{ getTimeAgo(tag.createdAt) }}</span>
+                      <button (click)="removeTag(tag.username)" class="tag-remove">Remove</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="empty">
+                No user tags yet. Tags will appear here when you tag users while browsing.
+              </p>
+            }
+          </div>
+
+          <!-- Clear All Button moved next to export/import -->
+        </app-card>
+
+        <!-- Cache Management Section (moved to bottom) -->
+        <app-card class="block" role="region" aria-label="Cache Management">
           <app-section-title>Cache Management</app-section-title>
 
           <div class="space-y-6">
@@ -88,67 +166,6 @@ import { SectionTitleComponent } from '../../components/shared/section-title/sec
               </div>
             }
           </div>
-        </app-card>
-
-        <!-- User Tags Section -->
-        <app-card class="block">
-          <app-section-title>User Tags Management</app-section-title>
-
-          <!-- Export/Import Section -->
-          <div class="mb-8 space-y-4">
-            <div class="flex gap-4">
-              <app-button (clicked)="exportTags()" variant="primary"> Export Tags </app-button>
-              <app-button (clicked)="fileInput.click()" variant="primary"> Import Tags </app-button>
-              <input
-                #fileInput
-                type="file"
-                accept=".json"
-                (change)="importTags($event)"
-                class="hidden"
-              />
-            </div>
-
-            @if (message()) {
-              <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
-            }
-          </div>
-
-          <!-- Current Tags List -->
-          <div>
-            <app-section-title variant="subtitle">
-              Current Tags ({{ tags().length }})
-            </app-section-title>
-
-            @if (tags().length > 0) {
-              <div class="space-y-2">
-                @for (tag of tags(); track tag.username) {
-                  <div class="tag-item">
-                    <div class="flex items-center gap-3">
-                      <span class="tag-username">{{ tag.username }}</span>
-                      <span class="tag-pill" [style.background-color]="tag.color">
-                        {{ tag.tag }}
-                      </span>
-                    </div>
-                    <div class="tag-meta">
-                      <span>Added {{ getTimeAgo(tag.createdAt) }}</span>
-                      <button (click)="removeTag(tag.username)" class="tag-remove">Remove</button>
-                    </div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="empty">
-                No user tags yet. Tags will appear here when you tag users while browsing.
-              </p>
-            }
-          </div>
-
-          <!-- Clear All Button -->
-          @if (tags().length > 0) {
-            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-slate-800">
-              <app-button (clicked)="clearAll()" variant="danger"> Clear All Tags </app-button>
-            </div>
-          }
         </app-card>
       </div>
     </app-page-container>
