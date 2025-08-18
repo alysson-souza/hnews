@@ -48,11 +48,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
         }
       }
       .vote-section-mobile {
-        @apply flex items-center justify-between px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue rounded-t-lg w-full overflow-hidden;
-        @screen md {
-          padding-left: 2px;
-          padding-right: 2px;
-        }
+        @apply flex items-center justify-start px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue rounded-t-lg w-full overflow-hidden;
       }
       .vote-button {
         @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1;
