@@ -43,8 +43,9 @@ node_modules/.cache/
 .DS_Store
 Thumbs.db
 
-# Claude
+# AI
 .claude/*.local.json
+.kilocode/mcp.json
 
 # Environment variables
 .env
