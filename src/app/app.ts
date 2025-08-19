@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-t
 import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
 import { CacheManagerService } from './services/cache-manager.service';
 import { ThemeService } from './services/theme.service';
+import { SidebarService } from './services/sidebar.service';
 import { VERSION } from './version';
 
 @Component({
@@ -33,6 +34,7 @@ export class App implements OnInit, OnDestroy {
   router = inject(Router);
   cacheService = inject(CacheManagerService);
   themeService = inject(ThemeService);
+  sidebarService = inject(SidebarService);
   version = VERSION;
 
   isOffline = signal(false);
@@ -96,5 +98,12 @@ export class App implements OnInit, OnDestroy {
 
   closeMobileMenu() {
     this.mobileMenuOpen.set(false);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (event.key === 'Escape' && this.sidebarService.isOpen()) {
+      this.sidebarService.closeSidebar();
+    }
   }
 }
