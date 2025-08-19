@@ -8,66 +8,80 @@
   @if (deviceService.isMobile()) {
     <!-- Mobile Vote Section (No Thumbnails) -->
     <div class="vote-section-mobile flex items-center gap-2">
-      <button
-        (click)="upvote()"
-        class="vote-button"
-        [class.vote-button-active]="!hasVoted()"
-        [class.vote-button-voted]="hasVoted()"
-        [disabled]="hasVoted()"
-        [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-        [attr.aria-pressed]="hasVoted()"
-        [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-      >
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-        </svg>
-      </button>
-      <span
-        class="vote-count text-xl"
-        [class.vote-count-active]="!hasVoted()"
-        [class.vote-count-voted]="hasVoted()"
-      >
-        {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
-      </span>
+      @if (isLoading()) {
+        <div class="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
+        <div class="w-12 h-6 bg-gray-300 rounded animate-pulse"></div>
+      } @else {
+        <button
+          (click)="upvote()"
+          class="vote-button"
+          [class.vote-button-active]="!hasVoted()"
+          [class.vote-button-voted]="hasVoted()"
+          [disabled]="hasVoted()"
+          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+          [attr.aria-pressed]="hasVoted()"
+          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+        >
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
+          </svg>
+        </button>
+        <span
+          class="vote-count text-xl"
+          [class.vote-count-active]="!hasVoted()"
+          [class.vote-count-voted]="hasVoted()"
+        >
+          {{ (story!.score || 0) + (hasVoted() ? 1 : 0) }}
+        </span>
+      }
     </div>
   } @else {
     <!-- Desktop Vote Section -->
     <div class="vote-section flex flex-col w-[100px] flex-shrink-0">
-      <button
-        (click)="upvote()"
-        class="vote-button"
-        [class.vote-button-active]="!hasVoted()"
-        [class.vote-button-voted]="hasVoted()"
-        [disabled]="hasVoted()"
-        [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-        [attr.aria-pressed]="hasVoted()"
-        [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-      >
-        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-        </svg>
-      </button>
-      <span
-        class="vote-count text-2xl"
-        [class.vote-count-active]="!hasVoted()"
-        [class.vote-count-voted]="hasVoted()"
-      >
-        {{ (story.score || 0) + (hasVoted() ? 1 : 0) }}
-      </span>
+      @if (isLoading()) {
+        <div class="w-8 h-8 bg-gray-300 rounded mb-2 animate-pulse"></div>
+        <div class="w-12 h-6 bg-gray-300 rounded animate-pulse"></div>
+      } @else {
+        <button
+          (click)="upvote()"
+          class="vote-button"
+          [class.vote-button-active]="!hasVoted()"
+          [class.vote-button-voted]="hasVoted()"
+          [disabled]="hasVoted()"
+          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+          [attr.aria-pressed]="hasVoted()"
+          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+        >
+          <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
+          </svg>
+        </button>
+        <span
+          class="vote-count text-2xl"
+          [class.vote-count-active]="!hasVoted()"
+          [class.vote-count-voted]="hasVoted()"
+        >
+          {{ (story!.score || 0) + (hasVoted() ? 1 : 0) }}
+        </span>
+      }
     </div>
   }
 
   <!-- Desktop Thumbnail -->
   <div class="hidden sm:flex flex-shrink-0 w-28 items-center justify-center p-3">
-    <app-story-thumbnail
-      [storyUrl]="story.url"
-      [storyTitle]="story.title || ''"
-      [ogData]="ogDataSignal()"
-      [loading]="loadingOg()"
-      [isTextPost]="isTextPost()"
-      (linkClicked)="markAsVisited()"
-    >
-    </app-story-thumbnail>
+    @if (isLoading()) {
+      <div class="w-20 h-20 bg-gray-200 animate-pulse"></div>
+    } @else {
+      <app-story-thumbnail
+        [storyUrl]="story!.url"
+        [storyTitle]="story!.title || ''"
+        [ogData]="ogDataSignal()"
+        [loading]="loadingOg()"
+        [isTextPost]="isTextPost()"
+        (linkClicked)="markAsVisited()"
+      >
+      </app-story-thumbnail>
+    }
   </div>
 
   <!-- Content -->
@@ -75,49 +89,57 @@
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0 overflow-hidden">
         <!-- Title -->
-        <h2
-          class="story-title"
-          [class.story-title-unread]="!isVisited()"
-          [class.story-title-visited]="isVisited()"
-        >
-          @if (story.url) {
-            <a
-              [href]="story.url"
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              (click)="markAsVisited()"
-              class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-            >
-              {{ story.title }}
-            </a>
-          } @else {
-            <a
-              [routerLink]="['/item', story.id]"
-              (click)="markAsVisited()"
-              class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-            >
-              {{ story.title }}
-            </a>
-          }
-        </h2>
+        @if (isLoading()) {
+          <div class="h-5 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+        } @else {
+          <h2
+            class="story-title"
+            [class.story-title-unread]="!isVisited()"
+            [class.story-title-visited]="isVisited()"
+          >
+            @if (story!.url) {
+              <a
+                [href]="story!.url"
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                (click)="markAsVisited()"
+                class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              >
+                {{ story!.title }}
+              </a>
+            } @else {
+              <a
+                [routerLink]="['/item', story!.id]"
+                (click)="markAsVisited()"
+                class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              >
+                {{ story!.title }}
+              </a>
+            }
+          </h2>
+        }
 
         <!-- Domain - Now clickable -->
-        @if (story.url && getDomain(story.url)) {
+        @if (isLoading()) {
+          <div class="h-4 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
+        } @else if (story!.url && getDomain(story!.url)) {
           <button
             type="button"
             (click)="searchByDomain($event)"
             (keyup.enter)="searchByDomain($event)"
             (keyup.space)="searchByDomain($event)"
             class="domain-btn"
-            [attr.aria-label]="'Search For More Stories From ' + getDomain(story.url)"
-            [title]="'Search For More Stories From ' + getDomain(story.url)"
+            [attr.aria-label]="'Search For More Stories From ' + getDomain(story!.url)"
+            [title]="'Search For More Stories From ' + getDomain(story!.url)"
           >
-            ({{ ogDataSignal()?.siteName || getDomain(story.url) }})
+            ({{ ogDataSignal()?.siteName || getDomain(story!.url) }})
           </button>
         }
 
         <!-- Description from OpenGraph - Hidden on mobile -->
-        @if (ogDataSignal()?.description) {
+        @if (isLoading()) {
+          <div class="h-4 bg-gray-200 rounded w-full mb-3 animate-pulse hidden sm:block"></div>
+        } @else if (ogDataSignal()?.description) {
           <p class="story-desc">
             {{ ogDataSignal()!.description }}
           </p>
@@ -125,56 +147,68 @@
 
         <!-- Metadata -->
         <div class="story-meta mt-2 overflow-hidden">
-          @if (story.by) {
-            <span class="inline-flex items-center gap-1">
-              by
-              <app-user-tag [username]="story.by!"></app-user-tag>
-            </span>
-          }
-          <span class="hidden sm:inline" aria-hidden="true">•</span>
-          <span class="story-time">{{ getTimeAgo(story.time) }}</span>
-          <span class="hidden sm:inline" aria-hidden="true">•</span>
-          <button
-            type="button"
-            (click)="openComments($event)"
-            (keyup.enter)="openComments($event)"
-            (keyup.space)="openComments($event)"
-            class="story-comments story-comments-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-            [attr.aria-label]="'View ' + (story.descendants || 0) + ' Comments'"
-            [title]="getCommentTooltip()"
-          >
-            {{ story.descendants || 0 }} {{ story.descendants === 1 ? 'comment' : 'comments' }}
-            @if (hasNewComments()) {
-              <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
+          @if (isLoading()) {
+            <div class="flex items-center gap-3">
+              <div class="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
+              <div class="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
+              <div class="h-3 bg-gray-200 rounded w-28 animate-pulse"></div>
+            </div>
+          } @else {
+            @if (story!.by) {
+              <span class="inline-flex items-center gap-1">
+                by
+                <app-user-tag [username]="story!.by!"></app-user-tag>
+              </span>
             }
-          </button>
+            <span class="hidden sm:inline" aria-hidden="true">•</span>
+            <span class="story-time">{{ getTimeAgo(story!.time) }}</span>
+            <span class="hidden sm:inline" aria-hidden="true">•</span>
+            <button
+              type="button"
+              (click)="openComments($event)"
+              (keyup.enter)="openComments($event)"
+              (keyup.space)="openComments($event)"
+              class="story-comments story-comments-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              [attr.aria-label]="'View ' + (story!.descendants || 0) + ' Comments'"
+              [title]="getCommentTooltip()"
+            >
+              {{ story!.descendants || 0 }} {{ story!.descendants === 1 ? 'comment' : 'comments' }}
+              @if (hasNewComments()) {
+                <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
+              }
+            </button>
+          }
         </div>
       </div>
 
       <!-- Actions Button -->
       <div class="story-actions-container relative ml-2 sm:ml-0 flex-shrink-0">
-        <button
-          #actionsBtn
-          (click)="toggleActionsMenu($event)"
-          class="story-actions-btn"
-          [attr.aria-label]="'Open Actions Menu'"
-          [attr.aria-haspopup]="'menu'"
-          [attr.aria-expanded]="showActionsMenu"
-          [attr.aria-controls]="'actions-menu-' + story.id"
-          [attr.id]="'actions-btn-' + story.id"
-          [title]="'More Actions'"
-        >
-          <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]"></fa-icon>
-        </button>
+        @if (isLoading()) {
+          <div class="w-9 h-9 bg-gray-200 rounded animate-pulse"></div>
+        } @else {
+          <button
+            #actionsBtn
+            (click)="toggleActionsMenu($event)"
+            class="story-actions-btn"
+            [attr.aria-label]="'Open Actions Menu'"
+            [attr.aria-haspopup]="'menu'"
+            [attr.aria-expanded]="showActionsMenu"
+            [attr.aria-controls]="'actions-menu-' + story!.id"
+            [attr.id]="'actions-btn-' + story!.id"
+            [title]="'More Actions'"
+          >
+            <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]"></fa-icon>
+          </button>
+        }
 
         <!-- Actions Menu Popup -->
-        @if (showActionsMenu) {
+        @if (showActionsMenu && !isLoading()) {
           <div
             #actionsMenu
             class="story-actions-menu story-actions-menu-fixed"
             role="menu"
-            [attr.id]="'actions-menu-' + story.id"
-            [attr.aria-labelledby]="'actions-btn-' + story.id"
+            [attr.id]="'actions-menu-' + story!.id"
+            [attr.aria-labelledby]="'actions-btn-' + story!.id"
             [style.top.px]="actionsMenuTop"
             [style.left.px]="actionsMenuLeft"
           >

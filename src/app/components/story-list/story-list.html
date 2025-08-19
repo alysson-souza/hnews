@@ -23,7 +23,7 @@
   @if ((loading() && stories().length === 0) || refreshing()) {
     <div role="status" aria-live="polite" aria-label="Loading Stories">
       @for (i of skeletonArray; track i) {
-        <app-story-skeleton></app-story-skeleton>
+        <app-story-item [loading]="true"></app-story-item>
       }
     </div>
   }
@@ -41,6 +41,7 @@
     @for (story of stories(); track story.id; let i = $index) {
       <app-story-item
         [story]="story"
+        [loading]="false"
         [index]="i + 1"
         [ogData]="getOpenGraphForStory(story)"
         [isSelected]="keyboardNavService.selectedIndex() === i"

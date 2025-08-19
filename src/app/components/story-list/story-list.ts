@@ -14,7 +14,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { HackernewsService, HNItem } from '../../services/hackernews.service';
 import { StoryItem } from '../story-item/story-item';
-import { StorySkeletonComponent } from '../story-skeleton/story-skeleton.component';
 import { Observable, switchMap, map, tap, interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
@@ -26,7 +25,7 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
 @Component({
   selector: 'app-story-list',
   standalone: true,
-  imports: [CommonModule, StoryItem, StorySkeletonComponent, PageContainerComponent],
+  imports: [CommonModule, StoryItem, PageContainerComponent],
   templateUrl: './story-list.html',
   styleUrl: './story-list.css',
   styles: [

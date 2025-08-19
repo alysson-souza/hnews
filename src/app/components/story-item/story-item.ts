@@ -165,10 +165,11 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
   ],
 })
 export class StoryItem implements OnInit {
-  @Input({ required: true }) story!: HNItem;
+  @Input() story?: HNItem;
   @Input() index = 0;
   @Input() ogData?: OpenGraphData;
   @Input() isSelected = false;
+  @Input() loading = false;
 
   private votedItems = signal<Set<number>>(new Set());
   private ogService = inject(OpenGraphService);
@@ -180,6 +181,9 @@ export class StoryItem implements OnInit {
 
   ogDataSignal = signal<OpenGraphData | null>(null);
   loadingOg = signal(true);
+
+  // Computed property to safely determine loading state
+  isLoading = computed(() => this.loading || !this.story);
 
   // FontAwesome icons
   faEllipsisVertical = faEllipsisVertical;
@@ -215,7 +219,7 @@ export class StoryItem implements OnInit {
     }
   }
 
-  hasVoted = computed(() => this.votedItems().has(this.story?.id || 0));
+  hasVoted = computed(() => (this.story ? this.votedItems().has(this.story.id) : false));
 
   getDomain(url?: string): string {
     if (!url) return '';
@@ -240,7 +244,7 @@ export class StoryItem implements OnInit {
   }
 
   upvote(): void {
-    if (this.hasVoted()) return;
+    if (this.hasVoted() || !this.story) return;
 
     const newVoted = new Set(this.votedItems());
     newVoted.add(this.story.id);
@@ -263,6 +267,8 @@ export class StoryItem implements OnInit {
   searchByDomain(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    if (!this.story) return;
+
     const domain = this.getDomain(this.story.url);
     if (domain) {
       this.router.navigate(['/search'], {
@@ -295,19 +301,25 @@ export class StoryItem implements OnInit {
   });
 
   isVisited(): boolean {
-    return this.visitedService.isVisited(this.story.id);
+    return this.story ? this.visitedService.isVisited(this.story.id) : false;
   }
 
   hasNewComments(): boolean {
-    return this.visitedService.hasNewComments(this.story.id, this.story.descendants || 0);
+    return this.story
+      ? this.visitedService.hasNewComments(this.story.id, this.story.descendants || 0)
+      : false;
   }
 
   getNewCommentCount(): number {
-    return this.visitedService.getNewCommentCount(this.story.id, this.story.descendants || 0);
+    return this.story
+      ? this.visitedService.getNewCommentCount(this.story.id, this.story.descendants || 0)
+      : 0;
   }
 
   markAsVisited(): void {
-    this.visitedService.markAsVisited(this.story.id, this.story.descendants);
+    if (this.story) {
+      this.visitedService.markAsVisited(this.story.id, this.story.descendants);
+    }
   }
 
   toggleActionsMenu(event: Event): void {
@@ -348,6 +360,8 @@ export class StoryItem implements OnInit {
   }
 
   async shareStory(): Promise<void> {
+    if (!this.story) return;
+
     const url = this.story.url || `https://news.ycombinator.com/item?id=${this.story.id}`;
     const shareData = {
       title: this.story.title,
@@ -385,6 +399,8 @@ export class StoryItem implements OnInit {
   }
 
   async shareComments(): Promise<void> {
+    if (!this.story) return;
+
     const url = `${window.location.origin}/item/${this.story.id}`;
     const shareData = {
       title: `${this.story.title} - Comments`,
@@ -423,6 +439,8 @@ export class StoryItem implements OnInit {
   }
 
   openCommentsInNewTab(): void {
+    if (!this.story) return;
+
     const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
     const url = `${window.location.origin}${path}`;
     window.open(url, '_blank');
@@ -438,6 +456,8 @@ export class StoryItem implements OnInit {
   }
 
   openComments(event: Event): void {
+    if (!this.story) return;
+
     if (!this.deviceService.isDesktop()) {
       // On mobile, navigate directly to item page
       this.router.navigate(['/item', this.story.id]);
