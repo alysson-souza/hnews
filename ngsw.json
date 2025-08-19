@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1755643268959,
+  "timestamp": 1755646452700,
   "index": "/hnews/index.html",
   "assetGroups": [
     {
@@ -11,7 +11,6 @@
         "ignoreVary": true
       },
       "urls": [
-        "/hnews/chunk-2JWCHVSD.js",
         "/hnews/chunk-3WCJOT7F.js",
         "/hnews/chunk-4S26V4BJ.js",
         "/hnews/chunk-6R2GPWYH.js",
@@ -27,13 +26,14 @@
         "/hnews/chunk-TFHQUO3A.js",
         "/hnews/chunk-UGM2JKJI.js",
         "/hnews/chunk-XFBJ6Z3S.js",
+        "/hnews/chunk-XRHI6N23.js",
         "/hnews/chunk-YMVQ6C4T.js",
         "/hnews/favicon.ico",
         "/hnews/index.html",
-        "/hnews/main-ABUZBNRX.js",
+        "/hnews/main-AKUL4T4L.js",
         "/hnews/manifest.webmanifest",
         "/hnews/polyfills-B6TNHZQ6.js",
-        "/hnews/styles-HJJXU3FM.css"
+        "/hnews/styles-SB5GK5XW.css"
       ],
       "patterns": []
     },
@@ -104,7 +104,6 @@
   ],
   "hashTable": {
     "/hnews/assets/default-thumb.svg": "0f7bbb809c3c87697c42da99455bde787bdef74e",
-    "/hnews/chunk-2JWCHVSD.js": "b9dc91c5226e1f98e3e4d94bab21b1f13c68eb6f",
     "/hnews/chunk-3WCJOT7F.js": "d7ef8484ca077849e34c44ebd9750c860a9ba5cf",
     "/hnews/chunk-4S26V4BJ.js": "31a74768a82c3dee32dffb30c5ca5cad0d0706da",
     "/hnews/chunk-6R2GPWYH.js": "6a44b0a41f76c4d4dab020f8e09542ffa42c7b60",
@@ -120,6 +119,7 @@
     "/hnews/chunk-TFHQUO3A.js": "d45b7fac4ab94781f2c1f4e38076f36bbdb88663",
     "/hnews/chunk-UGM2JKJI.js": "25d002a85bf764a0cbbfb318732ae60078d39827",
     "/hnews/chunk-XFBJ6Z3S.js": "8b2e7047b22248cdc8ca5dbce82895e09e1d12a9",
+    "/hnews/chunk-XRHI6N23.js": "a4f2fd888d4883d8b1691b9be044283cfdeebbc3",
     "/hnews/chunk-YMVQ6C4T.js": "6c022aee808c94578a9a6b7d135c4ea692e4713c",
     "/hnews/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/hnews/icons/icon-128x128.png": "f912963bdc6d5a38d8f1dd0afbaab2ce8d657acb",
@@ -130,11 +130,11 @@
     "/hnews/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
     "/hnews/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
     "/hnews/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
-    "/hnews/index.html": "2dafeb7bc489a90aee4abd5bd68d747f62ed9322",
-    "/hnews/main-ABUZBNRX.js": "75fef05b7c248e32b51f37e8c5026be60b53eaa7",
+    "/hnews/index.html": "25733b0476e6243d9643395013d1c09abf79a63a",
+    "/hnews/main-AKUL4T4L.js": "f29bb7128024d3e7d8d6dce96123b6a5cadffada",
     "/hnews/manifest.webmanifest": "4d05c8f6eb7436db74b0bf9902a1433f77c679fc",
     "/hnews/polyfills-B6TNHZQ6.js": "bf76ac291d7f51c1139b7edcf86b359a30c08c64",
-    "/hnews/styles-HJJXU3FM.css": "49e728e6b9de9c1cf463fe0a50df88a495cab8d4"
+    "/hnews/styles-SB5GK5XW.css": "91c8945903d3e8e6469047c0a7a8cc0e9ba094ff"
   },
   "navigationUrls": [
     {
