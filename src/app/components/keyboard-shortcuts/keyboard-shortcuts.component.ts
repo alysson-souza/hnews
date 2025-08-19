@@ -127,6 +127,23 @@ import { Router } from '@angular/router';
                 </div>
               }
 
+              @if (isOnUserPage) {
+                <!-- User Page Navigation -->
+                <div class="mb-6">
+                  <h3
+                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3"
+                  >
+                    Navigation
+                  </h3>
+                  <div class="space-y-2">
+                    <div class="shortcut-row">
+                      <kbd class="shortcut-key">Esc</kbd>
+                      <span class="shortcut-desc">Go to top of page</span>
+                    </div>
+                  </div>
+                </div>
+              }
+
               <!-- Always available -->
               <div>
                 <h3
@@ -147,7 +164,7 @@ import { Router } from '@angular/router';
                     <kbd class="shortcut-key">?</kbd>
                     <span class="shortcut-desc">Show help</span>
                   </div>
-                  @if (!isOnItemPage) {
+                  @if (!isOnItemPage && !isOnUserPage) {
                     <div class="shortcut-row">
                       <kbd class="shortcut-key">Esc</kbd>
                       <span class="shortcut-desc">Close / Clear / Top</span>
@@ -194,6 +211,11 @@ export class KeyboardShortcutsComponent {
 
   get isOnItemPage(): boolean {
     return this.router.url.includes('/item/');
+  }
+
+  get isOnUserPage(): boolean {
+    const path = this.router.url;
+    return path.startsWith('/user/') || path === '/user' || path.startsWith('/user?');
   }
 
   open(): void {

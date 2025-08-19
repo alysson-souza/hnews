@@ -198,7 +198,9 @@ export class App implements OnInit, OnDestroy {
       (path) => currentPath === path || currentPath.startsWith(path + '?'),
     );
 
-    if (!isOnStoryList && event.key !== '/' && event.key !== '?') {
+    // Allow global shortcuts (/, ?, t) on all pages, but restrict story-specific shortcuts to story lists
+    const globalShortcuts = ['/', '?', 't'];
+    if (!isOnStoryList && !globalShortcuts.includes(event.key)) {
       return;
     }
 
