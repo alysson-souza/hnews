@@ -45,7 +45,14 @@ export class HackernewsService {
   private http = inject(HttpClient);
   private cache = inject(CacheManagerService);
 
-  getTopStories(): Observable<number[]> {
+  getTopStories(forceRefresh = false): Observable<number[]> {
+    // For refresh: Skip cache for story lists (rankings change frequently)
+    if (forceRefresh) {
+      return this.http
+        .get<number[]>(`${this.API_BASE}/topstories.json`)
+        .pipe(tap(async (data) => await this.cache.set('storyLists', 'top', data)));
+    }
+
     return from(this.cache.get<number[]>('storyLists', 'top')).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -59,7 +66,13 @@ export class HackernewsService {
     );
   }
 
-  getBestStories(): Observable<number[]> {
+  getBestStories(forceRefresh = false): Observable<number[]> {
+    if (forceRefresh) {
+      return this.http
+        .get<number[]>(`${this.API_BASE}/beststories.json`)
+        .pipe(tap(async (data) => await this.cache.set('storyLists', 'best', data)));
+    }
+
     return from(this.cache.get<number[]>('storyLists', 'best')).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -73,7 +86,13 @@ export class HackernewsService {
     );
   }
 
-  getNewStories(): Observable<number[]> {
+  getNewStories(forceRefresh = false): Observable<number[]> {
+    if (forceRefresh) {
+      return this.http
+        .get<number[]>(`${this.API_BASE}/newstories.json`)
+        .pipe(tap(async (data) => await this.cache.set('storyLists', 'new', data)));
+    }
+
     return from(this.cache.get<number[]>('storyLists', 'new')).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -87,7 +106,13 @@ export class HackernewsService {
     );
   }
 
-  getAskStories(): Observable<number[]> {
+  getAskStories(forceRefresh = false): Observable<number[]> {
+    if (forceRefresh) {
+      return this.http
+        .get<number[]>(`${this.API_BASE}/askstories.json`)
+        .pipe(tap(async (data) => await this.cache.set('storyLists', 'ask', data)));
+    }
+
     return from(this.cache.get<number[]>('storyLists', 'ask')).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -101,7 +126,13 @@ export class HackernewsService {
     );
   }
 
-  getShowStories(): Observable<number[]> {
+  getShowStories(forceRefresh = false): Observable<number[]> {
+    if (forceRefresh) {
+      return this.http
+        .get<number[]>(`${this.API_BASE}/showstories.json`)
+        .pipe(tap(async (data) => await this.cache.set('storyLists', 'show', data)));
+    }
+
     return from(this.cache.get<number[]>('storyLists', 'show')).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -115,7 +146,13 @@ export class HackernewsService {
     );
   }
 
-  getJobStories(): Observable<number[]> {
+  getJobStories(forceRefresh = false): Observable<number[]> {
+    if (forceRefresh) {
+      return this.http
+        .get<number[]>(`${this.API_BASE}/jobstories.json`)
+        .pipe(tap(async (data) => await this.cache.set('storyLists', 'job', data)));
+    }
+
     return from(this.cache.get<number[]>('storyLists', 'job')).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -129,7 +166,19 @@ export class HackernewsService {
     );
   }
 
-  getItem(id: number): Observable<HNItem | null> {
+  getItem(id: number, forceRefresh = false): Observable<HNItem | null> {
+    // For refresh: Skip cache to get fresh vote counts
+    if (forceRefresh) {
+      return this.http.get<HNItem>(`${this.API_BASE}/item/${id}.json`).pipe(
+        tap(async (data) => {
+          if (data) {
+            await this.cache.set('stories', id.toString(), data);
+          }
+        }),
+        catchError(() => of(null)),
+      );
+    }
+
     return from(this.cache.get<HNItem>('stories', id.toString())).pipe(
       switchMap((cached) => {
         if (cached) {
@@ -148,12 +197,12 @@ export class HackernewsService {
     );
   }
 
-  getItems(ids: number[]): Observable<(HNItem | null)[]> {
+  getItems(ids: number[], forceRefresh = false): Observable<(HNItem | null)[]> {
     if (!ids || ids.length === 0) {
       return of([]);
     }
 
-    const requests = ids.map((id) => this.getItem(id));
+    const requests = ids.map((id) => this.getItem(id, forceRefresh));
     return forkJoin(requests);
   }
 

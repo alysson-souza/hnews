@@ -7,6 +7,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 ## Features
 
 - Story feeds: Top, Best, Newest, Ask HN, Show HN, Jobs
+- Auto-refresh: Story rankings update every 5 minutes (tab visibility aware)
 - Link previews: Open Graph thumbnails and metadata via pooled providers (Microlink, LinkPreview, OpenGraph.io)
 - Comments: Nested threads, lazy loading, auto-collapse for large threads
 - Voting UX: Local upvote state for comments (persisted in localStorage)
@@ -14,10 +15,25 @@ Live demo: https://alysson-souza.github.io/hnews/
 - Search: Algolia-powered with type, sort, and date range filters
 - Sidebar: Slide-over comments viewer for quick exploration
 - Theming: Light/Dark/Auto with one-click toggle and persistence
+- Vim-style keyboard navigation: hjkl navigation, vim-like shortcuts
+- Keyboard shortcuts: Full keyboard navigation with help dialog
 - Caching: Multi-layer cache (memory, IndexedDB, Service Worker, localStorage)
+- Two-phase loading: Cached display first, fresh data updates in background
 - PWA-ready: Angular Service Worker enabled in production builds
 - Responsive UI: Optimized for desktop, tablet, and mobile
 - HN-compatible routes (e.g., `/item?id=123`, `/user?id=pg`)
+
+## Keyboard Shortcuts
+
+- `j` / `k` - Navigate through stories
+- `h` / `l` - Switch between tabs (Top, Best, New, etc.)
+- `o` - Open selected story
+- `c` - Open comments sidebar
+- `/` - Focus search
+- `t` - Toggle theme
+- `r` - Refresh stories
+- `?` - Show keyboard shortcuts help
+- `Esc` - Close overlays / go back / scroll to top
 
 ## Tech Stack
 

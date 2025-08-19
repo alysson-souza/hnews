@@ -1,4 +1,4 @@
-<article class="story-card" role="article">
+<article class="story-card" [class.story-card-selected]="isSelected" role="article">
   <!-- Visited indicator -->
   @if (isVisited()) {
     <div class="visited-indicator" [title]="'You Have Visited This Story'"></div>
@@ -86,7 +86,7 @@
               target="_blank"
               rel="noopener noreferrer nofollow"
               (click)="markAsVisited()"
-              class="story-title-link cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             >
               {{ story.title }}
             </a>
@@ -94,7 +94,7 @@
             <a
               [routerLink]="['/item', story.id]"
               (click)="markAsVisited()"
-              class="story-title-link cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+              class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             >
               {{ story.title }}
             </a>
@@ -139,7 +139,7 @@
             (click)="openComments($event)"
             (keyup.enter)="openComments($event)"
             (keyup.space)="openComments($event)"
-            class="story-comments focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+            class="story-comments story-comments-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             [attr.aria-label]="'View ' + (story.descendants || 0) + ' Comments'"
             [title]="getCommentTooltip()"
           >

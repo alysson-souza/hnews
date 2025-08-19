@@ -36,6 +36,11 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
         @apply relative flex flex-col sm:flex-row bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg transition-shadow duration-200 mb-3 overflow-hidden;
       }
 
+      .story-card-selected {
+        @apply ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400;
+        @apply bg-blue-50 dark:bg-blue-900/20;
+      }
+
       /* Vote Sections */
       .vote-section {
         @apply flex items-center justify-center px-4 py-3 bg-gradient-to-b from-blue-50 to-blue-100 dark:bg-gradient-to-b dark:from-digg-blue-dark dark:to-digg-blue rounded-l-lg w-[100px] flex-shrink-0;
@@ -163,6 +168,7 @@ export class StoryItem implements OnInit {
   @Input({ required: true }) story!: HNItem;
   @Input() index = 0;
   @Input() ogData?: OpenGraphData;
+  @Input() isSelected = false;
 
   private votedItems = signal<Set<number>>(new Set());
   private ogService = inject(OpenGraphService);

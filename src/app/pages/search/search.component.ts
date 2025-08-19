@@ -40,10 +40,12 @@ interface SearchHit {
         <!-- Search Input -->
         <div class="relative">
           <input
-            type="text"
+            type="search"
             [(ngModel)]="searchQuery"
             (ngModelChange)="onSearchChange($event)"
             placeholder="Search stories, comments, users..."
+            aria-label="Search Hacker News content"
+            aria-describedby="search-hint"
             class="search-input"
           />
           <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

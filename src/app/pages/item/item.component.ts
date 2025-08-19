@@ -27,7 +27,7 @@ import { CardComponent } from '../../components/shared/card/card.component';
         </div>
       } @else if (item()) {
         <!-- Story Details -->
-        <app-card class="block mb-6">
+        <app-card class="block mb-6" id="submission-title">
           <!-- Title -->
           <h1 class="item-title">
             @if (item()!.url) {
@@ -286,6 +286,25 @@ export class ItemComponent implements OnInit {
           this.item.set(item);
           // Mark as visited with current comment count
           this.visitedService.markAsVisited(item.id, item.descendants);
+          // Scroll to submission title after content loads
+          setTimeout(() => {
+            const element = document.getElementById('submission-title');
+            if (element) {
+              // Get the element's position
+              const elementRect = element.getBoundingClientRect();
+              const elementTop = elementRect.top + window.scrollY;
+
+              // Account for sticky navbar (approximate height: 64px + some padding)
+              const navbarHeight = 80;
+              const targetPosition = elementTop - navbarHeight;
+
+              // Scroll to position accounting for navbar
+              window.scrollTo({
+                top: Math.max(0, targetPosition),
+                behavior: 'smooth',
+              });
+            }
+          }, 100);
         } else {
           this.error.set('Item not found');
         }
