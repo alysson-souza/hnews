@@ -95,7 +95,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   // Auto-refresh management
   private destroy$ = new Subject<void>();
-  private autoRefreshInterval = 10 * 1000; // 10 seconds for development
+  private autoRefreshInterval = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
     effect(() => {
