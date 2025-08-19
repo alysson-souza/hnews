@@ -2,12 +2,13 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { transformQuotesHtml } from './quote.transform';
 
 @Component({
   selector: 'app-comment-text',
   standalone: true,
   imports: [CommonModule],
-  template: ` <div class="comment-body" [innerHTML]="html"></div> `,
+  template: ` <div class="comment-body" [innerHTML]="processedHtml"></div> `,
   styles: [
     `
       @reference '../../../styles.css';
@@ -21,12 +22,21 @@ import { CommonModule } from '@angular/common';
       .comment-body > :first-child {
         margin-top: 0 !important;
       }
-      .comment-body a {
-        @apply text-blue-600 dark:text-blue-300 underline hover:text-blue-800 dark:hover:text-blue-200;
-      }
+
+      /* Blockquote visual styles are defined globally in styles.css */
     `,
   ],
 })
 export class CommentTextComponent {
-  @Input() html = '';
+  private _html = '';
+  processedHtml = '';
+
+  @Input()
+  set html(value: string) {
+    this._html = value || '';
+    this.processedHtml = transformQuotesHtml(this._html);
+  }
+  get html(): string {
+    return this._html;
+  }
 }

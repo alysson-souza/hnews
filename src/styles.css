@@ -107,3 +107,51 @@ code {
   overflow-x: auto;
   max-width: 100%;
 }
+
+/* Global styling for quotes inside comment bodies (applies to innerHTML content) */
+.comment-body blockquote {
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: #d1d5db; /* gray-300 */
+  padding-left: 0.75rem; /* pl-3 */
+  margin-top: 0.75rem; /* my-3 */
+  margin-bottom: 0.75rem;
+  color: var(--tw-prose-quotes, #111827);
+  font-style: italic;
+}
+.dark .comment-body blockquote {
+  border-left-color: #4b5563; /* gray-600 */
+  color: #d1d5db; /* gray-300 */
+}
+.comment-body blockquote p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Distinct URL styling inside comment text and story bodies */
+.comment-body a,
+.item-prose a {
+  /* Chip-like link appearance */
+  @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-sm no-underline cursor-pointer;
+  @apply border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+  /* Wrapping for long URLs */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.dark .comment-body a,
+.dark .item-prose a {
+  @apply border-slate-600 bg-slate-800 text-blue-300 hover:bg-slate-700 hover:border-slate-500;
+}
+.comment-body a::after,
+.item-prose a::after {
+  content: '↗';
+  font-size: 0.75em;
+  line-height: 1;
+  margin-left: 0.25rem;
+  color: #4b5563; /* slate-600 */
+}
+.dark .comment-body a::after,
+.dark .item-prose a::after {
+  color: #9ca3af; /* gray-400 */
+}
