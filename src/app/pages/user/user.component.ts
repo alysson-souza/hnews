@@ -76,18 +76,22 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
                     <!-- Story -->
                     <div>
                       <h3 class="sub-title">
-                        @if (item.url) {
+                        @if (item.dead) {
+                          <a [routerLink]="['/item', item.id]" class="title-link dead-item">
+                            [flagged]
+                          </a>
+                        } @else if (item.url) {
                           <a
                             [href]="item.url"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="title-link"
                           >
-                            {{ item.title }}
+                            {{ item.title || '[untitled]' }}
                           </a>
                         } @else {
                           <a [routerLink]="['/item', item.id]" class="title-link">
-                            {{ item.title }}
+                            {{ item.title || '[untitled]' }}
                           </a>
                         }
                       </h3>
@@ -214,6 +218,9 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
       }
       .subs-load-btn {
         @apply mt-6 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50;
+      }
+      .dead-item {
+        @apply text-gray-500 dark:text-gray-600 italic;
       }
 
       /* Empty */
