@@ -21,11 +21,19 @@ import { DeviceService } from '../../services/device.service';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
+import { VisitedIndicatorComponent } from '../shared/visited-indicator/visited-indicator.component';
 
 @Component({
   selector: 'app-story-item',
   standalone: true,
-  imports: [CommonModule, RouterLink, StoryThumbnailComponent, UserTagComponent, FontAwesomeModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    StoryThumbnailComponent,
+    UserTagComponent,
+    FontAwesomeModule,
+    VisitedIndicatorComponent,
+  ],
   templateUrl: './story-item.html',
   styles: [
     `
@@ -155,9 +163,6 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
       }
 
       /* Indicators & tags */
-      .visited-indicator {
-        @apply absolute top-0 right-0 w-0 h-0 border-t-[20px] border-t-blue-600 dark:border-t-blue-500 border-l-[20px] border-l-transparent;
-      }
       .story-tag {
         @apply px-2 py-0.5 text-xs text-white rounded-full;
       }
@@ -299,10 +304,6 @@ export class StoryItem implements OnInit {
     if (this.copiedComments) return '✓ Copied!';
     return this.canUseWebShare() ? 'Share Comments' : 'Copy Comments Link';
   });
-
-  isVisited(): boolean {
-    return this.story ? this.visitedService.isVisited(this.story.id) : false;
-  }
 
   hasNewComments(): boolean {
     return this.story
@@ -488,5 +489,9 @@ export class StoryItem implements OnInit {
       return 'View Comments';
     }
     return `View Comments (${this.deviceService.getModifierKey()}+Click for New Tab)`;
+  }
+
+  isVisited(): boolean {
+    return this.story ? this.visitedService.isVisited(this.story.id) : false;
   }
 }

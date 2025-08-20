@@ -8,11 +8,19 @@ import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
+import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
 
 @Component({
   selector: 'app-item',
   standalone: true,
-  imports: [CommonModule, CommentThread, RouterLink, PageContainerComponent, CardComponent],
+  imports: [
+    CommonModule,
+    CommentThread,
+    RouterLink,
+    PageContainerComponent,
+    CardComponent,
+    VisitedIndicatorComponent,
+  ],
   template: `
     <app-page-container>
       @if (loading()) {
@@ -28,6 +36,9 @@ import { CardComponent } from '../../components/shared/card/card.component';
       } @else if (item()) {
         <!-- Story Details -->
         <app-card class="block mb-6" id="submission-title">
+          <!-- Visited indicator -->
+          <app-visited-indicator [storyId]="item()!.id"></app-visited-indicator>
+
           <!-- Title -->
           <h1 class="item-title">
             @if (item()!.dead) {
@@ -191,6 +202,11 @@ import { CardComponent } from '../../components/shared/card/card.component';
       }
       .error-btn {
         @apply mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500;
+      }
+
+      /* Make app-card relative for visited indicator positioning */
+      app-card {
+        @apply relative;
       }
     `,
   ],
