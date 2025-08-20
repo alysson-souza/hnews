@@ -7,11 +7,12 @@ import { HackernewsService, HNUser, HNItem } from '../../services/hackernews.ser
 import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
+import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent],
+  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent, UserTagComponent],
   template: `
     <app-page-container>
       @if (loading()) {
@@ -27,8 +28,10 @@ import { CardComponent } from '../../components/shared/card/card.component';
         </div>
       } @else if (user()) {
         <!-- User Profile -->
-        <app-card class="block mb-6">
-          <h1 class="user-title">{{ user()!.id }}</h1>
+        <app-card class="block mb-6" id="user-profile">
+          <h1 class="user-title">
+            <app-user-tag [username]="user()!.id"></app-user-tag>
+          </h1>
 
           <!-- User Stats -->
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -278,6 +281,25 @@ export class UserComponent implements OnInit {
         if (user) {
           this.user.set(user);
           this.loadSubmissions(user);
+          // Scroll to user profile after content loads
+          setTimeout(() => {
+            const element = document.getElementById('user-profile');
+            if (element) {
+              // Get the element's position
+              const elementRect = element.getBoundingClientRect();
+              const elementTop = elementRect.top + window.scrollY;
+
+              // Account for sticky navbar (approximate height: 64px + some padding)
+              const navbarHeight = 80;
+              const targetPosition = elementTop - navbarHeight;
+
+              // Scroll to position accounting for navbar
+              window.scrollTo({
+                top: Math.max(0, targetPosition),
+                behavior: 'smooth',
+              });
+            }
+          }, 100);
         } else {
           this.error.set('User not found');
         }

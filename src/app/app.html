@@ -55,6 +55,7 @@
         <a routerLink="/ask" routerLinkActive="nav-link-active" class="nav-link"> Ask HN </a>
         <a routerLink="/show" routerLinkActive="nav-link-active" class="nav-link"> Show HN </a>
         <a routerLink="/jobs" routerLinkActive="nav-link-active" class="nav-link"> Jobs </a>
+        <a routerLink="/user" routerLinkActive="nav-link-active" class="nav-link"> User </a>
         <a routerLink="/settings" routerLinkActive="nav-link-active" class="nav-link"> Settings </a>
       </nav>
 
@@ -227,6 +228,14 @@
           class="mobile-nav-link"
         >
           Jobs
+        </a>
+        <a
+          routerLink="/user"
+          routerLinkActive="mobile-nav-link-active"
+          (click)="closeMobileMenu()"
+          class="mobile-nav-link"
+        >
+          User
         </a>
         <a
           routerLink="/settings"
