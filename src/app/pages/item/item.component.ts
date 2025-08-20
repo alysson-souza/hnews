@@ -30,17 +30,19 @@ import { CardComponent } from '../../components/shared/card/card.component';
         <app-card class="block mb-6" id="submission-title">
           <!-- Title -->
           <h1 class="item-title">
-            @if (item()!.url) {
+            @if (item()!.dead) {
+              <span class="dead-item">[flagged]</span>
+            } @else if (item()!.url) {
               <a
                 [href]="item()!.url"
                 target="_blank"
                 rel="noopener noreferrer nofollow"
                 class="title-link"
               >
-                {{ item()!.title }}
+                {{ item()!.title || '[untitled]' }}
               </a>
             } @else {
-              {{ item()!.title }}
+              {{ item()!.title || '[untitled]' }}
             }
           </h1>
 
@@ -152,6 +154,9 @@ import { CardComponent } from '../../components/shared/card/card.component';
       }
       .title-link {
         @apply hover:text-blue-600 dark:hover:text-blue-400;
+      }
+      .dead-item {
+        @apply text-gray-500 dark:text-gray-600 italic;
       }
 
       /* Metadata */
