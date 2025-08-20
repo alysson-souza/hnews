@@ -137,6 +137,37 @@ code {
   max-width: 100%;
 }
 
+/* Code blocks should use smaller font than surrounding text */
+.comment-body pre,
+.comment-body code,
+.item-prose pre,
+.item-prose code,
+.sub-comment pre,
+.sub-comment code {
+  @apply text-xs font-mono;
+}
+
+/* Ensure nested code in pre maintains the size */
+.comment-body pre code,
+.item-prose pre code,
+.sub-comment pre code {
+  @apply text-xs;
+}
+
+/* Code block styling */
+.comment-body pre,
+.item-prose pre,
+.sub-comment pre {
+  @apply bg-gray-100 dark:bg-gray-900 p-3 rounded my-2 overflow-x-auto;
+}
+
+/* Inline code styling */
+.comment-body :not(pre) > code,
+.item-prose :not(pre) > code,
+.sub-comment :not(pre) > code {
+  @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded;
+}
+
 /* Global styling for quotes inside comment bodies (applies to innerHTML content) */
 .comment-body blockquote {
   border-left-width: 4px;
