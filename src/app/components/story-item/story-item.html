@@ -1,6 +1,8 @@
 <article class="story-card" [class.story-card-selected]="isSelected" role="article">
   <!-- Visited indicator -->
-  <app-visited-indicator [storyId]="story!.id"></app-visited-indicator>
+  @if (!isLoading() && story) {
+    <app-visited-indicator [storyId]="story!.id"></app-visited-indicator>
+  }
 
   <!-- Responsive Vote Section -->
   @if (deviceService.isMobile()) {
