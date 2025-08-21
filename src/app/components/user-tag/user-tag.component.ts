@@ -67,7 +67,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
             (keyup.enter)="saveTag()"
             (keyup.escape)="cancelEdit()"
             (blur)="onInputBlur()"
-            class="tag-input"
+            class="tag-input app-input app-input-xs w-20 px-2 py-1"
             placeholder="Tag..."
             [attr.aria-label]="'Enter Tag For ' + username"
             #tagInput
@@ -113,8 +113,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
       }
 
       .tag-input {
-        @apply px-1 py-0 text-xs border border-gray-300 rounded w-20;
-        @apply focus:outline-none focus:ring-1 focus:ring-blue-500;
+        @apply text-xs;
       }
 
       .save-btn {

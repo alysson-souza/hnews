@@ -22,7 +22,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
             name="theme"
             [checked]="themeService.theme() === 'auto'"
             (change)="themeService.setTheme('auto')"
-            class="theme-radio"
+            class="app-radio"
             aria-label="Auto theme"
           />
           <span class="theme-label">
@@ -37,7 +37,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
             name="theme"
             [checked]="themeService.theme() === 'light'"
             (change)="themeService.setTheme('light')"
-            class="theme-radio"
+            class="app-radio"
             aria-label="Light theme"
           />
           <span class="theme-label">
@@ -52,7 +52,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
             name="theme"
             [checked]="themeService.theme() === 'dark'"
             (change)="themeService.setTheme('dark')"
-            class="theme-radio"
+            class="app-radio"
             aria-label="Dark theme"
           />
           <span class="theme-label">

@@ -21,7 +21,7 @@ import { FormsModule } from '@angular/forms';
       <input
         [id]="inputId"
         [type]="secret && !show ? 'password' : 'text'"
-        class="w-full px-3 py-2 rounded border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+        [class]="inputClasses"
         [placeholder]="placeholder"
         [(ngModel)]="model"
         (ngModelChange)="onChange()"
@@ -34,7 +34,7 @@ import { FormsModule } from '@angular/forms';
       @if (secret) {
         <button
           type="button"
-          class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-sm p-1 text-gray-500 dark:text-blue-300 hover:text-gray-700 dark:hover:text-blue-200 cursor-pointer"
           (click)="toggleVisibility()"
           [attr.aria-label]="show ? 'Hide API key' : 'Show API key'"
           [attr.aria-pressed]="show"
@@ -56,6 +56,7 @@ export class ApiKeyInputComponent implements OnInit {
   @Input() secret = true;
   @Input() hideLabel = false;
   @Input() value?: string;
+  @Input() size: 'sm' | 'md' | 'lg' = 'md';
   @Output() valueChange = new EventEmitter<string | undefined>();
 
   show = false;
@@ -63,6 +64,14 @@ export class ApiKeyInputComponent implements OnInit {
   inputId = `api-input-` + Math.random().toString(36).slice(2);
   get hintId() {
     return this.inputId + '-hint';
+  }
+
+  get inputClasses(): string {
+    let classes = 'app-input w-full';
+    if (this.size === 'sm') classes += ' app-input-sm';
+    if (this.size === 'lg') classes += ' app-input-lg';
+    if (this.secret) classes += ' pr-12';
+    return classes;
   }
 
   ngOnInit() {

@@ -46,7 +46,7 @@ interface SearchHit {
             placeholder="Search stories, comments, users..."
             aria-label="Search Hacker News content"
             aria-describedby="search-hint"
-            class="search-input"
+            class="app-input app-input-lg pr-12"
           />
           <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -60,20 +60,20 @@ interface SearchHit {
 
         <!-- Search Filters -->
         <div class="filters">
-          <select [(ngModel)]="searchType" (ngModelChange)="performSearch()" class="select">
+          <select [(ngModel)]="searchType" (ngModelChange)="performSearch()" class="app-select">
             <option value="story">Stories</option>
             <option value="comment">Comments</option>
             <option value="all">All</option>
           </select>
 
-          <select [(ngModel)]="sortBy" (ngModelChange)="performSearch()" class="select">
+          <select [(ngModel)]="sortBy" (ngModelChange)="performSearch()" class="app-select">
             <option value="relevance">Relevance</option>
             <option value="date">Date</option>
             <option value="points">Points</option>
             <option value="comments">Comments</option>
           </select>
 
-          <select [(ngModel)]="dateRange" (ngModelChange)="performSearch()" class="select">
+          <select [(ngModel)]="dateRange" (ngModelChange)="performSearch()" class="app-select">
             <option value="all">All Time</option>
             <option value="24h">Last 24 Hours</option>
             <option value="week">Past Week</option>

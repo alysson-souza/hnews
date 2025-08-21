@@ -130,6 +130,53 @@ a {
   overflow-wrap: break-word;
 }
 
+/* Unified form controls */
+.app-input {
+  @apply w-full px-3 py-2 rounded border outline-none;
+  @apply text-gray-900 dark:text-gray-100;
+  @apply placeholder-gray-500 dark:placeholder-gray-400;
+  @apply bg-white dark:bg-slate-900;
+  @apply border-gray-300 dark:border-slate-700;
+  @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply disabled:opacity-60 disabled:cursor-not-allowed;
+}
+.app-input-xs {
+  @apply text-xs px-2 py-1;
+}
+.app-input-sm {
+  @apply text-sm px-3 py-2;
+}
+.app-input-lg {
+  @apply text-base px-4 py-3;
+}
+
+/* Validation and state styles */
+.app-input[aria-invalid='true'],
+.app-select[aria-invalid='true'] {
+  @apply border-red-500 focus:ring-red-500;
+}
+.app-input[readonly],
+.app-select[readonly] {
+  @apply bg-gray-50 dark:bg-slate-800 cursor-default;
+}
+
+/* Selects */
+.app-select {
+  @apply px-3 py-2 rounded border outline-none;
+  @apply text-gray-900 dark:text-gray-100;
+  @apply bg-white dark:bg-slate-900;
+  @apply border-gray-300 dark:border-slate-700;
+  @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+/* Radios and checkboxes */
+.app-radio {
+  @apply w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300;
+}
+.app-checkbox {
+  @apply w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded;
+}
+
 /* Fix for long URLs and code blocks */
 pre,
 code {
