@@ -12,7 +12,6 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 import { StatCardComponent } from '../../components/shared/stat-card/stat-card.component';
 import { ThemeSelectorComponent } from '../../components/shared/theme-selector/theme-selector.component';
 import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
-import { OpenGraphSettingsComponent } from '../../components/settings/opengraph-settings/opengraph-settings.component';
 
 @Component({
   selector: 'app-settings',
@@ -26,17 +25,10 @@ import { OpenGraphSettingsComponent } from '../../components/settings/opengraph-
     StatCardComponent,
     ThemeSelectorComponent,
     SectionTitleComponent,
-    OpenGraphSettingsComponent,
   ],
   template: `
     <app-page-container variant="narrow">
       <div class="space-y-6">
-        <!-- Open Graph Providers Section -->
-        <app-card class="block" role="region" aria-label="Open Graph Providers">
-          <app-section-title>Open Graph Providers</app-section-title>
-          <app-opengraph-settings></app-opengraph-settings>
-        </app-card>
-
         <!-- Theme Settings Section -->
         <app-card class="block" role="region" aria-label="Theme Settings">
           <app-section-title>Theme Settings</app-section-title>

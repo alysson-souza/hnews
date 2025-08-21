@@ -55,7 +55,7 @@ npm run deploy:ci    # CI-friendly deploy
 
 - `src/app/components`: Reusable UI (story list/item, comments, shared widgets)
 - `src/app/pages`: Route-level features (top/best/newest, item, user, search, settings)
-- `src/app/services`: Data, caching, and Open Graph providers
+- `src/app/services`: Data and caching services
 - `src/app/config`: API configuration providers
 - `public/`: PWA manifest, icons, static assets
 - Tests live next to code as `*.spec.ts`
@@ -65,9 +65,3 @@ npm run deploy:ci    # CI-friendly deploy
 - Use Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `build:`, `test:`
 - PRs: include a concise summary, linked issues (e.g., `Fixes #123`), and screenshots for UI changes
 - CI expectations: `npm run lint` and `npm test` should pass; verify `npm run build:prod` for impactful UI changes
-
-## Link Previews (Open Graph)
-
-- Configure keys in Settings → Open Graph Providers
-- Microlink supports a free tier (`MICROLINK_API_KEY=free`); LinkPreview and OpenGraph.io require real keys
-- For build-time preseed, see `DEPLOYMENT.md`

@@ -22,7 +22,7 @@
           [attr.aria-pressed]="hasVoted()"
           [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
         >
-          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
           </svg>
         </button>
@@ -52,7 +52,7 @@
           [attr.aria-pressed]="hasVoted()"
           [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
         >
-          <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <svg class="w-8 h-8 fill-current" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
           </svg>
         </button>
@@ -75,8 +75,6 @@
       <app-story-thumbnail
         [storyUrl]="story!.url"
         [storyTitle]="story!.title || ''"
-        [ogData]="ogDataSignal()"
-        [loading]="loadingOg()"
         [isTextPost]="isTextPost()"
         (linkClicked)="markAsVisited()"
       >
@@ -132,17 +130,8 @@
             [attr.aria-label]="'Search For More Stories From ' + getDomain(story!.url)"
             [title]="'Search For More Stories From ' + getDomain(story!.url)"
           >
-            ({{ ogDataSignal()?.siteName || getDomain(story!.url) }})
+            ({{ getDomain(story!.url) }})
           </button>
-        }
-
-        <!-- Description from OpenGraph - Hidden on mobile -->
-        @if (isLoading()) {
-          <div class="h-4 bg-gray-200 rounded w-full mb-3 animate-pulse hidden sm:block"></div>
-        } @else if (ogDataSignal()?.description) {
-          <p class="story-desc">
-            {{ ogDataSignal()!.description }}
-          </p>
         }
 
         <!-- Metadata -->

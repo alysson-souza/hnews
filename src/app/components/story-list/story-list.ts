@@ -17,7 +17,6 @@ import { StoryItem } from '../story-item/story-item';
 import { Observable, switchMap, map, tap, interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
-import { OpenGraphService, OpenGraphData } from '../../services/opengraph.service';
 import { KeyboardNavigationService } from '../../services/keyboard-navigation.service';
 import { StoryListStateService } from '../../services/story-list-state.service';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
@@ -72,7 +71,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   @Input() pageSize = 30;
 
   private hnService = inject(HackernewsService);
-  private ogService = inject(OpenGraphService);
   private stateService = inject(StoryListStateService);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
@@ -83,7 +81,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   error = signal<string | null>(null);
   currentPage = signal(0);
   totalStoryIds = signal<number[]>([]);
-  openGraphData = signal<Map<string, OpenGraphData>>(new Map());
   refreshing = signal(false);
   newStoriesAvailable = signal(0);
 
@@ -148,30 +145,8 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
           return this.hnService.getItems(pageIds);
         }),
         map((items) => items.filter((item) => item !== null) as HNItem[]),
-        tap((items) => {
-          // Extract URLs from stories for OpenGraph fetching
-          const urls = items
-            .filter((item) => item.url && !this.isTextPost(item))
-            .map((item) => item.url!);
-
-          // Fetch OpenGraph data progressively
-          if (urls.length > 0) {
-            this.ogService.getOpenGraphDataBatch(urls).subscribe({
-              next: (partialOgDataMap) => {
-                // Accumulate partial results as they stream in
-                this.openGraphData.update((existing) => {
-                  const updated = new Map(existing);
-                  partialOgDataMap.forEach((data, url) => {
-                    updated.set(url, data);
-                  });
-                  return updated;
-                });
-              },
-              error: (err) => {
-                console.error('Error fetching OpenGraph data:', err);
-              },
-            });
-          }
+        tap(() => {
+          // OpenGraph fetching removed; relying solely on favicons now.
         }),
       )
       .subscribe({
@@ -250,30 +225,8 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
       .getItems(pageIds)
       .pipe(
         map((items) => items.filter((item) => item !== null) as HNItem[]),
-        tap((items) => {
-          // Extract URLs from new stories for OpenGraph fetching
-          const urls = items
-            .filter((item) => item.url && !this.isTextPost(item))
-            .map((item) => item.url!);
-
-          // Fetch OpenGraph data for new batch progressively
-          if (urls.length > 0) {
-            this.ogService.getOpenGraphDataBatch(urls).subscribe({
-              next: (partialOgDataMap) => {
-                // Accumulate partial results as they stream in
-                this.openGraphData.update((existing) => {
-                  const updated = new Map(existing);
-                  partialOgDataMap.forEach((data, url) => {
-                    updated.set(url, data);
-                  });
-                  return updated;
-                });
-              },
-              error: (err) => {
-                console.error('Error fetching OpenGraph data:', err);
-              },
-            });
-          }
+        tap(() => {
+          // OpenGraph fetching removed; relying solely on favicons now.
         }),
       )
       .subscribe({
@@ -301,7 +254,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
     this.stateService.clearState(this.storyType);
     this.currentPage.set(0);
     this.stories.set([]);
-    this.openGraphData.set(new Map());
     this.keyboardNavService.clearSelection();
 
     // Track when we started refreshing for minimum display time
@@ -475,7 +427,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
       this.stories.set(cachedState.stories);
       this.currentPage.set(cachedState.currentPage);
       this.totalStoryIds.set(cachedState.totalStoryIds);
-      this.openGraphData.set(cachedState.openGraphData);
       this.loading.set(false);
 
       // Restore scroll position after a delay
@@ -496,7 +447,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
       this.stories(),
       this.currentPage(),
       this.totalStoryIds(),
-      this.openGraphData(),
       this.keyboardNavService.selectedIndex(),
     );
   }
@@ -509,9 +459,5 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
       title.startsWith('Tell HN:') ||
       (title.startsWith('Show HN:') && !story?.url)
     );
-  }
-
-  getOpenGraphForStory(story: HNItem): OpenGraphData | undefined {
-    return story.url ? this.openGraphData().get(story.url) : undefined;
   }
 }

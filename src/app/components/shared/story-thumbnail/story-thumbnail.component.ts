@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { OpenGraphData } from '../../../services/opengraph.service';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-story-thumbnail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgOptimizedImage],
   template: `
     <div class="thumb">
       @if (isTextPost) {
@@ -22,28 +21,8 @@ import { OpenGraphData } from '../../../services/opengraph.service';
             ></path>
           </svg>
         </div>
-      } @else if (loading) {
-        <!-- Loading skeleton -->
-        <div class="thumb-skeleton"></div>
-      } @else if (ogData?.image) {
-        <!-- OpenGraph image -->
-        <a
-          [href]="storyUrl"
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          (click)="handleLinkClick()"
-          class="thumb-link"
-        >
-          <img
-            [src]="ogData!.image"
-            [alt]="'Thumbnail for ' + storyTitle"
-            class="thumb-img-cover"
-            loading="lazy"
-            (error)="handleImageError($event)"
-          />
-        </a>
       } @else {
-        <!-- Favicon fallback -->
+        <!-- Favicon thumbnail -->
         <a
           [href]="storyUrl"
           target="_blank"
@@ -52,7 +31,9 @@ import { OpenGraphData } from '../../../services/opengraph.service';
           class="thumb-link"
         >
           <img
-            [src]="ogData?.favicon || '/assets/default-thumb.svg'"
+            [ngSrc]="getFaviconUrl(storyUrl)"
+            width="64"
+            height="64"
             [alt]="'Favicon for ' + storyTitle"
             class="thumb-img-contain"
             decoding="async"
@@ -90,8 +71,6 @@ import { OpenGraphData } from '../../../services/opengraph.service';
 export class StoryThumbnailComponent {
   @Input() storyUrl?: string;
   @Input({ required: true }) storyTitle = '';
-  @Input() ogData?: OpenGraphData | null;
-  @Input() loading = false;
   @Input() isTextPost = false;
   @Output() linkClicked = new EventEmitter<void>();
 
@@ -104,5 +83,21 @@ export class StoryThumbnailComponent {
   handleImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     img.src = '/assets/default-thumb.svg';
+  }
+
+  private getDomain(url?: string): string {
+    if (!url) return '';
+    try {
+      const domain = new URL(url).hostname;
+      return domain.replace('www.', '');
+    } catch {
+      return '';
+    }
+  }
+
+  getFaviconUrl(url?: string): string {
+    const domain = this.getDomain(url);
+    if (!domain) return '/assets/default-thumb.svg';
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
   }
 }

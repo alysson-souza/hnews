@@ -4,7 +4,7 @@
 
 - `src/app/components`: Reusable UI (story list/item, comments, shared widgets).
 - `src/app/pages`: Route-level features (top/best/newest, item, user, search, settings).
-- `src/app/services`: Data, caching, and Open Graph providers.
+- `src/app/services`: Data and caching services.
 - `src/app/config`: API configuration providers.
 - `public/`: PWA manifest, icons, static assets.
 - Tests live next to code as `*.spec.ts` (e.g., `src/app/app.spec.ts`).
@@ -43,7 +43,5 @@
 ## Security & Configuration Tips
 
 - Never commit secrets. Copy `.env.example` to `.env` locally.
-- Supported Open Graph env vars: `MICROLINK_API_KEY` (supports `free`), `LINKPREVIEW_API_KEY`, `OPENGRAPHIO_APP_ID`.
-- Providers are optional; when keys are empty, providers are disabled and no external calls are made.
 - For CI/CD and Pages deploys, use repository secrets; workflow infers `--base-href` for forks.
 - Node: use `.nvmrc` (Node 22.x). NPM 11+ recommended.

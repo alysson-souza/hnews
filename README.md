@@ -8,7 +8,6 @@ Live demo: https://alysson-souza.github.io/hnews/
 
 - Story feeds: Top, Best, Newest, Ask HN, Show HN, Jobs
 - Auto-refresh: Story rankings update every 5 minutes (tab visibility aware)
-- Link previews: Open Graph thumbnails and metadata via pooled providers (Microlink, LinkPreview, OpenGraph.io)
 - Comments: Nested threads, lazy loading, auto-collapse for large threads
 - Voting UX: Local upvote state for comments (persisted in localStorage)
 - User profiles: Karma, member since, recent submissions with paging
@@ -42,7 +41,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 - TypeScript 5.8, RxJS 7.8
 - Angular Service Worker (PWA)
 - ESLint (angular-eslint), Prettier, Husky + lint-staged
-- APIs: Hacker News Firebase, Algolia HN Search, Microlink, LinkPreview, OpenGraph.io (Open Graph)
+- APIs: Hacker News Firebase, Algolia HN Search
 
 ## Getting Started
 
@@ -66,12 +65,6 @@ npm start
 ```
 
 App runs at `http://localhost:4200`.
-
-## Link Previews (Open Graph)
-
-- Configure keys in Settings → Open Graph Providers.
-- Microlink supports a free tier; set key to `free`. LinkPreview and OpenGraph.io require real keys.
-  For build‑time key preseed, see `DEPLOYMENT.md`.
 
 ## Deployment
 

@@ -1,19 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import {
-  Component,
-  Input,
-  inject,
-  signal,
-  computed,
-  OnInit,
-  ElementRef,
-  ViewChild,
-} from '@angular/core';
+import { Component, Input, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule, LocationStrategy } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../services/hackernews.service';
-import { OpenGraphService, OpenGraphData } from '../../services/opengraph.service';
 import { VisitedService } from '../../services/visited.service';
 import { StoryThumbnailComponent } from '../shared/story-thumbnail/story-thumbnail.component';
 import { SidebarService } from '../../services/sidebar.service';
@@ -169,23 +159,18 @@ import { VisitedIndicatorComponent } from '../shared/visited-indicator/visited-i
     `,
   ],
 })
-export class StoryItem implements OnInit {
+export class StoryItem {
   @Input() story?: HNItem;
   @Input() index = 0;
-  @Input() ogData?: OpenGraphData;
   @Input() isSelected = false;
   @Input() loading = false;
 
   private votedItems = signal<Set<number>>(new Set());
-  private ogService = inject(OpenGraphService);
   private router = inject(Router);
   private visitedService = inject(VisitedService);
   private sidebarService = inject(SidebarService);
   public deviceService = inject(DeviceService);
   private locationStrategy = inject(LocationStrategy);
-
-  ogDataSignal = signal<OpenGraphData | null>(null);
-  loadingOg = signal(true);
 
   // Computed property to safely determine loading state
   isLoading = computed(() => this.loading || !this.story);
@@ -198,29 +183,6 @@ export class StoryItem implements OnInit {
     const stored = localStorage.getItem('votedItems');
     if (stored) {
       this.votedItems.set(new Set(JSON.parse(stored)));
-    }
-  }
-
-  ngOnInit() {
-    // If OpenGraph data was provided as input, use it
-    if (this.ogData) {
-      this.ogDataSignal.set(this.ogData);
-      this.loadingOg.set(false);
-    }
-    // Otherwise, fetch it individually (for direct navigation or sidebar)
-    else if (this.story?.url && !this.isTextPost()) {
-      this.loadingOg.set(true);
-      this.ogService.getOpenGraphData(this.story.url).subscribe({
-        next: (data) => {
-          this.ogDataSignal.set(data);
-          this.loadingOg.set(false);
-        },
-        error: () => {
-          this.loadingOg.set(false);
-        },
-      });
-    } else {
-      this.loadingOg.set(false);
     }
   }
 

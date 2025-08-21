@@ -2,13 +2,11 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable } from '@angular/core';
 import { HNItem } from './hackernews.service';
-import { OpenGraphData } from './opengraph.service';
 
 interface SerializedStoryListState {
   stories: HNItem[];
   currentPage: number;
   totalStoryIds: number[];
-  openGraphData: [string, OpenGraphData][]; // For JSON serialization
   storyType: string;
   selectedIndex: number | null;
   scrollPosition?: number;
@@ -19,7 +17,6 @@ export interface StoryListState {
   stories: HNItem[];
   currentPage: number;
   totalStoryIds: number[];
-  openGraphData: Map<string, OpenGraphData>;
   storyType: string;
   selectedIndex: number | null;
   scrollPosition?: number;
@@ -41,15 +38,12 @@ export class StoryListStateService {
     stories: HNItem[],
     currentPage: number,
     totalStoryIds: number[],
-    openGraphData: Map<string, OpenGraphData>,
     selectedIndex: number | null,
   ): void {
-    // Convert Map to array for JSON serialization
     const serializedState: SerializedStoryListState = {
       stories,
       currentPage,
       totalStoryIds,
-      openGraphData: Array.from(openGraphData.entries()),
       storyType,
       selectedIndex,
       scrollPosition: window.scrollY,
@@ -85,10 +79,8 @@ export class StoryListStateService {
         return null;
       }
 
-      // Convert array back to Map
       const state: StoryListState = {
         ...serializedState,
-        openGraphData: new Map(serializedState.openGraphData),
       };
 
       return state;
