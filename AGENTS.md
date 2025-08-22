@@ -29,7 +29,7 @@
 
 ## Testing Guidelines
 
-- Framework: Karma + Jasmine; ChromeHeadless/Safari launchers.
+- Framework: Karma + Jasmine; ChromeHeadless launcher.
 - Place tests as `*.spec.ts` beside the unit under test.
 - Run `npm test` for watch mode; generate coverage with `ng test --watch=false --code-coverage` (outputs to `coverage/hnews`).
 - Prefer shallow tests for components and focused service specs; mock network calls.

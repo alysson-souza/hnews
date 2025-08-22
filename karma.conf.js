@@ -8,7 +8,6 @@ module.exports = function (config) {
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
-      require('karma-safari-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage'),
     ],
@@ -29,7 +28,7 @@ module.exports = function (config) {
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
     },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['ChromeHeadless', 'Safari'],
+    browsers: ['ChromeHeadless'],
     restartOnFileChange: true,
   });
 };
