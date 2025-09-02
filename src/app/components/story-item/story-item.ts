@@ -418,7 +418,7 @@ export class StoryItem {
     return true;
   }
 
-  openComments(event: Event): void {
+  openComments(event: MouseEvent | KeyboardEvent): void {
     if (!this.story) return;
 
     if (!this.deviceService.isDesktop()) {
@@ -428,12 +428,13 @@ export class StoryItem {
       return;
     }
 
-    const isShiftClick = (event as MouseEvent).shiftKey;
-    const isCmdClick = (event as MouseEvent).metaKey;
-    const isCtrlClick = (event as MouseEvent).ctrlKey;
+    const isShiftClick = event instanceof MouseEvent && event.shiftKey;
+    const isCmdClick = event instanceof MouseEvent && event.metaKey;
+    const isCtrlClick = event instanceof MouseEvent && event.ctrlKey;
+    const isMiddleClick = event instanceof MouseEvent && event.button === 1;
 
-    if (isShiftClick || isCmdClick || isCtrlClick) {
-      // Open in new window if modifier key is pressed
+    if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick) {
+      // Open in new window if modifier key or middle mouse button is used
       // Use LocationStrategy to get the correct external URL with base href
       const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
       const url = `${window.location.origin}${path}`;
