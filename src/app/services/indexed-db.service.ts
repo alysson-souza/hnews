@@ -2,7 +2,6 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable } from '@angular/core';
 import { HNItem, HNUser } from './hackernews.service';
-import { OpenGraphData } from './opengraph/opengraph.types';
 
 export interface CachedItem<T> {
   key: string | number;
@@ -14,7 +13,6 @@ export interface CachedItem<T> {
 
 export interface DBSchema {
   stories: CachedItem<HNItem>;
-  opengraph: CachedItem<OpenGraphData>;
   users: CachedItem<HNUser>;
   storyLists: CachedItem<number[]>;
   apiCache: CachedItem<unknown>;
@@ -31,7 +29,6 @@ export class IndexedDBService {
   // Store names
   private stores = {
     STORIES: 'stories',
-    OPENGRAPH: 'opengraph',
     USERS: 'users',
     STORY_LISTS: 'storyLists',
     API_CACHE: 'apiCache',
@@ -42,7 +39,6 @@ export class IndexedDBService {
     STORY_LIST: 5 * 60 * 1000, // 5 minutes
     STORY_ITEM: 30 * 60 * 1000, // 30 minutes
     USER_PROFILE: 60 * 60 * 1000, // 1 hour
-    OPEN_GRAPH: 24 * 60 * 60 * 1000, // 24 hours
   };
 
   constructor() {
@@ -76,11 +72,6 @@ export class IndexedDBService {
         if (!db.objectStoreNames.contains(this.stores.STORIES)) {
           const storyStore = db.createObjectStore(this.stores.STORIES, { keyPath: 'key' });
           storyStore.createIndex('timestamp', 'timestamp', { unique: false });
-        }
-
-        if (!db.objectStoreNames.contains(this.stores.OPENGRAPH)) {
-          const ogStore = db.createObjectStore(this.stores.OPENGRAPH, { keyPath: 'key' });
-          ogStore.createIndex('timestamp', 'timestamp', { unique: false });
         }
 
         if (!db.objectStoreNames.contains(this.stores.USERS)) {
@@ -232,14 +223,6 @@ export class IndexedDBService {
     return this.set(this.stores.STORIES, story.id, story, this.ttls.STORY_ITEM);
   }
 
-  async getOpenGraph(url: string): Promise<OpenGraphData | null> {
-    return this.get<OpenGraphData>(this.stores.OPENGRAPH, url);
-  }
-
-  async setOpenGraph(url: string, data: OpenGraphData): Promise<void> {
-    return this.set(this.stores.OPENGRAPH, url, data, this.ttls.OPEN_GRAPH);
-  }
-
   async getStoryList(type: string): Promise<number[] | null> {
     return this.get<number[]>(this.stores.STORY_LISTS, type);
   }
@@ -320,8 +303,6 @@ export class IndexedDBService {
     switch (storeName) {
       case this.stores.STORIES:
         return this.ttls.STORY_ITEM;
-      case this.stores.OPENGRAPH:
-        return this.ttls.OPEN_GRAPH;
       case this.stores.USERS:
         return this.ttls.USER_PROFILE;
       case this.stores.STORY_LISTS:
@@ -346,11 +327,7 @@ export class IndexedDBService {
             const cleanKey = key.replace(prefix, '');
 
             // Determine which store to use based on key pattern
-            if (cleanKey.startsWith('og_')) {
-              const url = cleanKey.replace('og_', '');
-              await this.setOpenGraph(url, data.data);
-              migrated++;
-            } else if (cleanKey.startsWith('user_')) {
+            if (cleanKey.startsWith('user_')) {
               const username = cleanKey.replace('user_', '');
               await this.setUserProfile(username, data.data);
               migrated++;

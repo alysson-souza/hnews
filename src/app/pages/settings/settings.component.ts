@@ -322,7 +322,6 @@ export class SettingsComponent implements OnInit {
           await caches.delete('images-v1');
           await caches.delete('favicons-v1');
         }
-        await this.cacheService.clearType('opengraph');
         this.showCacheMessage('Image cache cleared successfully', false);
       }
 

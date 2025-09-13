@@ -4,7 +4,6 @@ import { Injectable, inject } from '@angular/core';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
 import { HNItem, HNUser } from './hackernews.service';
-import { OpenGraphData } from './opengraph/opengraph.types';
 
 export enum StorageType {
   MEMORY = 'memory',
@@ -55,14 +54,6 @@ export class CacheManagerService {
         storageType: StorageType.INDEXED_DB,
         ttl: 5 * 60 * 1000,
         fallback: StorageType.LOCAL_STORAGE,
-      },
-    ],
-    [
-      'opengraph',
-      {
-        storageType: StorageType.INDEXED_DB,
-        ttl: 24 * 60 * 60 * 1000,
-        fallback: StorageType.SERVICE_WORKER,
       },
     ],
     [
@@ -228,7 +219,6 @@ export class CacheManagerService {
         const storeMap: Record<string, string> = {
           story: 'stories',
           storyList: 'storyLists',
-          opengraph: 'opengraph',
           user: 'users',
         };
         const storeName = storeMap[type];
@@ -329,8 +319,6 @@ export class CacheManagerService {
         return this.indexedDB.getStory(Number(key)) as Promise<T | null>;
       case 'storyList':
         return this.indexedDB.getStoryList(key) as Promise<T | null>;
-      case 'opengraph':
-        return this.indexedDB.getOpenGraph(key) as Promise<T | null>;
       case 'user':
         return this.indexedDB.getUserProfile(key) as Promise<T | null>;
       default:
@@ -346,9 +334,6 @@ export class CacheManagerService {
       case 'storyList':
         await this.indexedDB.setStoryList(key, data as unknown as number[]);
         break;
-      case 'opengraph':
-        await this.indexedDB.setOpenGraph(key, data as unknown as OpenGraphData);
-        break;
       case 'user':
         await this.indexedDB.setUserProfile(key, data as unknown as HNUser);
         break;
@@ -361,7 +346,6 @@ export class CacheManagerService {
     const storeMap: Record<string, string> = {
       story: 'stories',
       storyList: 'storyLists',
-      opengraph: 'opengraph',
       user: 'users',
     };
 
@@ -485,7 +469,6 @@ export class CacheManagerService {
     const storeMap: Record<string, string> = {
       stories: 'stories',
       storyLists: 'storyLists',
-      opengraph: 'opengraph',
       users: 'users',
       apiCache: 'apiCache',
     };
@@ -515,7 +498,7 @@ export class CacheManagerService {
     }
 
     // Count items in IndexedDB
-    const stores = ['stories', 'opengraph', 'users', 'storyLists', 'apiCache'];
+    const stores = ['stories', 'users', 'storyLists', 'apiCache'];
     for (const store of stores) {
       const count = await this.indexedDB.count(store);
       itemCount += count;

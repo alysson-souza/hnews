@@ -1,35 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, signal } from '@angular/core';
-import type { ApiConfig } from '../config/api.config';
-
-export interface OpenGraphSettings {
-  microlink: {
-    apiKey?: string; // 'free' enables free tier; empty disables
-  };
-  linkpreview: {
-    apiKey?: string; // empty disables
-  };
-  opengraphio: {
-    appId?: string; // empty disables
-  };
-}
-
-export interface UserSettings {
-  opengraph: OpenGraphSettings;
-}
+export type UserSettings = Record<string, never>;
 
 const STORAGE_KEY = 'user.settings.v1';
 
 @Injectable({ providedIn: 'root' })
 export class UserSettingsService {
-  private readonly defaults: UserSettings = {
-    opengraph: {
-      microlink: { apiKey: undefined },
-      linkpreview: { apiKey: undefined },
-      opengraphio: { appId: undefined },
-    },
-  };
+  private readonly defaults: UserSettings = {} as const;
 
   private _settings = signal<UserSettings>(this.load());
 
@@ -54,66 +32,14 @@ export class UserSettingsService {
     }
   }
 
-  // Convenience updaters
-  setMicrolinkApiKey(key?: string) {
-    const next = structuredClone(this._settings());
-    next.opengraph.microlink.apiKey = key;
-    this._settings.set(next);
-    this.save(next);
-  }
-  setLinkPreviewApiKey(key?: string) {
-    const next = structuredClone(this._settings());
-    next.opengraph.linkpreview.apiKey = key;
-    this._settings.set(next);
-    this.save(next);
-  }
-  setOpenGraphIoAppId(id?: string) {
-    const next = structuredClone(this._settings());
-    next.opengraph.opengraphio.appId = id;
-    this._settings.set(next);
-    this.save(next);
-  }
-
-  clearAllOpenGraph(): void {
-    const next = structuredClone(this._settings());
-    next.opengraph = structuredClone(this.defaults.opengraph);
-    this._settings.set(next);
-    this.save(next);
-  }
-
-  // Produce ApiConfig overrides from user settings (only defined fields)
-  getApiConfigOverrides(): ApiConfig {
-    const s = this._settings().opengraph;
-    const out: ApiConfig = {};
-    if (s.microlink.apiKey !== undefined) {
-      out.microlink = { apiKey: s.microlink.apiKey };
-    }
-    if (s.linkpreview.apiKey !== undefined) {
-      out.linkpreview = { apiKey: s.linkpreview.apiKey };
-    }
-    if (s.opengraphio.appId !== undefined) {
-      out.opengraphio = { appId: s.opengraphio.appId };
-    }
-    return out;
-  }
-
   private mergeSettings(base: UserSettings, override?: Partial<UserSettings>): UserSettings {
+    // Shallow-merge settings; fallback to base if no override provided
     if (!override) return base;
-    const out = structuredClone(base);
-    if (override.opengraph) {
-      out.opengraph.microlink = {
-        ...out.opengraph.microlink,
-        ...(override.opengraph.microlink ?? {}),
-      };
-      out.opengraph.linkpreview = {
-        ...out.opengraph.linkpreview,
-        ...(override.opengraph.linkpreview ?? {}),
-      };
-      out.opengraph.opengraphio = {
-        ...out.opengraph.opengraphio,
-        ...(override.opengraph.opengraphio ?? {}),
-      };
-    }
-    return out;
+    // Cast to generic records to allow spread; runtime stays a simple object merge
+    const merged = {
+      ...(base as Record<string, unknown>),
+      ...(override as Record<string, unknown>),
+    } as UserSettings;
+    return merged;
   }
 }

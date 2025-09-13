@@ -14,7 +14,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { HackernewsService, HNItem } from '../../services/hackernews.service';
 import { StoryItem } from '../story-item/story-item';
-import { Observable, switchMap, map, tap, interval, filter, takeUntil, Subject } from 'rxjs';
+import { Observable, switchMap, map, interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { KeyboardNavigationService } from '../../services/keyboard-navigation.service';
@@ -145,9 +145,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
           return this.hnService.getItems(pageIds);
         }),
         map((items) => items.filter((item) => item !== null) as HNItem[]),
-        tap(() => {
-          // OpenGraph fetching removed; relying solely on favicons now.
-        }),
       )
       .subscribe({
         next: (items) => {
@@ -223,12 +220,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
     this.hnService
       .getItems(pageIds)
-      .pipe(
-        map((items) => items.filter((item) => item !== null) as HNItem[]),
-        tap(() => {
-          // OpenGraph fetching removed; relying solely on favicons now.
-        }),
-      )
+      .pipe(map((items) => items.filter((item) => item !== null) as HNItem[]))
       .subscribe({
         next: (items) => {
           this.stories.update((stories) => [...stories, ...items]);

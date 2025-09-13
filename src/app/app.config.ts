@@ -11,7 +11,6 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
-import { provideApiConfig } from './config/api.config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,6 +22,5 @@ export const appConfig: ApplicationConfig = {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
-    provideApiConfig(),
   ],
 };

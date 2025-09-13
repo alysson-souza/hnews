@@ -45,16 +45,6 @@
         "maxAge": "5m",
         "timeout": "10s"
       }
-    },
-    {
-      "name": "opengraph-api",
-      "urls": ["https://api.microlink.io/**"],
-      "cacheConfig": {
-        "strategy": "performance",
-        "maxSize": 200,
-        "maxAge": "1d",
-        "timeout": "15s"
-      }
     }
   ]
 }
