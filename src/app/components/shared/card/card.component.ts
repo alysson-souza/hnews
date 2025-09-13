@@ -16,6 +16,10 @@ import { CommonModule } from '@angular/common';
     `
       @reference '../../../../styles.css';
 
+      :host {
+        display: block;
+      }
+
       .card-base {
         @apply bg-white dark:bg-slate-900;
         @apply border border-gray-200 dark:border-slate-700;

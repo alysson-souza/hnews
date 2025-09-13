@@ -33,186 +33,202 @@ interface SearchHit {
   imports: [CommonModule, FormsModule, RouterLink, PageContainerComponent, CardComponent],
   template: `
     <app-page-container variant="narrow">
-      <!-- Search Header -->
-      <app-card class="mb-6">
-        <h1 class="search-title">Search Hacker News</h1>
+      <div class="space-y-6">
+        <!-- Search Header -->
+        <app-card class="mb-6">
+          <h1 class="search-title">Search Hacker News</h1>
 
-        <!-- Search Input -->
-        <div class="relative">
-          <input
-            type="search"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearchChange($event)"
-            placeholder="Search stories, comments, users..."
-            aria-label="Search Hacker News content"
-            aria-describedby="search-hint"
-            class="app-input app-input-lg pr-12"
-          />
-          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
-        </div>
-
-        <!-- Search Filters -->
-        <div class="filters">
-          <select [(ngModel)]="searchType" (ngModelChange)="performSearch()" class="app-select">
-            <option value="all">All</option>
-            <option value="story">Stories</option>
-            <option value="comment">Comments</option>
-          </select>
-
-          <select [(ngModel)]="sortBy" (ngModelChange)="performSearch()" class="app-select">
-            <option value="relevance">Relevance</option>
-            <option value="date">Date</option>
-            <option value="points">Points</option>
-            <option value="comments">Comments</option>
-          </select>
-
-          <select [(ngModel)]="dateRange" (ngModelChange)="performSearch()" class="app-select">
-            <option value="all">All Time</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="week">Past Week</option>
-            <option value="month">Past Month</option>
-            <option value="year">Past Year</option>
-          </select>
-        </div>
-      </app-card>
-
-      <!-- Search Results -->
-      @if (loading()) {
-        <div class="animate-pulse space-y-4">
-          <app-card class="block p-4">
-            <div class="skel-line-4 w-3/4 mb-2"></div>
-            <div class="skel-line-3 w-1/2"></div>
-          </app-card>
-          <app-card class="block p-4">
-            <div class="skel-line-4 w-3/4 mb-2"></div>
-            <div class="skel-line-3 w-1/2"></div>
-          </app-card>
-          <app-card class="block p-4">
-            <div class="skel-line-4 w-3/4 mb-2"></div>
-            <div class="skel-line-3 w-1/2"></div>
-          </app-card>
-        </div>
-      } @else if (results().length > 0) {
-        <app-card class="block">
-          <div class="results-header">
-            <p class="results-summary">
-              Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
-            </p>
+          <!-- Search Input -->
+          <div class="relative">
+            <input
+              type="search"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search stories, comments, users..."
+              aria-label="Search Hacker News content"
+              aria-describedby="search-hint"
+              class="app-input app-input-lg pr-12"
+            />
+            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
           </div>
+          <p id="search-hint" class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Tip: use site:example.com to filter by domain, or quotes to match exact phrases.
+          </p>
 
-          <div class="results-list">
-            @for (hit of results(); track hit.objectID) {
-              <div class="result-row">
-                @if (hit.title) {
-                  <!-- Story Result -->
-                  <h3 class="result-title">
-                    @if (hit.url) {
-                      <a
-                        [href]="hit.url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="title-link"
-                        [innerHTML]="getHighlightedText(hit, 'title')"
-                      >
-                      </a>
-                    } @else {
-                      <a
-                        [routerLink]="['/item', hit.objectID]"
-                        class="title-link"
-                        [innerHTML]="getHighlightedText(hit, 'title')"
-                      >
-                      </a>
-                    }
-                  </h3>
+          <!-- Search Filters -->
+          <div class="filters">
+            <select [(ngModel)]="searchType" (ngModelChange)="performSearch()" class="app-select">
+              <option value="all">All</option>
+              <option value="story">Stories</option>
+              <option value="comment">Comments</option>
+            </select>
 
-                  @if (hit.story_text) {
-                    <p
-                      class="result-snippet line-clamp-2"
-                      [innerHTML]="getHighlightedText(hit, 'story_text')"
-                    ></p>
-                  }
-                } @else if (hit.comment_text) {
-                  <!-- Comment Result -->
-                  <div
-                    class="result-comment prose prose-sm max-w-none line-clamp-3"
-                    [innerHTML]="getHighlightedText(hit, 'comment_text')"
-                  ></div>
-                }
+            <select [(ngModel)]="sortBy" (ngModelChange)="performSearch()" class="app-select">
+              <option value="relevance">Relevance</option>
+              <option value="date">Date</option>
+              <option value="points">Points</option>
+              <option value="comments">Comments</option>
+            </select>
 
-                <!-- Metadata -->
-                <div class="result-meta">
-                  <span>{{ hit.points || 0 }} points</span>
-                  <span>•</span>
-                  <span
-                    >by
-                    <a [routerLink]="['/user', hit.author]" class="result-meta-link">
-                      {{ hit.author }}
-                    </a>
-                  </span>
-                  <span>•</span>
-                  <span>{{ getTimeAgo(hit.created_at) }}</span>
-                  <span>•</span>
-                  <a [routerLink]="['/item', hit.objectID]" class="result-meta-link">
-                    {{ hit.num_comments || 0 }} comments
-                  </a>
+            <select [(ngModel)]="dateRange" (ngModelChange)="performSearch()" class="app-select">
+              <option value="all">All Time</option>
+              <option value="24h">Last 24 Hours</option>
+              <option value="week">Past Week</option>
+              <option value="month">Past Month</option>
+              <option value="year">Past Year</option>
+            </select>
+          </div>
+        </app-card>
+
+        <!-- Search Results -->
+        @if (loading()) {
+          <app-card class="block" [noPadding]="true">
+            <div class="results-header">
+              <div class="skel-line-3 w-1/3"></div>
+            </div>
+            <div class="results-list animate-pulse px-4 pb-4">
+              @for (row of [0, 1, 2, 3, 4, 5]; track row) {
+                <div class="result-row">
+                  <div class="skel-title w-3/4 mb-2"></div>
+                  <div class="skel-snippet w-11/12 mb-3"></div>
+                  <div class="skel-meta w-1/3"></div>
                 </div>
+              }
+            </div>
+          </app-card>
+        } @else if (results().length > 0) {
+          <app-card class="block" [noPadding]="true">
+            <div class="results-header">
+              <p class="results-summary">
+                Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
+              </p>
+            </div>
+
+            <div class="results-list px-4 pb-4">
+              @for (hit of results(); track hit.objectID) {
+                <div class="result-row">
+                  @if (hit.title) {
+                    <!-- Story Result -->
+                    <h3 class="result-title">
+                      @if (hit.url) {
+                        <a
+                          [href]="hit.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="title-link"
+                          [innerHTML]="getHighlightedText(hit, 'title')"
+                        >
+                        </a>
+                      } @else {
+                        <a
+                          [routerLink]="['/item', hit.objectID]"
+                          class="title-link"
+                          [innerHTML]="getHighlightedText(hit, 'title')"
+                        >
+                        </a>
+                      }
+                    </h3>
+
+                    @if (hit.story_text) {
+                      <div
+                        class="item-prose prose prose-sm max-w-none dark:prose-invert result-snippet line-clamp-2"
+                        [innerHTML]="getHighlightedText(hit, 'story_text')"
+                      ></div>
+                    }
+                  } @else if (hit.comment_text) {
+                    <!-- Comment Result -->
+                    <div
+                      class="result-comment comment-body prose prose-sm max-w-none dark:prose-invert line-clamp-3"
+                      [innerHTML]="getHighlightedText(hit, 'comment_text')"
+                    ></div>
+                  }
+
+                  <!-- Metadata -->
+                  <div class="result-meta">
+                    <span>{{ hit.points || 0 }} points</span>
+                    <span>•</span>
+                    <span
+                      >by
+                      <a [routerLink]="['/user', hit.author]" class="result-meta-link">
+                        {{ hit.author }}
+                      </a>
+                    </span>
+                    <span>•</span>
+                    <span>{{ getTimeAgo(hit.created_at) }}</span>
+                    <span>•</span>
+                    <a [routerLink]="['/item', hit.objectID]" class="result-meta-link">
+                      {{ hit.num_comments || 0 }} comments
+                    </a>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Pagination -->
+            @if (hasMore()) {
+              <div class="pagination-bar px-4">
+                <button (click)="loadMore()" [disabled]="loadingMore()" class="pagination-btn">
+                  {{ loadingMore() ? 'Loading...' : 'Load More' }}
+                </button>
               </div>
             }
-          </div>
-
-          <!-- Pagination -->
-          @if (hasMore()) {
-            <div class="pagination-bar">
-              <button (click)="loadMore()" [disabled]="loadingMore()" class="pagination-btn">
-                {{ loadingMore() ? 'Loading...' : 'Load More' }}
-              </button>
+          </app-card>
+        } @else if (searchQuery && !loading()) {
+          <app-card class="block" [noPadding]="true">
+            <div class="results-header">
+              <p class="results-summary">
+                No results for <strong>"{{ searchQuery }}"</strong>
+              </p>
             </div>
-          }
-        </app-card>
-      } @else if (searchQuery && !loading()) {
-        <app-card class="block p-8 text-center">
-          <svg
-            class="w-16 h-16 text-gray-400 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01"
-            ></path>
-          </svg>
-          <p class="empty-main">No results found for "{{ searchQuery }}"</p>
-          <p class="empty-sub">Try adjusting your search terms or filters</p>
-        </app-card>
-      } @else {
-        <app-card class="block p-8 text-center">
-          <svg
-            class="w-16 h-16 text-gray-400 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
-          <p class="empty-main">Enter a search term to get started</p>
-          <p class="empty-sub mt-2">Search across all Hacker News stories and comments</p>
-        </app-card>
-      }
+            <div class="p-6 text-center">
+              <svg
+                class="w-16 h-16 text-gray-400 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01"
+                ></path>
+              </svg>
+              <p class="empty-main">Try adjusting your search terms or filters</p>
+            </div>
+          </app-card>
+        } @else {
+          <app-card class="block" [noPadding]="true">
+            <div class="results-header">
+              <p class="results-summary">Search Hacker News</p>
+            </div>
+            <div class="p-6 text-center">
+              <svg
+                class="w-16 h-16 text-gray-400 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+              <p class="empty-main">Enter a search term to get started</p>
+              <p class="empty-sub mt-2">Search across all Hacker News stories and comments</p>
+            </div>
+          </app-card>
+        }
+      </div>
     </app-page-container>
   `,
   styles: [
@@ -241,9 +257,18 @@ interface SearchHit {
       .skel-line-3 {
         @apply h-3 bg-gray-200 dark:bg-slate-800 rounded;
       }
+      .skel-title {
+        @apply h-4 bg-gray-200 dark:bg-slate-800 rounded;
+      }
+      .skel-snippet {
+        @apply h-3 bg-gray-200 dark:bg-slate-800 rounded;
+      }
+      .skel-meta {
+        @apply h-3 bg-gray-200 dark:bg-slate-800 rounded;
+      }
 
       .results-header {
-        @apply p-4 border-b border-gray-200 dark:border-slate-700;
+        @apply px-4 py-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 rounded-t-lg;
       }
       .results-summary {
         @apply text-sm text-gray-600 dark:text-gray-400;
@@ -267,7 +292,7 @@ interface SearchHit {
         @apply text-gray-800 dark:text-gray-200 mb-2;
       }
       .result-meta {
-        @apply flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400;
+        @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
       }
       .result-meta-link {
         @apply text-blue-600 dark:text-blue-300 hover:underline;
