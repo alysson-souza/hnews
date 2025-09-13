@@ -4,7 +4,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { HackernewsService } from '../../services/hackernews.service';
+import { HackernewsService, SearchOptions } from '../../services/hackernews.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
@@ -61,9 +61,9 @@ interface SearchHit {
         <!-- Search Filters -->
         <div class="filters">
           <select [(ngModel)]="searchType" (ngModelChange)="performSearch()" class="app-select">
+            <option value="all">All</option>
             <option value="story">Stories</option>
             <option value="comment">Comments</option>
-            <option value="all">All</option>
           </select>
 
           <select [(ngModel)]="sortBy" (ngModelChange)="performSearch()" class="app-select">
@@ -295,7 +295,7 @@ export class SearchComponent implements OnInit {
   private hnService = inject(HackernewsService);
 
   searchQuery = '';
-  searchType = 'story';
+  searchType = 'all';
   sortBy = 'relevance';
   dateRange = 'all';
 
@@ -343,9 +343,15 @@ export class SearchComponent implements OnInit {
     this.loading.set(true);
     this.currentPage.set(0);
 
-    const searchUrl = this.buildSearchUrl();
+    const searchOptions: SearchOptions = {
+      query: this.searchQuery,
+      tags: this.searchType,
+      sortBy: this.sortBy as 'relevance' | 'date' | 'points' | 'comments',
+      dateRange: this.dateRange as 'all' | '24h' | 'week' | 'month' | 'year',
+      page: this.currentPage(),
+    };
 
-    this.hnService.searchStories(searchUrl).subscribe({
+    this.hnService.searchStories(searchOptions).subscribe({
       next: (response) => {
         const hits = Array.isArray(response.hits) ? (response.hits as SearchHit[]) : [];
         this.results.set(hits);
@@ -362,9 +368,15 @@ export class SearchComponent implements OnInit {
     this.loadingMore.set(true);
     this.currentPage.update((p) => p + 1);
 
-    const searchUrl = this.buildSearchUrl();
+    const searchOptions: SearchOptions = {
+      query: this.searchQuery,
+      tags: this.searchType,
+      sortBy: this.sortBy as 'relevance' | 'date' | 'points' | 'comments',
+      dateRange: this.dateRange as 'all' | '24h' | 'week' | 'month' | 'year',
+      page: this.currentPage(),
+    };
 
-    this.hnService.searchStories(searchUrl).subscribe({
+    this.hnService.searchStories(searchOptions).subscribe({
       next: (response) => {
         const hits = Array.isArray(response.hits) ? (response.hits as SearchHit[]) : [];
         this.results.update((results) => [...results, ...hits]);
@@ -374,48 +386,6 @@ export class SearchComponent implements OnInit {
         this.loadingMore.set(false);
       },
     });
-  }
-
-  private buildSearchUrl(): string {
-    let url = this.searchQuery;
-
-    // Add type filter
-    if (this.searchType !== 'all') {
-      url += `&tags=${this.searchType}`;
-    }
-
-    // Add date range filter
-    if (this.dateRange !== 'all') {
-      const now = Math.floor(Date.now() / 1000);
-      let timestamp = now;
-
-      switch (this.dateRange) {
-        case '24h':
-          timestamp = now - 86400;
-          break;
-        case 'week':
-          timestamp = now - 604800;
-          break;
-        case 'month':
-          timestamp = now - 2592000;
-          break;
-        case 'year':
-          timestamp = now - 31536000;
-          break;
-      }
-
-      url += `&numericFilters=created_at_i>${timestamp}`;
-    }
-
-    // Add sorting
-    if (this.sortBy === 'date') {
-      url = url.replace('search?', 'search_by_date?');
-    }
-
-    // Add pagination
-    url += `&page=${this.currentPage()}`;
-
-    return url;
   }
 
   hasMore(): boolean {

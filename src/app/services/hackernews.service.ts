@@ -37,6 +37,14 @@ interface AlgoliaSearchResponse {
   nbHits?: number;
 }
 
+export interface SearchOptions {
+  query: string;
+  tags?: string;
+  sortBy?: 'relevance' | 'date' | 'points' | 'comments';
+  dateRange?: 'all' | '24h' | 'week' | 'month' | 'year';
+  page?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -250,15 +258,89 @@ export class HackernewsService {
     return this.http.get<{ items: number[]; profiles: string[] }>(`${this.API_BASE}/updates.json`);
   }
 
-  searchStories(query: string): Observable<AlgoliaSearchResponse> {
-    // Note: HN doesn't have a native search API
-    // You would typically use Algolia HN Search API for this
-    const searchUrl = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(query)}&tags=story`;
+  searchStories(options: SearchOptions): Observable<AlgoliaSearchResponse> {
+    let baseUrl = 'https://hn.algolia.com/api/v1/search';
+    if (options.sortBy === 'date') {
+      baseUrl = 'https://hn.algolia.com/api/v1/search_by_date';
+    }
+
+    const params = new URLSearchParams();
+    // Enable Algolia advanced syntax to support operators like quotes/parentheses
+    params.append('advancedSyntax', 'true');
+
+    // Normalize and enhance query handling for special operators
+    const rawQuery = (options.query || '').trim();
+    const siteMatch = rawQuery.match(/^site:(\S+)/i);
+    const urlMatch = rawQuery.match(/^url:(\S+)/i);
+
+    if (siteMatch) {
+      // For site:domain searches, restrict to URL attribute and force story tag
+      const domain = siteMatch[1]
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .replace(/\/.*$/, '');
+      params.append('query', domain);
+      params.append('restrictSearchableAttributes', 'url');
+      // site: only makes sense for stories with URLs
+      params.append('tags', 'story');
+    } else if (urlMatch) {
+      // For url: searches, behave similarly by restricting to URL
+      const term = urlMatch[1];
+      params.append('query', term);
+      params.append('restrictSearchableAttributes', 'url');
+      params.append('tags', 'story');
+    } else {
+      params.append('query', rawQuery);
+    }
+
+    // Add tags filter
+    // Add tags filter (unless already set by site:/url: handling above)
+    if (!params.has('tags')) {
+      if (options.tags && options.tags !== 'all') {
+        params.append('tags', options.tags);
+      } else {
+        // Default to stories and comments if no specific tag
+        params.append('tags', '(story,comment)');
+      }
+    }
+
+    // Add date range filter
+    if (options.dateRange && options.dateRange !== 'all') {
+      const now = Math.floor(Date.now() / 1000);
+      let timestamp = now;
+
+      switch (options.dateRange) {
+        case '24h':
+          timestamp = now - 86400;
+          break;
+        case 'week':
+          timestamp = now - 604800;
+          break;
+        case 'month':
+          timestamp = now - 2592000;
+          break;
+        case 'year':
+          timestamp = now - 31536000;
+          break;
+      }
+
+      params.append('numericFilters', `created_at_i>${timestamp}`);
+    }
+
+    // Add pagination
+    if (options.page !== undefined) {
+      params.append('page', options.page.toString());
+    }
+
+    const searchUrl = `${baseUrl}?${params.toString()}`;
     return this.http.get<AlgoliaSearchResponse>(searchUrl);
   }
 
   searchByDate(query: string): Observable<AlgoliaSearchResponse> {
-    const searchUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=story`;
-    return this.http.get<AlgoliaSearchResponse>(searchUrl);
+    return this.searchStories({
+      query,
+      tags: 'story',
+      sortBy: 'date',
+    });
   }
 }
