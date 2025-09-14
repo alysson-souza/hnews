@@ -25,6 +25,10 @@ This guide enables AI coding agents to work productively in the `hnews` Angular 
 - **Angular Selectors**: Components use `app-` (kebab-case), directives use `app` (camelCase)
 - **Filenames**: `kebab-case` for files, classes use `PascalCase` + suffix (`FooComponent`, `BarService`)
 - **Tests**: Place as `*.spec.ts` next to code, prefer shallow component tests and mock network calls
+- **Comments (strict policy)**:
+  - Do NOT add narration or change-log comments in code (e.g., "moved to X", "refactor", "temporary", "cleanup").
+  - Comments must explain intent, assumptions, constraints, non-obvious decisions, and public API contracts.
+  - Process notes belong in commit messages, PR descriptions, or docs — not inline in source.
 
 ## Patterns & Examples
 
@@ -47,3 +51,9 @@ This guide enables AI coding agents to work productively in the `hnews` Angular 
 ---
 
 For more details, see `AGENTS.md` and `README.md`. Ask for feedback if any section is unclear or missing.
+
+## AI Agent Edit Rules
+
+- Keep diffs minimal and focused; avoid sprinkling explanatory comments about what changed.
+- Do not add or preserve narration/change-log comments; remove them when encountered.
+- Only introduce comments when they clarify business logic, edge cases, or API usage that isn’t obvious from code.
