@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
 import { HNItem, HNUser } from '../models/hn';
@@ -44,6 +45,7 @@ export class CacheManagerService {
   // Memory cache for frequently accessed items
   private memoryCache = new Map<string, MemoryCacheItem<unknown>>();
   private readonly MAX_MEMORY_ITEMS = 100;
+  private updateStreams = new Map<string, Subject<unknown>>();
 
   // Service Worker communication
   private swRegistration: ServiceWorkerRegistration | null = null;
@@ -54,7 +56,7 @@ export class CacheManagerService {
       'story',
       {
         storageType: StorageType.INDEXED_DB,
-        ttl: this.ttlStories,
+        ttl: this.ttlItem,
         fallback: StorageType.LOCAL_STORAGE,
       },
     ],
@@ -62,7 +64,7 @@ export class CacheManagerService {
       'storyList',
       {
         storageType: StorageType.INDEXED_DB,
-        ttl: this.ttlItem,
+        ttl: this.ttlStories,
         fallback: StorageType.LOCAL_STORAGE,
       },
     ],
@@ -120,6 +122,19 @@ export class CacheManagerService {
     if (!migrationDone) {
       await this.indexedDB.migrateFromLocalStorage();
       localStorage.setItem('hnews_migration_v2', 'true');
+    }
+
+    // One-time reset of storyLists to correct any legacy key/aliasing issues
+    // that could cause categories to display the wrong list. Safe to clear;
+    // lists are cheap to refetch and repopulate.
+    const listResetFlag = 'hnews_storyLists_reset_2025_09_14';
+    if (!localStorage.getItem(listResetFlag)) {
+      try {
+        await this.indexedDB.clear('storyLists');
+      } catch {
+        // Swallow errors; lack of IndexedDB shouldn't block startup
+      }
+      localStorage.setItem(listResetFlag, 'true');
     }
   }
 
@@ -222,6 +237,9 @@ export class CacheManagerService {
     if (config.fallback) {
       await this.setInStorage(config.fallback, type, key, data, finalTTL);
     }
+
+    // Notify subscribers of updates for this key
+    this.emitUpdate<T>(type, key, data);
   }
 
   async delete(type: string, key: string): Promise<void> {
@@ -566,5 +584,25 @@ export class CacheManagerService {
       itemCount,
       memoryItems: this.memoryCache.size,
     };
+  }
+
+  // Update notification API
+  getUpdates<T>(type: string, key: string): Observable<T> {
+    const subject = this.getOrCreateSubject(`${type}:${key}`);
+    return subject.asObservable() as Observable<T>;
+  }
+
+  private emitUpdate<T>(type: string, key: string, data: T): void {
+    const subject = this.getOrCreateSubject(`${type}:${key}`);
+    subject.next(data);
+  }
+
+  private getOrCreateSubject(fullKey: string): Subject<unknown> {
+    let subject = this.updateStreams.get(fullKey);
+    if (!subject) {
+      subject = new Subject<unknown>();
+      this.updateStreams.set(fullKey, subject);
+    }
+    return subject;
   }
 }

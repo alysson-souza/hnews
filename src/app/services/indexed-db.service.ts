@@ -224,11 +224,34 @@ export class IndexedDBService {
   }
 
   async getStoryList(type: string): Promise<number[] | null> {
-    return this.get<number[]>(this.stores.STORY_LISTS, type);
+    // Normalize type to canonical key
+    const canonical = type === 'newest' ? 'new' : type;
+
+    // Try canonical key first
+    let result = await this.get<number[]>(this.stores.STORY_LISTS, canonical);
+
+    // If not found, attempt legacy-prefixed key (e.g., 'storyList_new') and migrate
+    if (result === null) {
+      const legacyKey = `storyList_${canonical}`;
+      const legacy = await this.get<number[]>(this.stores.STORY_LISTS, legacyKey);
+      if (legacy) {
+        // Migrate to canonical key and remove legacy key
+        await this.set(this.stores.STORY_LISTS, canonical, legacy, this.ttls.STORY_LIST);
+        await this.delete(this.stores.STORY_LISTS, legacyKey);
+        result = legacy;
+      }
+    }
+
+    return result;
   }
 
   async setStoryList(type: string, ids: number[]): Promise<void> {
-    return this.set(this.stores.STORY_LISTS, type, ids, this.ttls.STORY_LIST);
+    const canonical = type === 'newest' ? 'new' : type;
+    // Write canonical key
+    await this.set(this.stores.STORY_LISTS, canonical, ids, this.ttls.STORY_LIST);
+    // Clean up any legacy-prefixed key to avoid future confusion
+    const legacyKey = `storyList_${canonical}`;
+    await this.delete(this.stores.STORY_LISTS, legacyKey);
   }
 
   async getUserProfile(username: string): Promise<HNUser | null> {

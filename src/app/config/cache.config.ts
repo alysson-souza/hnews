@@ -19,3 +19,9 @@ export const CACHE_TTL_SEARCH = new InjectionToken<number>('CACHE_TTL_SEARCH', {
   providedIn: 'root',
   factory: () => 10 * 60 * 1000, // 10 minutes
 });
+
+// Versioned cache namespace to allow seamless invalidation on schema changes
+export const CACHE_NAMESPACE_VERSION = new InjectionToken<string>('CACHE_NAMESPACE_VERSION', {
+  providedIn: 'root',
+  factory: () => 'v1',
+});

@@ -13,6 +13,13 @@ export class PwaUpdateService {
   constructor() {
     if (!this.updates.isEnabled) return;
 
+    // Enable navigation preload to speed up initial navigations
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.navigationPreload?.enable?.())
+        .catch(() => undefined);
+    }
+
     const appIsStable$ = this.appRef.isStable.pipe(first((stable) => stable === true));
     const every15Min$ = interval(15 * 60 * 1000);
     concat(appIsStable$, every15Min$).subscribe(() => {
