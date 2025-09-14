@@ -8,18 +8,15 @@ import {
   OnChanges,
   SimpleChanges,
   inject,
-  signal,
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HackernewsService } from '../../services/hackernews.service';
-import { HNItem } from '../../models/hn';
 import { StoryItem } from '../story-item/story-item';
-import { Observable, switchMap, map, interval, filter, takeUntil, Subject } from 'rxjs';
+import { interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { KeyboardNavigationService } from '../../services/keyboard-navigation.service';
-import { StoryListStateService } from '../../services/story-list-state.service';
+import { StoryListStore } from '../../stores/story-list.store';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
 
 @Component({
@@ -71,19 +68,18 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   @Input() storyType: 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' = 'top';
   @Input() pageSize = 30;
 
-  private hnService = inject(HackernewsService);
-  private stateService = inject(StoryListStateService);
+  private store = inject(StoryListStore);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
   keyboardNavService = inject(KeyboardNavigationService);
 
-  stories = signal<HNItem[]>([]);
-  loading = signal(true);
-  error = signal<string | null>(null);
-  currentPage = signal(0);
-  totalStoryIds = signal<number[]>([]);
-  refreshing = signal(false);
-  newStoriesAvailable = signal(0);
+  stories = this.store.stories;
+  loading = this.store.loading;
+  error = this.store.error;
+  currentPage = this.store.currentPage;
+  totalStoryIds = this.store.totalStoryIds;
+  refreshing = this.store.refreshing;
+  newStoriesAvailable = this.store.newStoriesAvailable;
 
   // Array for skeleton count based on page size
   skeletonArray = Array(this.pageSize)
@@ -106,7 +102,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit() {
     // Check cache on initial load
-    this.checkCacheForCurrentType();
+    this.store.init(this.storyType, this.pageSize);
 
     // Start auto-refresh timer
     this.startAutoRefresh();
@@ -116,10 +112,8 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    // When storyType changes, check cache for the new type
     if (changes['storyType'] && !changes['storyType'].firstChange) {
-      this.saveCurrentState(); // Save state for the previous type
-      this.checkCacheForCurrentType();
+      this.store.init(this.storyType, this.pageSize);
     }
   }
 
@@ -129,151 +123,25 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
     this.destroy$.complete();
 
     // Save current state when component is destroyed
-    this.saveCurrentState();
+    // State persisted by store
   }
 
   loadStories(isRefresh = false, refreshStartTime?: number) {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.getStoryIds(isRefresh)
-      .pipe(
-        switchMap((ids) => {
-          this.totalStoryIds.set(ids);
-          const start = this.currentPage() * this.pageSize;
-          const end = start + this.pageSize;
-          const pageIds = ids.slice(start, end);
-          return this.hnService.getItems(pageIds);
-        }),
-        map((items) => items.filter((item) => item !== null) as HNItem[]),
-      )
-      .subscribe({
-        next: (items) => {
-          this.stories.set(items);
-          this.loading.set(false);
-
-          // If this is a refresh, ensure minimum display time
-          if (isRefresh && refreshStartTime) {
-            const elapsed = Date.now() - refreshStartTime;
-            const remainingTime = Math.max(0, 500 - elapsed);
-
-            if (remainingTime > 0) {
-              // Wait remaining time before hiding skeletons
-              setTimeout(() => {
-                this.refreshing.set(false);
-              }, remainingTime);
-            } else {
-              // Minimum time already passed
-              this.refreshing.set(false);
-            }
-
-            // Phase 2: Fetch fresh story details in background
-            // This updates vote counts and titles
-            const storyIds = this.totalStoryIds().slice(0, this.pageSize);
-            this.refreshStoryDetails(storyIds);
-          }
-
-          // Save state after loading
-          this.saveCurrentState();
-        },
-        error: (err) => {
-          this.error.set('Failed to load stories. Please try again.');
-          this.loading.set(false);
-
-          // Also hide refresh skeletons on error
-          if (isRefresh) {
-            this.refreshing.set(false);
-          }
-
-          console.error('Error loading stories:', err);
-        },
-      });
-  }
-
-  private getStoryIds(forceRefresh = false): Observable<number[]> {
-    switch (this.storyType) {
-      case 'top':
-        return this.hnService.getTopStories(forceRefresh);
-      case 'best':
-        return this.hnService.getBestStories(forceRefresh);
-      case 'new':
-        return this.hnService.getNewStories(forceRefresh);
-      case 'ask':
-        return this.hnService.getAskStories(forceRefresh);
-      case 'show':
-        return this.hnService.getShowStories(forceRefresh);
-      case 'job':
-        return this.hnService.getJobStories(forceRefresh);
-      default:
-        return this.hnService.getTopStories(forceRefresh);
-    }
+    this.store.loadStories(isRefresh, refreshStartTime);
   }
 
   loadMore() {
     if (!this.hasMore()) return;
-
-    this.currentPage.update((p) => p + 1);
-    this.loading.set(true);
-
-    const start = this.currentPage() * this.pageSize;
-    const end = start + this.pageSize;
-    const pageIds = this.totalStoryIds().slice(start, end);
-
-    this.hnService
-      .getItems(pageIds)
-      .pipe(map((items) => items.filter((item) => item !== null) as HNItem[]))
-      .subscribe({
-        next: (items) => {
-          this.stories.update((stories) => [...stories, ...items]);
-          this.loading.set(false);
-          // Save state after loading more
-          this.saveCurrentState();
-        },
-        error: (err) => {
-          this.error.set('Failed to load more stories.');
-          this.loading.set(false);
-          console.error('Error loading more stories:', err);
-        },
-      });
+    this.store.loadMore();
   }
 
   hasMore(): boolean {
-    return (this.currentPage() + 1) * this.pageSize < this.totalStoryIds().length;
+    return this.store.hasMore();
   }
 
   refresh() {
-    this.refreshing.set(true);
-    // Clear cached state when explicitly refreshing
-    this.stateService.clearState(this.storyType);
-    this.currentPage.set(0);
-    this.stories.set([]);
     this.keyboardNavService.clearSelection();
-
-    // Track when we started refreshing for minimum display time
-    const refreshStartTime = Date.now();
-
-    // Load stories with refresh flag
-    this.loadStories(true, refreshStartTime);
-  }
-
-  private refreshStoryDetails(storyIds: number[]): void {
-    // Fetch fresh story data in background to update vote counts and titles
-    // No loading state shown - seamless update
-    this.hnService.getItems(storyIds, true).subscribe({
-      next: (freshItems) => {
-        // Filter out nulls and update stories
-        const validItems = freshItems.filter((item) => item !== null) as HNItem[];
-        if (validItems.length > 0) {
-          this.stories.set(validItems);
-          // Save the updated state with fresh vote counts
-          this.saveCurrentState();
-        }
-      },
-      error: (err) => {
-        // Silent fail for background refresh - user already has cached data
-        console.warn('Background refresh failed:', err);
-      },
-    });
+    this.store.refresh();
   }
 
   private startAutoRefresh(): void {
@@ -338,70 +206,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   }
 
   private silentRefreshStoryList(): void {
-    this.getStoryIds(true).subscribe({
-      next: (freshIds) => {
-        const currentIds = this.totalStoryIds();
-
-        // Count new stories at the top
-        const newStoryCount = this.countNewStoriesAtTop(currentIds, freshIds);
-
-        if (newStoryCount > 0 && window.scrollY < 100) {
-          // User is at top - show new stories indicator
-          this.newStoriesAvailable.set(newStoryCount);
-        }
-
-        // Update the list silently
-        this.totalStoryIds.set(freshIds);
-
-        // Fetch only new stories we don't have cached
-        const currentStoryIds = this.stories().map((s) => s.id);
-        const newIds = freshIds
-          .slice(0, this.pageSize)
-          .filter((id) => !currentStoryIds.includes(id));
-
-        if (newIds.length > 0) {
-          this.hnService.getItems(newIds).subscribe({
-            next: (newStories) => {
-              this.mergeNewStories(newStories);
-            },
-            error: (err) => {
-              console.warn('Failed to fetch new stories:', err);
-            },
-          });
-        }
-      },
-      error: (err) => {
-        console.warn('Silent refresh failed:', err);
-      },
-    });
-  }
-
-  private countNewStoriesAtTop(currentIds: number[], freshIds: number[]): number {
-    if (currentIds.length === 0) return 0;
-
-    const firstCurrentId = currentIds[0];
-    const firstCurrentIndex = freshIds.indexOf(firstCurrentId);
-
-    // If our first story is still in the fresh list, count how many are before it
-    return firstCurrentIndex > 0 ? firstCurrentIndex : 0;
-  }
-
-  private mergeNewStories(newStories: (HNItem | null)[]): void {
-    const validNewStories = newStories.filter((item) => item !== null) as HNItem[];
-    if (validNewStories.length === 0) return;
-
-    const currentStories = this.stories();
-    const currentIds = currentStories.map((s) => s.id);
-
-    // Add new stories that aren't already displayed
-    const trulyNewStories = validNewStories.filter((story) => !currentIds.includes(story.id));
-
-    if (trulyNewStories.length > 0) {
-      // Merge new stories at the beginning
-      const mergedStories = [...trulyNewStories, ...currentStories];
-      this.stories.set(mergedStories.slice(0, this.pageSize));
-      this.saveCurrentState();
-    }
+    this.store.silentRefreshStoryList();
   }
 
   loadNewStories(): void {
@@ -410,47 +215,5 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
     // Trigger a manual refresh to load the new stories
     this.refresh();
-  }
-
-  checkCacheForCurrentType(): void {
-    // Check if we have cached state for the current story type
-    const cachedState = this.stateService.getState(this.storyType);
-    if (cachedState) {
-      // Use cached state
-      this.stories.set(cachedState.stories);
-      this.currentPage.set(cachedState.currentPage);
-      this.totalStoryIds.set(cachedState.totalStoryIds);
-      this.loading.set(false);
-
-      // Restore scroll position after a delay
-      if (cachedState.scrollPosition !== undefined) {
-        setTimeout(() => {
-          window.scrollTo({ top: cachedState.scrollPosition, behavior: 'instant' });
-        }, 50);
-      }
-    } else {
-      // No cached state - load fresh data
-      this.loadStories();
-    }
-  }
-
-  saveCurrentState(): void {
-    this.stateService.saveState(
-      this.storyType,
-      this.stories(),
-      this.currentPage(),
-      this.totalStoryIds(),
-      this.keyboardNavService.selectedIndex(),
-    );
-  }
-
-  private isTextPost(story: HNItem): boolean {
-    const title = story?.title || '';
-    return (
-      !story?.url ||
-      title.startsWith('Ask HN:') ||
-      title.startsWith('Tell HN:') ||
-      (title.startsWith('Show HN:') && !story?.url)
-    );
   }
 }
