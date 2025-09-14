@@ -88,7 +88,7 @@
       <div class="flex-1 min-w-0 overflow-hidden">
         <!-- Title -->
         @if (isLoading()) {
-          <div class="h-5 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+          <div class="h-6 sm:h-7 bg-gray-200 rounded w-3/4 mb-1 mt-1 animate-pulse"></div>
         } @else {
           <h2
             class="story-title"
@@ -119,7 +119,7 @@
 
         <!-- Domain - Now clickable -->
         @if (isLoading()) {
-          <div class="h-4 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
+          <div class="h-4 bg-gray-200 rounded w-32 mb-1 animate-pulse"></div>
         } @else if (story!.url && getDomain(story!.url)) {
           <button
             type="button"
