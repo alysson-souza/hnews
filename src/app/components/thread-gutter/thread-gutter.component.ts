@@ -8,7 +8,15 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="thread-container group" [ngClass]="depth > 0 ? 'thread-indent' : ''">
+    <div
+      class="thread-container group"
+      [ngClass]="depth > 0 ? 'thread-indent' : ''"
+      role="treeitem"
+      [attr.aria-level]="depth + 1"
+      [attr.aria-expanded]="clickable ? !collapsed : null"
+      aria-selected="false"
+      tabindex="-1"
+    >
       <div class="header">
         <ng-content select="[header]"></ng-content>
       </div>
@@ -24,7 +32,9 @@ import { CommonModule } from '@angular/common';
             title="Toggle Thread"
           ></button>
         }
-        <ng-content select="[body]"></ng-content>
+        <div role="group">
+          <ng-content select="[body]"></ng-content>
+        </div>
       </div>
     </div>
   `,

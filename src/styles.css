@@ -262,3 +262,13 @@ code {
 .dark .item-prose a::after {
   color: #9ca3af; /* gray-400 */
 }
+
+/* Smaller style for domain-only links (transformed with class ext-link) */
+.comment-body a.ext-link,
+.item-prose a.ext-link {
+  /* Force a smaller size than text-sm applied above */
+  font-size: 0.75rem !important; /* text-xs */
+  line-height: 1.15rem !important;
+  /* Slightly tighter chip paddings */
+  padding: 0.125rem 0.375rem !important; /* ~py-0.5 px-1.5 -> a bit tighter */
+}

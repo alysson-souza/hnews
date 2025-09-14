@@ -62,7 +62,7 @@ import { VisitedService } from '../../services/visited.service';
                 </h4>
 
                 @if (item()!.kids && item()!.kids!.length > 0) {
-                  <div class="space-y-4">
+                  <div class="space-y-4" role="tree" aria-label="Comments">
                     @for (commentId of item()!.kids!; track commentId) {
                       <app-comment-thread [commentId]="commentId" [depth]="0"></app-comment-thread>
                     }

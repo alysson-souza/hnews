@@ -126,7 +126,7 @@ import { VisitedIndicatorComponent } from '../shared/visited-indicator/visited-i
         @apply text-gray-500 dark:text-gray-400 truncate max-w-[150px] sm:max-w-[200px];
       }
       .domain-btn {
-        @apply inline-block text-xs sm:text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all;
+        @apply inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all;
       }
 
       /* Actions */

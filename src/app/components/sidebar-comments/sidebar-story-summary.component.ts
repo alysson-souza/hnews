@@ -23,6 +23,7 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
           >
             {{ item.title }}
           </a>
+          <span class="domain ml-1">({{ getDomain(item.url) }})</span>
         } @else {
           {{ item.title }}
         }
@@ -60,6 +61,9 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
       .story-link {
         @apply text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
       }
+      .domain {
+        @apply text-xs text-gray-600 dark:text-gray-400;
+      }
       .meta {
         @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3;
       }
@@ -74,4 +78,13 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
 })
 export class SidebarStorySummaryComponent {
   @Input({ required: true }) item!: HNItem;
+  getDomain(url?: string): string | null {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      return u.hostname.replace(/^www\./i, '');
+    } catch {
+      return null;
+    }
+  }
 }

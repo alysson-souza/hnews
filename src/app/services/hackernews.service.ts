@@ -214,6 +214,42 @@ export class HackernewsService {
     return forkJoin(requests);
   }
 
+  /**
+   * Convenience: fetch a story and resolve its top-level comments (kids) as full items.
+   * Returns only existing, non-null items (deleted are filtered by consumers if needed).
+   */
+  getStoryTopLevelComments(storyId: number, forceRefresh = false): Observable<HNItem[]> {
+    return this.getItem(storyId, forceRefresh).pipe(
+      switchMap((story) => {
+        const kids = story?.kids || [];
+        if (!kids.length) return of([]);
+        return this.getItems(kids, forceRefresh).pipe(
+          switchMap((items) => of(items.filter((i): i is HNItem => !!i))),
+        );
+      }),
+    );
+  }
+
+  /**
+   * Convenience: fetch a comment's direct children by comment id.
+   * Useful for on-demand expansion of a node.
+   */
+  getCommentChildren(commentId: number, page?: number, pageSize?: number): Observable<HNItem[]> {
+    return this.getItem(commentId).pipe(
+      switchMap((item) => {
+        const kids = item?.kids || [];
+        if (!kids.length) return of([]);
+        const ids =
+          page !== undefined && pageSize !== undefined
+            ? kids.slice(page * pageSize, page * pageSize + pageSize)
+            : kids;
+        return this.getItems(ids).pipe(
+          switchMap((items) => of(items.filter((i): i is HNItem => !!i))),
+        );
+      }),
+    );
+  }
+
   getItemsPage(ids: number[], page = 0, pageSize = 10): Observable<(HNItem | null)[]> {
     if (!ids || ids.length === 0) {
       return of([]);

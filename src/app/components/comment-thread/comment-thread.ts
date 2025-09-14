@@ -82,6 +82,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
                       [commentId]="reply.id"
                       [depth]="depth + 1"
                       [lazyLoad]="true"
+                      [initialComment]="reply"
                     ></app-comment-thread>
                   } @else {
                     <app-thread-gutter [depth]="depth + 1" [clickable]="false" [collapsed]="false">
@@ -169,6 +170,8 @@ export class CommentThread implements OnInit {
   @Input({ required: true }) commentId!: number;
   @Input() depth = 0;
   @Input() lazyLoad = false;
+  // Optional: when a parent already fetched this comment, pass it to avoid refetching
+  @Input() initialComment?: HNItem;
 
   // Auto-collapse threshold
   private readonly autoCollapseThreshold = 10;
@@ -232,8 +235,30 @@ export class CommentThread implements OnInit {
   }
 
   ngOnInit() {
+    // If parent provided the comment, hydrate without fetching
+    if (this.initialComment) {
+      this.hydrateFromInitial(this.initialComment);
+      return;
+    }
+
     if (!this.lazyLoad) {
       this.loadComment();
+    } else {
+      // Lazy instances render a small loader card until user opts-in
+      this.loading.set(false);
+    }
+  }
+
+  private hydrateFromInitial(item: HNItem) {
+    if (item && !item.deleted) {
+      this.comment.set(item);
+      this.commentLoaded.set(true);
+      // Prepare kids but DO NOT auto-load replies; load only on expand
+      if (item.kids && item.kids.length > 0) {
+        this.allKidsIds = item.kids;
+        this.hasMoreReplies.set(item.kids.length > this.pageSize);
+      }
+      this.loading.set(false);
     } else {
       this.loading.set(false);
     }
@@ -248,22 +273,13 @@ export class CommentThread implements OnInit {
           this.comment.set(item);
           this.commentLoaded.set(true);
 
-          // Set up kids array but don't auto-load if should collapse
+          // Prepare kids but DO NOT auto-load replies; load only on expand
           if (item.kids && item.kids.length > 0) {
             this.allKidsIds = item.kids;
             this.hasMoreReplies.set(item.kids.length > this.pageSize);
-
-            // Always finish loading the parent first
-            this.loading.set(false);
-
-            // Only auto-load replies if comment shouldn't be collapsed
-            if (!this.shouldAutoCollapse()) {
-              // Small delay to let parent render first
-              setTimeout(() => this.loadRepliesPage(0), 50);
-            }
-          } else {
-            this.loading.set(false);
           }
+          // Parent is ready; children loading deferred until expand
+          this.loading.set(false);
         } else {
           this.loading.set(false);
         }

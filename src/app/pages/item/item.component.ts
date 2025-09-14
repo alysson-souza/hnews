@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HackernewsService, HNItem } from '../../services/hackernews.service';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
+import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
 import { VisitedService } from '../../services/visited.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
@@ -20,6 +21,7 @@ import { VisitedIndicatorComponent } from '../../components/shared/visited-indic
     PageContainerComponent,
     CardComponent,
     VisitedIndicatorComponent,
+    CommentTextComponent,
   ],
   template: `
     <app-page-container>
@@ -75,7 +77,7 @@ import { VisitedIndicatorComponent } from '../../components/shared/visited-indic
 
           <!-- Story Text (for Ask HN, etc.) -->
           @if (item()!.text) {
-            <div class="item-prose" [innerHTML]="item()!.text"></div>
+            <app-comment-text [html]="item()!.text || ''"></app-comment-text>
           }
         </app-card>
 
@@ -84,7 +86,7 @@ import { VisitedIndicatorComponent } from '../../components/shared/visited-indic
           <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
 
           @if (visibleComments().length > 0) {
-            <div class="space-y-4">
+            <div class="space-y-4" role="tree" aria-label="Comments">
               @for (commentId of visibleComments(); track commentId; let i = $index) {
                 <app-comment-thread
                   [commentId]="commentId"
