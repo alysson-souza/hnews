@@ -23,6 +23,7 @@ import { KeyboardNavigationService } from './services/keyboard-navigation.servic
 import { NavigationHistoryService } from './services/navigation-history.service';
 import { StoryListStateService } from './services/story-list-state.service';
 import { VERSION } from './version';
+import { PwaUpdateService } from './services/pwa-update.service';
 
 @Component({
   selector: 'app-root',
@@ -54,6 +55,7 @@ export class App implements OnInit, OnDestroy {
   keyboardNavService = inject(KeyboardNavigationService);
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
+  private readonly _pwaUpdate = inject(PwaUpdateService);
   version = VERSION;
 
   isOffline = signal(false);
