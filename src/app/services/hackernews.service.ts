@@ -5,37 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, of, from } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
 import { CacheManagerService } from './cache-manager.service';
-
-export interface HNItem {
-  id: number;
-  deleted?: boolean;
-  type: 'job' | 'story' | 'comment' | 'poll' | 'pollopt';
-  by?: string;
-  time: number;
-  text?: string;
-  dead?: boolean;
-  parent?: number;
-  poll?: number;
-  kids?: number[];
-  url?: string;
-  score?: number;
-  title?: string;
-  parts?: number[];
-  descendants?: number;
-}
-
-export interface HNUser {
-  id: string;
-  created: number;
-  karma: number;
-  about?: string;
-  submitted?: number[];
-}
-
-interface AlgoliaSearchResponse {
-  hits?: unknown[];
-  nbHits?: number;
-}
+import { HNItem, HNUser, mapToHNItem } from '../models/hn';
+import { AlgoliaSearchResponse } from '../models/algolia';
 
 export interface SearchOptions {
   query: string;
@@ -177,11 +148,13 @@ export class HackernewsService {
   getItem(id: number, forceRefresh = false): Observable<HNItem | null> {
     // For refresh: Skip cache to get fresh vote counts
     if (forceRefresh) {
-      return this.http.get<HNItem>(`${this.API_BASE}/item/${id}.json`).pipe(
-        tap(async (data) => {
-          if (data) {
-            await this.cache.set('stories', id.toString(), data);
+      return this.http.get<unknown>(`${this.API_BASE}/item/${id}.json`).pipe(
+        switchMap(async (raw) => {
+          const mapped = mapToHNItem(raw);
+          if (mapped) {
+            await this.cache.set('stories', id.toString(), mapped);
           }
+          return mapped;
         }),
         catchError(() => of(null)),
       );
@@ -193,11 +166,13 @@ export class HackernewsService {
           return of(cached);
         }
 
-        return this.http.get<HNItem>(`${this.API_BASE}/item/${id}.json`).pipe(
-          tap(async (data) => {
-            if (data) {
-              await this.cache.set('stories', id.toString(), data);
+        return this.http.get<unknown>(`${this.API_BASE}/item/${id}.json`).pipe(
+          switchMap(async (raw) => {
+            const mapped = mapToHNItem(raw);
+            if (mapped) {
+              await this.cache.set('stories', id.toString(), mapped);
             }
+            return mapped;
           }),
           catchError(() => of(null)),
         );

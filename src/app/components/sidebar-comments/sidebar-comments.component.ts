@@ -3,7 +3,8 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarService } from '../../services/sidebar.service';
-import { HackernewsService, HNItem } from '../../services/hackernews.service';
+import { HackernewsService } from '../../services/hackernews.service';
+import { HNItem } from '../../models/hn';
 import { CommentThread } from '../comment-thread/comment-thread';
 import { SidebarCommentsHeaderComponent } from './sidebar-comments-header.component';
 import { SidebarStorySummaryComponent } from './sidebar-story-summary.component';

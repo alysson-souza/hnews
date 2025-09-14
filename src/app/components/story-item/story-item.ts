@@ -3,7 +3,7 @@
 import { Component, Input, inject, signal, computed, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule, LocationStrategy } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { HNItem } from '../../services/hackernews.service';
+import { HNItem } from '../../models/hn';
 import { VisitedService } from '../../services/visited.service';
 import { StoryThumbnailComponent } from '../shared/story-thumbnail/story-thumbnail.component';
 import { SidebarService } from '../../services/sidebar.service';

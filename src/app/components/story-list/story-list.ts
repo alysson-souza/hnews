@@ -12,7 +12,8 @@ import {
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HackernewsService, HNItem } from '../../services/hackernews.service';
+import { HackernewsService } from '../../services/hackernews.service';
+import { HNItem } from '../../models/hn';
 import { StoryItem } from '../story-item/story-item';
 import { Observable, switchMap, map, interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';

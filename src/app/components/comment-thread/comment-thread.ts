@@ -2,7 +2,8 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HackernewsService, HNItem } from '../../services/hackernews.service';
+import { HackernewsService } from '../../services/hackernews.service';
+import { HNItem } from '../../models/hn';
 import { ThreadGutterComponent } from '../thread-gutter/thread-gutter.component';
 import { CommentHeaderComponent } from '../comment-header/comment-header.component';
 import { CommentTextComponent } from '../comment-text/comment-text.component';

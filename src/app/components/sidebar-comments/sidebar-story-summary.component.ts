@@ -3,7 +3,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { HNItem } from '../../services/hackernews.service';
+import { HNItem } from '../../models/hn';
 import { RelativeTimeComponent } from '../relative-time/relative-time.component';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 

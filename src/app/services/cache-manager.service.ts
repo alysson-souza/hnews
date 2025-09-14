@@ -3,7 +3,7 @@
 import { Injectable, inject } from '@angular/core';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
-import { HNItem, HNUser } from './hackernews.service';
+import { HNItem, HNUser } from '../models/hn';
 
 export enum StorageType {
   MEMORY = 'memory',

@@ -3,7 +3,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { HackernewsService, HNItem } from '../../services/hackernews.service';
+import { HackernewsService } from '../../services/hackernews.service';
+import { HNItem } from '../../models/hn';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';

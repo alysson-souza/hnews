@@ -3,7 +3,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HackernewsService, HNUser, HNItem } from '../../services/hackernews.service';
+import { HackernewsService } from '../../services/hackernews.service';
+import { HNUser, HNItem } from '../../models/hn';
 import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
