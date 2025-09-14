@@ -4,6 +4,12 @@ import { Injectable, inject } from '@angular/core';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
 import { HNItem, HNUser } from '../models/hn';
+import {
+  CACHE_TTL_STORIES,
+  CACHE_TTL_ITEM,
+  CACHE_TTL_USER,
+  CACHE_TTL_SEARCH,
+} from '../config/cache.config';
 
 export enum StorageType {
   MEMORY = 'memory',
@@ -30,6 +36,10 @@ interface MemoryCacheItem<T> {
 export class CacheManagerService {
   private indexedDB = inject(IndexedDBService);
   private legacyCache = inject(CacheService); // Existing localStorage cache
+  private ttlStories = inject(CACHE_TTL_STORIES);
+  private ttlItem = inject(CACHE_TTL_ITEM);
+  private ttlUser = inject(CACHE_TTL_USER);
+  private ttlSearch = inject(CACHE_TTL_SEARCH);
 
   // Memory cache for frequently accessed items
   private memoryCache = new Map<string, MemoryCacheItem<unknown>>();
@@ -44,7 +54,7 @@ export class CacheManagerService {
       'story',
       {
         storageType: StorageType.INDEXED_DB,
-        ttl: 30 * 60 * 1000,
+        ttl: this.ttlStories,
         fallback: StorageType.LOCAL_STORAGE,
       },
     ],
@@ -52,7 +62,7 @@ export class CacheManagerService {
       'storyList',
       {
         storageType: StorageType.INDEXED_DB,
-        ttl: 5 * 60 * 1000,
+        ttl: this.ttlItem,
         fallback: StorageType.LOCAL_STORAGE,
       },
     ],
@@ -60,7 +70,15 @@ export class CacheManagerService {
       'user',
       {
         storageType: StorageType.INDEXED_DB,
-        ttl: 60 * 60 * 1000,
+        ttl: this.ttlUser,
+        fallback: StorageType.LOCAL_STORAGE,
+      },
+    ],
+    [
+      'search',
+      {
+        storageType: StorageType.INDEXED_DB,
+        ttl: this.ttlSearch,
         fallback: StorageType.LOCAL_STORAGE,
       },
     ],
@@ -128,6 +146,33 @@ export class CacheManagerService {
   }
 
   // Main cache operations
+
+  /**
+   * Stale-while-revalidate utility: returns cached data immediately if fresh, then triggers background refresh.
+   * @param type Cache type string
+   * @param key Cache key
+   * @param fetcher Function to fetch fresh data
+   * @returns Promise<T> resolves to cached or fresh data
+   */
+  async getWithSWR<T>(type: string, key: string, fetcher: () => Promise<T>): Promise<T | null> {
+    const cached = await this.get<T | null>(type, key);
+    if (cached !== null) {
+      // Kick off background refresh
+      fetcher().then((fresh) => {
+        if (fresh !== null && fresh !== undefined) {
+          this.set(type, key, fresh);
+        }
+      });
+      return cached;
+    }
+    // No cache, fetch and store
+    const fresh = await fetcher();
+    if (fresh !== null && fresh !== undefined) {
+      await this.set(type, key, fresh);
+      return fresh;
+    }
+    return null;
+  }
 
   async get<T>(type: string, key: string): Promise<T | null> {
     const config = this.cacheConfigs.get(type) || {

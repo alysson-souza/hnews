@@ -19,23 +19,20 @@ export class HackernewsService {
   private algolia = inject(AlgoliaApiClient);
 
   getTopStories(forceRefresh = false): Observable<number[]> {
-    // For refresh: Skip cache for story lists (rankings change frequently)
     if (forceRefresh) {
       return this.hn
         .topStories()
-        .pipe(tap(async (data) => await this.cache.set('storyLists', 'top', data)));
+        .pipe(tap(async (data) => await this.cache.set('storyList', 'top', data)));
     }
-
-    return from(this.cache.get<number[]>('storyLists', 'top')).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn
-          .topStories()
-          .pipe(tap(async (data) => await this.cache.set('storyLists', 'top', data)));
-      }),
+    return from(
+      this.cache.getWithSWR<number[]>(
+        'storyList',
+        'top',
+        async () => (await this.hn.topStories().toPromise()) ?? [],
+      ),
+    ).pipe(
+      // Ensure always returns an array
+      switchMap((result) => of(result ?? [])),
     );
   }
 
@@ -43,132 +40,95 @@ export class HackernewsService {
     if (forceRefresh) {
       return this.hn
         .bestStories()
-        .pipe(tap(async (data) => await this.cache.set('storyLists', 'best', data)));
+        .pipe(tap(async (data) => await this.cache.set('storyList', 'best', data)));
     }
-
-    return from(this.cache.get<number[]>('storyLists', 'best')).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn
-          .bestStories()
-          .pipe(tap(async (data) => await this.cache.set('storyLists', 'best', data)));
-      }),
-    );
+    return from(
+      this.cache.getWithSWR<number[]>(
+        'storyList',
+        'best',
+        async () => (await this.hn.bestStories().toPromise()) ?? [],
+      ),
+    ).pipe(switchMap((result) => of(result ?? [])));
   }
 
   getNewStories(forceRefresh = false): Observable<number[]> {
     if (forceRefresh) {
       return this.hn
         .newStories()
-        .pipe(tap(async (data) => await this.cache.set('storyLists', 'new', data)));
+        .pipe(tap(async (data) => await this.cache.set('storyList', 'new', data)));
     }
-
-    return from(this.cache.get<number[]>('storyLists', 'new')).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn
-          .newStories()
-          .pipe(tap(async (data) => await this.cache.set('storyLists', 'new', data)));
-      }),
-    );
+    return from(
+      this.cache.getWithSWR<number[]>(
+        'storyList',
+        'new',
+        async () => (await this.hn.newStories().toPromise()) ?? [],
+      ),
+    ).pipe(switchMap((result) => of(result ?? [])));
   }
 
   getAskStories(forceRefresh = false): Observable<number[]> {
     if (forceRefresh) {
       return this.hn
         .askStories()
-        .pipe(tap(async (data) => await this.cache.set('storyLists', 'ask', data)));
+        .pipe(tap(async (data) => await this.cache.set('storyList', 'ask', data)));
     }
-
-    return from(this.cache.get<number[]>('storyLists', 'ask')).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn
-          .askStories()
-          .pipe(tap(async (data) => await this.cache.set('storyLists', 'ask', data)));
-      }),
-    );
+    return from(
+      this.cache.getWithSWR<number[]>(
+        'storyList',
+        'ask',
+        async () => (await this.hn.askStories().toPromise()) ?? [],
+      ),
+    ).pipe(switchMap((result) => of(result ?? [])));
   }
 
   getShowStories(forceRefresh = false): Observable<number[]> {
     if (forceRefresh) {
       return this.hn
         .showStories()
-        .pipe(tap(async (data) => await this.cache.set('storyLists', 'show', data)));
+        .pipe(tap(async (data) => await this.cache.set('storyList', 'show', data)));
     }
-
-    return from(this.cache.get<number[]>('storyLists', 'show')).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn
-          .showStories()
-          .pipe(tap(async (data) => await this.cache.set('storyLists', 'show', data)));
-      }),
-    );
+    return from(
+      this.cache.getWithSWR<number[]>(
+        'storyList',
+        'show',
+        async () => (await this.hn.showStories().toPromise()) ?? [],
+      ),
+    ).pipe(switchMap((result) => of(result ?? [])));
   }
 
   getJobStories(forceRefresh = false): Observable<number[]> {
     if (forceRefresh) {
       return this.hn
         .jobStories()
-        .pipe(tap(async (data) => await this.cache.set('storyLists', 'job', data)));
+        .pipe(tap(async (data) => await this.cache.set('storyList', 'job', data)));
     }
-
-    return from(this.cache.get<number[]>('storyLists', 'job')).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn
-          .jobStories()
-          .pipe(tap(async (data) => await this.cache.set('storyLists', 'job', data)));
-      }),
-    );
+    return from(
+      this.cache.getWithSWR<number[]>(
+        'storyList',
+        'job',
+        async () => (await this.hn.jobStories().toPromise()) ?? [],
+      ),
+    ).pipe(switchMap((result) => of(result ?? [])));
   }
 
   getItem(id: number, forceRefresh = false): Observable<HNItem | null> {
-    // For refresh: Skip cache to get fresh vote counts
     if (forceRefresh) {
       return this.hn.item(id).pipe(
         switchMap(async (mapped) => {
           if (mapped) {
-            await this.cache.set('stories', id.toString(), mapped);
+            await this.cache.set('story', id.toString(), mapped);
           }
           return mapped;
         }),
         catchError(() => of(null)),
       );
     }
-
-    return from(this.cache.get<HNItem>('stories', id.toString())).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-
-        return this.hn.item(id).pipe(
-          switchMap(async (mapped) => {
-            if (mapped) {
-              await this.cache.set('stories', id.toString(), mapped);
-            }
-            return mapped;
-          }),
-          catchError(() => of(null)),
-        );
-      }),
+    return from(
+      this.cache.getWithSWR<HNItem | null>(
+        'story',
+        id.toString(),
+        async () => (await this.hn.item(id).toPromise()) ?? null,
+      ),
     );
   }
 
@@ -235,20 +195,12 @@ export class HackernewsService {
   }
 
   getUser(id: string): Observable<HNUser | null> {
-    return from(this.cache.get<HNUser>('users', id)).pipe(
-      switchMap((cached) => {
-        if (cached) {
-          return of(cached);
-        }
-        return this.hn.user(id).pipe(
-          tap(async (data) => {
-            if (data) {
-              await this.cache.set('users', id, data);
-            }
-          }),
-          catchError(() => of(null)),
-        );
-      }),
+    return from(
+      this.cache.getWithSWR<HNUser | null>(
+        'user',
+        id,
+        async () => (await this.hn.user(id).toPromise()) ?? null,
+      ),
     );
   }
 

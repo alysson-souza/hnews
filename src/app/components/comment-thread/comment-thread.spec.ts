@@ -14,6 +14,9 @@ class MockCacheManagerService {
   set() {
     return Promise.resolve();
   }
+  getWithSWR() {
+    return Promise.resolve(null);
+  }
 }
 
 describe('CommentThread', () => {
