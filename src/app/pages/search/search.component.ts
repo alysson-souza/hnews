@@ -64,20 +64,35 @@ interface SearchHit {
 
           <!-- Search Filters -->
           <div class="filters">
-            <select [(ngModel)]="searchType" (ngModelChange)="performSearch()" class="app-select">
+            <select
+              [(ngModel)]="searchType"
+              (ngModelChange)="performSearch()"
+              class="app-select"
+              aria-label="Filter by type"
+            >
               <option value="all">All</option>
               <option value="story">Stories</option>
               <option value="comment">Comments</option>
             </select>
 
-            <select [(ngModel)]="sortBy" (ngModelChange)="performSearch()" class="app-select">
+            <select
+              [(ngModel)]="sortBy"
+              (ngModelChange)="performSearch()"
+              class="app-select"
+              aria-label="Sort by"
+            >
               <option value="relevance">Relevance</option>
               <option value="date">Date</option>
               <option value="points">Points</option>
               <option value="comments">Comments</option>
             </select>
 
-            <select [(ngModel)]="dateRange" (ngModelChange)="performSearch()" class="app-select">
+            <select
+              [(ngModel)]="dateRange"
+              (ngModelChange)="performSearch()"
+              class="app-select"
+              aria-label="Date range"
+            >
               <option value="all">All Time</option>
               <option value="24h">Last 24 Hours</option>
               <option value="week">Past Week</option>
@@ -245,7 +260,12 @@ interface SearchHit {
         @apply absolute right-4 top-3.5 w-6 h-6 text-gray-400 dark:text-gray-500;
       }
       .filters {
-        @apply flex gap-4 mt-4;
+        /* Responsive layout: stack on small screens, wrap on larger */
+        @apply flex flex-col gap-3 mt-4 sm:flex-row sm:flex-wrap sm:gap-4;
+      }
+      .filters .app-select {
+        /* Make selects full-width on mobile for better tap targets */
+        @apply w-full sm:w-auto;
       }
       .select {
         @apply px-3 py-2 rounded border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500;
