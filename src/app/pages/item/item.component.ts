@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { HackernewsService, HNItem } from '../../services/hackernews.service';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
-import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
 import { VisitedService } from '../../services/visited.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
+import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/sidebar-story-summary.component';
 
 @Component({
   selector: 'app-item',
@@ -17,11 +17,10 @@ import { VisitedIndicatorComponent } from '../../components/shared/visited-indic
   imports: [
     CommonModule,
     CommentThread,
-    RouterLink,
     PageContainerComponent,
     CardComponent,
     VisitedIndicatorComponent,
-    CommentTextComponent,
+    SidebarStorySummaryComponent,
   ],
   template: `
     <app-page-container>
@@ -40,96 +39,20 @@ import { VisitedIndicatorComponent } from '../../components/shared/visited-indic
         <app-card class="block mb-6" id="submission-title">
           <!-- Visited indicator -->
           <app-visited-indicator [storyId]="item()!.id"></app-visited-indicator>
-
-          <!-- Title -->
-          <h1 class="item-title">
-            @if (item()!.dead) {
-              <span class="dead-item">[flagged]</span>
-            } @else if (item()!.url) {
-              <a
-                [href]="item()!.url"
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                class="title-link"
-              >
-                {{ item()!.title || '[untitled]' }}
-              </a>
-            } @else {
-              {{ item()!.title || '[untitled]' }}
-            }
-          </h1>
-
-          <!-- Metadata -->
-          <div class="item-meta mb-4">
-            <span>{{ item()!.score || 0 }} points</span>
-            <span>•</span>
-            <span
-              >by
-              <a [routerLink]="['/user', item()!.by]" class="meta-link">
-                {{ item()!.by }}
-              </a>
-            </span>
-            <span>•</span>
-            <span>{{ getTimeAgo(item()!.time) }}</span>
-            <span>•</span>
-            <span>{{ item()!.descendants || 0 }} comments</span>
-          </div>
-
-          <!-- Story Text (for Ask HN, etc.) -->
-          @if (item()!.text) {
-            <app-comment-text [html]="item()!.text || ''"></app-comment-text>
-          }
+          <!-- Story summary -->
+          <app-sidebar-story-summary [item]="item()!" [showActions]="false" />
         </app-card>
 
         <!-- Comments Section -->
         <app-card class="block">
           <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
 
-          @if (visibleComments().length > 0) {
+          @if (item()!.kids && item()!.kids!.length > 0) {
             <div class="space-y-4" role="tree" aria-label="Comments">
-              @for (commentId of visibleComments(); track commentId; let i = $index) {
-                <app-comment-thread
-                  [commentId]="commentId"
-                  [depth]="0"
-                  [lazyLoad]="shouldLazyLoad(i)"
-                >
-                </app-comment-thread>
+              @for (commentId of item()!.kids!; track commentId) {
+                <app-comment-thread [commentId]="commentId" [depth]="0"></app-comment-thread>
               }
             </div>
-
-            <!-- Load More Comments Button -->
-            @if (hasMoreComments()) {
-              <div class="mt-8 text-center">
-                <button
-                  (click)="loadMoreComments()"
-                  [disabled]="loadingMoreComments()"
-                  class="comments-load-btn"
-                >
-                  @if (loadingMoreComments()) {
-                    <span class="flex items-center gap-2">
-                      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle
-                          class="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="4"
-                        ></circle>
-                        <path
-                          class="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Loading...
-                    </span>
-                  } @else {
-                    Load {{ nextBatchSize() }} more comments
-                  }
-                </button>
-              </div>
-            }
           } @else {
             <p class="empty">No comments yet</p>
           }
@@ -185,11 +108,6 @@ import { VisitedIndicatorComponent } from '../../components/shared/visited-indic
         @apply prose prose-lg max-w-none text-gray-800 dark:text-gray-200 mb-4;
       }
 
-      /* Buttons */
-      .comments-load-btn {
-        @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
-      }
-
       /* Empty */
       .empty {
         @apply text-gray-500 dark:text-gray-400 text-center py-8;
@@ -222,56 +140,6 @@ export class ItemComponent implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
 
-  readonly commentsPerPage = 10;
-  readonly immediateLoadCount = 3;
-  readonly maxInitialComments = 3;
-  private currentCommentsPage = signal(0);
-  loadingMoreComments = signal(false);
-
-  visibleComments = computed(() => {
-    const item = this.item();
-    if (!item?.kids) return [];
-
-    if (this.currentCommentsPage() === 0) {
-      return item.kids.slice(0, this.maxInitialComments);
-    }
-
-    const totalToShow = this.maxInitialComments + this.currentCommentsPage() * this.commentsPerPage;
-    return item.kids.slice(0, totalToShow);
-  });
-
-  hasMoreComments = computed(() => {
-    const item = this.item();
-    if (!item?.kids) return false;
-
-    const totalComments = item.kids.length;
-    const loadedComments =
-      this.currentCommentsPage() === 0
-        ? this.maxInitialComments
-        : this.maxInitialComments + this.currentCommentsPage() * this.commentsPerPage;
-    return loadedComments < totalComments;
-  });
-
-  remainingCommentsCount = computed(() => {
-    const item = this.item();
-    if (!item?.kids) return 0;
-
-    const totalComments = item.kids.length;
-    const loadedComments =
-      this.currentCommentsPage() === 0
-        ? this.maxInitialComments
-        : this.maxInitialComments + this.currentCommentsPage() * this.commentsPerPage;
-    return Math.max(0, totalComments - loadedComments);
-  });
-
-  nextBatchSize = computed(() => {
-    return Math.min(this.commentsPerPage, this.remainingCommentsCount());
-  });
-
-  shouldLazyLoad(index: number): boolean {
-    return index >= this.immediateLoadCount;
-  }
-
   ngOnInit() {
     // Check for both path params and query params (HN compatibility)
     this.route.params.subscribe((params) => {
@@ -300,8 +168,6 @@ export class ItemComponent implements OnInit {
 
     this.loading.set(true);
     this.error.set(null);
-    // Reset pagination when loading new item
-    this.currentCommentsPage.set(0);
 
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
@@ -313,15 +179,12 @@ export class ItemComponent implements OnInit {
           setTimeout(() => {
             const element = document.getElementById('submission-title');
             if (element) {
-              // Get the element's position
               const elementRect = element.getBoundingClientRect();
               const elementTop = elementRect.top + window.scrollY;
 
-              // Account for sticky navbar (approximate height: 64px + some padding)
               const navbarHeight = 80;
               const targetPosition = elementTop - navbarHeight;
 
-              // Scroll to position accounting for navbar
               window.scrollTo({
                 top: Math.max(0, targetPosition),
                 behavior: 'smooth',
@@ -338,30 +201,5 @@ export class ItemComponent implements OnInit {
         this.loading.set(false);
       },
     });
-  }
-
-  loadMoreComments() {
-    if (this.loadingMoreComments() || !this.hasMoreComments()) {
-      return;
-    }
-
-    this.loadingMoreComments.set(true);
-
-    setTimeout(() => {
-      this.currentCommentsPage.update((page) => page + 1);
-      this.loadingMoreComments.set(false);
-    }, 300);
-  }
-
-  getTimeAgo(timestamp: number): string {
-    const seconds = Math.floor(Date.now() / 1000 - timestamp);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return 'just now';
   }
 }

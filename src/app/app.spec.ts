@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
+import { SwUpdate } from '@angular/service-worker';
+import { Subject } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -14,6 +16,15 @@ describe('App', () => {
         provideRouter([]),
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
+        {
+          provide: SwUpdate,
+          useValue: {
+            isEnabled: false,
+            versionUpdates: new Subject(),
+            checkForUpdate: () => Promise.resolve(false),
+            activateUpdate: () => Promise.resolve(false),
+          } as unknown as SwUpdate,
+        },
       ],
     }).compileComponents();
   });

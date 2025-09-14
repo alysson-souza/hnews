@@ -41,11 +41,13 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
         <app-comment-text [html]="item.text!"></app-comment-text>
       }
 
-      <div class="actions">
-        <a [routerLink]="['/item', item.id]" target="_blank" class="open-link">
-          Open in full view ↗
-        </a>
-      </div>
+      @if (showActions) {
+        <div class="actions">
+          <a [routerLink]="['/item', item.id]" target="_blank" class="open-link">
+            Open in full view ↗
+          </a>
+        </div>
+      }
     </section>
   `,
   styles: [
@@ -78,6 +80,7 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
 })
 export class SidebarStorySummaryComponent {
   @Input({ required: true }) item!: HNItem;
+  @Input() showActions = true;
   getDomain(url?: string): string | null {
     if (!url) return null;
     try {
