@@ -14,7 +14,10 @@ This guide enables AI coding agents to work productively in the `hnews` Angular 
 
 - **Start Dev Server**: `npm start` (http://localhost:4200)
 - **Build**: `npm run build` (dev) or `npm run build:prod` (prod, use `--base-href` for subpaths)
-- **Test**: `npm test` (watch mode), coverage: `ng test --watch=false --code-coverage`
+- **Test (single-run)**: `npm test`
+- **Test (watch)**: `npm run test:watch`
+- **Coverage (single-run)**: `npm run test:coverage`
+- **Coverage (watch)**: `npm run test:coverage:watch`
 - **Lint/Format**: `npm run lint`, `npm run format`
 - **Deploy**: `npm run deploy` (GitHub Pages)
 
