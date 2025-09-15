@@ -9,9 +9,11 @@ import {
   HostListener,
   ViewChild,
 } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-comments.component';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top.component';
 import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
@@ -45,6 +47,7 @@ import { PwaUpdateService } from './services/pwa-update.service';
 export class App implements OnInit, OnDestroy {
   @ViewChild(KeyboardShortcutsComponent) keyboardShortcuts!: KeyboardShortcutsComponent;
   @ViewChild(RouterOutlet) outlet!: RouterOutlet;
+  @ViewChild('scrollTop') scrollTop?: ScrollToTopComponent;
 
   title = 'HNews';
   searchQuery = '';
@@ -65,6 +68,7 @@ export class App implements OnInit, OnDestroy {
   private offlineHandler?: () => void;
   private onlineHandler?: () => void;
   private lastRefreshTime = 0;
+  private routerSubscription?: Subscription;
 
   ngOnInit() {
     console.log(`HNews version: ${this.version}`);
@@ -84,6 +88,20 @@ export class App implements OnInit, OnDestroy {
 
     window.addEventListener('offline', this.offlineHandler);
     window.addEventListener('online', this.onlineHandler);
+
+    // Subscribe to router events to handle scroll-to-top on tab navigation
+    this.routerSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        // Check if we're navigating to a story list route
+        const storyRoutes = ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'];
+        if (storyRoutes.includes(event.url) || storyRoutes.includes(event.url.split('?')[0])) {
+          // Use setTimeout to ensure the view has updated before scrolling
+          setTimeout(() => {
+            this.scrollTop?.scrollToTop();
+          }, 0);
+        }
+      });
   }
 
   ngOnDestroy() {
@@ -92,6 +110,9 @@ export class App implements OnInit, OnDestroy {
     }
     if (this.onlineHandler) {
       window.removeEventListener('online', this.onlineHandler);
+    }
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
     }
   }
 
