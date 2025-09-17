@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { Observable, firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { HackernewsService } from './hackernews.service';
 import { CacheManagerService } from './cache-manager.service';
+import { HnApiClient } from '../data/hn-api.client';
+import { AlgoliaApiClient } from '../data/algolia-api.client';
+import { HNItem, HNUser } from '../models/hn';
+import { AlgoliaSearchResponse } from '../models/algolia';
 
 class MockCacheManagerService {
   get() {
@@ -36,6 +41,7 @@ describe('HackernewsService searchStories', () => {
 
   afterEach(() => {
     httpMock.verify();
+    TestBed.resetTestingModule();
   });
 
   it('builds default query with tags for all', () => {
@@ -65,5 +71,335 @@ describe('HackernewsService searchStories', () => {
     );
     expect(req.request.url).toContain('search_by_date');
     req.flush({ hits: [], nbHits: 0 });
+  });
+});
+
+describe('HackernewsService data orchestration', () => {
+  let service: HackernewsService;
+  let cache: jasmine.SpyObj<CacheManagerService>;
+  let hnClient: jasmine.SpyObj<HnApiClient>;
+  let algoliaClient: jasmine.SpyObj<AlgoliaApiClient>;
+  let cacheStore: Map<string, unknown>;
+  let cacheUpdateStreams: Map<string, Subject<unknown>>;
+
+  const makeItem = (id: number, overrides: Partial<HNItem> = {}): HNItem => ({
+    id,
+    type: 'story',
+    time: 1,
+    ...overrides,
+  });
+
+  const makeComment = (id: number, overrides: Partial<HNItem> = {}): HNItem =>
+    makeItem(id, { type: 'comment', ...overrides });
+
+  const emitCacheUpdate = (type: string, key: string, value: unknown): void => {
+    const subject = cacheUpdateStreams.get(`${type}:${key}`);
+    if (!subject) {
+      throw new Error(`No update stream for ${type}:${key}`);
+    }
+    subject.next(value);
+  };
+
+  beforeEach(() => {
+    cacheStore = new Map();
+    cacheUpdateStreams = new Map();
+
+    cache = jasmine.createSpyObj<CacheManagerService>('CacheManagerService', [
+      'set',
+      'getWithSWR',
+      'getUpdates',
+    ]);
+    cache.set.and.callFake(async (type: string, key: string, value: unknown) => {
+      cacheStore.set(`${type}:${key}`, value ?? null);
+    });
+    cache.getWithSWR.and.callFake(
+      async <T>(type: string, key: string, fetcher: () => Promise<T>) => {
+        const storeKey = `${type}:${key}`;
+        if (cacheStore.has(storeKey)) {
+          return cacheStore.get(storeKey) as T | null;
+        }
+        const fresh = await fetcher();
+        cacheStore.set(storeKey, fresh ?? null);
+        return (fresh ?? null) as T | null;
+      },
+    );
+    cache.getUpdates.and.callFake(<T>(type: string, key: string) => {
+      const storeKey = `${type}:${key}`;
+      if (!cacheUpdateStreams.has(storeKey)) {
+        cacheUpdateStreams.set(storeKey, new Subject<unknown>());
+      }
+      return cacheUpdateStreams.get(storeKey)!.asObservable() as Observable<T>;
+    });
+
+    hnClient = jasmine.createSpyObj<HnApiClient>('HnApiClient', [
+      'topStories',
+      'bestStories',
+      'newStories',
+      'askStories',
+      'showStories',
+      'jobStories',
+      'item',
+      'user',
+      'maxItem',
+      'updates',
+    ]);
+    hnClient.topStories.and.returnValue(of([]));
+    hnClient.bestStories.and.returnValue(of([]));
+    hnClient.newStories.and.returnValue(of([]));
+    hnClient.askStories.and.returnValue(of([]));
+    hnClient.showStories.and.returnValue(of([]));
+    hnClient.jobStories.and.returnValue(of([]));
+    hnClient.item.and.returnValue(of(null));
+    hnClient.user.and.returnValue(of({ id: 'user', created: 0, karma: 0 } as HNUser));
+    hnClient.maxItem.and.returnValue(of(0));
+    hnClient.updates.and.returnValue(of({ items: [], profiles: [] }));
+
+    algoliaClient = jasmine.createSpyObj<AlgoliaApiClient>('AlgoliaApiClient', ['search']);
+    algoliaClient.search.and.returnValue(of({ hits: [] } as AlgoliaSearchResponse));
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CacheManagerService, useValue: cache },
+        { provide: HnApiClient, useValue: hnClient },
+        { provide: AlgoliaApiClient, useValue: algoliaClient },
+      ],
+    });
+
+    service = TestBed.inject(HackernewsService);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('emits cached top stories first and then pushes cache updates', fakeAsync(() => {
+    cacheStore.set('storyList:top', [1, 2]);
+
+    const values: number[][] = [];
+    const subscription = service.getTopStories().subscribe((ids) => values.push(ids));
+
+    flushMicrotasks();
+    expect(values).toEqual([[1, 2]]);
+
+    emitCacheUpdate('storyList', 'top', [3, 4]);
+    expect(values).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
+
+    subscription.unsubscribe();
+  }));
+
+  const storyListCases: {
+    key: string;
+    method: keyof Pick<
+      HackernewsService,
+      | 'getTopStories'
+      | 'getBestStories'
+      | 'getNewStories'
+      | 'getAskStories'
+      | 'getShowStories'
+      | 'getJobStories'
+    >;
+    spy: () => jasmine.Spy;
+  }[] = [
+    { key: 'top', method: 'getTopStories', spy: () => hnClient.topStories },
+    { key: 'best', method: 'getBestStories', spy: () => hnClient.bestStories },
+    { key: 'new', method: 'getNewStories', spy: () => hnClient.newStories },
+    { key: 'ask', method: 'getAskStories', spy: () => hnClient.askStories },
+    { key: 'show', method: 'getShowStories', spy: () => hnClient.showStories },
+    { key: 'job', method: 'getJobStories', spy: () => hnClient.jobStories },
+  ];
+
+  storyListCases.forEach(({ key, method, spy }) => {
+    it(`forces refresh for ${key} stories and caches the result`, async () => {
+      const payload = [key.length, key.length + 1];
+      const apiSpy = spy();
+      apiSpy.and.returnValue(of(payload));
+
+      cache.set.calls.reset();
+      cache.getWithSWR.calls.reset();
+
+      const invoke = service[method].bind(service) as (force?: boolean) => Observable<number[]>;
+      const result = await firstValueFrom(invoke(true));
+
+      expect(apiSpy).toHaveBeenCalled();
+      expect(result).toEqual(payload);
+      expect(cache.set).toHaveBeenCalledWith('storyList', key, payload);
+      expect(cache.getWithSWR).not.toHaveBeenCalled();
+    });
+  });
+
+  it('returns cached item without hitting the API', fakeAsync(() => {
+    const cachedItem = makeItem(42);
+    cacheStore.set('story:42', cachedItem);
+
+    let value: HNItem | null | undefined;
+    service.getItem(42).subscribe((item) => (value = item));
+
+    flushMicrotasks();
+    expect(value).toEqual(cachedItem);
+    expect(hnClient.item).not.toHaveBeenCalled();
+  }));
+
+  it('fetches and caches an item on force refresh', async () => {
+    const freshItem = makeComment(7);
+    hnClient.item.and.returnValue(of(freshItem));
+
+    const result = await firstValueFrom(service.getItem(7, true));
+
+    expect(hnClient.item).toHaveBeenCalledWith(7);
+    expect(result).toEqual(freshItem);
+    expect(cache.set).toHaveBeenCalledWith('story', '7', freshItem);
+  });
+
+  it('maps API failures to null items', async () => {
+    hnClient.item.and.returnValue(throwError(() => new Error('fail')));
+
+    const result = await firstValueFrom(service.getItem(99, true));
+
+    expect(result).toBeNull();
+  });
+
+  it('returns an empty array when getItems receives no ids', async () => {
+    const result = await firstValueFrom(service.getItems([]));
+
+    expect(result).toEqual([]);
+  });
+
+  it('collects individual items with getItems', async () => {
+    const itemA = makeItem(1);
+    const itemB = makeItem(2);
+    cacheStore.set('story:1', itemA);
+    cacheStore.set('story:2', itemB);
+
+    const result = await firstValueFrom(service.getItems([1, 2]));
+
+    expect(result).toEqual([itemA, itemB]);
+  });
+
+  it('returns only existing comments for story top-level children', async () => {
+    const story = makeItem(10, { kids: [11, 12] });
+    const comment = makeComment(11);
+    cacheStore.set('story:10', story);
+    cacheStore.set('story:11', comment);
+    cacheStore.set('story:12', null);
+
+    const result = await firstValueFrom(service.getStoryTopLevelComments(10));
+
+    expect(result).toEqual([comment]);
+  });
+
+  it('returns an empty list when a story has no kids', async () => {
+    const story = makeItem(20, { kids: [] });
+    cacheStore.set('story:20', story);
+
+    const result = await firstValueFrom(service.getStoryTopLevelComments(20));
+
+    expect(result).toEqual([]);
+  });
+
+  it('resolves all existing comment children by default', async () => {
+    const parent = makeComment(30, { kids: [31, 32, 33] });
+    const childA = makeComment(31);
+    const childC = makeComment(33);
+    cacheStore.set('story:30', parent);
+    cacheStore.set('story:31', childA);
+    cacheStore.set('story:32', null);
+    cacheStore.set('story:33', childC);
+
+    const result = await firstValueFrom(service.getCommentChildren(30));
+
+    expect(result).toEqual([childA, childC]);
+  });
+
+  it('paginates comment children when requested', async () => {
+    const parent = makeComment(40, { kids: [41, 42, 43, 44] });
+    cacheStore.set('story:40', parent);
+    cacheStore.set('story:41', makeComment(41));
+    cacheStore.set('story:42', makeComment(42));
+    cacheStore.set('story:43', makeComment(43));
+    cacheStore.set('story:44', makeComment(44));
+
+    const page = await firstValueFrom(service.getCommentChildren(40, 1, 2));
+
+    expect(page.map((item) => item.id)).toEqual([43, 44]);
+  });
+
+  it('returns an empty list when comment has no children', async () => {
+    const parent = makeComment(50, { kids: [] });
+    cacheStore.set('story:50', parent);
+
+    const result = await firstValueFrom(service.getCommentChildren(50));
+
+    expect(result).toEqual([]);
+  });
+
+  it('pages items and skips out-of-range pages', async () => {
+    cacheStore.set('story:60', makeItem(60));
+    cacheStore.set('story:61', makeItem(61));
+    cacheStore.set('story:62', makeItem(62));
+
+    const firstPage = await firstValueFrom(service.getItemsPage([60, 61, 62], 0, 2));
+    const secondPage = await firstValueFrom(service.getItemsPage([60, 61, 62], 1, 2));
+    const farPage = await firstValueFrom(service.getItemsPage([60, 61, 62], 5, 2));
+    const emptyIds = await firstValueFrom(service.getItemsPage([], 0, 2));
+
+    expect(firstPage.map((item) => item?.id)).toEqual([60, 61]);
+    expect(secondPage.map((item) => item?.id)).toEqual([62]);
+    expect(farPage).toEqual([]);
+    expect(emptyIds).toEqual([]);
+  });
+
+  it('reads cached users without network calls', async () => {
+    const user: HNUser = { id: 'alice', created: 1, karma: 100 };
+    cacheStore.set('user:alice', user);
+
+    const result = await firstValueFrom(service.getUser('alice'));
+
+    expect(result).toEqual(user);
+    expect(hnClient.user).not.toHaveBeenCalled();
+  });
+
+  it('fetches and caches users when missing', async () => {
+    const user: HNUser = { id: 'bob', created: 2, karma: 200 };
+    hnClient.user.and.returnValue(of(user));
+
+    const result = await firstValueFrom(service.getUser('bob'));
+
+    expect(hnClient.user).toHaveBeenCalledWith('bob');
+    expect(result).toEqual(user);
+    expect(cacheStore.get('user:bob')).toEqual(user);
+  });
+
+  it('exposes max item from the API client', async () => {
+    hnClient.maxItem.and.returnValue(of(9001));
+
+    const result = await firstValueFrom(service.getMaxItem());
+
+    expect(result).toBe(9001);
+  });
+
+  it('exposes updates from the API client', async () => {
+    const payload = { items: [1, 2], profiles: ['foo'] };
+    hnClient.updates.and.returnValue(of(payload));
+
+    const result = await firstValueFrom(service.getUpdates());
+
+    expect(result).toEqual(payload);
+  });
+
+  it('delegates searchByDate to Algolia with the expected options', async () => {
+    const response: AlgoliaSearchResponse = { hits: [] };
+    algoliaClient.search.and.returnValue(of(response));
+
+    const result = await firstValueFrom(service.searchByDate('angular'));
+
+    expect(algoliaClient.search).toHaveBeenCalledWith({
+      query: 'angular',
+      tags: 'story',
+      sortBy: 'date',
+    });
+    expect(result).toEqual(response);
   });
 });
