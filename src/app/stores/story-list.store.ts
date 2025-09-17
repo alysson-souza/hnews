@@ -157,27 +157,21 @@ export class StoryListStore {
       });
   }
 
-  /** Background refresh; updates top IDs, new-stories indicator, and merges missing items. */
+  /** Background refresh; updates top IDs and new-stories indicator only. */
   silentRefreshStoryList(): void {
+    console.debug('🔄 Auto refresh: Checking for new stories...');
     this.getStoryIds(true).subscribe({
       next: (freshIds) => {
         const currentIds = this.totalStoryIds();
         const newStoryCount = this.countNewStoriesAtTop(currentIds, freshIds);
+        console.debug(`🔄 Auto refresh: Found ${newStoryCount} new stories`);
         if (newStoryCount > 0 && window.scrollY < 100) {
+          console.debug(
+            `🔄 Auto refresh: Showing new stories indicator with ${newStoryCount} stories`,
+          );
           this.newStoriesAvailable.set(newStoryCount);
         }
         this.totalStoryIds.set(freshIds);
-
-        const currentStoryIds = this.stories().map((s) => s.id);
-        const newIds = freshIds
-          .slice(0, this.pageSize())
-          .filter((id) => !currentStoryIds.includes(id));
-
-        if (newIds.length > 0) {
-          this.hn.getItems(newIds).subscribe({
-            next: (newStories) => this.mergeNewStories(newStories),
-          });
-        }
       },
     });
   }

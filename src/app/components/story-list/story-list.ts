@@ -10,6 +10,7 @@ import {
   inject,
   effect,
 } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { StoryItem } from '../story-item/story-item';
 import { interval, filter, takeUntil, Subject } from 'rxjs';
@@ -88,8 +89,8 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   // Auto-refresh management
   private destroy$ = new Subject<void>();
-  private autoRefreshInterval = 5 * 60 * 1000; // 5 minutes
-  private maxBackgroundRefreshTime = 30 * 60 * 1000; // 30 minutes
+  private autoRefreshInterval = environment.autoRefreshInterval;
+  private maxBackgroundRefreshTime = environment.maxBackgroundRefreshTime;
   private tabHiddenTime: number | null = null;
   private backgroundRefreshEnabled = true;
 
