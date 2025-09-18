@@ -28,7 +28,7 @@ npm start            # Run dev server (http://localhost:4200)
 npm run watch        # Watch mode build
 npm run build        # Build (development)
 npm run build:prod   # Build (production)
-npm test             # Unit tests (Karma + Jasmine)
+npm test             # Unit tests (Vitest)
 npm run lint         # ESLint
 npm run lint:fix     # ESLint with autofix
 npm run format       # Prettier write
@@ -40,7 +40,7 @@ npm run deploy:ci    # CI-friendly deploy
 ## Testing
 
 - Run tests: `npm test`
-- Coverage: `ng test --watch=false --code-coverage` (outputs to `coverage/hnews`)
+- Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
 - Prefer focused service specs and shallow component tests; mock network calls
 
 ## Code Style

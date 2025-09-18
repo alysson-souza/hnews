@@ -42,6 +42,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 - Angular Service Worker (PWA)
 - ESLint (angular-eslint), Prettier, Husky + lint-staged
 - APIs: Hacker News Firebase, Algolia HN Search
+- Testing: Vitest
 
 ## Getting Started
 

@@ -14,8 +14,8 @@
 - `npm start`: Run dev server at `http://localhost:4200`.
 - `npm run build`: Development build (outputs to `dist/hnews`).
 - `npm run build:prod`: Production build; pass `--base-href` when needed (e.g., `-- --base-href=/hnews/`).
-- `npm test`: Single-run unit tests (ChromeHeadless), exits cleanly (no coverage).
-- `npm run test:watch`: Unit tests in watch mode (Karma + Jasmine).
+- `npm test`: Single-run unit tests (Vitest), exits cleanly (no coverage).
+- `npm run test:watch`: Unit tests in watch mode (Vitest).
 - `npm run test:coverage`: Single-run tests with coverage output to `coverage/hnews`.
 - `npm run test:coverage:watch`: Watch mode with coverage (slower, for targeted work).
 - `npm run lint` / `npm run lint:fix`: ESLint check/fix.
@@ -32,7 +32,7 @@
 
 ## Testing Guidelines
 
-- Framework: Karma + Jasmine; ChromeHeadless launcher.
+- Framework: Vitest
 - Place tests as `*.spec.ts` beside the unit under test.
 - Run `npm test` for a single pass; use `npm run test:watch` in watch mode.
 - Coverage: `npm run test:coverage` (single-run) or `npm run test:coverage:watch` (watch mode). Outputs to `coverage/hnews`.
