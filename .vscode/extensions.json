@@ -3,6 +3,9 @@
   "recommendations": [
     "angular.ng-template",
     "christian-kohler.npm-intellisense",
-    "github.vscode-github-actions"
+    "github.vscode-github-actions",
+    "spmeesseman.vscode-taskexplorer",
+    "idered.npm",
+    "vitest.explorer"
   ]
 }

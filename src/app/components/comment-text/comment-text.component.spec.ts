@@ -20,7 +20,7 @@ describe('CommentTextComponent', () => {
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component).toBeDefined();
   });
 
   it('should process html input using quote and link transforms in order', () => {

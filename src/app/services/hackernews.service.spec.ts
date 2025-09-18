@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { Observable, firstValueFrom, of, Subject, throwError } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { HackernewsService } from './hackernews.service';
 import { CacheManagerService } from './cache-manager.service';
 import { HnApiClient } from '../data/hn-api.client';
@@ -76,9 +77,9 @@ describe('HackernewsService searchStories', () => {
 
 describe('HackernewsService data orchestration', () => {
   let service: HackernewsService;
-  let cache: jasmine.SpyObj<CacheManagerService>;
-  let hnClient: jasmine.SpyObj<HnApiClient>;
-  let algoliaClient: jasmine.SpyObj<AlgoliaApiClient>;
+  let cache: CacheManagerService;
+  let hnClient: HnApiClient;
+  let algoliaClient: AlgoliaApiClient;
   let cacheStore: Map<string, unknown>;
   let cacheUpdateStreams: Map<string, Subject<unknown>>;
 
@@ -104,16 +105,11 @@ describe('HackernewsService data orchestration', () => {
     cacheStore = new Map();
     cacheUpdateStreams = new Map();
 
-    cache = jasmine.createSpyObj<CacheManagerService>('CacheManagerService', [
-      'set',
-      'getWithSWR',
-      'getUpdates',
-    ]);
-    cache.set.and.callFake(async (type: string, key: string, value: unknown) => {
-      cacheStore.set(`${type}:${key}`, value ?? null);
-    });
-    cache.getWithSWR.and.callFake(
-      async <T>(type: string, key: string, fetcher: () => Promise<T>) => {
+    cache = {
+      set: vi.fn(async (type: string, key: string, value: unknown) => {
+        cacheStore.set(`${type}:${key}`, value ?? null);
+      }),
+      getWithSWR: vi.fn(async <T>(type: string, key: string, fetcher: () => Promise<T>) => {
         const storeKey = `${type}:${key}`;
         if (cacheStore.has(storeKey)) {
           return cacheStore.get(storeKey) as T | null;
@@ -121,41 +117,32 @@ describe('HackernewsService data orchestration', () => {
         const fresh = await fetcher();
         cacheStore.set(storeKey, fresh ?? null);
         return (fresh ?? null) as T | null;
-      },
-    );
-    cache.getUpdates.and.callFake(<T>(type: string, key: string) => {
-      const storeKey = `${type}:${key}`;
-      if (!cacheUpdateStreams.has(storeKey)) {
-        cacheUpdateStreams.set(storeKey, new Subject<unknown>());
-      }
-      return cacheUpdateStreams.get(storeKey)!.asObservable() as Observable<T>;
-    });
+      }),
+      getUpdates: vi.fn(<T>(type: string, key: string) => {
+        const storeKey = `${type}:${key}`;
+        if (!cacheUpdateStreams.has(storeKey)) {
+          cacheUpdateStreams.set(storeKey, new Subject<unknown>());
+        }
+        return cacheUpdateStreams.get(storeKey)!.asObservable() as Observable<T>;
+      }),
+    } as unknown as CacheManagerService;
 
-    hnClient = jasmine.createSpyObj<HnApiClient>('HnApiClient', [
-      'topStories',
-      'bestStories',
-      'newStories',
-      'askStories',
-      'showStories',
-      'jobStories',
-      'item',
-      'user',
-      'maxItem',
-      'updates',
-    ]);
-    hnClient.topStories.and.returnValue(of([]));
-    hnClient.bestStories.and.returnValue(of([]));
-    hnClient.newStories.and.returnValue(of([]));
-    hnClient.askStories.and.returnValue(of([]));
-    hnClient.showStories.and.returnValue(of([]));
-    hnClient.jobStories.and.returnValue(of([]));
-    hnClient.item.and.returnValue(of(null));
-    hnClient.user.and.returnValue(of({ id: 'user', created: 0, karma: 0 } as HNUser));
-    hnClient.maxItem.and.returnValue(of(0));
-    hnClient.updates.and.returnValue(of({ items: [], profiles: [] }));
+    hnClient = {
+      topStories: vi.fn(() => of([])),
+      bestStories: vi.fn(() => of([])),
+      newStories: vi.fn(() => of([])),
+      askStories: vi.fn(() => of([])),
+      showStories: vi.fn(() => of([])),
+      jobStories: vi.fn(() => of([])),
+      item: vi.fn(() => of(null)),
+      user: vi.fn(() => of({ id: 'user', created: 0, karma: 0 } as HNUser)),
+      maxItem: vi.fn(() => of(0)),
+      updates: vi.fn(() => of({ items: [], profiles: [] })),
+    } as unknown as HnApiClient;
 
-    algoliaClient = jasmine.createSpyObj<AlgoliaApiClient>('AlgoliaApiClient', ['search']);
-    algoliaClient.search.and.returnValue(of({ hits: [] } as AlgoliaSearchResponse));
+    algoliaClient = {
+      search: vi.fn(() => of({ hits: [] } as AlgoliaSearchResponse)),
+    } as unknown as AlgoliaApiClient;
 
     TestBed.configureTestingModule({
       providers: [
@@ -172,79 +159,114 @@ describe('HackernewsService data orchestration', () => {
     TestBed.resetTestingModule();
   });
 
-  it('emits cached top stories first and then pushes cache updates', fakeAsync(() => {
+  it('emits cached top stories first and then pushes cache updates', async () => {
     cacheStore.set('storyList:top', [1, 2]);
 
     const values: number[][] = [];
     const subscription = service.getTopStories().subscribe((ids) => values.push(ids));
 
-    flushMicrotasks();
+    // Allow microtasks to flush
+    await Promise.resolve();
     expect(values).toEqual([[1, 2]]);
 
     emitCacheUpdate('storyList', 'top', [3, 4]);
+    // Wait a tick for the update to propagate
+    await Promise.resolve();
     expect(values).toEqual([
       [1, 2],
       [3, 4],
     ]);
 
     subscription.unsubscribe();
-  }));
-
-  const storyListCases: {
-    key: string;
-    method: keyof Pick<
-      HackernewsService,
-      | 'getTopStories'
-      | 'getBestStories'
-      | 'getNewStories'
-      | 'getAskStories'
-      | 'getShowStories'
-      | 'getJobStories'
-    >;
-    spy: () => jasmine.Spy;
-  }[] = [
-    { key: 'top', method: 'getTopStories', spy: () => hnClient.topStories },
-    { key: 'best', method: 'getBestStories', spy: () => hnClient.bestStories },
-    { key: 'new', method: 'getNewStories', spy: () => hnClient.newStories },
-    { key: 'ask', method: 'getAskStories', spy: () => hnClient.askStories },
-    { key: 'show', method: 'getShowStories', spy: () => hnClient.showStories },
-    { key: 'job', method: 'getJobStories', spy: () => hnClient.jobStories },
-  ];
-
-  storyListCases.forEach(({ key, method, spy }) => {
-    it(`forces refresh for ${key} stories and caches the result`, async () => {
-      const payload = [key.length, key.length + 1];
-      const apiSpy = spy();
-      apiSpy.and.returnValue(of(payload));
-
-      cache.set.calls.reset();
-      cache.getWithSWR.calls.reset();
-
-      const invoke = service[method].bind(service) as (force?: boolean) => Observable<number[]>;
-      const result = await firstValueFrom(invoke(true));
-
-      expect(apiSpy).toHaveBeenCalled();
-      expect(result).toEqual(payload);
-      expect(cache.set).toHaveBeenCalledWith('storyList', key, payload);
-      expect(cache.getWithSWR).not.toHaveBeenCalled();
-    });
   });
 
-  it('returns cached item without hitting the API', fakeAsync(() => {
+  it('forces refresh for top stories and caches the result', async () => {
+    const payload = [1, 2];
+    vi.mocked(hnClient.topStories).mockReturnValue(of(payload));
+    vi.mocked(cache.set).mockClear();
+    vi.mocked(cache.getWithSWR).mockClear();
+    const result = await firstValueFrom(service.getTopStories(true));
+    expect(hnClient.topStories).toHaveBeenCalled();
+    expect(result).toEqual(payload);
+    expect(cache.set).toHaveBeenCalledWith('storyList', 'top', payload);
+    expect(cache.getWithSWR).not.toHaveBeenCalled();
+  });
+
+  it('forces refresh for best stories and caches the result', async () => {
+    const payload = [2, 3];
+    vi.mocked(hnClient.bestStories).mockReturnValue(of(payload));
+    vi.mocked(cache.set).mockClear();
+    vi.mocked(cache.getWithSWR).mockClear();
+    const result = await firstValueFrom(service.getBestStories(true));
+    expect(hnClient.bestStories).toHaveBeenCalled();
+    expect(result).toEqual(payload);
+    expect(cache.set).toHaveBeenCalledWith('storyList', 'best', payload);
+    expect(cache.getWithSWR).not.toHaveBeenCalled();
+  });
+
+  it('forces refresh for new stories and caches the result', async () => {
+    const payload = [3, 4];
+    vi.mocked(hnClient.newStories).mockReturnValue(of(payload));
+    vi.mocked(cache.set).mockClear();
+    vi.mocked(cache.getWithSWR).mockClear();
+    const result = await firstValueFrom(service.getNewStories(true));
+    expect(hnClient.newStories).toHaveBeenCalled();
+    expect(result).toEqual(payload);
+    expect(cache.set).toHaveBeenCalledWith('storyList', 'new', payload);
+    expect(cache.getWithSWR).not.toHaveBeenCalled();
+  });
+
+  it('forces refresh for ask stories and caches the result', async () => {
+    const payload = [4, 5];
+    vi.mocked(hnClient.askStories).mockReturnValue(of(payload));
+    vi.mocked(cache.set).mockClear();
+    vi.mocked(cache.getWithSWR).mockClear();
+    const result = await firstValueFrom(service.getAskStories(true));
+    expect(hnClient.askStories).toHaveBeenCalled();
+    expect(result).toEqual(payload);
+    expect(cache.set).toHaveBeenCalledWith('storyList', 'ask', payload);
+    expect(cache.getWithSWR).not.toHaveBeenCalled();
+  });
+
+  it('forces refresh for show stories and caches the result', async () => {
+    const payload = [5, 6];
+    vi.mocked(hnClient.showStories).mockReturnValue(of(payload));
+    vi.mocked(cache.set).mockClear();
+    vi.mocked(cache.getWithSWR).mockClear();
+    const result = await firstValueFrom(service.getShowStories(true));
+    expect(hnClient.showStories).toHaveBeenCalled();
+    expect(result).toEqual(payload);
+    expect(cache.set).toHaveBeenCalledWith('storyList', 'show', payload);
+    expect(cache.getWithSWR).not.toHaveBeenCalled();
+  });
+
+  it('forces refresh for job stories and caches the result', async () => {
+    const payload = [6, 7];
+    vi.mocked(hnClient.jobStories).mockReturnValue(of(payload));
+    vi.mocked(cache.set).mockClear();
+    vi.mocked(cache.getWithSWR).mockClear();
+    const result = await firstValueFrom(service.getJobStories(true));
+    expect(hnClient.jobStories).toHaveBeenCalled();
+    expect(result).toEqual(payload);
+    expect(cache.set).toHaveBeenCalledWith('storyList', 'job', payload);
+    expect(cache.getWithSWR).not.toHaveBeenCalled();
+  });
+
+  it('returns cached item without hitting the API', async () => {
     const cachedItem = makeItem(42);
     cacheStore.set('story:42', cachedItem);
 
     let value: HNItem | null | undefined;
     service.getItem(42).subscribe((item) => (value = item));
-
-    flushMicrotasks();
+    // Let subscription deliver cached value
+    await Promise.resolve();
     expect(value).toEqual(cachedItem);
     expect(hnClient.item).not.toHaveBeenCalled();
-  }));
+  });
 
   it('fetches and caches an item on force refresh', async () => {
     const freshItem = makeComment(7);
-    hnClient.item.and.returnValue(of(freshItem));
+    vi.mocked(hnClient.item).mockReturnValue(of(freshItem));
 
     const result = await firstValueFrom(service.getItem(7, true));
 
@@ -254,7 +276,7 @@ describe('HackernewsService data orchestration', () => {
   });
 
   it('maps API failures to null items', async () => {
-    hnClient.item.and.returnValue(throwError(() => new Error('fail')));
+    vi.mocked(hnClient.item).mockReturnValue(throwError(() => new Error('fail')));
 
     const result = await firstValueFrom(service.getItem(99, true));
 
@@ -363,7 +385,7 @@ describe('HackernewsService data orchestration', () => {
 
   it('fetches and caches users when missing', async () => {
     const user: HNUser = { id: 'bob', created: 2, karma: 200 };
-    hnClient.user.and.returnValue(of(user));
+    vi.mocked(hnClient.user).mockReturnValue(of(user));
 
     const result = await firstValueFrom(service.getUser('bob'));
 
@@ -373,7 +395,7 @@ describe('HackernewsService data orchestration', () => {
   });
 
   it('exposes max item from the API client', async () => {
-    hnClient.maxItem.and.returnValue(of(9001));
+    vi.mocked(hnClient.maxItem).mockReturnValue(of(9001));
 
     const result = await firstValueFrom(service.getMaxItem());
 
@@ -382,7 +404,7 @@ describe('HackernewsService data orchestration', () => {
 
   it('exposes updates from the API client', async () => {
     const payload = { items: [1, 2], profiles: ['foo'] };
-    hnClient.updates.and.returnValue(of(payload));
+    vi.mocked(hnClient.updates).mockReturnValue(of(payload));
 
     const result = await firstValueFrom(service.getUpdates());
 
@@ -391,7 +413,7 @@ describe('HackernewsService data orchestration', () => {
 
   it('delegates searchByDate to Algolia with the expected options', async () => {
     const response: AlgoliaSearchResponse = { hits: [] };
-    algoliaClient.search.and.returnValue(of(response));
+    vi.mocked(algoliaClient.search).mockReturnValue(of(response));
 
     const result = await firstValueFrom(service.searchByDate('angular'));
 

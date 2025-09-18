@@ -48,25 +48,19 @@ describe('StoryListStore', () => {
     store = TestBed.inject(StoryListStore);
   });
 
-  it('loads initial page of stories', (done) => {
+  it('loads initial page of stories', async () => {
     store.init('top', 2);
-    // allow async subscription to push values
-    setTimeout(() => {
-      expect(store.totalStoryIds()).toEqual([1, 2, 3, 4, 5]);
-      expect(store.stories().length).toBe(2);
-      expect(store.loading()).toBeFalse();
-      done();
-    }, 0);
+    await Promise.resolve();
+    expect(store.totalStoryIds()).toEqual([1, 2, 3, 4, 5]);
+    expect(store.stories().length).toBe(2);
+    expect(!!store.loading()).toBe(false);
   });
 
-  it('loads more stories when loadMore is called', (done) => {
+  it('loads more stories when loadMore is called', async () => {
     store.init('top', 2);
-    setTimeout(() => {
-      store.loadMore();
-      setTimeout(() => {
-        expect(store.stories().length).toBe(4);
-        done();
-      }, 0);
-    }, 0);
+    await Promise.resolve();
+    store.loadMore();
+    await Promise.resolve();
+    expect(store.stories().length).toBe(4);
   });
 });

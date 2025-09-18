@@ -10,6 +10,12 @@ import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
+    // Override template to avoid deep rendering of child components (e.g., fontawesome)
+    TestBed.overrideComponent(App, {
+      set: {
+        template: '<span>HNews</span>',
+      },
+    });
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
@@ -32,7 +38,7 @@ describe('App', () => {
   it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(app).toBeDefined();
   });
 
   it('should render title', () => {

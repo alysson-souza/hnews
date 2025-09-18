@@ -81,20 +81,12 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              },
-              "src/service-worker.js",
-              "src/manifest.json"
-            ],
-            "styles": ["src/styles.css"],
-            "karmaConfig": "karma.conf.js"
+            "runner": "vitest",
+            "buildTarget": "hnews:build:development",
+            "setupFiles": ["src/test-setup.ts"]
           }
         },
         "lint": {

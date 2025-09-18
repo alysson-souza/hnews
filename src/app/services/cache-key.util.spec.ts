@@ -14,7 +14,7 @@ describe('CacheKeyBuilderService', () => {
     const a = svc.build('search', { q: 'hn', page: 2, tags: ['story', 'comment'] });
     const b = svc.build('search', { tags: ['story', 'comment'], page: 2, q: 'hn' });
     expect(a).toBe(b);
-    expect(a.startsWith('v9:search:')).toBeTrue();
+    expect(a.startsWith('v9:search:')).toBe(true);
   });
 
   it('provides convenience helpers', () => {

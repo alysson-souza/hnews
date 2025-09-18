@@ -21,7 +21,7 @@ describe('CommentSkeletonComponent', () => {
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component).toBeDefined();
   });
 
   it('renders base structure with two skeleton lines', () => {
@@ -34,18 +34,18 @@ describe('CommentSkeletonComponent', () => {
     const line1 = children.item(0) as HTMLDivElement;
     const line2 = children.item(1) as HTMLDivElement;
 
-    expect(line1.classList.contains('h-4')).toBeTrue();
-    expect(line1.classList.contains('bg-gray-200')).toBeTrue();
-    expect(line1.classList.contains('dark:bg-slate-800')).toBeTrue();
-    expect(line1.classList.contains('rounded')).toBeTrue();
-    expect(line1.classList.contains('w-1/4')).toBeTrue();
-    expect(line1.classList.contains('mb-2')).toBeTrue();
+    expect(line1.classList.contains('h-4')).toBe(true);
+    expect(line1.classList.contains('bg-gray-200')).toBe(true);
+    expect(line1.classList.contains('dark:bg-slate-800')).toBe(true);
+    expect(line1.classList.contains('rounded')).toBe(true);
+    expect(line1.classList.contains('w-1/4')).toBe(true);
+    expect(line1.classList.contains('mb-2')).toBe(true);
 
-    expect(line2.classList.contains('h-3')).toBeTrue();
-    expect(line2.classList.contains('bg-gray-200')).toBeTrue();
-    expect(line2.classList.contains('dark:bg-slate-800')).toBeTrue();
-    expect(line2.classList.contains('rounded')).toBeTrue();
-    expect(line2.classList.contains('w-3/4')).toBeTrue();
+    expect(line2.classList.contains('h-3')).toBe(true);
+    expect(line2.classList.contains('bg-gray-200')).toBe(true);
+    expect(line2.classList.contains('dark:bg-slate-800')).toBe(true);
+    expect(line2.classList.contains('rounded')).toBe(true);
+    expect(line2.classList.contains('w-3/4')).toBe(true);
   });
 
   it('does not render indentation/border classes when depth is 0 (default)', () => {
@@ -55,13 +55,13 @@ describe('CommentSkeletonComponent', () => {
     const container = getContainer()!;
     const classList = container.classList;
 
-    expect(classList.contains('ml-4')).toBeFalse();
-    expect(classList.contains('border-l-2')).toBeFalse();
-    expect(classList.contains('border-gray-200')).toBeFalse();
-    expect(classList.contains('dark:border-slate-700')).toBeFalse();
-    expect(classList.contains('pl-4')).toBeFalse();
-    expect(classList.contains('relative')).toBeFalse();
-    expect(classList.contains('group')).toBeFalse();
+    expect(classList.contains('ml-4')).toBe(false);
+    expect(classList.contains('border-l-2')).toBe(false);
+    expect(classList.contains('border-gray-200')).toBe(false);
+    expect(classList.contains('dark:border-slate-700')).toBe(false);
+    expect(classList.contains('pl-4')).toBe(false);
+    expect(classList.contains('relative')).toBe(false);
+    expect(classList.contains('group')).toBe(false);
   });
 
   it('applies indentation/border classes when depth > 0', () => {
@@ -71,13 +71,13 @@ describe('CommentSkeletonComponent', () => {
     const container = getContainer()!;
     const classList = container.classList;
 
-    expect(classList.contains('ml-4')).toBeTrue();
-    expect(classList.contains('border-l-2')).toBeTrue();
-    expect(classList.contains('border-gray-200')).toBeTrue();
-    expect(classList.contains('dark:border-slate-700')).toBeTrue();
-    expect(classList.contains('pl-4')).toBeTrue();
-    expect(classList.contains('relative')).toBeTrue();
-    expect(classList.contains('group')).toBeTrue();
+    expect(classList.contains('ml-4')).toBe(true);
+    expect(classList.contains('border-l-2')).toBe(true);
+    expect(classList.contains('border-gray-200')).toBe(true);
+    expect(classList.contains('dark:border-slate-700')).toBe(true);
+    expect(classList.contains('pl-4')).toBe(true);
+    expect(classList.contains('relative')).toBe(true);
+    expect(classList.contains('group')).toBe(true);
   });
 
   it('updates classes when depth changes at runtime', () => {
@@ -87,9 +87,9 @@ describe('CommentSkeletonComponent', () => {
     let container = getContainer()!;
     let classList = container.classList;
 
-    expect(classList.contains('ml-4')).toBeTrue();
-    expect(classList.contains('border-l-2')).toBeTrue();
-    expect(classList.contains('pl-4')).toBeTrue();
+    expect(classList.contains('ml-4')).toBe(true);
+    expect(classList.contains('border-l-2')).toBe(true);
+    expect(classList.contains('pl-4')).toBe(true);
 
     component.depth = 0;
     fixture.detectChanges();
@@ -97,12 +97,12 @@ describe('CommentSkeletonComponent', () => {
     container = getContainer()!;
     classList = container.classList;
 
-    expect(classList.contains('ml-4')).toBeFalse();
-    expect(classList.contains('border-l-2')).toBeFalse();
-    expect(classList.contains('border-gray-200')).toBeFalse();
-    expect(classList.contains('dark:border-slate-700')).toBeFalse();
-    expect(classList.contains('pl-4')).toBeFalse();
-    expect(classList.contains('relative')).toBeFalse();
-    expect(classList.contains('group')).toBeFalse();
+    expect(classList.contains('ml-4')).toBe(false);
+    expect(classList.contains('border-l-2')).toBe(false);
+    expect(classList.contains('border-gray-200')).toBe(false);
+    expect(classList.contains('dark:border-slate-700')).toBe(false);
+    expect(classList.contains('pl-4')).toBe(false);
+    expect(classList.contains('relative')).toBe(false);
+    expect(classList.contains('group')).toBe(false);
   });
 });

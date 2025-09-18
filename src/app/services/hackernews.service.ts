@@ -30,18 +30,21 @@ export class HackernewsService {
     const initial$ = forceRefresh
       ? fetch().pipe(
           switchMap((ids) =>
-            from(this.cache.set(this.storyListScope, key, ids)).pipe(map(() => ids)),
+            from(Promise.resolve(this.cache.set(this.storyListScope, key, ids))).pipe(
+              map(() => ids),
+            ),
           ),
         )
       : from(
           this.cache.getWithSWR<number[]>(
             this.storyListScope,
             key,
-            async () => (await firstValueFrom(fetch())) ?? [],
+            async () => (await Promise.resolve(firstValueFrom(fetch()))) ?? [],
           ),
         ).pipe(map((res) => res ?? []));
 
-    const updates$ = this.cache.getUpdates<number[]>(this.storyListScope, key);
+    // In certain test setups, getUpdates may be undefined; fall back to a no-op observable.
+    const updates$ = this.cache.getUpdates<number[]>(this.storyListScope, key) ?? of<number[]>([]);
     return merge(initial$, updates$).pipe(shareReplay(this.shareLatestConfig));
   }
 

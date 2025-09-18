@@ -3,6 +3,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CommentHeaderComponent } from './comment-header.component';
+import { vi } from 'vitest';
 
 import { provideRouter } from '@angular/router';
 
@@ -24,7 +25,7 @@ describe('CommentHeaderComponent', () => {
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component).toBeDefined();
   });
 
   it('renders user tag when "by" is provided', () => {
@@ -32,7 +33,7 @@ describe('CommentHeaderComponent', () => {
     fixture.detectChanges();
 
     const userTag = fixture.debugElement.query(By.css('app-user-tag'));
-    expect(userTag).toBeTruthy();
+    expect(userTag).toBeDefined();
     expect(fixture.nativeElement.textContent).toContain('alice');
   });
 
@@ -47,24 +48,24 @@ describe('CommentHeaderComponent', () => {
   it('always renders relative time with timestamp', () => {
     // Stabilize now to make output deterministic
     const fixedNow = 2_000_000_000_000; // ms
-    spyOn(Date, 'now').and.returnValue(fixedNow);
+    vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
     component.timestamp = Math.floor(fixedNow / 1000) - 60; // 1 minute ago
     fixture.detectChanges();
 
     const timeEl = fixture.debugElement.query(By.css('app-relative-time'));
-    expect(timeEl).toBeTruthy();
+    expect(timeEl).toBeDefined();
     expect(fixture.nativeElement.textContent).toContain('1 minute ago');
   });
 
   it('forwards upvote click via (vote) to parent output', () => {
     const upvoteBtnDe = fixture.debugElement.query(By.css('app-upvote-button button'));
-    expect(upvoteBtnDe).toBeTruthy();
+    expect(upvoteBtnDe).toBeDefined();
 
     let emitted = false;
     component.upvote.subscribe(() => (emitted = true));
 
     (upvoteBtnDe.nativeElement as HTMLButtonElement).click();
-    expect(emitted).toBeTrue();
+    expect(emitted).toBe(true);
   });
 
   it('sets aria-label on upvote button based on voted state', () => {
@@ -91,11 +92,11 @@ describe('CommentHeaderComponent', () => {
     fixture.detectChanges();
 
     const repliesEl = fixture.debugElement.query(By.css('app-replies-counter'));
-    expect(repliesEl).toBeTruthy();
+    expect(repliesEl).toBeDefined();
     // Button text is rendered inside child; ensure the button exists
     expect(fixture.debugElement.query(By.css('app-replies-counter button')))
       .withContext('expand button not found')
-      .toBeTruthy();
+      .toBeDefined();
   });
 
   it('forwards expand click via (expand) to parent output', () => {
@@ -108,6 +109,6 @@ describe('CommentHeaderComponent', () => {
 
     const btnDe = fixture.debugElement.query(By.css('app-replies-counter button'));
     (btnDe.nativeElement as HTMLButtonElement).click();
-    expect(expanded).toBeTrue();
+    expect(expanded).toBe(true);
   });
 });

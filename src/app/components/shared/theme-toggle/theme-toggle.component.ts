@@ -41,9 +41,10 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
 })
 export class ThemeToggleComponent {
   themeService = inject(ThemeService);
-  protected faSun = faSun;
-  protected faMoon = faMoon;
-  protected faCircleHalfStroke = faCircleHalfStroke;
+  // Use public fields to ensure AOT/templates always see defined icon inputs in tests
+  faSun = faSun;
+  faMoon = faMoon;
+  faCircleHalfStroke = faCircleHalfStroke;
 
   getTooltip(): string {
     const current = this.themeService.theme();

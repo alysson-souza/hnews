@@ -4,29 +4,43 @@ import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
 
 class IndexedDBServiceStub {
-  get = jasmine.createSpy('get').and.returnValue(Promise.resolve(null));
-  set = jasmine.createSpy('set').and.returnValue(Promise.resolve());
-  clearAll = jasmine.createSpy('clearAll').and.returnValue(Promise.resolve());
-  getStoryList = jasmine.createSpy('getStoryList').and.returnValue(Promise.resolve([]));
-  setStoryList = jasmine.createSpy('setStoryList').and.returnValue(Promise.resolve());
-  getStory = jasmine.createSpy('getStory').and.returnValue(Promise.resolve(null));
-  setStory = jasmine.createSpy('setStory').and.returnValue(Promise.resolve());
-  getUserProfile = jasmine.createSpy('getUserProfile').and.returnValue(Promise.resolve(null));
-  setUserProfile = jasmine.createSpy('setUserProfile').and.returnValue(Promise.resolve());
-  delete = jasmine.createSpy('delete').and.returnValue(Promise.resolve());
-  count = jasmine.createSpy('count').and.returnValue(Promise.resolve(0));
-  getStories = jasmine
-    .createSpy('getStories')
-    .and.returnValue(Promise.resolve(new Map<number, unknown>()));
-  migrateFromLocalStorage = jasmine
-    .createSpy('migrateFromLocalStorage')
-    .and.returnValue(Promise.resolve());
+  get = async () => null;
+  set = async () => {
+    /* no-op */
+  };
+  clearAll = async () => {
+    /* no-op */
+  };
+  getStoryList = async () => [] as number[];
+  setStoryList = async () => {
+    /* no-op */
+  };
+  getStory = async () => null as unknown;
+  setStory = async () => {
+    /* no-op */
+  };
+  getUserProfile = async () => null as unknown;
+  setUserProfile = async () => {
+    /* no-op */
+  };
+  delete = async () => {
+    /* no-op */
+  };
+  count = async () => 0;
+  getStories = async () => new Map<number, unknown>();
+  migrateFromLocalStorage = async () => {
+    /* no-op */
+  };
 }
 
 class CacheServiceStub {
-  get = jasmine.createSpy('get').and.returnValue(null);
-  set = jasmine.createSpy('set');
-  clear = jasmine.createSpy('clear');
+  get = () => null as unknown;
+  set = () => {
+    /* no-op */
+  };
+  clear = () => {
+    /* no-op */
+  };
 }
 
 describe('CacheManagerService (SWR)', () => {
@@ -64,21 +78,18 @@ describe('CacheManagerService (SWR)', () => {
     expect(updated).toEqual([4, 5, 6]);
   });
 
-  it('emits updates for a key when set is called', (done) => {
+  it('emits updates for a key when set is called', async () => {
     const key = 'bar';
     const updates$ = service.getUpdates<number[]>('storyList', key);
     const values: number[][] = [];
 
-    const sub = updates$.subscribe((v) => {
-      values.push(v);
-      if (values.length === 2) {
-        expect(values[0]).toEqual([1]);
-        expect(values[1]).toEqual([1, 2]);
-        sub.unsubscribe();
-        done();
-      }
-    });
-
-    service.set('storyList', key, [1]).then(() => service.set('storyList', key, [1, 2]));
+    const sub = updates$.subscribe((v) => values.push(v));
+    await service.set('storyList', key, [1]);
+    await service.set('storyList', key, [1, 2]);
+    // Allow observable microtasks to flush
+    await Promise.resolve();
+    expect(values[0]).toEqual([1]);
+    expect(values[1]).toEqual([1, 2]);
+    sub.unsubscribe();
   });
 });

@@ -5,6 +5,7 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem, HNItemType } from '../../models/hn';
@@ -26,7 +27,7 @@ class MockCacheManagerService {
 describe('CommentThread', () => {
   let component: CommentThread;
   let fixture: ComponentFixture<CommentThread>;
-  let mockHnService: jasmine.SpyObj<HackernewsService>;
+  let mockHnService: { getItem: ReturnType<typeof vi.fn>; getItemsPage: ReturnType<typeof vi.fn> };
 
   // Test data
   const mockComment: HNItem = {
@@ -58,7 +59,10 @@ describe('CommentThread', () => {
 
   beforeEach(async () => {
     // Create spy object for HackernewsService
-    mockHnService = jasmine.createSpyObj('HackernewsService', ['getItem', 'getItemsPage']);
+    mockHnService = {
+      getItem: vi.fn(),
+      getItemsPage: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [CommentThread],
@@ -79,31 +83,34 @@ describe('CommentThread', () => {
     component.depth = 0;
 
     // Mock the service methods to prevent actual HTTP calls
-    mockHnService.getItem.and.returnValue(of(null));
-    mockHnService.getItemsPage.and.returnValue(of([]));
+    mockHnService.getItem.mockReturnValue(of(null));
+    mockHnService.getItemsPage.mockReturnValue(of([]));
 
     fixture.detectChanges();
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(component).toBeDefined();
   });
 
   describe('Constructor', () => {
     it('should load voted comments from localStorage on init', () => {
       const votedIds = [123, 456, 789];
-      spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(votedIds));
+      // Spy on Storage.prototype so it captures calls from component constructor
+      const getSpy = vi
+        .spyOn(Storage.prototype, 'getItem')
+        .mockReturnValue(JSON.stringify(votedIds));
 
       // Create a new instance through TestBed to maintain injection context
       const newFixture = TestBed.createComponent(CommentThread);
       const newComponent = newFixture.componentInstance;
 
       expect(newComponent.votedComments()).toEqual(new Set(votedIds));
-      expect(localStorage.getItem).toHaveBeenCalledWith('votedComments');
+      expect(getSpy).toHaveBeenCalledWith('votedComments');
     });
 
     it('should handle missing localStorage data gracefully', () => {
-      spyOn(localStorage, 'getItem').and.returnValue(null);
+      vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
 
       // Create a new instance through TestBed to maintain injection context
       const newFixture = TestBed.createComponent(CommentThread);
@@ -139,14 +146,14 @@ describe('CommentThread', () => {
       it('should return falsy when comment has fewer kids than threshold', () => {
         const commentWithFewKids = { ...mockComment, kids: [1, 2, 3, 4, 5] }; // 5 kids, threshold is 10
         component.comment.set(commentWithFewKids);
-        expect(component.shouldAutoCollapse()).toBeFalsy();
+        expect(component.shouldAutoCollapse()).toBe(false);
       });
 
       it('should return truthy when comment has more kids than threshold', () => {
         const kidsArray = Array.from({ length: 15 }, (_, i) => i); // 15 kids
         const commentWithManyKids = { ...mockComment, kids: kidsArray };
         component.comment.set(commentWithManyKids);
-        expect(component.shouldAutoCollapse()).toBeTruthy();
+        expect(component.shouldAutoCollapse()).toBe(true);
       });
     });
 
@@ -186,19 +193,19 @@ describe('CommentThread', () => {
       it('should return false when not lazy loading', () => {
         component.lazyLoad = false;
         component.commentLoaded.set(false);
-        expect(component.showLoadButton()).toBeFalsy();
+        expect(component.showLoadButton()).toBe(false);
       });
 
       it('should return true when lazy loading and comment is not loaded', () => {
         component.lazyLoad = true;
         component.commentLoaded.set(false);
-        expect(component.showLoadButton()).toBeTruthy();
+        expect(component.showLoadButton()).toBe(true);
       });
 
       it('should return false when lazy loading but comment is already loaded', () => {
         component.lazyLoad = true;
         component.commentLoaded.set(true);
-        expect(component.showLoadButton()).toBeFalsy();
+        expect(component.showLoadButton()).toBe(false);
       });
     });
 
@@ -238,7 +245,7 @@ describe('CommentThread', () => {
     it('should load comment when not lazy loading and no initial comment', () => {
       component.lazyLoad = false;
       component.initialComment = undefined;
-      spyOn(component, 'loadComment');
+      vi.spyOn(component, 'loadComment');
 
       component.ngOnInit();
 
@@ -257,7 +264,7 @@ describe('CommentThread', () => {
 
   describe('loadComment', () => {
     it('should load comment from service and set loading states', () => {
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
 
       component.loadComment();
 
@@ -265,7 +272,7 @@ describe('CommentThread', () => {
     });
 
     it('should handle successful comment load', () => {
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
 
       component.loadComment();
 
@@ -280,7 +287,7 @@ describe('CommentThread', () => {
 
     it('should handle deleted comment', () => {
       const deletedComment = { ...mockComment, deleted: true };
-      mockHnService.getItem.and.returnValue(of(deletedComment));
+      mockHnService.getItem.mockReturnValue(of(deletedComment));
 
       component.loadComment();
 
@@ -292,7 +299,7 @@ describe('CommentThread', () => {
     });
 
     it('should handle service error', () => {
-      mockHnService.getItem.and.returnValue(throwError(() => new Error('Failed to load')));
+      mockHnService.getItem.mockReturnValue(throwError(() => new Error('Failed to load')));
 
       component.loadComment();
 
@@ -309,29 +316,29 @@ describe('CommentThread', () => {
     });
 
     it('should load first page of replies and call service with correct args', () => {
-      mockHnService.getItemsPage.and.returnValue(of(mockReplies));
+      mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
 
       component.loadRepliesPage(0);
 
       // With synchronous emissions, flags settle back to false immediately
-      expect(component.loadingReplies()).toBeFalse();
-      expect(component.loadingMore()).toBeFalse();
+      expect(component.loadingReplies()).toBe(false);
+      expect(component.loadingMore()).toBe(false);
       expect(mockHnService.getItemsPage).toHaveBeenCalledWith([456, 789], 0, 10);
     });
 
     it('should load subsequent page of replies and call service with correct args', () => {
-      mockHnService.getItemsPage.and.returnValue(of([mockReplies[1]]));
+      mockHnService.getItemsPage.mockReturnValue(of([mockReplies[1]]));
 
       component.loadRepliesPage(1);
 
       // With synchronous emissions, flags settle back to false immediately
-      expect(component.loadingMore()).toBeFalse();
-      expect(component.loadingReplies()).toBeFalse();
+      expect(component.loadingMore()).toBe(false);
+      expect(component.loadingReplies()).toBe(false);
       expect(mockHnService.getItemsPage).toHaveBeenCalledWith([456, 789], 1, 10);
     });
 
     it('should handle successful replies load for first page', () => {
-      mockHnService.getItemsPage.and.returnValue(of(mockReplies));
+      mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
 
       component.loadRepliesPage(0);
 
@@ -346,7 +353,7 @@ describe('CommentThread', () => {
 
     it('should handle successful replies load for subsequent pages', () => {
       component.replies.set([mockReplies[0]]);
-      mockHnService.getItemsPage.and.returnValue(of([mockReplies[1]]));
+      mockHnService.getItemsPage.mockReturnValue(of([mockReplies[1]]));
 
       component.loadRepliesPage(1);
 
@@ -360,7 +367,7 @@ describe('CommentThread', () => {
     });
 
     it('should handle service error when loading replies', () => {
-      mockHnService.getItemsPage.and.returnValue(throwError(() => new Error('Failed to load')));
+      mockHnService.getItemsPage.mockReturnValue(throwError(() => new Error('Failed to load')));
 
       component.loadRepliesPage(0);
 
@@ -382,7 +389,7 @@ describe('CommentThread', () => {
         type: 'comment' as HNItemType,
       }));
 
-      mockHnService.getItemsPage.and.returnValue(of(firstPage));
+      mockHnService.getItemsPage.mockReturnValue(of(firstPage));
 
       component.loadRepliesPage(0);
 
@@ -395,7 +402,7 @@ describe('CommentThread', () => {
 
   describe('loadMoreReplies', () => {
     it('should load next page when there are more replies', () => {
-      spyOn(component, 'loadRepliesPage');
+      vi.spyOn(component, 'loadRepliesPage');
       // Access the private currentPage signal directly
       component['currentPage'].set(0);
       component.hasMoreReplies.set(true);
@@ -407,7 +414,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load next page when already loading', () => {
-      spyOn(component, 'loadRepliesPage');
+      vi.spyOn(component, 'loadRepliesPage');
       component.hasMoreReplies.set(true);
       component.loadingMore.set(true);
 
@@ -417,7 +424,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load next page when no more replies', () => {
-      spyOn(component, 'loadRepliesPage');
+      vi.spyOn(component, 'loadRepliesPage');
       component.hasMoreReplies.set(false);
 
       component.loadMoreReplies();
@@ -428,7 +435,7 @@ describe('CommentThread', () => {
 
   describe('expandReplies', () => {
     it('should load first page of replies when not loaded and not loading', () => {
-      spyOn(component, 'loadRepliesPage');
+      vi.spyOn(component, 'loadRepliesPage');
       component.repliesLoaded.set(false);
       component.loadingReplies.set(false);
 
@@ -438,7 +445,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load replies when already loaded', () => {
-      spyOn(component, 'loadRepliesPage');
+      vi.spyOn(component, 'loadRepliesPage');
       component.repliesLoaded.set(true);
 
       component.expandReplies();
@@ -447,7 +454,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load replies when already loading', () => {
-      spyOn(component, 'loadRepliesPage');
+      vi.spyOn(component, 'loadRepliesPage');
       component.repliesLoaded.set(false);
       component.loadingReplies.set(true);
 
@@ -474,35 +481,35 @@ describe('CommentThread', () => {
     it('should add comment to votedComments and save to localStorage', () => {
       component.comment.set(mockComment);
       component.votedComments.set(new Set([456]));
-      spyOn(localStorage, 'setItem');
+      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteComment();
 
       expect(component.votedComments()).toEqual(new Set([456, 123]));
-      expect(localStorage.setItem).toHaveBeenCalledWith('votedComments', '[456,123]');
+      expect(setSpy).toHaveBeenCalledWith('votedComments', '[456,123]');
     });
 
     it('should not upvote if comment is already voted', () => {
       component.comment.set(mockComment);
       component.votedComments.set(new Set([123]));
-      spyOn(localStorage, 'setItem');
+      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteComment();
 
       // Should not change the set
       expect(component.votedComments()).toEqual(new Set([123]));
-      expect(localStorage.setItem).not.toHaveBeenCalled();
+      expect(setSpy).not.toHaveBeenCalled();
     });
 
     it('should not upvote if comment is not loaded', () => {
       component.comment.set(null);
       component.votedComments.set(new Set());
-      spyOn(localStorage, 'setItem');
+      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteComment();
 
       expect(component.votedComments()).toEqual(new Set());
-      expect(localStorage.setItem).not.toHaveBeenCalled();
+      expect(setSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -521,23 +528,23 @@ describe('CommentThread', () => {
   describe('upvoteById', () => {
     it('should add id to votedComments and save to localStorage', () => {
       component.votedComments.set(new Set([123]));
-      spyOn(localStorage, 'setItem');
+      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteById(456);
 
       expect(component.votedComments()).toEqual(new Set([123, 456]));
-      expect(localStorage.setItem).toHaveBeenCalledWith('votedComments', '[123,456]');
+      expect(setSpy).toHaveBeenCalledWith('votedComments', '[123,456]');
     });
 
     it('should not add id if already in votedComments', () => {
       component.votedComments.set(new Set([123, 456]));
-      spyOn(localStorage, 'setItem');
+      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteById(456);
 
       // Should not change the set
       expect(component.votedComments()).toEqual(new Set([123, 456]));
-      expect(localStorage.setItem).not.toHaveBeenCalled();
+      expect(setSpy).not.toHaveBeenCalled();
     });
   });
 

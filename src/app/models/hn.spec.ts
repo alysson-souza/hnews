@@ -19,8 +19,8 @@ describe('HN mappers and guards', () => {
     expect(item.id).toBe(100);
     expect(item.type).toBe('story');
     expect(item.title).toBe('Hello');
-    expect(isStory(item)).toBeTrue();
-    expect(isComment(item)).toBeFalse();
+    expect(isStory(item)).toBe(true);
+    expect(isComment(item)).toBe(false);
   });
 
   it('returns null for malformed raw', () => {
