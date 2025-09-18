@@ -10,6 +10,7 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { LazyLoadCardComponent } from '../lazy-load-card/lazy-load-card.component';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
+import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 
 @Component({
   selector: 'app-comment-thread',
@@ -183,8 +184,6 @@ export class CommentThread implements OnInit {
   replies = signal<HNItem[]>([]);
   isCollapsed = signal(false);
   loading = signal(true);
-  votedComments = signal<Set<number>>(new Set());
-
   // Reply loading state
   repliesLoaded = signal(false);
   loadingReplies = signal(false);
@@ -198,15 +197,16 @@ export class CommentThread implements OnInit {
   loadingMore = signal(false);
   allKidsIds: number[] = [];
 
-  constructor() {
-    // Load voted comments from localStorage
-    const stored = localStorage.getItem('votedComments');
-    if (stored) {
-      this.votedComments.set(new Set(JSON.parse(stored)));
-    }
-  }
+  private voteStore = inject(CommentVoteStoreService);
 
-  hasVoted = computed(() => this.votedComments().has(this.comment()?.id || 0));
+  hasVoted = computed(() => {
+    const current = this.comment();
+    if (!current) {
+      return false;
+    }
+
+    return this.voteStore.votedCommentIds().has(current.id);
+  });
 
   // Auto-collapse logic
   shouldAutoCollapse = computed(() => {
@@ -342,26 +342,20 @@ export class CommentThread implements OnInit {
   }
 
   upvoteComment() {
-    if (this.hasVoted() || !this.comment()) return;
+    const current = this.comment();
+    if (!current) {
+      return;
+    }
 
-    const newVoted = new Set(this.votedComments());
-    newVoted.add(this.comment()!.id);
-    this.votedComments.set(newVoted);
-
-    // Save to localStorage
-    localStorage.setItem('votedComments', JSON.stringify(Array.from(newVoted)));
+    this.voteStore.vote(current.id);
   }
 
   hasVotedById(id: number): boolean {
-    return this.votedComments().has(id);
+    return this.voteStore.votedCommentIds().has(id);
   }
 
   upvoteById(id: number) {
-    if (this.votedComments().has(id)) return;
-    const newVoted = new Set(this.votedComments());
-    newVoted.add(id);
-    this.votedComments.set(newVoted);
-    localStorage.setItem('votedComments', JSON.stringify(Array.from(newVoted)));
+    this.voteStore.vote(id);
   }
 
   getTimeAgo(timestamp: number): string {

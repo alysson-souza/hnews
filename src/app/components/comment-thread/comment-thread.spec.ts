@@ -6,9 +6,11 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { signal } from '@angular/core';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem, HNItemType } from '../../models/hn';
+import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 
 import { CommentThread } from './comment-thread';
 
@@ -24,10 +26,32 @@ class MockCacheManagerService {
   }
 }
 
+class MockCommentVoteStoreService {
+  private readonly state = signal<Set<number>>(new Set());
+  readonly votedCommentIds = this.state.asReadonly();
+
+  vote = vi.fn((id: number) => {
+    this.state.update((current) => {
+      if (current.has(id)) {
+        return current;
+      }
+
+      const next = new Set(current);
+      next.add(id);
+      return next;
+    });
+  });
+
+  setVoted(ids: number[]) {
+    this.state.set(new Set(ids));
+  }
+}
+
 describe('CommentThread', () => {
   let component: CommentThread;
   let fixture: ComponentFixture<CommentThread>;
   let mockHnService: { getItem: ReturnType<typeof vi.fn>; getItemsPage: ReturnType<typeof vi.fn> };
+  let mockVoteStore: MockCommentVoteStoreService;
 
   // Test data
   const mockComment: HNItem = {
@@ -63,6 +87,7 @@ describe('CommentThread', () => {
       getItem: vi.fn(),
       getItemsPage: vi.fn(),
     };
+    mockVoteStore = new MockCommentVoteStoreService();
 
     await TestBed.configureTestingModule({
       imports: [CommentThread],
@@ -72,6 +97,7 @@ describe('CommentThread', () => {
         provideRouter([]), // Provide an empty router configuration
         { provide: HackernewsService, useValue: mockHnService },
         { provide: CacheManagerService, useClass: MockCacheManagerService },
+        { provide: CommentVoteStoreService, useValue: mockVoteStore },
       ],
     }).compileComponents();
 
@@ -94,29 +120,12 @@ describe('CommentThread', () => {
   });
 
   describe('Constructor', () => {
-    it('should load voted comments from localStorage on init', () => {
-      const votedIds = [123, 456, 789];
-      // Spy on Storage.prototype so it captures calls from component constructor
-      const getSpy = vi
-        .spyOn(Storage.prototype, 'getItem')
-        .mockReturnValue(JSON.stringify(votedIds));
+    it('should reflect existing votes exposed by the vote store', () => {
+      mockVoteStore.setVoted([123, 456]);
 
-      // Create a new instance through TestBed to maintain injection context
-      const newFixture = TestBed.createComponent(CommentThread);
-      const newComponent = newFixture.componentInstance;
+      component.comment.set(mockComment);
 
-      expect(newComponent.votedComments()).toEqual(new Set(votedIds));
-      expect(getSpy).toHaveBeenCalledWith('votedComments');
-    });
-
-    it('should handle missing localStorage data gracefully', () => {
-      vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(null);
-
-      // Create a new instance through TestBed to maintain injection context
-      const newFixture = TestBed.createComponent(CommentThread);
-      const newComponent = newFixture.componentInstance;
-
-      expect(newComponent.votedComments()).toEqual(new Set());
+      expect(component.hasVoted()).toBe(true);
     });
   });
 
@@ -133,7 +142,7 @@ describe('CommentThread', () => {
 
       it('should return true when comment is in votedComments', () => {
         component.comment.set(mockComment);
-        component.votedComments.set(new Set([123]));
+        mockVoteStore.setVoted([123]);
         expect(component.hasVoted()).toBe(true);
       });
     });
@@ -478,73 +487,40 @@ describe('CommentThread', () => {
   });
 
   describe('upvoteComment', () => {
-    it('should add comment to votedComments and save to localStorage', () => {
+    it('should delegate voting to the vote store when a comment is present', () => {
       component.comment.set(mockComment);
-      component.votedComments.set(new Set([456]));
-      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteComment();
 
-      expect(component.votedComments()).toEqual(new Set([456, 123]));
-      expect(setSpy).toHaveBeenCalledWith('votedComments', '[456,123]');
+      expect(mockVoteStore.vote).toHaveBeenCalledWith(mockComment.id);
     });
 
-    it('should not upvote if comment is already voted', () => {
-      component.comment.set(mockComment);
-      component.votedComments.set(new Set([123]));
-      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
-
-      component.upvoteComment();
-
-      // Should not change the set
-      expect(component.votedComments()).toEqual(new Set([123]));
-      expect(setSpy).not.toHaveBeenCalled();
-    });
-
-    it('should not upvote if comment is not loaded', () => {
+    it('should not call the vote store when no comment is loaded', () => {
       component.comment.set(null);
-      component.votedComments.set(new Set());
-      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
 
       component.upvoteComment();
 
-      expect(component.votedComments()).toEqual(new Set());
-      expect(setSpy).not.toHaveBeenCalled();
+      expect(mockVoteStore.vote).not.toHaveBeenCalled();
     });
   });
 
   describe('hasVotedById', () => {
-    it('should return false when id is not in votedComments', () => {
-      component.votedComments.set(new Set([123, 456]));
+    it('should return false when id is not in the vote store', () => {
+      mockVoteStore.setVoted([123, 456]);
       expect(component.hasVotedById(789)).toBe(false);
     });
 
-    it('should return true when id is in votedComments', () => {
-      component.votedComments.set(new Set([123, 456]));
+    it('should return true when id is in the vote store', () => {
+      mockVoteStore.setVoted([123, 456]);
       expect(component.hasVotedById(456)).toBe(true);
     });
   });
 
   describe('upvoteById', () => {
-    it('should add id to votedComments and save to localStorage', () => {
-      component.votedComments.set(new Set([123]));
-      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
-
+    it('should delegate voting to the vote store', () => {
       component.upvoteById(456);
 
-      expect(component.votedComments()).toEqual(new Set([123, 456]));
-      expect(setSpy).toHaveBeenCalledWith('votedComments', '[123,456]');
-    });
-
-    it('should not add id if already in votedComments', () => {
-      component.votedComments.set(new Set([123, 456]));
-      const setSpy = vi.spyOn(Storage.prototype, 'setItem');
-
-      component.upvoteById(456);
-
-      // Should not change the set
-      expect(component.votedComments()).toEqual(new Set([123, 456]));
-      expect(setSpy).not.toHaveBeenCalled();
+      expect(mockVoteStore.vote).toHaveBeenCalledWith(456);
     });
   });
 
