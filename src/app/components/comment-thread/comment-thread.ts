@@ -222,9 +222,9 @@ export class CommentThread implements OnInit {
     return this.totalRepliesCount() > 0 && !this.repliesLoaded();
   });
 
-  showLoadButton = computed(() => {
+  showLoadButton(): boolean {
     return this.lazyLoad && !this.commentLoaded();
-  });
+  }
 
   get currentPageValue() {
     return this.currentPage();
@@ -232,7 +232,7 @@ export class CommentThread implements OnInit {
 
   get remainingRepliesCount() {
     const remaining = this.allKidsIds.length - (this.currentPage() + 1) * this.pageSize;
-    return Math.min(this.pageSize, remaining);
+    return Math.max(0, Math.min(this.pageSize, remaining));
   }
 
   ngOnInit() {
