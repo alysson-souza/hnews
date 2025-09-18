@@ -9,8 +9,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { HackernewsService } from '../../services/hackernews.service';
-import { HNItem, HNItemType } from '../../models/hn';
+import { HNItem } from '../../models/hn';
 import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
+import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
 
 import { CommentThread } from './comment-thread';
 
@@ -47,11 +48,27 @@ class MockCommentVoteStoreService {
   }
 }
 
+class MockCommentRepliesLoaderService {
+  replies = signal<HNItem[]>([]);
+  repliesLoaded = signal(false);
+  loadingReplies = signal(false);
+  loadingMore = signal(false);
+  hasMore = signal(false);
+  currentPage = signal(0);
+  pageSize = 10;
+
+  configureKids = vi.fn();
+  loadFirstPage = vi.fn();
+  loadNextPage = vi.fn();
+  remainingCount = vi.fn(() => 0);
+}
+
 describe('CommentThread', () => {
   let component: CommentThread;
   let fixture: ComponentFixture<CommentThread>;
-  let mockHnService: { getItem: ReturnType<typeof vi.fn>; getItemsPage: ReturnType<typeof vi.fn> };
+  let mockHnService: { getItem: ReturnType<typeof vi.fn> };
   let mockVoteStore: MockCommentVoteStoreService;
+  let mockRepliesLoader: MockCommentRepliesLoaderService;
 
   // Test data
   const mockComment: HNItem = {
@@ -64,30 +81,19 @@ describe('CommentThread', () => {
     type: 'comment',
   };
 
-  const mockReplies: HNItem[] = [
-    {
-      id: 456,
-      by: 'replyuser1',
-      time: Math.floor(Date.now() / 1000) - 1800,
-      text: 'Reply 1',
-      type: 'comment',
-    },
-    {
-      id: 789,
-      by: 'replyuser2',
-      time: Math.floor(Date.now() / 1000) - 900,
-      text: 'Reply 2',
-      type: 'comment',
-    },
-  ];
-
   beforeEach(async () => {
     // Create spy object for HackernewsService
     mockHnService = {
       getItem: vi.fn(),
-      getItemsPage: vi.fn(),
     };
     mockVoteStore = new MockCommentVoteStoreService();
+    mockRepliesLoader = new MockCommentRepliesLoaderService();
+
+    TestBed.overrideComponent(CommentThread, {
+      set: {
+        providers: [{ provide: CommentRepliesLoaderService, useValue: mockRepliesLoader }],
+      },
+    });
 
     await TestBed.configureTestingModule({
       imports: [CommentThread],
@@ -110,7 +116,7 @@ describe('CommentThread', () => {
 
     // Mock the service methods to prevent actual HTTP calls
     mockHnService.getItem.mockReturnValue(of(null));
-    mockHnService.getItemsPage.mockReturnValue(of([]));
+    mockRepliesLoader.remainingCount.mockReturnValue(0);
 
     fixture.detectChanges();
   });
@@ -181,19 +187,19 @@ describe('CommentThread', () => {
       it('should return false when there are no replies', () => {
         const commentWithoutKids = { ...mockComment, kids: [] };
         component.comment.set(commentWithoutKids);
-        component.repliesLoaded.set(false);
+        mockRepliesLoader.repliesLoaded.set(false);
         expect(component.showExpandButton()).toBe(false);
       });
 
       it('should return true when there are replies and they are not loaded', () => {
         component.comment.set(mockComment);
-        component.repliesLoaded.set(false);
+        mockRepliesLoader.repliesLoaded.set(false);
         expect(component.showExpandButton()).toBe(true);
       });
 
       it('should return false when replies are already loaded', () => {
         component.comment.set(mockComment);
-        component.repliesLoaded.set(true);
+        mockRepliesLoader.repliesLoaded.set(true);
         expect(component.showExpandButton()).toBe(false);
       });
     });
@@ -226,14 +232,12 @@ describe('CommentThread', () => {
 
     describe('remainingRepliesCount', () => {
       it('should calculate the remaining replies count correctly', () => {
-        component.allKidsIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-        // With pageSize=10 and currentPage=0, should have 2 remaining
+        mockRepliesLoader.remainingCount.mockReturnValue(2);
         expect(component.remainingRepliesCount).toBe(2);
       });
 
       it('should return 0 when no more replies', () => {
-        component.allKidsIds = [1, 2, 3];
-        // With pageSize=10 and only 3 items, all fit on first page
+        mockRepliesLoader.remainingCount.mockReturnValue(0);
         expect(component.remainingRepliesCount).toBe(0);
       });
     });
@@ -242,6 +246,7 @@ describe('CommentThread', () => {
   describe('ngOnInit', () => {
     it('should hydrate from initial comment when provided', () => {
       component.initialComment = mockComment;
+      mockRepliesLoader.configureKids.mockClear();
 
       component.ngOnInit();
 
@@ -249,6 +254,7 @@ describe('CommentThread', () => {
       expect(component.comment()).toEqual(mockComment);
       expect(component.commentLoaded()).toBe(true);
       expect(component.loading()).toBe(false);
+      expect(mockRepliesLoader.configureKids).toHaveBeenCalledWith(mockComment.kids);
     });
 
     it('should load comment when not lazy loading and no initial comment', () => {
@@ -274,6 +280,7 @@ describe('CommentThread', () => {
   describe('loadComment', () => {
     it('should load comment from service and set loading states', () => {
       mockHnService.getItem.mockReturnValue(of(mockComment));
+      mockRepliesLoader.configureKids.mockClear();
 
       component.loadComment();
 
@@ -282,6 +289,7 @@ describe('CommentThread', () => {
 
     it('should handle successful comment load', () => {
       mockHnService.getItem.mockReturnValue(of(mockComment));
+      mockRepliesLoader.configureKids.mockClear();
 
       component.loadComment();
 
@@ -291,12 +299,13 @@ describe('CommentThread', () => {
       expect(component.comment()).toEqual(mockComment);
       expect(component.commentLoaded()).toBe(true);
       expect(component.loading()).toBe(false);
-      expect(component.allKidsIds).toEqual(mockComment.kids!);
+      expect(mockRepliesLoader.configureKids).toHaveBeenCalledWith(mockComment.kids);
     });
 
     it('should handle deleted comment', () => {
       const deletedComment = { ...mockComment, deleted: true };
       mockHnService.getItem.mockReturnValue(of(deletedComment));
+      mockRepliesLoader.configureKids.mockClear();
 
       component.loadComment();
 
@@ -305,6 +314,7 @@ describe('CommentThread', () => {
 
       expect(component.loading()).toBe(false);
       expect(component.comment()).toBeNull();
+      expect(mockRepliesLoader.configureKids).toHaveBeenCalledWith([]);
     });
 
     it('should handle service error', () => {
@@ -319,157 +329,68 @@ describe('CommentThread', () => {
     });
   });
 
-  describe('loadRepliesPage', () => {
-    beforeEach(() => {
-      component.allKidsIds = [456, 789];
-    });
-
-    it('should load first page of replies and call service with correct args', () => {
-      mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
-
-      component.loadRepliesPage(0);
-
-      // With synchronous emissions, flags settle back to false immediately
-      expect(component.loadingReplies()).toBe(false);
-      expect(component.loadingMore()).toBe(false);
-      expect(mockHnService.getItemsPage).toHaveBeenCalledWith([456, 789], 0, 10);
-    });
-
-    it('should load subsequent page of replies and call service with correct args', () => {
-      mockHnService.getItemsPage.mockReturnValue(of([mockReplies[1]]));
-
-      component.loadRepliesPage(1);
-
-      // With synchronous emissions, flags settle back to false immediately
-      expect(component.loadingMore()).toBe(false);
-      expect(component.loadingReplies()).toBe(false);
-      expect(mockHnService.getItemsPage).toHaveBeenCalledWith([456, 789], 1, 10);
-    });
-
-    it('should handle successful replies load for first page', () => {
-      mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
-
-      component.loadRepliesPage(0);
-
-      // Trigger change detection to process the Observable
-      fixture.detectChanges();
-
-      expect(component.replies()).toEqual(mockReplies);
-      expect(component.repliesLoaded()).toBe(true);
-      expect(component.currentPageValue).toBe(0);
-      expect(component.loadingReplies()).toBe(false);
-    });
-
-    it('should handle successful replies load for subsequent pages', () => {
-      component.replies.set([mockReplies[0]]);
-      mockHnService.getItemsPage.mockReturnValue(of([mockReplies[1]]));
-
-      component.loadRepliesPage(1);
-
-      // Trigger change detection to process the Observable
-      fixture.detectChanges();
-
-      // Verify replies are appended
-      expect(component.replies().length).toBe(2);
-      expect(component.currentPageValue).toBe(1);
-      expect(component.loadingMore()).toBe(false);
-    });
-
-    it('should handle service error when loading replies', () => {
-      mockHnService.getItemsPage.mockReturnValue(throwError(() => new Error('Failed to load')));
-
-      component.loadRepliesPage(0);
-
-      // Trigger change detection to process the Observable
-      fixture.detectChanges();
-
-      expect(component.loadingReplies()).toBe(false);
-      expect(component.loadingMore()).toBe(false);
-    });
-
-    it('should update hasMoreReplies signal correctly', () => {
-      // Set up more kids than one page
-      component.allKidsIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-      const firstPage: HNItem[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((id) => ({
-        id,
-        by: `user${id}`,
-        time: Math.floor(Date.now() / 1000) - id * 100,
-        text: `Reply ${id}`,
-        type: 'comment' as HNItemType,
-      }));
-
-      mockHnService.getItemsPage.mockReturnValue(of(firstPage));
-
-      component.loadRepliesPage(0);
-
-      // Trigger change detection to process the Observable
-      fixture.detectChanges();
-
-      expect(component.hasMoreReplies()).toBe(true);
-    });
-  });
-
   describe('loadMoreReplies', () => {
     it('should load next page when there are more replies', () => {
-      vi.spyOn(component, 'loadRepliesPage');
-      // Access the private currentPage signal directly
-      component['currentPage'].set(0);
-      component.hasMoreReplies.set(true);
-      component.loadingMore.set(false);
+      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.hasMore.set(true);
+      mockRepliesLoader.loadingMore.set(false);
+      mockRepliesLoader.repliesLoaded.set(true);
 
       component.loadMoreReplies();
 
-      expect(component.loadRepliesPage).toHaveBeenCalledWith(1);
+      expect(mockRepliesLoader.loadNextPage).toHaveBeenCalled();
     });
 
     it('should not load next page when already loading', () => {
-      vi.spyOn(component, 'loadRepliesPage');
-      component.hasMoreReplies.set(true);
-      component.loadingMore.set(true);
+      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.hasMore.set(true);
+      mockRepliesLoader.loadingMore.set(true);
+      mockRepliesLoader.repliesLoaded.set(true);
 
       component.loadMoreReplies();
 
-      expect(component.loadRepliesPage).not.toHaveBeenCalled();
+      expect(mockRepliesLoader.loadNextPage).not.toHaveBeenCalled();
     });
 
     it('should not load next page when no more replies', () => {
-      vi.spyOn(component, 'loadRepliesPage');
-      component.hasMoreReplies.set(false);
+      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.hasMore.set(false);
+      mockRepliesLoader.repliesLoaded.set(true);
 
       component.loadMoreReplies();
 
-      expect(component.loadRepliesPage).not.toHaveBeenCalled();
+      expect(mockRepliesLoader.loadNextPage).not.toHaveBeenCalled();
     });
   });
 
   describe('expandReplies', () => {
     it('should load first page of replies when not loaded and not loading', () => {
-      vi.spyOn(component, 'loadRepliesPage');
-      component.repliesLoaded.set(false);
-      component.loadingReplies.set(false);
+      mockRepliesLoader.loadFirstPage.mockClear();
+      mockRepliesLoader.repliesLoaded.set(false);
+      mockRepliesLoader.loadingReplies.set(false);
 
       component.expandReplies();
 
-      expect(component.loadRepliesPage).toHaveBeenCalledWith(0);
+      expect(mockRepliesLoader.loadFirstPage).toHaveBeenCalled();
     });
 
     it('should not load replies when already loaded', () => {
-      vi.spyOn(component, 'loadRepliesPage');
-      component.repliesLoaded.set(true);
+      mockRepliesLoader.loadFirstPage.mockClear();
+      mockRepliesLoader.repliesLoaded.set(true);
 
       component.expandReplies();
 
-      expect(component.loadRepliesPage).not.toHaveBeenCalled();
+      expect(mockRepliesLoader.loadFirstPage).not.toHaveBeenCalled();
     });
 
     it('should not load replies when already loading', () => {
-      vi.spyOn(component, 'loadRepliesPage');
-      component.repliesLoaded.set(false);
-      component.loadingReplies.set(true);
+      mockRepliesLoader.loadFirstPage.mockClear();
+      mockRepliesLoader.repliesLoaded.set(false);
+      mockRepliesLoader.loadingReplies.set(true);
 
       component.expandReplies();
 
-      expect(component.loadRepliesPage).not.toHaveBeenCalled();
+      expect(mockRepliesLoader.loadFirstPage).not.toHaveBeenCalled();
     });
   });
 

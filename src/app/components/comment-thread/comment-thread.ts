@@ -11,6 +11,7 @@ import { LazyLoadCardComponent } from '../lazy-load-card/lazy-load-card.componen
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
 import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
+import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
 
 @Component({
   selector: 'app-comment-thread',
@@ -25,6 +26,7 @@ import { CommentVoteStoreService } from '../../services/comment-vote-store.servi
     AppButtonComponent,
     CommentSkeletonComponent,
   ],
+  providers: [CommentRepliesLoaderService],
   template: `
     @if (showLoadButton()) {
       <app-lazy-load-card [depth]="depth" [loading]="loading()" (loadMore)="loadComment()" />
@@ -181,23 +183,21 @@ export class CommentThread implements OnInit {
   private hnService = inject(HackernewsService);
 
   comment = signal<HNItem | null>(null);
-  replies = signal<HNItem[]>([]);
   isCollapsed = signal(false);
   loading = signal(true);
-  // Reply loading state
-  repliesLoaded = signal(false);
-  loadingReplies = signal(false);
 
   // Lazy loading state
   commentLoaded = signal(false);
 
-  private currentPage = signal(0);
-  readonly pageSize = 10;
-  hasMoreReplies = signal(false);
-  loadingMore = signal(false);
-  allKidsIds: number[] = [];
-
+  private repliesLoader = inject(CommentRepliesLoaderService);
   private voteStore = inject(CommentVoteStoreService);
+
+  readonly replies = this.repliesLoader.replies;
+  readonly repliesLoaded = this.repliesLoader.repliesLoaded;
+  readonly loadingReplies = this.repliesLoader.loadingReplies;
+  readonly loadingMore = this.repliesLoader.loadingMore;
+  readonly hasMoreReplies = this.repliesLoader.hasMore;
+  private readonly currentPage = this.repliesLoader.currentPage;
 
   hasVoted = computed(() => {
     const current = this.comment();
@@ -231,8 +231,7 @@ export class CommentThread implements OnInit {
   }
 
   get remainingRepliesCount() {
-    const remaining = this.allKidsIds.length - (this.currentPage() + 1) * this.pageSize;
-    return Math.max(0, Math.min(this.pageSize, remaining));
+    return this.repliesLoader.remainingCount();
   }
 
   ngOnInit() {
@@ -252,15 +251,12 @@ export class CommentThread implements OnInit {
 
   private hydrateFromInitial(item: HNItem) {
     if (item && !item.deleted) {
+      this.repliesLoader.configureKids(item.kids);
       this.comment.set(item);
       this.commentLoaded.set(true);
-      // Prepare kids but DO NOT auto-load replies; load only on expand
-      if (item.kids && item.kids.length > 0) {
-        this.allKidsIds = item.kids;
-        this.hasMoreReplies.set(item.kids.length > this.pageSize);
-      }
       this.loading.set(false);
     } else {
+      this.repliesLoader.configureKids([]);
       this.loading.set(false);
     }
   }
@@ -271,17 +267,13 @@ export class CommentThread implements OnInit {
     this.hnService.getItem(this.commentId).subscribe({
       next: (item) => {
         if (item && !item.deleted) {
+          this.repliesLoader.configureKids(item.kids);
           this.comment.set(item);
           this.commentLoaded.set(true);
-
-          // Prepare kids but DO NOT auto-load replies; load only on expand
-          if (item.kids && item.kids.length > 0) {
-            this.allKidsIds = item.kids;
-            this.hasMoreReplies.set(item.kids.length > this.pageSize);
-          }
           // Parent is ready; children loading deferred until expand
           this.loading.set(false);
         } else {
+          this.repliesLoader.configureKids([]);
           this.loading.set(false);
         }
       },
@@ -291,49 +283,15 @@ export class CommentThread implements OnInit {
     });
   }
 
-  loadRepliesPage(page: number) {
-    if (page === 0) {
-      this.loadingReplies.set(true);
-    } else {
-      this.loadingMore.set(true);
-    }
-
-    this.hnService.getItemsPage(this.allKidsIds, page, this.pageSize).subscribe({
-      next: (items) => {
-        const validReplies = items.filter((item) => item !== null && !item.deleted) as HNItem[];
-
-        if (page === 0) {
-          this.replies.set(validReplies);
-          this.repliesLoaded.set(true);
-        } else {
-          this.replies.update((current) => [...current, ...validReplies]);
-        }
-
-        this.currentPage.set(page);
-
-        const totalLoaded = (page + 1) * this.pageSize;
-        this.hasMoreReplies.set(totalLoaded < this.allKidsIds.length);
-
-        this.loadingReplies.set(false);
-        this.loadingMore.set(false);
-      },
-      error: () => {
-        this.loadingReplies.set(false);
-        this.loadingMore.set(false);
-      },
-    });
-  }
-
   loadMoreReplies() {
     if (!this.loadingMore() && this.hasMoreReplies()) {
-      const nextPage = this.currentPage() + 1;
-      this.loadRepliesPage(nextPage);
+      this.repliesLoader.loadNextPage();
     }
   }
 
   expandReplies() {
     if (!this.repliesLoaded() && !this.loadingReplies()) {
-      this.loadRepliesPage(0);
+      this.repliesLoader.loadFirstPage();
     }
   }
 
