@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of, from, merge, firstValueFrom } from 'rxjs';
-import { catchError, tap, switchMap, shareReplay, map } from 'rxjs/operators';
+import { catchError, switchMap, shareReplay, map } from 'rxjs/operators';
 import { CacheManagerService } from './cache-manager.service';
 import { HNItem, HNUser } from '../models/hn';
 import { AlgoliaSearchResponse } from '../models/algolia';
@@ -18,120 +18,79 @@ export class HackernewsService {
   private hn = inject(HnApiClient);
   private algolia = inject(AlgoliaApiClient);
 
-  getTopStories(forceRefresh = false): Observable<number[]> {
-    const key = 'top';
+  private readonly storyListScope = 'storyList';
+  private readonly storyScope = 'story';
+  private readonly shareLatestConfig = { bufferSize: 1, refCount: true } as const;
+
+  private getStoryIds(
+    key: string,
+    fetch: () => Observable<number[]>,
+    forceRefresh: boolean,
+  ): Observable<number[]> {
     const initial$ = forceRefresh
-      ? this.hn.topStories().pipe(tap(async (data) => await this.cache.set('storyList', key, data)))
+      ? fetch().pipe(
+          switchMap((ids) =>
+            from(this.cache.set(this.storyListScope, key, ids)).pipe(map(() => ids)),
+          ),
+        )
       : from(
           this.cache.getWithSWR<number[]>(
-            'storyList',
+            this.storyListScope,
             key,
-            async () => (await firstValueFrom(this.hn.topStories())) ?? [],
+            async () => (await firstValueFrom(fetch())) ?? [],
           ),
         ).pipe(map((res) => res ?? []));
-    const updates$ = this.cache.getUpdates<number[]>('storyList', key);
-    return merge(initial$, updates$).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+    const updates$ = this.cache.getUpdates<number[]>(this.storyListScope, key);
+    return merge(initial$, updates$).pipe(shareReplay(this.shareLatestConfig));
+  }
+
+  private filterExisting<T>(items: (T | null | undefined)[]): T[] {
+    return items.filter((item): item is T => item != null);
+  }
+
+  getTopStories(forceRefresh = false): Observable<number[]> {
+    return this.getStoryIds('top', () => this.hn.topStories(), forceRefresh);
   }
 
   getBestStories(forceRefresh = false): Observable<number[]> {
-    const key = 'best';
-    const initial$ = forceRefresh
-      ? this.hn
-          .bestStories()
-          .pipe(tap(async (data) => await this.cache.set('storyList', key, data)))
-      : from(
-          this.cache.getWithSWR<number[]>(
-            'storyList',
-            key,
-            async () => (await firstValueFrom(this.hn.bestStories())) ?? [],
-          ),
-        ).pipe(map((res) => res ?? []));
-    const updates$ = this.cache.getUpdates<number[]>('storyList', key);
-    return merge(initial$, updates$).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.getStoryIds('best', () => this.hn.bestStories(), forceRefresh);
   }
 
   getNewStories(forceRefresh = false): Observable<number[]> {
-    const key = 'new';
-    const initial$ = forceRefresh
-      ? this.hn.newStories().pipe(tap(async (data) => await this.cache.set('storyList', key, data)))
-      : from(
-          this.cache.getWithSWR<number[]>(
-            'storyList',
-            key,
-            async () => (await firstValueFrom(this.hn.newStories())) ?? [],
-          ),
-        ).pipe(map((res) => res ?? []));
-    const updates$ = this.cache.getUpdates<number[]>('storyList', key);
-    return merge(initial$, updates$).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.getStoryIds('new', () => this.hn.newStories(), forceRefresh);
   }
 
   getAskStories(forceRefresh = false): Observable<number[]> {
-    const key = 'ask';
-    const initial$ = forceRefresh
-      ? this.hn.askStories().pipe(tap(async (data) => await this.cache.set('storyList', key, data)))
-      : from(
-          this.cache.getWithSWR<number[]>(
-            'storyList',
-            key,
-            async () => (await firstValueFrom(this.hn.askStories())) ?? [],
-          ),
-        ).pipe(map((res) => res ?? []));
-    const updates$ = this.cache.getUpdates<number[]>('storyList', key);
-    return merge(initial$, updates$).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.getStoryIds('ask', () => this.hn.askStories(), forceRefresh);
   }
 
   getShowStories(forceRefresh = false): Observable<number[]> {
-    const key = 'show';
-    const initial$ = forceRefresh
-      ? this.hn
-          .showStories()
-          .pipe(tap(async (data) => await this.cache.set('storyList', key, data)))
-      : from(
-          this.cache.getWithSWR<number[]>(
-            'storyList',
-            key,
-            async () => (await firstValueFrom(this.hn.showStories())) ?? [],
-          ),
-        ).pipe(map((res) => res ?? []));
-    const updates$ = this.cache.getUpdates<number[]>('storyList', key);
-    return merge(initial$, updates$).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.getStoryIds('show', () => this.hn.showStories(), forceRefresh);
   }
 
   getJobStories(forceRefresh = false): Observable<number[]> {
-    const key = 'job';
-    const initial$ = forceRefresh
-      ? this.hn.jobStories().pipe(tap(async (data) => await this.cache.set('storyList', key, data)))
-      : from(
-          this.cache.getWithSWR<number[]>(
-            'storyList',
-            key,
-            async () => (await firstValueFrom(this.hn.jobStories())) ?? [],
-          ),
-        ).pipe(map((res) => res ?? []));
-    const updates$ = this.cache.getUpdates<number[]>('storyList', key);
-    return merge(initial$, updates$).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    return this.getStoryIds('job', () => this.hn.jobStories(), forceRefresh);
   }
 
   getItem(id: number, forceRefresh = false): Observable<HNItem | null> {
     const key = id.toString();
-    const initial$ = forceRefresh
-      ? this.hn.item(id).pipe(
-          switchMap(async (mapped) => {
-            if (mapped) {
-              await this.cache.set('story', key, mapped);
-            }
-            return mapped;
-          }),
-          catchError(() => of(null)),
-        )
-      : from(
-          this.cache.getWithSWR<HNItem | null>(
-            'story',
-            key,
-            async () => (await firstValueFrom(this.hn.item(id))) ?? null,
-          ),
-        );
-    return initial$;
+    if (forceRefresh) {
+      return this.hn.item(id).pipe(
+        switchMap((item) =>
+          item ? from(this.cache.set(this.storyScope, key, item)).pipe(map(() => item)) : of(item),
+        ),
+        catchError(() => of(null)),
+      );
+    }
+
+    return from(
+      this.cache.getWithSWR<HNItem | null>(
+        this.storyScope,
+        key,
+        async () => (await firstValueFrom(this.hn.item(id))) ?? null,
+      ),
+    );
   }
 
   getItems(ids: number[], forceRefresh = false): Observable<(HNItem | null)[]> {
@@ -152,9 +111,7 @@ export class HackernewsService {
       switchMap((story) => {
         const kids = story?.kids || [];
         if (!kids.length) return of([]);
-        return this.getItems(kids, forceRefresh).pipe(
-          switchMap((items) => of(items.filter((i): i is HNItem => !!i))),
-        );
+        return this.getItems(kids, forceRefresh).pipe(map((items) => this.filterExisting(items)));
       }),
     );
   }
@@ -172,9 +129,7 @@ export class HackernewsService {
           page !== undefined && pageSize !== undefined
             ? kids.slice(page * pageSize, page * pageSize + pageSize)
             : kids;
-        return this.getItems(ids).pipe(
-          switchMap((items) => of(items.filter((i): i is HNItem => !!i))),
-        );
+        return this.getItems(ids).pipe(map((items) => this.filterExisting(items)));
       }),
     );
   }
