@@ -1,62 +1,48 @@
 # Copilot Instructions for hnews
 
-This guide enables AI coding agents to work productively in the `hnews` Angular project. It summarizes essential architecture, workflows, and conventions unique to this codebase.
+Concise rules and context to help AI agents work effectively in this Angular 20 app.
 
-## Architecture Overview
+## Architecture and entry points
 
-- **Angular 20, Standalone Components**: UI is built from reusable components in `src/app/components`. Route-level features live in `src/app/pages`.
-- **Services**: Data, caching, and device logic are in `src/app/services`. Caching uses memory, IndexedDB, Service Worker, and localStorage.
-- **Config & API**: API endpoints and config providers are in `src/app/config`. Integrates Hacker News Firebase and Algolia HN Search.
-- **PWA**: Service Worker enabled for offline and background updates. Manifest and icons in `public/`.
-- **Testing**: Unit tests use Karma + Jasmine, placed as `*.spec.ts` beside code.
+- Standalone Angular app (no NgModules). UI components live in `src/app/components`; route-level features in `src/app/pages`. Routes are defined in `src/app/app.routes.ts` and provided in `src/app/app.config.ts` alongside `provideServiceWorker` (prod-only, `registerWhenStable:30000`).
+- State uses Angular Signals in stores under `src/app/stores/`. Example: `StoryListStore` manages paging, refresh, and “new stories” badge via signals and calls into services.
+- Data/services are in `src/app/services/` with API clients in `src/app/data/`. `HackernewsService` orchestrates HN Firebase + Algolia search and composes cache + network flows.
+- PWA assets are in `public/`; Service Worker config is in `ngsw-config.json`.
 
-## Developer Workflows
+## Data flow and caching (project-specific)
 
-- **Start Dev Server**: `npm start` (http://localhost:4200)
-- **Build**: `npm run build` (dev) or `npm run build:prod` (prod, use `--base-href` for subpaths)
-- **Test (single-run)**: `npm test`
-- **Test (watch)**: `npm run test:watch`
-- **Coverage (single-run)**: `npm run test:coverage`
-- **Coverage (watch)**: `npm run test:coverage:watch`
-- **Lint/Format**: `npm run lint`, `npm run format`
-- **Deploy**: `npm run deploy` (GitHub Pages)
+- Use `CacheManagerService` for all cached data. It implements stale‑while‑revalidate and multi‑layer storage: Memory → IndexedDB (primary) → localStorage (fallback) + SW cache for assets. It also emits per‑key updates via `getUpdates(type,key)`.
+- Cache scopes and TTLs are centralized: see `src/app/config/cache.config.ts` and `cache-manager.service.ts` (`story`, `storyList`, `user`, `search`). IndexedDB schema is in `IndexedDBService` with stores `stories`, `storyLists`, `users`, `apiCache` and TTL enforcement/cleanup.
+- Example pattern: `HackernewsService.getTopStories()` calls a private `getStoryIds()` that merges `cache.getWithSWR()` with `cache.getUpdates()` and `shareReplay({bufferSize:1,refCount:true})` for live updates.
+- Key normalization/migration: `IndexedDBService` normalizes list keys (e.g., `newest` → `new`) and migrates legacy keys; `CacheManagerService` performs one‑time migrations and list resets when needed. When adding new cache types, extend `cacheConfigs` and, if persisted, add a store or reuse `apiCache`.
 
-## Coding Conventions
+## UI patterns
 
-- **Indentation**: 2 spaces, UTF-8, trim trailing whitespace (`.editorconfig`)
-- **TypeScript**: single quotes, ~100 line width (Prettier)
-- **Angular Selectors**: Components use `app-` (kebab-case), directives use `app` (camelCase)
-- **Filenames**: `kebab-case` for files, classes use `PascalCase` + suffix (`FooComponent`, `BarService`)
-- **Tests**: Place as `*.spec.ts` next to code, prefer shallow component tests and mock network calls
-- **Comments (strict policy)**:
-  - Do NOT add narration or change-log comments in code (e.g., "moved to X", "refactor", "temporary", "cleanup").
-  - Comments must explain intent, assumptions, constraints, non-obvious decisions, and public API contracts.
-  - Process notes belong in commit messages, PR descriptions, or docs — not inline in source.
+- Components use Tailwind CSS v4 (global in `src/styles.css`) and selectors prefixed with `app-`. Keep files kebab‑case; classes in PascalCase with suffixes (`FooComponent`, `BarService`).
+- Feed and comments follow a two‑phase loading UX: render cached data immediately, then refresh details in background (see `StoryListStore.refresh()` → `refreshStoryDetails`).
+- Keyboard navigation: see `components/keyboard-shortcuts/` and `services/keyboard-navigation.service.ts` for Vim‑style shortcuts and help dialog.
+- Comment rendering and lazy loading: `components/comment-thread/`, `comment-text/`, `comment-header/`.
 
-## Patterns & Examples
+## Developer workflows
 
-- **Story/Comment UI**: See `src/app/components/story-list/`, `comment-thread/`, and `comment-text/` for data flow and lazy loading.
-- **Keyboard Navigation**: Vim-style shortcuts in `keyboard-shortcuts.component.ts` and related services.
-- **Caching**: Multi-layer cache logic in `cache-manager.service.ts` and `cache.service.ts`.
-- **Theme & Settings**: Theme toggling in `theme.service.ts`, user settings in `user-settings.service.ts`.
+- Start: `npm start` (http://localhost:4200)
+- Build: `npm run build` (dev) | `npm run build:prod` (prod; pass `--base-href` for subpaths, e.g., Pages)
+- Test: `npm test` (single‑run, ChromeHeadless) | `npm run test:watch`
+- Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
+- Lint/Format: `npm run lint` | `npm run format`
+- Deploy: `npm run deploy` (GitHub Pages via `angular-cli-ghpages`)
 
-## Commit & PR Process
+## Conventions and edit rules
 
-- Use Conventional Commits (`feat:`, `fix:`, etc.)
-- PRs: concise summary, link issues, add screenshots for UI changes
-- CI: must pass lint, tests, and build before merge
+- Comments: no narration/change‑logs. Only add comments that clarify intent, constraints, non‑obvious logic, or public contracts.
+- Tests: place `*.spec.ts` next to code; prefer shallow component tests and mock network calls.
+- Node 22.x (`.nvmrc`) and npm 11+ recommended. TypeScript single quotes; ~100 char width (Prettier).
 
-## Security & Config
+## Code pointers (start here)
 
-- Never commit secrets. Use `.env.example` for local setup.
-- Node 22.x required (`.nvmrc`), NPM 11+ recommended
+- Stores: `src/app/stores/story-list.store.ts` (signals, paging, auto‑refresh), `user.store.ts`.
+- Data: `src/app/services/hackernews.service.ts` (SWR + updates), `src/app/data/hn-api.client.ts`, `algolia-api.client.ts`.
+- Cache: `src/app/services/cache-manager.service.ts`, `indexed-db.service.ts`, `config/cache.config.ts`.
+- UX: `components/story-list/`, `comment-thread/`, `keyboard-shortcuts/`, theme in `services/theme.service.ts`.
 
----
-
-For more details, see `AGENTS.md` and `README.md`. Ask for feedback if any section is unclear or missing.
-
-## AI Agent Edit Rules
-
-- Keep diffs minimal and focused; avoid sprinkling explanatory comments about what changed.
-- Do not add or preserve narration/change-log comments; remove them when encountered.
-- Only introduce comments when they clarify business logic, edge cases, or API usage that isn’t obvious from code.
+For more, see `AGENTS.md` and `README.md`. If any section is unclear or missing, ask and we’ll refine this file.
