@@ -22,6 +22,9 @@ module.exports = function (config) {
     jasmineHtmlReporter: {
       suppressAll: true, // removes the duplicated traces
     },
+    browserConsoleLogOptions: {
+      level: 'log', // hide console.debug while keeping console.log/warn/error
+    },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/hnews'),
       subdir: '.',
