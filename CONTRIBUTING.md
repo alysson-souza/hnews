@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 22+ (see `.nvmrc`)
-- npm 11+
+- pnpm 9+
 
 Optional
 
@@ -15,32 +15,32 @@ Optional
 # Clone and install
 git clone https://github.com/alysson-souza/hnews.git
 cd hnews
-npm install
+pnpm install
 
 # Start dev server
-npm start  # http://localhost:4200
+pnpm start  # http://localhost:4200
 ```
 
 ## Scripts
 
 ```bash
-npm start            # Run dev server (http://localhost:4200)
-npm run watch        # Watch mode build
-npm run build        # Build (development)
-npm run build:prod   # Build (production)
-npm test             # Unit tests (Vitest)
-npm run lint         # ESLint
-npm run lint:fix     # ESLint with autofix
-npm run format       # Prettier write
-npm run format:check # Prettier check only
-npm run deploy       # Deploy to GitHub Pages (gh-pages)
-npm run deploy:ci    # CI-friendly deploy
+pnpm start            # Run dev server (http://localhost:4200)
+pnpm run watch        # Watch mode build
+pnpm run build        # Build (development)
+pnpm run build:prod   # Build (production)
+pnpm test             # Unit tests (Vitest)
+pnpm run lint         # ESLint
+pnpm run lint:fix     # ESLint with autofix
+pnpm run format       # Prettier write
+pnpm run format:check # Prettier check only
+pnpm run deploy       # Deploy to GitHub Pages (gh-pages)
+pnpm run deploy:ci    # CI-friendly deploy
 ```
 
 ## Testing
 
-- Run tests: `npm test`
-- Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
+- Run tests: `pnpm test`
+- Coverage: `pnpm run test:coverage` (outputs to `coverage/hnews`)
 - Prefer focused service specs and shallow component tests; mock network calls
 
 ## Code Style
@@ -64,4 +64,4 @@ npm run deploy:ci    # CI-friendly deploy
 
 - Use Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `build:`, `test:`
 - PRs: include a concise summary, linked issues (e.g., `Fixes #123`), and screenshots for UI changes
-- CI expectations: `npm run lint` and `npm test` should pass; verify `npm run build:prod` for impactful UI changes
+- CI expectations: `pnpm run lint` and `pnpm test` should pass; verify `pnpm run build:prod` for impactful UI changes

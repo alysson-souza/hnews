@@ -21,17 +21,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Update npm to match local version
-        run: npm install -g npm@11.5.2
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build and Deploy
         env:
@@ -53,10 +56,10 @@ jobs:
           echo "Building with base-href: $BASE_HREF"
 
           # Build with the correct base href
-          npm run build:prod -- --base-href="$BASE_HREF"
+          pnpm run build:prod -- --base-href="$BASE_HREF"
 
           # Deploy using angular-cli-ghpages
-          npx angular-cli-ghpages \
+          pnpm dlx angular-cli-ghpages \
             --dir=dist/hnews/browser \
             --name="github-actions[bot]" \
             --email="github-actions[bot]@users.noreply.github.com"

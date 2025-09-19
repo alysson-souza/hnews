@@ -12,9 +12,9 @@
     "test:watch": "ng test",
     "test:coverage": "ng test --watch=false --code-coverage",
     "test:coverage:watch": "ng test --code-coverage",
-    "predeploy": "npm run build:prod",
+    "predeploy": "pnpm run build:prod",
     "deploy": "ng deploy",
-    "deploy:ci": "npm run build:prod && ng deploy --no-silent",
+    "deploy:ci": "pnpm run build:prod && ng deploy --no-silent",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
     "format": "prettier --write .",
@@ -36,7 +36,7 @@
   "private": true,
   "engines": {
     "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "pnpm": ">=9.0.0"
   },
   "lint-staged": {
     "*.{ts,js}": [

@@ -49,7 +49,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 ### Prerequisites
 
 - Node.js 22+ (LTS recommended; `.nvmrc` provided)
-- npm 11+
+- pnpm 9+
 
 ### Installation
 
@@ -59,10 +59,10 @@ git clone https://github.com/alysson-souza/hnews.git
 cd hnews
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start the dev server
-npm start
+pnpm start
 ```
 
 App runs at `http://localhost:4200`.
