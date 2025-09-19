@@ -252,6 +252,22 @@
     <div class="text-center">
       <p class="footer-text">HNews — Hacker News Reader</p>
       <p class="footer-subtext">Built with Angular & Tailwind CSS | Data from Hacker News API</p>
+      <p class="footer-subtext">
+        Version
+        @if (commitUrl) {
+          <a
+            [href]="commitUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            aria-label="View current commit on GitHub"
+          >
+            {{ commitShaShort }}
+          </a>
+        } @else {
+          <span>{{ commitShaShort }}</span>
+        }
+      </p>
     </div>
   </div>
   <a

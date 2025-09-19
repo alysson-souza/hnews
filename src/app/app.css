@@ -91,6 +91,11 @@
   @apply text-gray-400 dark:text-blue-200;
 }
 
+.footer-link {
+  @apply underline decoration-dotted decoration-1 underline-offset-4;
+  @apply text-gray-200 hover:text-white dark:text-blue-100 dark:hover:text-white;
+}
+
 /* Status Banner Styles */
 .offline-banner {
   @apply fixed top-0 left-0 right-0 z-50 transition-all duration-300;

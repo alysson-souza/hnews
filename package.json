@@ -4,14 +4,14 @@
   "license": "MIT",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "build:prod": "ng build --configuration production",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test --watch=false",
-    "test:watch": "ng test",
-    "test:coverage": "ng test --watch=false --code-coverage",
-    "test:coverage:watch": "ng test --code-coverage",
+    "start": "pnpm run generate:version && ng serve",
+    "build": "pnpm run generate:version && ng build",
+    "build:prod": "pnpm run generate:version && ng build --configuration production",
+    "watch": "pnpm run generate:version && ng build --watch --configuration development",
+    "test": "pnpm run generate:version && ng test --watch=false",
+    "test:watch": "pnpm run generate:version && ng test",
+    "test:coverage": "pnpm run generate:version && ng test --watch=false --code-coverage",
+    "test:coverage:watch": "pnpm run generate:version && ng test --code-coverage",
     "predeploy": "pnpm run build:prod",
     "deploy": "ng deploy",
     "deploy:ci": "pnpm run build:prod && ng deploy --no-silent",
@@ -19,7 +19,8 @@
     "lint:fix": "ng lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate:version": "node ./scripts/generate-version.mjs"
   },
   "prettier": {
     "printWidth": 100,

@@ -22,7 +22,7 @@ import { SidebarService } from './services/sidebar.service';
 import { KeyboardNavigationService } from './services/keyboard-navigation.service';
 import { NavigationHistoryService } from './services/navigation-history.service';
 import { StoryListStateService } from './services/story-list-state.service';
-import { VERSION } from './version';
+import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from './services/pwa-update.service';
 
 @Component({
@@ -57,6 +57,12 @@ export class App implements OnInit, OnDestroy {
   storyListStateService = inject(StoryListStateService);
   private readonly _pwaUpdate = inject(PwaUpdateService);
   version = VERSION;
+  commitSha = COMMIT_SHA;
+  commitShaShort = COMMIT_SHA_SHORT;
+  commitUrl =
+    this.commitSha !== 'unknown'
+      ? `https://github.com/alysson-souza/hnews/commit/${this.commitSha}`
+      : null;
 
   isOffline = signal(false);
   showOfflineMessage = signal(false);
