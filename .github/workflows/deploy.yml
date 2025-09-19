@@ -56,7 +56,8 @@ jobs:
           echo "Building with base-href: $BASE_HREF"
 
           # Build with the correct base href
-          pnpm run build:prod -- --base-href "$BASE_HREF"
+          pnpm run generate:version
+          pnpm exec ng build --configuration production --base-href "$BASE_HREF"
 
           # Deploy using angular-cli-ghpages
           pnpm dlx angular-cli-ghpages \
