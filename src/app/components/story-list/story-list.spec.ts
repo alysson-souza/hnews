@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { StoryList } from './story-list';

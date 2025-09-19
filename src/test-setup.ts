@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 // Global test setup for Vitest + Angular
 // - Polyfill window.matchMedia used by ThemeService
 

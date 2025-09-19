@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { mapHitToStory, AlgoliaHitRaw } from './algolia';
 
 describe('algolia mappers', () => {

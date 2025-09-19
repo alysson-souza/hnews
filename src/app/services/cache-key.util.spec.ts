@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { CACHE_NAMESPACE_VERSION } from '../config/cache.config';
 import { CacheKeyBuilderService } from './cache-key.util';

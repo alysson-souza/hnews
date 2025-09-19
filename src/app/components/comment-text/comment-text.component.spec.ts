@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CommentTextComponent } from './comment-text.component';

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { transformQuotesHtml } from './quote.transform';
 
 describe('transformQuotesHtml', () => {

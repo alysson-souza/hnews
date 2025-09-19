@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { CacheManagerService } from './cache-manager.service';
 import { IndexedDBService } from './indexed-db.service';

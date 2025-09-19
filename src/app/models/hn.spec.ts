@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { mapToHNItem, isStory, isComment } from './hn';
 
 describe('HN mappers and guards', () => {

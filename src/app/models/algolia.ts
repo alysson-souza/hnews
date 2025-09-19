@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 // Domain models and helpers for Algolia HN Search API
 
 export interface AlgoliaHitRaw {

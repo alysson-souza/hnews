@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { InjectionToken } from '@angular/core';
 
 export const CACHE_TTL_STORIES = new InjectionToken<number>('CACHE_TTL_STORIES', {

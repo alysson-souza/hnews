@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { transformLinksToDomain } from './links.transform';
 
 describe('transformLinksToDomain', () => {
