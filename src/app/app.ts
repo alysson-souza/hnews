@@ -12,6 +12,8 @@ import {
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-comments.component';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top.component';
 import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
@@ -55,6 +57,7 @@ export class App implements OnInit, OnDestroy {
   keyboardNavService = inject(KeyboardNavigationService);
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
+  http = inject(HttpClient);
   private readonly _pwaUpdate = inject(PwaUpdateService);
   version = VERSION;
   commitSha = COMMIT_SHA;
@@ -71,6 +74,31 @@ export class App implements OnInit, OnDestroy {
   private offlineHandler?: () => void;
   private onlineHandler?: () => void;
   private lastRefreshTime = 0;
+
+  private async loadBuildInfo(): Promise<void> {
+    try {
+      const info = await firstValueFrom(
+        this.http.get<{
+          version: string;
+          buildTime: string;
+          commitSha: string;
+          commitShaShort: string;
+        }>('version.json', {
+          headers: { 'Cache-Control': 'no-cache' },
+        }),
+      );
+
+      this.version = info.version ?? this.version;
+      this.commitSha = info.commitSha ?? this.commitSha;
+      this.commitShaShort = info.commitShaShort ?? this.commitShaShort;
+      this.commitUrl =
+        this.commitSha && this.commitSha !== 'unknown'
+          ? `https://github.com/alysson-souza/hnews/commit/${this.commitSha}`
+          : null;
+    } catch (error) {
+      console.warn('Failed to load build info', error);
+    }
+  }
 
   ngOnInit() {
     console.log(`HNews version: ${this.version}`);
@@ -90,6 +118,8 @@ export class App implements OnInit, OnDestroy {
 
     window.addEventListener('offline', this.offlineHandler);
     window.addEventListener('online', this.onlineHandler);
+
+    this.loadBuildInfo();
   }
 
   ngOnDestroy() {
