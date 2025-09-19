@@ -28,7 +28,7 @@ pnpm start            # Run dev server (http://localhost:4200)
 pnpm run watch        # Watch mode build
 pnpm run build        # Build (development)
 pnpm run build:prod   # Build (production)
-pnpm test             # Unit tests (Vitest)
+pnpm test             # Unit tests (Karma + Jasmine)
 pnpm run lint         # ESLint
 pnpm run lint:fix     # ESLint with autofix
 pnpm run format       # Prettier write

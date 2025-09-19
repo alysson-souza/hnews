@@ -6,7 +6,6 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -32,7 +31,7 @@ class MockCommentVoteStoreService {
   private readonly state = signal<Set<number>>(new Set());
   readonly votedCommentIds = this.state.asReadonly();
 
-  vote = vi.fn((id: number) => {
+  vote = jasmine.createSpy('vote').and.callFake((id: number) => {
     this.state.update((current) => {
       if (current.has(id)) {
         return current;
@@ -58,16 +57,16 @@ class MockCommentRepliesLoaderService {
   currentPage = signal(0);
   pageSize = 10;
 
-  configureKids = vi.fn();
-  loadFirstPage = vi.fn();
-  loadNextPage = vi.fn();
-  remainingCount = vi.fn(() => 0);
+  configureKids = jasmine.createSpy('configureKids');
+  loadFirstPage = jasmine.createSpy('loadFirstPage');
+  loadNextPage = jasmine.createSpy('loadNextPage');
+  remainingCount = jasmine.createSpy('remainingCount').and.returnValue(0);
 }
 
 describe('CommentThread', () => {
   let component: CommentThread;
   let fixture: ComponentFixture<CommentThread>;
-  let mockHnService: { getItem: ReturnType<typeof vi.fn> };
+  let mockHnService: jasmine.SpyObj<HackernewsService>;
   let mockVoteStore: MockCommentVoteStoreService;
   let mockRepliesLoader: MockCommentRepliesLoaderService;
 
@@ -84,9 +83,7 @@ describe('CommentThread', () => {
 
   beforeEach(async () => {
     // Create spy object for HackernewsService
-    mockHnService = {
-      getItem: vi.fn(),
-    };
+    mockHnService = jasmine.createSpyObj<HackernewsService>('HackernewsService', ['getItem']);
     mockVoteStore = new MockCommentVoteStoreService();
     mockRepliesLoader = new MockCommentRepliesLoaderService();
 
@@ -116,8 +113,8 @@ describe('CommentThread', () => {
     component.depth = 0;
 
     // Mock the service methods to prevent actual HTTP calls
-    mockHnService.getItem.mockReturnValue(of(null));
-    mockRepliesLoader.remainingCount.mockReturnValue(0);
+    mockHnService.getItem.and.returnValue(of(null));
+    mockRepliesLoader.remainingCount.and.returnValue(0);
 
     fixture.detectChanges();
   });
@@ -233,12 +230,12 @@ describe('CommentThread', () => {
 
     describe('remainingRepliesCount', () => {
       it('should calculate the remaining replies count correctly', () => {
-        mockRepliesLoader.remainingCount.mockReturnValue(2);
+        mockRepliesLoader.remainingCount.and.returnValue(2);
         expect(component.remainingRepliesCount).toBe(2);
       });
 
       it('should return 0 when no more replies', () => {
-        mockRepliesLoader.remainingCount.mockReturnValue(0);
+        mockRepliesLoader.remainingCount.and.returnValue(0);
         expect(component.remainingRepliesCount).toBe(0);
       });
     });
@@ -247,7 +244,7 @@ describe('CommentThread', () => {
   describe('ngOnInit', () => {
     it('should hydrate from initial comment when provided', () => {
       component.initialComment = mockComment;
-      mockRepliesLoader.configureKids.mockClear();
+      mockRepliesLoader.configureKids.calls.reset();
 
       component.ngOnInit();
 
@@ -261,7 +258,7 @@ describe('CommentThread', () => {
     it('should load comment when not lazy loading and no initial comment', () => {
       component.lazyLoad = false;
       component.initialComment = undefined;
-      vi.spyOn(component, 'loadComment');
+      spyOn(component, 'loadComment');
 
       component.ngOnInit();
 
@@ -280,8 +277,8 @@ describe('CommentThread', () => {
 
   describe('loadComment', () => {
     it('should load comment from service and set loading states', () => {
-      mockHnService.getItem.mockReturnValue(of(mockComment));
-      mockRepliesLoader.configureKids.mockClear();
+      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockRepliesLoader.configureKids.calls.reset();
 
       component.loadComment();
 
@@ -289,8 +286,8 @@ describe('CommentThread', () => {
     });
 
     it('should handle successful comment load', () => {
-      mockHnService.getItem.mockReturnValue(of(mockComment));
-      mockRepliesLoader.configureKids.mockClear();
+      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockRepliesLoader.configureKids.calls.reset();
 
       component.loadComment();
 
@@ -305,8 +302,8 @@ describe('CommentThread', () => {
 
     it('should handle deleted comment', () => {
       const deletedComment = { ...mockComment, deleted: true };
-      mockHnService.getItem.mockReturnValue(of(deletedComment));
-      mockRepliesLoader.configureKids.mockClear();
+      mockHnService.getItem.and.returnValue(of(deletedComment));
+      mockRepliesLoader.configureKids.calls.reset();
 
       component.loadComment();
 
@@ -319,7 +316,7 @@ describe('CommentThread', () => {
     });
 
     it('should handle service error', () => {
-      mockHnService.getItem.mockReturnValue(throwError(() => new Error('Failed to load')));
+      mockHnService.getItem.and.returnValue(throwError(() => new Error('Failed to load')));
 
       component.loadComment();
 
@@ -332,7 +329,7 @@ describe('CommentThread', () => {
 
   describe('loadMoreReplies', () => {
     it('should load next page when there are more replies', () => {
-      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.loadNextPage.calls.reset();
       mockRepliesLoader.hasMore.set(true);
       mockRepliesLoader.loadingMore.set(false);
       mockRepliesLoader.repliesLoaded.set(true);
@@ -343,7 +340,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load next page when already loading', () => {
-      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.loadNextPage.calls.reset();
       mockRepliesLoader.hasMore.set(true);
       mockRepliesLoader.loadingMore.set(true);
       mockRepliesLoader.repliesLoaded.set(true);
@@ -354,7 +351,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load next page when no more replies', () => {
-      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.loadNextPage.calls.reset();
       mockRepliesLoader.hasMore.set(false);
       mockRepliesLoader.repliesLoaded.set(true);
 
@@ -366,7 +363,7 @@ describe('CommentThread', () => {
 
   describe('expandReplies', () => {
     it('should load first page of replies when not loaded and not loading', () => {
-      mockRepliesLoader.loadFirstPage.mockClear();
+      mockRepliesLoader.loadFirstPage.calls.reset();
       mockRepliesLoader.repliesLoaded.set(false);
       mockRepliesLoader.loadingReplies.set(false);
 
@@ -376,7 +373,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load replies when already loaded', () => {
-      mockRepliesLoader.loadFirstPage.mockClear();
+      mockRepliesLoader.loadFirstPage.calls.reset();
       mockRepliesLoader.repliesLoaded.set(true);
 
       component.expandReplies();
@@ -385,7 +382,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load replies when already loading', () => {
-      mockRepliesLoader.loadFirstPage.mockClear();
+      mockRepliesLoader.loadFirstPage.calls.reset();
       mockRepliesLoader.repliesLoaded.set(false);
       mockRepliesLoader.loadingReplies.set(true);
 
@@ -461,8 +458,8 @@ describe('CommentThread', () => {
       mockRepliesLoader.loadingReplies.set(false);
       mockRepliesLoader.hasMore.set(true);
       mockRepliesLoader.loadingMore.set(false);
-      mockRepliesLoader.loadNextPage.mockClear();
-      mockRepliesLoader.remainingCount.mockReturnValue(2);
+      mockRepliesLoader.loadNextPage.calls.reset();
+      mockRepliesLoader.remainingCount.and.returnValue(2);
       fixture.detectChanges();
     });
 
@@ -492,7 +489,7 @@ describe('CommentThread', () => {
 
     it('should show loading state and disable the button while fetching more replies', () => {
       mockRepliesLoader.loadingMore.set(true);
-      mockRepliesLoader.remainingCount.mockReturnValue(5);
+      mockRepliesLoader.remainingCount.and.returnValue(5);
       fixture.detectChanges();
 
       const buttons = fixture.debugElement.queryAll(By.css('app-button button'));

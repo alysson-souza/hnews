@@ -1,29 +1,37 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { CommentVoteStoreService, COMMENT_VOTE_STORAGE } from './comment-vote-store.service';
 
 describe('CommentVoteStoreService', () => {
   const storageKey = 'votedComments';
   let storageMap: Map<string, string>;
-  let mockStorage: Storage;
+  let mockStorage: jasmine.SpyObj<Storage>;
 
   beforeEach(() => {
     storageMap = new Map();
-    mockStorage = {
-      get length() {
-        return storageMap.size;
-      },
-      clear: vi.fn(() => storageMap.clear()),
-      getItem: vi.fn((key: string) => storageMap.get(key) ?? null),
-      key: vi.fn((index: number) => Array.from(storageMap.keys())[index] ?? null),
-      removeItem: vi.fn((key: string) => storageMap.delete(key)),
-      setItem: vi.fn((key: string, value: string) => {
-        storageMap.set(key, value);
-      }),
-    } as unknown as Storage;
+    mockStorage = jasmine.createSpyObj<Storage>('Storage', [
+      'clear',
+      'getItem',
+      'key',
+      'removeItem',
+      'setItem',
+    ]);
+
+    Object.defineProperty(mockStorage, 'length', {
+      get: () => storageMap.size,
+    });
+
+    mockStorage.clear.and.callFake(() => storageMap.clear());
+    mockStorage.getItem.and.callFake((key: string) => storageMap.get(key) ?? null);
+    mockStorage.key.and.callFake((index: number) => Array.from(storageMap.keys())[index] ?? null);
+    mockStorage.removeItem.and.callFake((key: string) => {
+      storageMap.delete(key);
+    });
+    mockStorage.setItem.and.callFake((key: string, value: string) => {
+      storageMap.set(key, value);
+    });
 
     TestBed.configureTestingModule({
       providers: [
@@ -35,7 +43,6 @@ describe('CommentVoteStoreService', () => {
 
   afterEach(() => {
     TestBed.resetTestingModule();
-    vi.restoreAllMocks();
   });
 
   it('should restore votes from storage on creation', () => {

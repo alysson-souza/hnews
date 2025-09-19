@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { StoryList } from './story-list';
 import { StoryListStore } from '../../stores/story-list.store';
@@ -55,21 +54,21 @@ class MockStateService {
 /** Test double for KeyboardNavigationService */
 class MockKeyboardNavigationService {
   selectedIndex = {
-    set: vi.fn(),
-    update: vi.fn(),
+    set: jasmine.createSpy('selectedIndex.set'),
+    update: jasmine.createSpy('selectedIndex.update'),
   };
-  clearSelection = vi.fn();
-  setTotalItems = vi.fn();
+  clearSelection = jasmine.createSpy('clearSelection');
+  setTotalItems = jasmine.createSpy('setTotalItems');
 }
 
 /** Test double for SidebarService */
 class MockSidebarService {
-  isOpen = vi.fn(() => false);
+  isOpen = jasmine.createSpy('isOpen').and.returnValue(false);
 }
 
 /** Test double for DeviceService */
 class MockDeviceService {
-  isDesktop = vi.fn(() => false);
+  isDesktop = jasmine.createSpy('isDesktop').and.returnValue(false);
 }
 
 describe('StoryList', () => {

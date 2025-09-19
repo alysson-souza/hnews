@@ -6,6 +6,7 @@
     "github.vscode-github-actions",
     "spmeesseman.vscode-taskexplorer",
     "idered.npm",
-    "vitest.explorer"
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
   ]
 }

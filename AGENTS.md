@@ -14,8 +14,8 @@
 - `pnpm start`: Run dev server at `http://localhost:4200`.
 - `pnpm run build`: Development build (outputs to `dist/hnews`).
 - `pnpm run build:prod`: Production build; pass `--base-href` when needed (e.g., `-- --base-href=/hnews/`).
-- `pnpm test`: Single-run unit tests (Vitest), exits cleanly (no coverage).
-- `pnpm run test:watch`: Unit tests in watch mode (Vitest).
+- `pnpm test`: Single-run unit tests (Karma + Jasmine), exits cleanly (no coverage).
+- `pnpm run test:watch`: Unit tests in watch mode (Karma + Jasmine).
 - `pnpm run test:coverage`: Single-run tests with coverage output to `coverage/hnews`.
 - `pnpm run test:coverage:watch`: Watch mode with coverage (slower, for targeted work).
 - `pnpm run lint` / `pnpm run lint:fix`: ESLint check/fix.
@@ -32,7 +32,7 @@
 
 ## Testing Guidelines
 
-- Framework: Vitest
+- Framework: Karma + Jasmine
 - Place tests as `*.spec.ts` beside the unit under test.
 - Run `pnpm test` for a single pass; use `pnpm run test:watch` in watch mode.
 - Coverage: `pnpm run test:coverage` (single-run) or `pnpm run test:coverage:watch` (watch mode). Outputs to `coverage/hnews`.

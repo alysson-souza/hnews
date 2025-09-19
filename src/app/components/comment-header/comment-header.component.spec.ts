@@ -3,7 +3,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CommentHeaderComponent } from './comment-header.component';
-import { vi } from 'vitest';
 
 import { provideRouter } from '@angular/router';
 
@@ -48,7 +47,7 @@ describe('CommentHeaderComponent', () => {
   it('always renders relative time with timestamp', () => {
     // Stabilize now to make output deterministic
     const fixedNow = 2_000_000_000_000; // ms
-    vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
+    spyOn(Date, 'now').and.returnValue(fixedNow);
     component.timestamp = Math.floor(fixedNow / 1000) - 60; // 1 minute ago
     fixture.detectChanges();
     const timeEl = fixture.debugElement.query(By.css('.time-text'));

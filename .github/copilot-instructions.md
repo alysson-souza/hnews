@@ -27,7 +27,7 @@ Concise rules and context to help AI agents work effectively in this Angular 20 
 
 - Start: `pnpm start` (http://localhost:4200)
 - Build: `pnpm run build` (dev) | `pnpm run build:prod` (prod; pass `--base-href` for subpaths, e.g., Pages)
-- Test: `pnpm test` (single‑run, Vitest) | `pnpm run test:watch`
+- Test: `pnpm test` (single‑run, Karma + Jasmine) | `pnpm run test:watch`
 - Coverage: `pnpm run test:coverage` (outputs to `coverage/hnews`)
 - Lint/Format: `pnpm run lint` | `pnpm run format`
 - Deploy: `pnpm run deploy` (GitHub Pages via `angular-cli-ghpages`)
