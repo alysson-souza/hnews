@@ -4,13 +4,13 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HNItem } from '../../models/hn';
-import { RelativeTimeComponent } from '../relative-time/relative-time.component';
+import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 
 @Component({
   selector: 'app-sidebar-story-summary',
   standalone: true,
-  imports: [CommonModule, RouterLink, RelativeTimeComponent, CommentTextComponent],
+  imports: [CommonModule, RouterLink, RelativeTimePipe, CommentTextComponent],
   template: `
     <section class="story">
       <h3 class="story-title">
@@ -34,7 +34,7 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
         <span>•</span>
         <span>by {{ item.by }}</span>
         <span>•</span>
-        <app-relative-time [timestamp]="item.time"></app-relative-time>
+        <span class="time-text">{{ item.time | relativeTime }}</span>
       </div>
 
       @if (item.text) {
@@ -74,6 +74,9 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
       }
       .open-link {
         @apply text-blue-600 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+      }
+      .time-text {
+        @apply text-gray-500 dark:text-gray-500;
       }
     `,
   ],

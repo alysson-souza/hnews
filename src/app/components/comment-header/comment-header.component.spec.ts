@@ -51,9 +51,8 @@ describe('CommentHeaderComponent', () => {
     vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
     component.timestamp = Math.floor(fixedNow / 1000) - 60; // 1 minute ago
     fixture.detectChanges();
-
-    const timeEl = fixture.debugElement.query(By.css('app-relative-time'));
-    expect(timeEl).toBeDefined();
+    const timeEl = fixture.debugElement.query(By.css('.time-text'));
+    expect(timeEl).withContext('relative time span not found').toBeDefined();
     expect(fixture.nativeElement.textContent).toContain('1 minute ago');
   });
 

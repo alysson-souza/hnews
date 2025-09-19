@@ -3,18 +3,13 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { UpvoteButtonComponent } from '../upvote-button/upvote-button.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
-import { RelativeTimeComponent } from '../relative-time/relative-time.component';
+import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { RepliesCounterComponent } from '../replies-counter/replies-counter.component';
 
 @Component({
   selector: 'app-comment-header',
   standalone: true,
-  imports: [
-    UpvoteButtonComponent,
-    UserTagComponent,
-    RelativeTimeComponent,
-    RepliesCounterComponent,
-  ],
+  imports: [UpvoteButtonComponent, UserTagComponent, RelativeTimePipe, RepliesCounterComponent],
   template: `
     <div class="comment-header">
       <app-upvote-button
@@ -27,7 +22,7 @@ import { RepliesCounterComponent } from '../replies-counter/replies-counter.comp
         <app-user-tag [username]="by!"></app-user-tag>
       }
 
-      <app-relative-time [timestamp]="timestamp"></app-relative-time>
+      <span class="time-text">{{ timestamp | relativeTime }}</span>
 
       @if (showExpand) {
         <app-replies-counter
@@ -45,6 +40,9 @@ import { RepliesCounterComponent } from '../replies-counter/replies-counter.comp
 
       .comment-header {
         @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-0;
+      }
+      .time-text {
+        @apply text-gray-500 dark:text-gray-500;
       }
     `,
   ],

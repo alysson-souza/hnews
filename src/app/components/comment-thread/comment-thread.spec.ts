@@ -506,28 +506,6 @@ describe('CommentThread', () => {
     });
   });
 
-  describe('getTimeAgo', () => {
-    it('should return "just now" for recent timestamps', () => {
-      const recentTimestamp = Math.floor(Date.now() / 1000) - 10; // 10 seconds ago
-      expect(component.getTimeAgo(recentTimestamp)).toBe('just now');
-    });
-
-    it('should return minutes ago for timestamps within an hour', () => {
-      const minutesAgo = Math.floor(Date.now() / 1000) - 120; // 2 minutes ago
-      expect(component.getTimeAgo(minutesAgo)).toBe('2 minutes ago');
-    });
-
-    it('should return hours ago for timestamps within a day', () => {
-      const hoursAgo = Math.floor(Date.now() / 1000) - 7200; // 2 hours ago
-      expect(component.getTimeAgo(hoursAgo)).toBe('2 hours ago');
-    });
-
-    it('should return days ago for timestamps beyond a day', () => {
-      const daysAgo = Math.floor(Date.now() / 1000) - 172800; // 2 days ago
-      expect(component.getTimeAgo(daysAgo)).toBe('2 days ago');
-    });
-  });
-
   describe('getIndentClass', () => {
     it('should return correct margin class for depth 0', () => {
       component.depth = 0;

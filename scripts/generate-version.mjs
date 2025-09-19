@@ -9,7 +9,9 @@ const __dirname = dirname(__filename);
 
 function resolveSha(command) {
   try {
-    return execSync(command, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return execSync(command, { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
   } catch (error) {
     return 'unknown';
   }
@@ -20,7 +22,9 @@ const packageJson = JSON.parse(readFileSync(join(rootDir, 'package.json'), 'utf8
 
 const commitSha = resolveSha('git rev-parse HEAD');
 const shortCommitSha =
-  commitSha !== 'unknown' ? resolveSha('git rev-parse --short HEAD') || commitSha.slice(0, 7) : 'unknown';
+  commitSha !== 'unknown'
+    ? resolveSha('git rev-parse --short HEAD') || commitSha.slice(0, 7)
+    : 'unknown';
 const buildTime = new Date().toISOString();
 const version = packageJson.version ?? '0.0.0';
 

@@ -5,6 +5,7 @@ import { CommonModule, LocationStrategy } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { VisitedService } from '../../services/visited.service';
+import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { StoryThumbnailComponent } from '../shared/story-thumbnail/story-thumbnail.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
@@ -199,15 +200,7 @@ export class StoryItem {
   }
 
   getTimeAgo(timestamp: number): string {
-    const seconds = Math.floor(Date.now() / 1000 - timestamp);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return 'just now';
+    return formatRelativeTimeFromSeconds(timestamp);
   }
 
   upvote(): void {

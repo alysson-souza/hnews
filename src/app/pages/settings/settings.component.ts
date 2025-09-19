@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
@@ -281,15 +282,8 @@ export class SettingsComponent implements OnInit {
   }
 
   getTimeAgo(timestamp: number): string {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor(seconds / 60);
-
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return 'just now';
+    // tags createdAt appears to be ms; convert to seconds
+    return formatRelativeTimeFromSeconds(Math.floor(timestamp / 1000));
   }
 
   // Cache management methods
