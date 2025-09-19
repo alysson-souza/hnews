@@ -122,6 +122,35 @@ describe('CommentRepliesLoaderService', () => {
     expect(service.remainingCount()).toBe(0);
   });
 
+  it('should expose the remaining count for additional reply batches', () => {
+    const kids = Array.from({ length: 25 }, (_, index) => index + 1);
+    const buildReply = (id: number): HNItem => ({ id, by: 'reply', time: 0, type: 'comment' });
+
+    service.configureKids(kids);
+
+    const firstPage = kids.slice(0, 10).map(buildReply);
+    const secondPage = kids.slice(10, 20).map(buildReply);
+    const thirdPage = kids.slice(20).map(buildReply);
+
+    mockHnService.getItemsPage
+      .mockReturnValueOnce(of(firstPage))
+      .mockReturnValueOnce(of(secondPage))
+      .mockReturnValueOnce(of(thirdPage));
+
+    expect(service.remainingCount()).toBe(10);
+
+    service.loadFirstPage();
+    expect(service.remainingCount()).toBe(10);
+
+    service.loadNextPage();
+    expect(service.remainingCount()).toBe(5);
+    expect(service.hasMore()).toBe(true);
+
+    service.loadNextPage();
+    expect(service.remainingCount()).toBe(0);
+    expect(service.hasMore()).toBe(false);
+  });
+
   it('should not attempt to load more when already loading or no more replies', () => {
     service.configureKids([1, 2, 3]);
     service.loadNextPage();

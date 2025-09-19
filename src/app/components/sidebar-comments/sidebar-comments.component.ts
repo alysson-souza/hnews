@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarService } from '../../services/sidebar.service';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -8,6 +8,7 @@ import { HNItem } from '../../models/hn';
 import { CommentThread } from '../comment-thread/comment-thread';
 import { SidebarCommentsHeaderComponent } from './sidebar-comments-header.component';
 import { SidebarStorySummaryComponent } from './sidebar-story-summary.component';
+import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { VisitedService } from '../../services/visited.service';
 
 @Component({
@@ -18,6 +19,7 @@ import { VisitedService } from '../../services/visited.service';
     CommentThread,
     SidebarCommentsHeaderComponent,
     SidebarStorySummaryComponent,
+    AppButtonComponent,
   ],
   template: `
     <!-- Sidebar Comments -->
@@ -64,10 +66,23 @@ import { VisitedService } from '../../services/visited.service';
 
                 @if (item()!.kids && item()!.kids!.length > 0) {
                   <div class="space-y-4" role="tree" aria-label="Comments">
-                    @for (commentId of item()!.kids!; track commentId) {
+                    @for (commentId of visibleCommentIds(); track commentId) {
                       <app-comment-thread [commentId]="commentId" [depth]="0"></app-comment-thread>
                     }
                   </div>
+
+                  @if (hasMoreTopLevelComments()) {
+                    <div class="mt-4 flex justify-center">
+                      <app-button
+                        variant="secondary"
+                        size="sm"
+                        [ariaLabel]="'Load more comments'"
+                        (clicked)="loadMoreTopLevelComments()"
+                      >
+                        Load {{ remainingTopLevelCount() }} more comments
+                      </app-button>
+                    </div>
+                  }
                 } @else {
                   <p class="text-gray-500 text-center py-8">No comments yet</p>
                 }
@@ -100,6 +115,27 @@ export class SidebarCommentsComponent {
   loading = signal(false);
   error = signal<string | null>(null);
 
+  private readonly commentsPageSize = 10;
+  private visibleTopLevelCount = signal(this.commentsPageSize);
+
+  visibleCommentIds = computed(() => {
+    const kids = this.item()?.kids ?? [];
+    const count = Math.min(this.visibleTopLevelCount(), kids.length);
+    return kids.slice(0, count);
+  });
+
+  hasMoreTopLevelComments = computed(() => {
+    const total = this.item()?.kids?.length ?? 0;
+    return total > this.visibleCommentIds().length;
+  });
+
+  remainingTopLevelCount = computed(() => {
+    const total = this.item()?.kids?.length ?? 0;
+    const loaded = this.visibleCommentIds().length;
+    const remaining = Math.max(total - loaded, 0);
+    return Math.min(this.commentsPageSize, remaining);
+  });
+
   constructor() {
     // React to currentItemId changes using signals
     effect(() => {
@@ -114,6 +150,7 @@ export class SidebarCommentsComponent {
   private loadItem(id: number): void {
     this.loading.set(true);
     this.error.set(null);
+    this.visibleTopLevelCount.set(this.commentsPageSize);
 
     this.hnService.getItem(id).subscribe({
       next: (item) => {
@@ -130,6 +167,19 @@ export class SidebarCommentsComponent {
         this.error.set('Failed to load comments');
         this.loading.set(false);
       },
+    });
+  }
+
+  loadMoreTopLevelComments(): void {
+    const total = this.item()?.kids?.length ?? 0;
+
+    if (!this.hasMoreTopLevelComments() || total === 0) {
+      return;
+    }
+
+    this.visibleTopLevelCount.update((current) => {
+      const next = current + this.commentsPageSize;
+      return Math.min(next, total);
     });
   }
 }

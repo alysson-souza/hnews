@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
@@ -442,6 +443,66 @@ describe('CommentThread', () => {
       component.upvoteById(456);
 
       expect(mockVoteStore.vote).toHaveBeenCalledWith(456);
+    });
+  });
+
+  describe('template integration', () => {
+    const buildReply = (id: number): HNItem => ({
+      id,
+      by: 'nested',
+      time: Math.floor(Date.now() / 1000),
+      type: 'comment',
+    });
+
+    beforeEach(() => {
+      component.comment.set(mockComment);
+      mockRepliesLoader.replies.set([buildReply(555)]);
+      mockRepliesLoader.repliesLoaded.set(true);
+      mockRepliesLoader.loadingReplies.set(false);
+      mockRepliesLoader.hasMore.set(true);
+      mockRepliesLoader.loadingMore.set(false);
+      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.remainingCount.mockReturnValue(2);
+      fixture.detectChanges();
+    });
+
+    it('should render the load more button with remaining count', () => {
+      const buttons = fixture.debugElement.queryAll(By.css('app-button button'));
+      expect(buttons.length).toBeGreaterThan(0);
+      const buttonDebug = buttons[buttons.length - 1];
+      const button = buttonDebug?.nativeElement as HTMLButtonElement | undefined;
+
+      expect(button).toBeDefined();
+      expect(button!.disabled).toBe(false);
+      expect(button!.textContent?.includes('Load 2 more replies')).toBe(true);
+    });
+
+    it('should request the next page when clicking the load more button', () => {
+      const buttons = fixture.debugElement.queryAll(By.css('app-button button'));
+      expect(buttons.length).toBeGreaterThan(0);
+      const buttonDebug = buttons[buttons.length - 1];
+      const button = buttonDebug?.nativeElement as HTMLButtonElement | undefined;
+      expect(button).toBeDefined();
+
+      button!.click();
+      fixture.detectChanges();
+
+      expect(mockRepliesLoader.loadNextPage).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show loading state and disable the button while fetching more replies', () => {
+      mockRepliesLoader.loadingMore.set(true);
+      mockRepliesLoader.remainingCount.mockReturnValue(5);
+      fixture.detectChanges();
+
+      const buttons = fixture.debugElement.queryAll(By.css('app-button button'));
+      expect(buttons.length).toBeGreaterThan(0);
+      const buttonDebug = buttons[buttons.length - 1];
+      const button = buttonDebug?.nativeElement as HTMLButtonElement | undefined;
+
+      expect(button).toBeDefined();
+      expect(button!.disabled).toBe(true);
+      expect(button!.textContent?.includes('Loading...')).toBe(true);
     });
   });
 

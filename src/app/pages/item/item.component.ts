@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -11,6 +11,7 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 import { CardComponent } from '../../components/shared/card/card.component';
 import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
 import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/sidebar-story-summary.component';
+import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 
 @Component({
   selector: 'app-item',
@@ -22,6 +23,7 @@ import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/
     CardComponent,
     VisitedIndicatorComponent,
     SidebarStorySummaryComponent,
+    AppButtonComponent,
   ],
   template: `
     <app-page-container>
@@ -50,10 +52,23 @@ import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/
 
           @if (item()!.kids && item()!.kids!.length > 0) {
             <div class="space-y-4" role="tree" aria-label="Comments">
-              @for (commentId of item()!.kids!; track commentId) {
+              @for (commentId of visibleCommentIds(); track commentId) {
                 <app-comment-thread [commentId]="commentId" [depth]="0"></app-comment-thread>
               }
             </div>
+
+            @if (hasMoreTopLevelComments()) {
+              <div class="mt-6 flex justify-center">
+                <app-button
+                  variant="secondary"
+                  size="sm"
+                  [ariaLabel]="'Load more comments'"
+                  (clicked)="loadMoreTopLevelComments()"
+                >
+                  Load {{ remainingTopLevelCount() }} more comments
+                </app-button>
+              </div>
+            }
           } @else {
             <p class="empty">No comments yet</p>
           }
@@ -141,6 +156,27 @@ export class ItemComponent implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
 
+  private readonly commentsPageSize = 10;
+  private visibleTopLevelCount = signal(this.commentsPageSize);
+
+  visibleCommentIds = computed(() => {
+    const kids = this.item()?.kids ?? [];
+    const count = Math.min(this.visibleTopLevelCount(), kids.length);
+    return kids.slice(0, count);
+  });
+
+  hasMoreTopLevelComments = computed(() => {
+    const total = this.item()?.kids?.length ?? 0;
+    return total > this.visibleCommentIds().length;
+  });
+
+  remainingTopLevelCount = computed(() => {
+    const total = this.item()?.kids?.length ?? 0;
+    const loaded = this.visibleCommentIds().length;
+    const remaining = Math.max(total - loaded, 0);
+    return Math.min(this.commentsPageSize, remaining);
+  });
+
   ngOnInit() {
     // Check for both path params and query params (HN compatibility)
     this.route.params.subscribe((params) => {
@@ -169,6 +205,7 @@ export class ItemComponent implements OnInit {
 
     this.loading.set(true);
     this.error.set(null);
+    this.visibleTopLevelCount.set(this.commentsPageSize);
 
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
@@ -201,6 +238,19 @@ export class ItemComponent implements OnInit {
         this.error.set('Failed to load item. Please try again.');
         this.loading.set(false);
       },
+    });
+  }
+
+  loadMoreTopLevelComments() {
+    const total = this.item()?.kids?.length ?? 0;
+
+    if (!this.hasMoreTopLevelComments() || total === 0) {
+      return;
+    }
+
+    this.visibleTopLevelCount.update((current) => {
+      const next = current + this.commentsPageSize;
+      return Math.min(next, total);
     });
   }
 }
