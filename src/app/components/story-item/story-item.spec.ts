@@ -87,8 +87,19 @@ describe('StoryItem', () => {
       commentsLink = linkDebugElement.nativeElement as HTMLAnchorElement;
     });
 
-    it('should render as an anchor element with routerLink', () => {
+    it('should render as an anchor element with conditional routerLink', () => {
       expect(commentsLink.tagName.toLowerCase()).toBe('a');
+
+      // On desktop, routerLink should be null (since shouldUseRouterLink returns false)
+      mockDeviceService.isDesktop.and.returnValue(true);
+      fixture.detectChanges();
+      expect(commentsLink.getAttribute('ng-reflect-router-link')).toBeNull();
+    });
+
+    it('should have routerLink on mobile', () => {
+      // On mobile, routerLink should be present
+      mockDeviceService.isDesktop.and.returnValue(false);
+      fixture.detectChanges();
       expect(commentsLink.getAttribute('ng-reflect-router-link')).toBe('/item,123');
     });
 
@@ -116,58 +127,66 @@ describe('StoryItem', () => {
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
 
-      it('should allow default navigation on Ctrl+click', () => {
+      it('should open new window on Ctrl+click', () => {
         const clickEvent = new MouseEvent('click', {
           bubbles: true,
           ctrlKey: true,
         });
         spyOn(clickEvent, 'preventDefault');
+        spyOn(window, 'open');
 
         component.openComments(clickEvent);
 
-        expect(clickEvent.preventDefault).not.toHaveBeenCalled();
+        expect(clickEvent.preventDefault).toHaveBeenCalled();
+        expect(window.open).toHaveBeenCalledWith('http://localhost/item/123', '_blank');
         expect(mockSidebarService.toggleSidebar).not.toHaveBeenCalled();
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
 
-      it('should allow default navigation on Cmd+click', () => {
+      it('should open new window on Cmd+click', () => {
         const clickEvent = new MouseEvent('click', {
           bubbles: true,
           metaKey: true,
         });
         spyOn(clickEvent, 'preventDefault');
+        spyOn(window, 'open');
 
         component.openComments(clickEvent);
 
-        expect(clickEvent.preventDefault).not.toHaveBeenCalled();
+        expect(clickEvent.preventDefault).toHaveBeenCalled();
+        expect(window.open).toHaveBeenCalledWith('http://localhost/item/123', '_blank');
         expect(mockSidebarService.toggleSidebar).not.toHaveBeenCalled();
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
 
-      it('should allow default navigation on Shift+click', () => {
+      it('should open new window on Shift+click', () => {
         const clickEvent = new MouseEvent('click', {
           bubbles: true,
           shiftKey: true,
         });
         spyOn(clickEvent, 'preventDefault');
+        spyOn(window, 'open');
 
         component.openComments(clickEvent);
 
-        expect(clickEvent.preventDefault).not.toHaveBeenCalled();
+        expect(clickEvent.preventDefault).toHaveBeenCalled();
+        expect(window.open).toHaveBeenCalledWith('http://localhost/item/123', '_blank');
         expect(mockSidebarService.toggleSidebar).not.toHaveBeenCalled();
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
 
-      it('should allow default navigation on middle click', () => {
+      it('should open new window on middle click', () => {
         const clickEvent = new MouseEvent('click', {
           bubbles: true,
           button: 1,
         });
         spyOn(clickEvent, 'preventDefault');
+        spyOn(window, 'open');
 
         component.openComments(clickEvent);
 
-        expect(clickEvent.preventDefault).not.toHaveBeenCalled();
+        expect(clickEvent.preventDefault).toHaveBeenCalled();
+        expect(window.open).toHaveBeenCalledWith('http://localhost/item/123', '_blank');
         expect(mockSidebarService.toggleSidebar).not.toHaveBeenCalled();
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
@@ -190,16 +209,18 @@ describe('StoryItem', () => {
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
 
-      it('should allow default navigation on mobile with modifier keys', () => {
+      it('should open new window on mobile with modifier keys', () => {
         const clickEvent = new MouseEvent('click', {
           bubbles: true,
           ctrlKey: true,
         });
         spyOn(clickEvent, 'preventDefault');
+        spyOn(window, 'open');
 
         component.openComments(clickEvent);
 
-        expect(clickEvent.preventDefault).not.toHaveBeenCalled();
+        expect(clickEvent.preventDefault).toHaveBeenCalled();
+        expect(window.open).toHaveBeenCalledWith('http://localhost/item/123', '_blank');
         expect(mockSidebarService.toggleSidebar).not.toHaveBeenCalled();
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });

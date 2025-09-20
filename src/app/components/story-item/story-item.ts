@@ -411,28 +411,38 @@ export class StoryItem {
     return true;
   }
 
+  shouldUseRouterLink(): boolean {
+    // Use RouterLink for mobile or when we want to enable native browser features
+    // Don't use RouterLink on desktop normal clicks (we want sidebar behavior)
+    return !this.deviceService.isDesktop();
+  }
+
   openComments(event: MouseEvent | KeyboardEvent): void {
     if (!this.story) return;
 
-    // Check for modified clicks first - allow default navigation behavior
+    // Check for modified clicks first - these should open in new window/tab
     const isShiftClick = event instanceof MouseEvent && event.shiftKey;
     const isCmdClick = event instanceof MouseEvent && event.metaKey;
     const isCtrlClick = event instanceof MouseEvent && event.ctrlKey;
     const isMiddleClick = event instanceof MouseEvent && event.button === 1;
 
     if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick) {
-      // Allow default link behavior (RouterLink will handle navigation)
+      // For modified clicks, manually open in new tab (since RouterLink might not be active)
+      event.preventDefault();
+      const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+      const url = `${window.location.origin}${path}`;
+      window.open(url, '_blank');
       this.markAsVisited();
       return;
     }
 
     if (!this.deviceService.isDesktop()) {
-      // On mobile, allow default navigation to item page
+      // On mobile, allow default navigation (RouterLink will handle this)
       this.markAsVisited();
       return;
     }
 
-    // On desktop with normal click, prevent default and open sidebar
+    // On desktop with normal click, prevent navigation and open sidebar
     event.preventDefault();
     this.sidebarService.toggleSidebar(this.story.id);
     this.markAsVisited();
