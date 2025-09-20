@@ -2,11 +2,10 @@
 
 ## Quick Deploy (GitHub Pages)
 
-Pushing to `main`/`master` deploys to GitHub Pages using the included workflow. Alternatively, run:
+Pushing to `main`/`master` deploys to GitHub Pages using the included workflow.
 
-```bash
-npm run deploy
-```
+- [`actions/upload-pages-artifact`](https://github.com/actions/upload-pages-artifact)
+- [`actions/deploy-pages`](https://github.com/actions/deploy-pages)
 
 ## Manual Build
 

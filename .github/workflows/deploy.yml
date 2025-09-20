@@ -39,14 +39,8 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Build and Deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
         run: |
-          # Configure git
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-
           # Determine base href based on repository
           if [ "${{ github.repository }}" = "alysson-souza/hnews" ]; then
             BASE_HREF="/hnews/"
@@ -62,8 +56,11 @@ jobs:
           npm run generate:version
           npx ng build --configuration production --base-href "$BASE_HREF"
 
-          # Deploy using angular-cli-ghpages
-          npx angular-cli-ghpages \
-            --dir=dist/hnews/browser \
-            --name="github-actions[bot]" \
-            --email="github-actions[bot]@users.noreply.github.com"
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/hnews/browser
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
