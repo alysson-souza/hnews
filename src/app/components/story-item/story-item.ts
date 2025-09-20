@@ -414,30 +414,28 @@ export class StoryItem {
   openComments(event: MouseEvent | KeyboardEvent): void {
     if (!this.story) return;
 
-    if (!this.deviceService.isDesktop()) {
-      // On mobile, navigate directly to item page
-      this.router.navigate(['/item', this.story.id]);
-      this.markAsVisited();
-      return;
-    }
-
+    // Check for modified clicks first - allow default navigation behavior
     const isShiftClick = event instanceof MouseEvent && event.shiftKey;
     const isCmdClick = event instanceof MouseEvent && event.metaKey;
     const isCtrlClick = event instanceof MouseEvent && event.ctrlKey;
     const isMiddleClick = event instanceof MouseEvent && event.button === 1;
 
     if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick) {
-      // Open in new window if modifier key or middle mouse button is used
-      // Use LocationStrategy to get the correct external URL with base href
-      const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
-      const url = `${window.location.origin}${path}`;
-      window.open(url, '_blank');
-    } else {
-      // Open sidebar on desktop
-      event.preventDefault();
-      this.sidebarService.toggleSidebar(this.story.id);
+      // Allow default link behavior (RouterLink will handle navigation)
       this.markAsVisited();
+      return;
     }
+
+    if (!this.deviceService.isDesktop()) {
+      // On mobile, allow default navigation to item page
+      this.markAsVisited();
+      return;
+    }
+
+    // On desktop with normal click, prevent default and open sidebar
+    event.preventDefault();
+    this.sidebarService.toggleSidebar(this.story.id);
+    this.markAsVisited();
   }
 
   getCommentTooltip(): string {
