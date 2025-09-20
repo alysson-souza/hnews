@@ -1,6 +1,7 @@
-// Test file to manually verify the HTML output with mock data
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { Component } from '@angular/core';
 import { StoryItem } from './story-item';
@@ -63,12 +64,10 @@ describe('StoryItem HTML Structure Verification', () => {
     mockDeviceService.getModifierKey.and.returnValue('Ctrl');
 
     await TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule.withRoutes([{ path: 'item/:id', component: TestHostComponent }]),
-        StoryItem,
-      ],
+      imports: [StoryItem],
       declarations: [TestHostComponent],
       providers: [
+        provideRouter([{ path: 'item/:id', component: TestHostComponent }]),
         { provide: VisitedService, useValue: mockVisitedService },
         { provide: SidebarService, useValue: mockSidebarService },
         { provide: DeviceService, useValue: mockDeviceService },
@@ -141,8 +140,4 @@ describe('StoryItem HTML Structure Verification', () => {
     expect(classList.contains('focus-visible:ring-2')).toBe(true);
     expect(classList.contains('focus-visible:ring-blue-500')).toBe(true);
   });
-
-  console.log(
-    '✅ All HTML structure tests passed! The button has been successfully converted to a link.',
-  );
 });
