@@ -1,6 +1,8 @@
 // Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
 
+process.env.CHROME_BIN = require('playwright').chromium.executablePath();
+
 module.exports = function (config) {
   config.set({
     basePath: '',
@@ -31,11 +33,17 @@ module.exports = function (config) {
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
     },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['ChromeHeadlessCI'],
+    browsers: ['ChromeHeadlessPlaywright'],
     customLaunchers: {
-      ChromeHeadlessCI: {
+      ChromeHeadlessPlaywright: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox', '--disable-dev-shm-usage'],
+        flags: [
+          '--no-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+        ],
       },
     },
     restartOnFileChange: true,

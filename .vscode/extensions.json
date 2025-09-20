@@ -3,10 +3,10 @@
   "recommendations": [
     "angular.ng-template",
     "christian-kohler.npm-intellisense",
-    "github.vscode-github-actions",
-    "spmeesseman.vscode-taskexplorer",
-    "idered.npm",
     "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "github.vscode-github-actions",
+    "idered.npm",
+    "spmeesseman.vscode-taskexplorer"
   ]
 }

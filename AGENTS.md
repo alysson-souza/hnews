@@ -11,16 +11,16 @@
 
 ## Build, Test, and Development Commands
 
-- `pnpm start`: Run dev server at `http://localhost:4200`.
-- `pnpm run build`: Development build (outputs to `dist/hnews`).
-- `pnpm run build:prod`: Production build; pass `--base-href` when needed (e.g., `-- --base-href=/hnews/`).
-- `pnpm test`: Single-run unit tests (Karma + Jasmine), exits cleanly (no coverage).
-- `pnpm run test:watch`: Unit tests in watch mode (Karma + Jasmine).
-- `pnpm run test:coverage`: Single-run tests with coverage output to `coverage/hnews`.
-- `pnpm run test:coverage:watch`: Watch mode with coverage (slower, for targeted work).
-- `pnpm run lint` / `pnpm run lint:fix`: ESLint check/fix.
-- `pnpm run format` / `pnpm run format:check`: Prettier write/check.
-- `pnpm run deploy`: Deploy to GitHub Pages (via `angular-cli-ghpages`).
+- `npm start`: Run dev server at `http://localhost:4200`.
+- `npm run build`: Development build (outputs to `dist/hnews`).
+- `npm run build:prod`: Production build; pass `--base-href` when needed (e.g., `-- --base-href=/hnews/`).
+- `npm test`: Single-run unit tests (Karma + Jasmine), exits cleanly (no coverage).
+- `npm run test:watch`: Unit tests in watch mode (Karma + Jasmine).
+- `npm run test:coverage`: Single-run tests with coverage output to `coverage/hnews`.
+- `npm run test:coverage:watch`: Watch mode with coverage (slower, for targeted work).
+- `npm run lint` / `npm run lint:fix`: ESLint check/fix.
+- `npm run format` / `npm run format:check`: Prettier write/check.
+- `npm run deploy`: Deploy to GitHub Pages (via `angular-cli-ghpages`).
 
 ## Coding Style & Naming Conventions
 
@@ -34,18 +34,18 @@
 
 - Framework: Karma + Jasmine
 - Place tests as `*.spec.ts` beside the unit under test.
-- Run `pnpm test` for a single pass; use `pnpm run test:watch` in watch mode.
-- Coverage: `pnpm run test:coverage` (single-run) or `pnpm run test:coverage:watch` (watch mode). Outputs to `coverage/hnews`.
+- Run `npm test` for a single pass; use `npm run test:watch` in watch mode.
+- Coverage: `npm run test:coverage` (single-run) or `npm run test:coverage:watch` (watch mode). Outputs to `coverage/hnews`.
 - Prefer shallow tests for components and focused service specs; mock network calls.
 
 ## Commit & Pull Request Guidelines
 
 - Use Conventional Commits: `feat:`, `fix:`, `docs:`, `build:`, `test:`, `refactor:`… (see git history).
 - PRs: include a concise summary, linked issues (`Fixes #123`), and screenshots for UI changes.
-- CI: ensure `pnpm run lint` and `pnpm test` pass; verify `pnpm run build:prod` for critical UI changes.
+- CI: ensure `npm run lint` and `npm test` pass; verify `npm run build:prod` for critical UI changes.
 
 ## Security & Configuration Tips
 
 - Never commit secrets. Copy `.env.example` to `.env` locally.
 - For CI/CD and Pages deploys, use repository secrets; workflow infers `--base-href` for forks.
-- Node: use `.nvmrc` (Node 22.x). pnpm 9+ recommended.
+- Node: use `.nvmrc` (Node 22.x). npm 9+ recommended.

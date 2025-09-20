@@ -21,20 +21,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
+
+      - name: Install Playwright browsers for tests
+        run: npx playwright install --with-deps --no-shell chromium
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run linting
+        run: npm run lint
 
       - name: Build and Deploy
         env:
@@ -56,11 +59,11 @@ jobs:
           echo "Building with base-href: $BASE_HREF"
 
           # Build with the correct base href
-          pnpm run generate:version
-          pnpm exec ng build --configuration production --base-href "$BASE_HREF"
+          npm run generate:version
+          npx ng build --configuration production --base-href "$BASE_HREF"
 
           # Deploy using angular-cli-ghpages
-          pnpm dlx angular-cli-ghpages \
+          npx angular-cli-ghpages \
             --dir=dist/hnews/browser \
             --name="github-actions[bot]" \
             --email="github-actions[bot]@users.noreply.github.com"

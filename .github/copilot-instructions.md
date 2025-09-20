@@ -25,18 +25,18 @@ Concise rules and context to help AI agents work effectively in this Angular 20 
 
 ## Developer workflows
 
-- Start: `pnpm start` (http://localhost:4200)
-- Build: `pnpm run build` (dev) | `pnpm run build:prod` (prod; pass `--base-href` for subpaths, e.g., Pages)
-- Test: `pnpm test` (single‑run, Karma + Jasmine) | `pnpm run test:watch`
-- Coverage: `pnpm run test:coverage` (outputs to `coverage/hnews`)
-- Lint/Format: `pnpm run lint` | `pnpm run format`
-- Deploy: `pnpm run deploy` (GitHub Pages via `angular-cli-ghpages`)
+- Start: `npm start` (http://localhost:4200)
+- Build: `npm run build` (dev) | `npm run build:prod` (prod; pass `--base-href` for subpaths, e.g., Pages)
+- Test: `npm test` (single‑run, Karma + Jasmine) | `npm run test:watch`
+- Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
+- Lint/Format: `npm run lint` | `npm run format`
+- Deploy: `npm run deploy` (GitHub Pages via `angular-cli-ghpages`)
 
 ## Conventions and edit rules
 
 - Comments: no narration/change‑logs. Only add comments that clarify intent, constraints, non‑obvious logic, or public contracts.
 - Tests: place `*.spec.ts` next to code; prefer shallow component tests and mock network calls.
-- Node 22.x (`.nvmrc`) and pnpm 9+ recommended. TypeScript single quotes; ~100 char width (Prettier).
+- Node 22.x (`.nvmrc`) and npm 9+ recommended. TypeScript single quotes; ~100 char width (Prettier).
 
 ## Code pointers (start here)
 

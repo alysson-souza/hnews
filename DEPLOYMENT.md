@@ -5,7 +5,7 @@
 Pushing to `main`/`master` deploys to GitHub Pages using the included workflow. Alternatively, run:
 
 ```bash
-pnpm run deploy
+npm run deploy
 ```
 
 ## Manual Build
@@ -13,7 +13,7 @@ pnpm run deploy
 Build the production bundle; output is in `dist/hnews/browser/`.
 
 ```bash
-pnpm run build:prod
+npm run build:prod
 ```
 
 ## Troubleshooting

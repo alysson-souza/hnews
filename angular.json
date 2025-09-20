@@ -93,7 +93,7 @@
               }
             ],
             "styles": ["src/styles.css"],
-            "browsers": "ChromeHeadlessCI"
+            "browsers": "ChromeHeadlessPlaywright"
           }
         },
         "lint": {
