@@ -411,14 +411,17 @@ export class StoryItem {
     return true;
   }
 
-  shouldUseRouterLink(): boolean {
-    // Use RouterLink for mobile or when we want to enable native browser features
-    // Don't use RouterLink on desktop normal clicks (we want sidebar behavior)
-    return !this.deviceService.isDesktop();
+  getItemUrl(): string {
+    if (!this.story) return '#';
+    const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+    return `${window.location.origin}${path}`;
   }
 
   openComments(event: MouseEvent | KeyboardEvent): void {
     if (!this.story) return;
+
+    // Always prevent default to stop any unwanted navigation
+    event.preventDefault();
 
     // Check for modified clicks first - these should open in new window/tab
     const isShiftClick = event instanceof MouseEvent && event.shiftKey;
@@ -427,8 +430,7 @@ export class StoryItem {
     const isMiddleClick = event instanceof MouseEvent && event.button === 1;
 
     if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick) {
-      // For modified clicks, manually open in new tab (since RouterLink might not be active)
-      event.preventDefault();
+      // For modified clicks, open in new tab
       const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
       const url = `${window.location.origin}${path}`;
       window.open(url, '_blank');
@@ -437,13 +439,13 @@ export class StoryItem {
     }
 
     if (!this.deviceService.isDesktop()) {
-      // On mobile, allow default navigation (RouterLink will handle this)
+      // On mobile, navigate to the item page
+      this.router.navigate(['/item', this.story.id]);
       this.markAsVisited();
       return;
     }
 
-    // On desktop with normal click, prevent navigation and open sidebar
-    event.preventDefault();
+    // On desktop with normal click, open sidebar
     this.sidebarService.toggleSidebar(this.story.id);
     this.markAsVisited();
   }

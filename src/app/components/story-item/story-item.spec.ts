@@ -87,20 +87,9 @@ describe('StoryItem', () => {
       commentsLink = linkDebugElement.nativeElement as HTMLAnchorElement;
     });
 
-    it('should render as an anchor element with conditional routerLink', () => {
+    it('should render as an anchor element with proper href', () => {
       expect(commentsLink.tagName.toLowerCase()).toBe('a');
-
-      // On desktop, routerLink should be null (since shouldUseRouterLink returns false)
-      mockDeviceService.isDesktop.and.returnValue(true);
-      fixture.detectChanges();
-      expect(commentsLink.getAttribute('ng-reflect-router-link')).toBeNull();
-    });
-
-    it('should have routerLink on mobile', () => {
-      // On mobile, routerLink should be present
-      mockDeviceService.isDesktop.and.returnValue(false);
-      fixture.detectChanges();
-      expect(commentsLink.getAttribute('ng-reflect-router-link')).toBe('/item,123');
+      expect(commentsLink.getAttribute('href')).toBe('http://localhost/item/123');
     });
 
     it('should have role="button" for accessibility', () => {
@@ -198,13 +187,14 @@ describe('StoryItem', () => {
         mockDeviceService.isMobile.and.returnValue(true);
       });
 
-      it('should allow default navigation on mobile', () => {
+      it('should navigate manually on mobile', () => {
         const clickEvent = new MouseEvent('click', { bubbles: true });
         spyOn(clickEvent, 'preventDefault');
 
         component.openComments(clickEvent);
 
-        expect(clickEvent.preventDefault).not.toHaveBeenCalled();
+        expect(clickEvent.preventDefault).toHaveBeenCalled();
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/item', 123]);
         expect(mockSidebarService.toggleSidebar).not.toHaveBeenCalled();
         expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(123, 5);
       });
