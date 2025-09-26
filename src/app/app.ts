@@ -9,7 +9,7 @@ import {
   HostListener,
   ViewChild,
 } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -18,6 +18,7 @@ import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top.component';
 import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
 import { KeyboardShortcutsComponent } from './components/keyboard-shortcuts/keyboard-shortcuts.component';
+import { NavLinkComponent } from './components/shared/nav-link/nav-link.component';
 import { CacheManagerService } from './services/cache-manager.service';
 import { ThemeService } from './services/theme.service';
 import { SidebarService } from './services/sidebar.service';
@@ -34,12 +35,12 @@ import { PwaUpdateService } from './services/pwa-update.service';
     CommonModule,
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
     FormsModule,
     SidebarCommentsComponent,
     ScrollToTopComponent,
     ThemeToggleComponent,
     KeyboardShortcutsComponent,
+    NavLinkComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',

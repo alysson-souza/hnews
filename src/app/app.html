@@ -42,20 +42,13 @@
         role="navigation"
         aria-label="Main Navigation"
       >
-        <a
-          routerLink="/top"
-          routerLinkActive="nav-link-active"
-          [attr.aria-current]="router.url === '/top' ? 'page' : null"
-          class="nav-link"
-        >
-          Top
-        </a>
-        <a routerLink="/best" routerLinkActive="nav-link-active" class="nav-link"> Best </a>
-        <a routerLink="/newest" routerLinkActive="nav-link-active" class="nav-link"> Newest </a>
-        <a routerLink="/ask" routerLinkActive="nav-link-active" class="nav-link"> Ask HN </a>
-        <a routerLink="/show" routerLinkActive="nav-link-active" class="nav-link"> Show HN </a>
-        <a routerLink="/jobs" routerLinkActive="nav-link-active" class="nav-link"> Jobs </a>
-        <a routerLink="/settings" routerLinkActive="nav-link-active" class="nav-link"> Settings </a>
+        <app-nav-link route="/top" [isActive]="router.url === '/top'"> Top </app-nav-link>
+        <app-nav-link route="/best"> Best </app-nav-link>
+        <app-nav-link route="/newest"> Newest </app-nav-link>
+        <app-nav-link route="/ask"> Ask HN </app-nav-link>
+        <app-nav-link route="/show"> Show HN </app-nav-link>
+        <app-nav-link route="/jobs"> Jobs </app-nav-link>
+        <app-nav-link route="/settings"> Settings </app-nav-link>
       </nav>
 
       <!-- Desktop Search Bar -->
@@ -180,62 +173,25 @@
         role="navigation"
         aria-label="Mobile Navigation"
       >
-        <a
-          routerLink="/top"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link"
-        >
-          Top
-        </a>
-        <a
-          routerLink="/best"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link"
-        >
+        <app-nav-link route="/top" [mobile]="true" (click)="closeMobileMenu()"> Top </app-nav-link>
+        <app-nav-link route="/best" [mobile]="true" (click)="closeMobileMenu()">
           Best
-        </a>
-        <a
-          routerLink="/newest"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link"
-        >
+        </app-nav-link>
+        <app-nav-link route="/newest" [mobile]="true" (click)="closeMobileMenu()">
           Newest
-        </a>
-        <a
-          routerLink="/ask"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link"
-        >
+        </app-nav-link>
+        <app-nav-link route="/ask" [mobile]="true" (click)="closeMobileMenu()">
           Ask HN
-        </a>
-        <a
-          routerLink="/show"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link"
-        >
+        </app-nav-link>
+        <app-nav-link route="/show" [mobile]="true" (click)="closeMobileMenu()">
           Show HN
-        </a>
-        <a
-          routerLink="/jobs"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link"
-        >
+        </app-nav-link>
+        <app-nav-link route="/jobs" [mobile]="true" (click)="closeMobileMenu()">
           Jobs
-        </a>
-        <a
-          routerLink="/settings"
-          routerLinkActive="mobile-nav-link-active"
-          (click)="closeMobileMenu()"
-          class="mobile-nav-link border-t border-blue-800 dark:border-blue-800 mt-2"
-        >
+        </app-nav-link>
+        <app-nav-link route="/settings" [mobile]="true" (click)="closeMobileMenu()">
           Settings
-        </a>
+        </app-nav-link>
       </nav>
     }
   </div>

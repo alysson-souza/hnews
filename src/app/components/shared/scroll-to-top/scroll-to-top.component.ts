@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, HostListener, signal } from '@angular/core';
+import { Component, HostListener, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ScrollService } from '../../../services/scroll.service';
 
 @Component({
   selector: 'app-scroll-to-top',
@@ -31,6 +32,8 @@ import { CommonModule } from '@angular/common';
 export class ScrollToTopComponent {
   isVisible = signal(false);
 
+  private scrollService = inject(ScrollService);
+
   @HostListener('window:scroll', [])
   onWindowScroll() {
     const scrollPosition =
@@ -39,9 +42,6 @@ export class ScrollToTopComponent {
   }
 
   scrollToTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    this.scrollService.scrollToTop();
   }
 }
