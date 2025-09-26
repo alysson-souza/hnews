@@ -46,11 +46,11 @@ import { CommonModule } from '@angular/common';
       }
 
       .btn-danger {
-        @apply bg-gradient-to-r from-red-600 to-red-700 text-white;
-        @apply hover:from-red-700 hover:to-red-800;
-        @apply dark:from-red-500 dark:to-red-600;
-        @apply dark:hover:from-red-600 dark:hover:to-red-700;
-        @apply focus-visible:ring-red-500;
+        @apply bg-red-800 text-white;
+        @apply hover:bg-red-900;
+        @apply dark:bg-red-900 dark:text-white;
+        @apply dark:hover:bg-red-800;
+        @apply focus-visible:ring-red-700;
       }
 
       .btn-sm {

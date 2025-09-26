@@ -1,12 +1,20 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
-import { LocationStrategy } from '@angular/common';
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { Component } from '@angular/core';
+import { Router, provideRouter } from '@angular/router';
+import { provideLocationMocks } from '@angular/common/testing';
+import { By } from '@angular/platform-browser';
+
+@Component({ template: '' })
+class DummyComponent {}
 
 import { StoryItem } from './story-item';
 import { VisitedService } from '../../services/visited.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { HNItem } from '../../models/hn';
+import { UserSettingsService } from '../../services/user-settings.service';
 
 class MockDeviceService {
   private desktop = true;
@@ -39,8 +47,11 @@ describe('StoryItem comments link behaviour', () => {
   let fixture: ComponentFixture<StoryItem>;
   let component: StoryItem;
   let visitedService: jasmine.SpyObj<VisitedService>;
-  let sidebarService: jasmine.SpyObj<SidebarService>;
+  let sidebarService: SidebarService;
+  let toggleSidebarSpy: jasmine.Spy;
   let deviceService: MockDeviceService;
+  let userSettings: UserSettingsService;
+  let router: Router;
   let story: HNItem;
 
   beforeEach(() => {
@@ -54,18 +65,16 @@ describe('StoryItem comments link behaviour', () => {
     visitedServiceMock.getNewCommentCount.and.returnValue(0);
     visitedServiceMock.isVisited.and.returnValue(false);
 
-    const sidebarServiceMock = jasmine.createSpyObj<SidebarService>('SidebarService', [
-      'toggleSidebar',
-    ]);
+    localStorage.clear();
 
     TestBed.configureTestingModule({
       imports: [StoryItem],
       providers: [
+        provideRouter([{ path: 'item/:id', component: DummyComponent }]),
+        provideLocationMocks(),
         { provide: VisitedService, useValue: visitedServiceMock },
-        { provide: SidebarService, useValue: sidebarServiceMock },
+        SidebarService,
         { provide: DeviceService, useClass: MockDeviceService },
-        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
-        { provide: LocationStrategy, useValue: { prepareExternalUrl: (url: string) => url } },
       ],
     });
 
@@ -73,8 +82,13 @@ describe('StoryItem comments link behaviour', () => {
     component = fixture.componentInstance;
 
     visitedService = TestBed.inject(VisitedService) as jasmine.SpyObj<VisitedService>;
-    sidebarService = TestBed.inject(SidebarService) as jasmine.SpyObj<SidebarService>;
+    sidebarService = TestBed.inject(SidebarService);
+    toggleSidebarSpy = spyOn(sidebarService, 'toggleSidebar').and.callThrough();
     deviceService = TestBed.inject(DeviceService) as unknown as MockDeviceService;
+    userSettings = TestBed.inject(UserSettingsService);
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate');
+    spyOn(router, 'navigateByUrl');
 
     story = {
       id: 123,
@@ -88,7 +102,9 @@ describe('StoryItem comments link behaviour', () => {
     deviceService.setDesktop(true);
 
     visitedService.markAsVisited.calls.reset();
-    sidebarService.toggleSidebar.calls.reset();
+    toggleSidebarSpy.calls.reset();
+    userSettings.setSetting('openCommentsInSidebar', true);
+    (router.navigateByUrl as jasmine.Spy).calls.reset();
   });
 
   it('opens sidebar and prevents default navigation on desktop left click', () => {
@@ -97,7 +113,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeTrue();
-    expect(sidebarService.toggleSidebar).toHaveBeenCalledWith(story.id);
+    expect(toggleSidebarSpy).toHaveBeenCalledWith(story.id);
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -108,7 +124,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
-    expect(sidebarService.toggleSidebar).not.toHaveBeenCalled();
+    expect(toggleSidebarSpy).not.toHaveBeenCalled();
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -118,7 +134,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
-    expect(sidebarService.toggleSidebar).not.toHaveBeenCalled();
+    expect(toggleSidebarSpy).not.toHaveBeenCalled();
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -128,7 +144,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
-    expect(sidebarService.toggleSidebar).not.toHaveBeenCalled();
+    expect(toggleSidebarSpy).not.toHaveBeenCalled();
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -138,7 +154,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
-    expect(sidebarService.toggleSidebar).not.toHaveBeenCalled();
+    expect(toggleSidebarSpy).not.toHaveBeenCalled();
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -148,7 +164,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
-    expect(sidebarService.toggleSidebar).not.toHaveBeenCalled();
+    expect(toggleSidebarSpy).not.toHaveBeenCalled();
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -158,7 +174,7 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
-    expect(sidebarService.toggleSidebar).not.toHaveBeenCalled();
+    expect(toggleSidebarSpy).not.toHaveBeenCalled();
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
@@ -168,7 +184,83 @@ describe('StoryItem comments link behaviour', () => {
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeTrue();
-    expect(sidebarService.toggleSidebar).toHaveBeenCalledWith(story.id);
+    expect(toggleSidebarSpy).toHaveBeenCalledWith(story.id);
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+  });
+
+  it('should not navigate when sidebar preference is enabled and link is clicked', () => {
+    userSettings.setSetting('openCommentsInSidebar', true);
+    fixture.detectChanges();
+    toggleSidebarSpy.calls.reset();
+    (router.navigate as jasmine.Spy).calls.reset();
+    (router.navigateByUrl as jasmine.Spy).calls.reset();
+
+    const link = fixture.debugElement.query(By.css('.story-comments'))
+      .nativeElement as HTMLAnchorElement;
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+
+    link.dispatchEvent(clickEvent);
+
+    expect(toggleSidebarSpy).toHaveBeenCalledWith(story.id);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  describe('when sidebar preference is disabled', () => {
+    beforeEach(() => {
+      userSettings.setSetting('openCommentsInSidebar', false);
+      deviceService.setDesktop(true);
+    });
+
+    it('allows desktop clicks to navigate in place', () => {
+      const event = createMouseEvent('click', { button: 0 });
+
+      component.openComments(event);
+
+      expect(event.defaultPrevented).toBeFalse();
+      expect(toggleSidebarSpy).not.toHaveBeenCalled();
+      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    });
+
+    it('allows keyboard activation to navigate in place', () => {
+      const event = new KeyboardEvent('keyup', { key: 'Enter', cancelable: true });
+
+      component.openComments(event);
+
+      expect(event.defaultPrevented).toBeFalse();
+      expect(toggleSidebarSpy).not.toHaveBeenCalled();
+      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    });
+
+    it('does not toggle sidebar when clicking comments link via template', fakeAsync(() => {
+      userSettings.setSetting('openCommentsInSidebar', true);
+      fixture.detectChanges();
+      toggleSidebarSpy.calls.reset();
+      userSettings.setSetting('openCommentsInSidebar', false);
+      fixture.detectChanges();
+      const link = fixture.debugElement.query(By.css('.story-comments'))
+        .nativeElement as HTMLAnchorElement;
+      link.click();
+      tick();
+
+      expect(toggleSidebarSpy).not.toHaveBeenCalled();
+      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+      expect(sidebarService.isOpen()).toBeFalse();
+      expect(router.navigateByUrl).toHaveBeenCalled();
+    }));
+
+    it('navigates to item page when clicking comments link via template while sidebar disabled', fakeAsync(() => {
+      userSettings.setSetting('openCommentsInSidebar', false);
+      fixture.detectChanges();
+      toggleSidebarSpy.calls.reset();
+      (router.navigateByUrl as jasmine.Spy).calls.reset();
+      const link = fixture.debugElement.query(By.css('.story-comments'))
+        .nativeElement as HTMLAnchorElement;
+      link.click();
+      tick();
+
+      expect(toggleSidebarSpy).not.toHaveBeenCalled();
+      expect(router.navigateByUrl).toHaveBeenCalled();
+    }));
   });
 });

@@ -1,18 +1,37 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { ThemeService } from '../../services/theme.service';
+import { UserSettingsService } from '../../services/user-settings.service';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
-import { StatCardComponent } from '../../components/shared/stat-card/stat-card.component';
 import { ThemeSelectorComponent } from '../../components/shared/theme-selector/theme-selector.component';
 import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
+import { ToggleSwitchComponent } from '../../components/shared/toggle-switch/toggle-switch.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import {
+  faPalette,
+  faBook,
+  faTag,
+  faFileExport,
+  faFileImport,
+  faTrash,
+  faTimes,
+  faDatabase,
+  faChartBar,
+  faRefresh,
+  faUser,
+  faClock,
+  faHardDrive,
+  faMemory,
+  faImages,
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-settings',
@@ -23,35 +42,88 @@ import { SectionTitleComponent } from '../../components/shared/section-title/sec
     AppButtonComponent,
     CardComponent,
     PageContainerComponent,
-    StatCardComponent,
     ThemeSelectorComponent,
     SectionTitleComponent,
+    ToggleSwitchComponent,
+    FontAwesomeModule,
   ],
   template: `
     <app-page-container variant="narrow">
       <div class="space-y-6">
         <!-- Theme Settings Section -->
-        <app-card class="block" role="region" aria-label="Theme Settings">
-          <app-section-title>Theme Settings</app-section-title>
+        <app-card class="block setting-section" role="region" aria-label="Theme Settings">
+          <div class="section-header">
+            <fa-icon [icon]="faPalette" class="section-icon"></fa-icon>
+            <app-section-title>Appearance</app-section-title>
+          </div>
           <app-theme-selector></app-theme-selector>
         </app-card>
 
-        <!-- User Tags Section -->
-        <app-card class="block" role="region" aria-label="User Tags Management">
-          <app-section-title>User Tags Management</app-section-title>
+        <!-- Reading Preferences -->
+        <app-card class="block setting-section" role="region" aria-label="Reading Preferences">
+          <div class="section-header">
+            <fa-icon [icon]="faBook" class="section-icon"></fa-icon>
+            <app-section-title>Reading Preferences</app-section-title>
+          </div>
+          <div class="space-y-6">
+            <div class="setting-group">
+              <div class="modern-toggle-container">
+                <div class="setting-info">
+                  <label
+                    class="setting-title cursor-pointer"
+                    for="sidebar-toggle"
+                    (click)="toggleSidebarPreference()"
+                    role="button"
+                    tabindex="0"
+                    (keydown.enter)="toggleSidebarPreference()"
+                    (keydown.space)="toggleSidebarPreference()"
+                    aria-label="Toggle open comments in sidebar on desktop"
+                  >
+                    Open comments in sidebar on desktop
+                  </label>
+                  <p class="setting-description" id="sidebar-toggle-description">
+                    When enabled, comments will open in a sidebar instead of navigating to a new
+                    page
+                  </p>
+                </div>
+                <app-toggle-switch
+                  id="sidebar-toggle"
+                  [checked]="openCommentsInSidebar()"
+                  (checkedChange)="toggleSidebarPreference()"
+                  ariaLabel="Toggle sidebar preference"
+                  descriptionId="sidebar-toggle-description"
+                ></app-toggle-switch>
+              </div>
+            </div>
+          </div>
+        </app-card>
 
-          <!-- Export/Import/Clear Section -->
-          <div class="mb-8 space-y-4">
-            <div class="flex flex-wrap items-center gap-4">
-              <app-button (clicked)="exportTags()" variant="primary" ariaLabel="Export user tags">
-                Export Tags
+        <!-- User Tags Section -->
+        <app-card class="block setting-section" role="region" aria-label="User Tags Management">
+          <div class="section-header">
+            <fa-icon [icon]="faTag" class="section-icon"></fa-icon>
+            <app-section-title>User Tags</app-section-title>
+          </div>
+
+          <div class="tag-actions">
+            <div class="action-buttons justify-end">
+              <app-button
+                (clicked)="exportTags()"
+                variant="secondary"
+                size="sm"
+                ariaLabel="Export user tags"
+              >
+                <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
+                Export
               </app-button>
               <app-button
                 (clicked)="fileInput.click()"
-                variant="primary"
+                variant="secondary"
+                size="sm"
                 ariaLabel="Import user tags"
               >
-                Import Tags
+                <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
+                Import
               </app-button>
               <input
                 #fileInput
@@ -61,94 +133,175 @@ import { SectionTitleComponent } from '../../components/shared/section-title/sec
                 class="hidden"
                 aria-hidden="true"
               />
-              @if (tags().length > 0) {
-                <app-button (clicked)="clearAll()" variant="danger" ariaLabel="Clear all user tags">
-                  Clear All Tags
-                </app-button>
-              }
             </div>
-
-            @if (message()) {
-              <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
-            }
           </div>
 
-          <!-- Current Tags List -->
-          <div>
-            <app-section-title variant="subtitle">
-              Current Tags ({{ tags().length }})
-            </app-section-title>
+          @if (message()) {
+            <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
+          }
 
+          <!-- Tags Overview -->
+          <div class="tags-overview">
             @if (tags().length > 0) {
-              <div class="space-y-2">
+              <div class="tags-list">
                 @for (tag of tags(); track tag.username) {
-                  <div class="tag-item">
-                    <div class="flex items-center gap-3">
-                      <span class="tag-username">{{ tag.username }}</span>
-                      <span class="tag-pill" [style.background-color]="tag.color">
-                        {{ tag.tag }}
-                      </span>
+                  <div class="tag-item-modern">
+                    <div class="tag-content">
+                      <div class="tag-user-info">
+                        <fa-icon [icon]="faUser" class="user-icon"></fa-icon>
+                        <span class="tag-username">{{ tag.username }}</span>
+                        <span class="tag-badge" [style.background-color]="tag.color">
+                          {{ tag.tag }}
+                        </span>
+                      </div>
+                      <div class="tag-meta">
+                        <fa-icon [icon]="faClock" class="meta-icon"></fa-icon>
+                        <span class="tag-time">{{ getTimeAgo(tag.createdAt) }}</span>
+                      </div>
                     </div>
-                    <div class="tag-meta">
-                      <span>Added {{ getTimeAgo(tag.createdAt) }}</span>
-                      <button (click)="removeTag(tag.username)" class="tag-remove">Remove</button>
-                    </div>
+                    <button
+                      (click)="removeTag(tag.username)"
+                      class="tag-remove-modern"
+                      [attr.aria-label]="'Remove tag for ' + tag.username"
+                    >
+                      <fa-icon [icon]="faTimes"></fa-icon>
+                    </button>
                   </div>
                 }
               </div>
             } @else {
-              <p class="empty">
-                No user tags yet. Tags will appear here when you tag users while browsing.
-              </p>
+              <div class="empty-state">
+                <fa-icon [icon]="faTag" class="empty-icon"></fa-icon>
+                <h4 class="empty-title">No tags yet</h4>
+                <p class="empty-description">
+                  Start tagging users while browsing stories and comments. Your tags will help you
+                  remember interesting contributors.
+                </p>
+              </div>
+            }
+
+            <!-- Clear All Button - positioned consistently with other action buttons -->
+            @if (tags().length > 0) {
+              <div class="tag-action-buttons">
+                <app-button
+                  (clicked)="clearAll()"
+                  variant="danger"
+                  size="sm"
+                  ariaLabel="Clear all user tags"
+                >
+                  <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
+                  Clear All Tags
+                </app-button>
+              </div>
             }
           </div>
-
-          <!-- Clear All Button moved next to export/import -->
         </app-card>
 
-        <!-- Cache Management Section (moved to bottom) -->
-        <app-card class="block" role="region" aria-label="Cache Management">
-          <app-section-title>Cache Management</app-section-title>
+        <!-- Cache Management Section -->
+        <app-card class="block setting-section" role="region" aria-label="Cache Management">
+          <div class="section-header">
+            <fa-icon [icon]="faDatabase" class="section-icon"></fa-icon>
+            <app-section-title>Cache Management</app-section-title>
+          </div>
 
-          <div class="space-y-6">
+          <div class="space-y-8">
             <!-- Cache Statistics -->
-            <div>
-              <app-section-title variant="subtitle">Cache Statistics</app-section-title>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <app-stat-card
-                  label="IndexedDB Storage"
-                  [value]="formatBytes(cacheStats().indexedDB)"
-                ></app-stat-card>
-                <app-stat-card
-                  label="Service Worker Cache"
-                  [value]="formatBytes(cacheStats().swCache)"
-                ></app-stat-card>
-                <app-stat-card
-                  label="Total Items Cached"
-                  [value]="cacheStats().itemCount.toString()"
-                ></app-stat-card>
-                <app-stat-card
-                  label="Memory Cache"
-                  [value]="cacheStats().memoryItems + ' items'"
-                ></app-stat-card>
+            <div class="cache-stats-section">
+              <div class="stats-header">
+                <h3 class="stats-title">
+                  <fa-icon [icon]="faChartBar" class="mr-2"></fa-icon>
+                  Storage Statistics
+                </h3>
+                <app-button
+                  (clicked)="refreshStats()"
+                  variant="secondary"
+                  size="sm"
+                  ariaLabel="Refresh cache statistics"
+                >
+                  <fa-icon [icon]="faRefresh" class="mr-2"></fa-icon>
+                  Refresh
+                </app-button>
+              </div>
+
+              <div class="stats-grid">
+                <div class="stat-card-modern">
+                  <div class="stat-icon indexeddb">
+                    <fa-icon [icon]="faHardDrive"></fa-icon>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-label">IndexedDB Storage</div>
+                    <div class="stat-value">{{ formatBytes(cacheStats().indexedDB) }}</div>
+                  </div>
+                </div>
+
+                <div class="stat-card-modern">
+                  <div class="stat-icon sw-cache">
+                    <fa-icon [icon]="faImages"></fa-icon>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-label">Service Worker Cache</div>
+                    <div class="stat-value">{{ formatBytes(cacheStats().swCache) }}</div>
+                  </div>
+                </div>
+
+                <div class="stat-card-modern">
+                  <div class="stat-icon items">
+                    <fa-icon [icon]="faDatabase"></fa-icon>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-label">Cached Items</div>
+                    <div class="stat-value">{{ cacheStats().itemCount }}</div>
+                  </div>
+                </div>
+
+                <div class="stat-card-modern">
+                  <div class="stat-icon memory">
+                    <fa-icon [icon]="faMemory"></fa-icon>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-label">Memory Cache</div>
+                    <div class="stat-value">{{ cacheStats().memoryItems }} items</div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Cache Actions -->
-            <div>
-              <app-section-title variant="subtitle">Cache Actions</app-section-title>
-              <div class="flex flex-wrap gap-4">
-                <app-button (clicked)="clearCache('all')" variant="danger">
+            <div class="cache-actions-section">
+              <div class="cache-actions-header">
+                <h3 class="actions-title">
+                  <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
+                  Clear Cache Data
+                </h3>
+              </div>
+              <p class="actions-description">
+                Free up storage space by clearing cached data. The app will re-download content as
+                needed.
+              </p>
+              <div class="action-buttons">
+                <app-button
+                  (clicked)="clearCache('all')"
+                  variant="danger"
+                  size="sm"
+                  ariaLabel="Clear all cached data"
+                >
                   Clear All Cache
                 </app-button>
-                <app-button (clicked)="clearCache('stories')" variant="secondary">
+                <app-button
+                  (clicked)="clearCache('stories')"
+                  variant="secondary"
+                  size="sm"
+                  ariaLabel="Clear story cache"
+                >
                   Clear Stories
                 </app-button>
-                <app-button (clicked)="clearCache('images')" variant="secondary">
+                <app-button
+                  (clicked)="clearCache('images')"
+                  variant="secondary"
+                  size="sm"
+                  ariaLabel="Clear image cache"
+                >
                   Clear Images
-                </app-button>
-                <app-button (clicked)="refreshStats()" variant="primary">
-                  Refresh Stats
                 </app-button>
               </div>
             </div>
@@ -167,31 +320,211 @@ import { SectionTitleComponent } from '../../components/shared/section-title/sec
     `
       @reference '../../../styles.css';
 
+      /* Page Header */
+      .page-header {
+        @apply text-center py-8 border-b border-gray-200 dark:border-slate-700 mb-8;
+      }
+
+      /* Section Styling */
+      .setting-section {
+        @apply relative overflow-hidden;
+      }
+
+      .section-header {
+        @apply flex items-center gap-3 mb-6;
+      }
+
+      .section-header app-section-title {
+        @apply flex items-center;
+      }
+
+      .section-icon {
+        @apply text-lg text-gray-600 dark:text-gray-400 flex-shrink-0;
+      }
+
+      /* Alert Messages */
       .alert-success {
-        @apply p-3 rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
+        @apply p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 mb-6;
       }
       .alert-danger {
-        @apply p-3 rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
+        @apply p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800 mb-6;
       }
 
-      .tag-item {
-        @apply flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-900 rounded border border-transparent dark:border-slate-800;
+      /* Modern Toggle Switch */
+      .setting-group {
+        @apply space-y-6;
       }
+
+      .modern-toggle-container {
+        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-slate-700 hover:shadow-md transition-all duration-200;
+        @apply bg-white dark:bg-slate-900;
+      }
+
+      .setting-info {
+        @apply flex-1;
+      }
+
+      .setting-title {
+        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 block cursor-pointer;
+      }
+
+      .setting-description {
+        @apply text-sm text-gray-600 dark:text-gray-400 leading-relaxed;
+      }
+
+      /* Tag Management */
+      .tag-actions {
+        @apply mb-6;
+      }
+
+      .action-buttons {
+        @apply flex flex-wrap items-center gap-3;
+      }
+
+      .tags-overview {
+        @apply space-y-6;
+      }
+
+      .tags-list {
+        @apply space-y-3;
+      }
+
+      .tag-item-modern {
+        @apply flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-slate-700 transition-all duration-200;
+        @apply bg-white dark:bg-slate-900;
+      }
+
+      .tag-content {
+        @apply flex-1 space-y-2;
+      }
+
+      .tag-user-info {
+        @apply flex items-center gap-3;
+      }
+
+      .user-icon {
+        @apply text-gray-500 dark:text-gray-400;
+      }
+
       .tag-username {
-        @apply font-medium text-gray-900 dark:text-gray-100;
-      }
-      .tag-pill {
-        @apply px-2 py-1 text-xs text-white rounded;
-      }
-      .tag-meta {
-        @apply flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400;
-      }
-      .tag-remove {
-        @apply text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded px-1;
+        @apply font-semibold text-gray-900 dark:text-gray-100;
       }
 
-      .empty {
-        @apply text-gray-500 dark:text-gray-400 text-center py-8;
+      .tag-badge {
+        @apply px-3 py-1 text-sm font-medium text-white rounded-full shadow-sm;
+      }
+
+      .tag-meta {
+        @apply flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400;
+      }
+
+      .meta-icon {
+        @apply text-xs;
+      }
+
+      .tag-time {
+        @apply font-medium;
+      }
+
+      .tag-remove-modern {
+        @apply flex items-center justify-center w-10 h-10 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
+        @apply bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40;
+      }
+
+      /* Empty State */
+      .empty-state {
+        @apply text-center py-6 space-y-4;
+      }
+
+      .empty-icon {
+        @apply text-5xl text-gray-300 dark:text-gray-600 mx-auto mb-4;
+      }
+
+      .empty-title {
+        @apply text-xl font-semibold text-gray-900 dark:text-gray-100;
+      }
+
+      .empty-description {
+        @apply text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed;
+      }
+
+      /* Tag Action Buttons */
+      .tag-action-buttons {
+        @apply flex justify-end pt-4;
+      }
+
+      /* Cache Management */
+      .cache-stats-section {
+        @apply space-y-6 mb-8;
+      }
+
+      .stats-header {
+        @apply flex items-center justify-between mb-6;
+      }
+
+      .stats-title {
+        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center;
+      }
+
+      .stats-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+      }
+
+      .stat-card-modern {
+        @apply flex items-center gap-4 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200;
+        @apply bg-white dark:bg-slate-900;
+      }
+
+      .stat-icon {
+        @apply flex items-center justify-center w-12 h-12 rounded-full text-white text-xl shadow-lg;
+      }
+
+      .stat-icon.indexeddb {
+        @apply bg-gradient-to-br from-violet-600 to-violet-700;
+      }
+
+      .stat-icon.sw-cache {
+        @apply bg-gradient-to-br from-teal-600 to-teal-700;
+      }
+
+      .stat-icon.items {
+        @apply bg-gradient-to-br from-sky-600 to-sky-700;
+      }
+
+      .stat-icon.memory {
+        @apply bg-gradient-to-br from-amber-600 to-amber-700;
+      }
+
+      .stat-content {
+        @apply flex-1;
+      }
+
+      .stat-label {
+        @apply text-sm font-medium text-gray-600 dark:text-gray-400 mb-1;
+      }
+
+      .stat-value {
+        @apply text-2xl font-bold text-gray-900 dark:text-gray-100;
+      }
+
+      .cache-actions-section {
+        @apply space-y-4 pt-6 border-t border-gray-200 dark:border-slate-700;
+      }
+
+      .cache-actions-header {
+        @apply flex items-center justify-between mb-4;
+      }
+
+      .actions-title {
+        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center;
+      }
+
+      .actions-description {
+        @apply text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4;
+      }
+
+      .action-buttons {
+        @apply flex flex-wrap items-center gap-3;
       }
     `,
   ],
@@ -200,6 +533,24 @@ export class SettingsComponent implements OnInit {
   private tagsService = inject(UserTagsService);
   private cacheService = inject(CacheManagerService);
   themeService = inject(ThemeService);
+  private userSettings = inject(UserSettingsService);
+
+  // FontAwesome icons
+  faPalette = faPalette;
+  faBook = faBook;
+  faTag = faTag;
+  faFileExport = faFileExport;
+  faFileImport = faFileImport;
+  faTrash = faTrash;
+  faTimes = faTimes;
+  faDatabase = faDatabase;
+  faChartBar = faChartBar;
+  faRefresh = faRefresh;
+  faUser = faUser;
+  faClock = faClock;
+  faHardDrive = faHardDrive;
+  faMemory = faMemory;
+  faImages = faImages;
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');
@@ -214,6 +565,8 @@ export class SettingsComponent implements OnInit {
   });
   cacheMessage = signal<string>('');
   cacheError = signal(false);
+
+  openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
 
   constructor() {
     this.loadTags();
@@ -273,6 +626,16 @@ export class SettingsComponent implements OnInit {
       this.loadTags();
       this.showMessage('All tags cleared', false);
     }
+  }
+
+  onSidebarPreferenceChange(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.userSettings.setSetting('openCommentsInSidebar', checked);
+  }
+
+  toggleSidebarPreference(): void {
+    const newValue = !this.openCommentsInSidebar();
+    this.userSettings.setSetting('openCommentsInSidebar', newValue);
   }
 
   private showMessage(msg: string, error: boolean): void {

@@ -13,6 +13,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { VisitedIndicatorComponent } from '../shared/visited-indicator/visited-indicator.component';
+import { UserSettingsService } from '../../services/user-settings.service';
 
 @Component({
   selector: 'app-story-item',
@@ -172,6 +173,7 @@ export class StoryItem {
   private sidebarService = inject(SidebarService);
   public deviceService = inject(DeviceService);
   private locationStrategy = inject(LocationStrategy);
+  private userSettings = inject(UserSettingsService);
 
   // Computed property to safely determine loading state
   isLoading = computed(() => this.loading || !this.story);
@@ -249,6 +251,8 @@ export class StoryItem {
   canUseWebShare = computed(() => {
     return 'share' in navigator && typeof navigator.share === 'function';
   });
+
+  openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
 
   getStoryActionText = computed(() => {
     if (this.copiedStory) return '✓ Copied!';
@@ -403,6 +407,13 @@ export class StoryItem {
     this.showActionsMenu = false;
   }
 
+  getItemLink(): string {
+    if (!this.story) {
+      return this.locationStrategy.prepareExternalUrl('/item');
+    }
+    return this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
+  }
+
   private canShare(data: ShareData): boolean {
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (typeof nav.canShare === 'function') {
@@ -414,29 +425,36 @@ export class StoryItem {
   openComments(event: MouseEvent | KeyboardEvent): void {
     if (!this.story) return;
 
-    if (!this.deviceService.isDesktop()) {
-      // On mobile, allow default navigation behavior
-      this.markAsVisited();
+    this.markAsVisited();
+
+    const shouldUseSidebar = this.deviceService.isDesktop() && this.openCommentsInSidebar();
+
+    if (!shouldUseSidebar) {
+      if (this.sidebarService.isOpen()) {
+        this.sidebarService.closeSidebar();
+      }
       return;
     }
 
-    const isShiftClick = event instanceof MouseEvent && event.shiftKey;
-    const isCmdClick = event instanceof MouseEvent && event.metaKey;
-    const isCtrlClick = event instanceof MouseEvent && event.ctrlKey;
-    // For auxclick events (non-primary mouse buttons), always allow default navigation
-    const isAuxClick = event instanceof MouseEvent && event.type === 'auxclick';
-    const isMiddleClick = event instanceof MouseEvent && event.button === 1;
+    if (event instanceof MouseEvent) {
+      const isShiftClick = event.shiftKey;
+      const isCmdClick = event.metaKey;
+      const isCtrlClick = event.ctrlKey;
+      // For auxclick events (non-primary mouse buttons), always allow default navigation
+      const isAuxClick = event.type === 'auxclick';
+      const isMiddleClick = event.button === 1;
 
-    if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick || isAuxClick) {
-      // Allow default navigation behavior (new tab/window)
-      this.markAsVisited();
-      return;
-    } else {
-      // Open sidebar on desktop for normal left clicks
-      event.preventDefault();
-      this.sidebarService.toggleSidebar(this.story.id);
-      this.markAsVisited();
+      if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick || isAuxClick) {
+        return;
+      }
     }
+
+    event.preventDefault();
+    if ('stopImmediatePropagation' in event) {
+      (event as MouseEvent).stopImmediatePropagation();
+    }
+    event.stopPropagation();
+    this.sidebarService.toggleSidebar(this.story.id);
   }
 
   getCommentTooltip(): string {

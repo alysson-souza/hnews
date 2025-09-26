@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, signal } from '@angular/core';
-export type UserSettings = Record<string, never>;
+
+export interface UserSettings {
+  /**
+   * When true, desktop clicks on story comments open the sidebar instead of navigating directly.
+   */
+  openCommentsInSidebar: boolean;
+}
 
 const STORAGE_KEY = 'user.settings.v1';
 
 @Injectable({ providedIn: 'root' })
 export class UserSettingsService {
-  private readonly defaults: UserSettings = {} as const;
+  private readonly defaults: UserSettings = {
+    openCommentsInSidebar: true,
+  } as const;
 
   private _settings = signal<UserSettings>(this.load());
 
@@ -33,13 +41,36 @@ export class UserSettingsService {
   }
 
   private mergeSettings(base: UserSettings, override?: Partial<UserSettings>): UserSettings {
-    // Shallow-merge settings; fallback to base if no override provided
     if (!override) return base;
-    // Cast to generic records to allow spread; runtime stays a simple object merge
-    const merged = {
-      ...(base as Record<string, unknown>),
-      ...(override as Record<string, unknown>),
-    } as UserSettings;
+
+    const merged: UserSettings = {
+      ...base,
+      ...override,
+    };
+
+    // Ensure boolean coercion for persisted values
+    if (typeof merged.openCommentsInSidebar !== 'boolean') {
+      merged.openCommentsInSidebar = base.openCommentsInSidebar;
+    }
+
     return merged;
+  }
+
+  updateSettings(update: Partial<UserSettings>): void {
+    const current = this._settings();
+    const next = this.mergeSettings(current, update);
+    if (current.openCommentsInSidebar === next.openCommentsInSidebar) {
+      return;
+    }
+    this._settings.set(next);
+    this.save(next);
+  }
+
+  setSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]): void {
+    this.updateSettings({ [key]: value } as Partial<UserSettings>);
+  }
+
+  getSetting<K extends keyof UserSettings>(key: K): UserSettings[K] {
+    return this._settings()[key];
   }
 }

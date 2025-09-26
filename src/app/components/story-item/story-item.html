@@ -152,21 +152,41 @@
             <span class="hidden sm:inline" aria-hidden="true">•</span>
             <span class="story-time">{{ getTimeAgo(story!.time) }}</span>
             <span class="hidden sm:inline" aria-hidden="true">•</span>
-            <a
-              [routerLink]="['/item', story!.id]"
-              (click)="openComments($event)"
-              (auxclick)="openComments($event)"
-              (keyup.enter)="openComments($any($event))"
-              (keyup.space)="openComments($any($event))"
-              class="story-comments story-comments-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-              [attr.aria-label]="'View ' + (story!.descendants || 0) + ' Comments'"
-              [title]="getCommentTooltip()"
-            >
-              {{ story!.descendants || 0 }} {{ story!.descendants === 1 ? 'comment' : 'comments' }}
-              @if (hasNewComments()) {
-                <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
-              }
-            </a>
+            @if (openCommentsInSidebar()) {
+              <a
+                [attr.href]="getItemLink()"
+                (click)="openComments($event)"
+                (auxclick)="openComments($event)"
+                (keyup.enter)="openComments($any($event))"
+                (keyup.space)="openComments($any($event))"
+                class="story-comments story-comments-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                [attr.aria-label]="'View ' + (story!.descendants || 0) + ' Comments'"
+                [title]="getCommentTooltip()"
+              >
+                {{ story!.descendants || 0 }}
+                {{ story!.descendants === 1 ? 'comment' : 'comments' }}
+                @if (hasNewComments()) {
+                  <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
+                }
+              </a>
+            } @else {
+              <a
+                [routerLink]="['/item', story!.id]"
+                (click)="openComments($event)"
+                (auxclick)="openComments($event)"
+                (keyup.enter)="openComments($any($event))"
+                (keyup.space)="openComments($any($event))"
+                class="story-comments story-comments-trigger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                [attr.aria-label]="'View ' + (story!.descendants || 0) + ' Comments'"
+                [title]="getCommentTooltip()"
+              >
+                {{ story!.descendants || 0 }}
+                {{ story!.descendants === 1 ? 'comment' : 'comments' }}
+                @if (hasNewComments()) {
+                  <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
+                }
+              </a>
+            }
           }
         </div>
       </div>
