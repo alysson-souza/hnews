@@ -162,7 +162,11 @@ import {
                     <button
                       (click)="removeTag(tag.username)"
                       class="tag-remove-modern"
+                      role="button"
+                      tabindex="0"
                       [attr.aria-label]="'Remove tag for ' + tag.username"
+                      (keydown.enter)="removeTag(tag.username)"
+                      (keydown.space)="removeTag(tag.username)"
                     >
                       <fa-icon [icon]="faTimes"></fa-icon>
                     </button>
@@ -428,7 +432,7 @@ import {
 
       .tag-remove-modern {
         @apply flex items-center justify-center w-10 h-10 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
-        @apply bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40;
+        @apply bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer;
       }
 
       /* Empty State */

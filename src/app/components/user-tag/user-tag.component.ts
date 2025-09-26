@@ -41,6 +41,8 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
           (click)="startEdit($event)"
           (keyup.enter)="startEdit($event)"
           (keyup.space)="startEdit($event)"
+          role="button"
+          tabindex="0"
           [attr.aria-label]="'Tag: ' + tag()!.tag"
         >
           {{ tag()!.tag }}
@@ -52,7 +54,11 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
         <button
           (click)="startEdit($event)"
           class="add-btn"
+          role="button"
+          tabindex="0"
           [attr.aria-label]="'Add Tag For ' + username"
+          (keydown.enter)="startEdit($event)"
+          (keydown.space)="startEdit($event)"
         >
           <fa-icon [icon]="faUserTag" class="icon"></fa-icon>
         </button>
@@ -72,9 +78,27 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
             [attr.aria-label]="'Enter Tag For ' + username"
             #tagInput
           />
-          <button (mousedown)="saveTag()" class="save-btn" [attr.aria-label]="'Save Tag'">✓</button>
+          <button
+            (mousedown)="saveTag()"
+            class="save-btn"
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Save Tag'"
+            (keydown.enter)="saveTag()"
+            (keydown.space)="saveTag()"
+          >
+            ✓
+          </button>
           @if (tag()) {
-            <button (click)="removeTag()" class="remove-btn" [attr.aria-label]="'Remove Tag'">
+            <button
+              (click)="removeTag()"
+              class="remove-btn"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="'Remove Tag'"
+              (keydown.enter)="removeTag()"
+              (keydown.space)="removeTag()"
+            >
               ✗
             </button>
           }
