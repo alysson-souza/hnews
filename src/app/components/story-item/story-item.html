@@ -152,8 +152,8 @@
             <span class="hidden sm:inline" aria-hidden="true">•</span>
             <span class="story-time">{{ getTimeAgo(story!.time) }}</span>
             <span class="hidden sm:inline" aria-hidden="true">•</span>
-            <button
-              type="button"
+            <a
+              [routerLink]="['/item', story!.id]"
               (click)="openComments($event)"
               (auxclick)="openComments($event)"
               (keyup.enter)="openComments($any($event))"
@@ -166,7 +166,7 @@
               @if (hasNewComments()) {
                 <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
               }
-            </button>
+            </a>
           }
         </div>
       </div>

@@ -415,8 +415,7 @@ export class StoryItem {
     if (!this.story) return;
 
     if (!this.deviceService.isDesktop()) {
-      // On mobile, navigate directly to item page
-      this.router.navigate(['/item', this.story.id]);
+      // On mobile, allow default navigation behavior
       this.markAsVisited();
       return;
     }
@@ -424,16 +423,16 @@ export class StoryItem {
     const isShiftClick = event instanceof MouseEvent && event.shiftKey;
     const isCmdClick = event instanceof MouseEvent && event.metaKey;
     const isCtrlClick = event instanceof MouseEvent && event.ctrlKey;
+    // For auxclick events (non-primary mouse buttons), always allow default navigation
+    const isAuxClick = event instanceof MouseEvent && event.type === 'auxclick';
     const isMiddleClick = event instanceof MouseEvent && event.button === 1;
 
-    if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick) {
-      // Open in new window if modifier key or middle mouse button is used
-      // Use LocationStrategy to get the correct external URL with base href
-      const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
-      const url = `${window.location.origin}${path}`;
-      window.open(url, '_blank');
+    if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick || isAuxClick) {
+      // Allow default navigation behavior (new tab/window)
+      this.markAsVisited();
+      return;
     } else {
-      // Open sidebar on desktop
+      // Open sidebar on desktop for normal left clicks
       event.preventDefault();
       this.sidebarService.toggleSidebar(this.story.id);
       this.markAsVisited();
