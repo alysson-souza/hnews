@@ -34,8 +34,12 @@ export class UserTagsService {
   }
 
   private loadTags(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = window.localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const data: UserTag[] = JSON.parse(stored);
         const map = new Map<string, UserTag>();
@@ -48,9 +52,13 @@ export class UserTagsService {
   }
 
   private saveTags(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const data = Array.from(this.tagsMap().values());
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
       console.error('Failed to save user tags:', error);
     }
@@ -134,7 +142,10 @@ export class UserTagsService {
   }
 
   clearAllTags(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
     this.tagsMap.set(new Map());
-    localStorage.removeItem(this.STORAGE_KEY);
+    window.localStorage.removeItem(this.STORAGE_KEY);
   }
 }

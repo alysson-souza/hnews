@@ -21,8 +21,12 @@ export class VisitedService {
   }
 
   private loadVisited(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = window.localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const data: VisitedData[] = JSON.parse(stored);
         const newMap = new Map<number, VisitedData>();
@@ -35,11 +39,15 @@ export class VisitedService {
   }
 
   private saveVisited(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const data = Array.from(this.visitedMap().values())
         .sort((a, b) => b.visitedAt - a.visitedAt)
         .slice(0, this.MAX_VISITED);
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
       console.error('Failed to save visited stories:', error);
     }
@@ -85,7 +93,10 @@ export class VisitedService {
   }
 
   clearVisited(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
     this.visitedMap.set(new Map());
-    localStorage.removeItem(this.STORAGE_KEY);
+    window.localStorage.removeItem(this.STORAGE_KEY);
   }
 }

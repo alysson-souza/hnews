@@ -5,3 +5,7 @@ coverage
 *.min.*
 package-lock.json
 
+# temporary and log output
+tmp
+*.log
+

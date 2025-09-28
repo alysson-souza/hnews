@@ -15,7 +15,8 @@ export class ThemeService {
   theme = signal<Theme>('auto');
   effectiveTheme = signal<'light' | 'dark'>('light');
 
-  private mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  private mediaQuery: MediaQueryList | null =
+    typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
   constructor() {
     this.loadTheme();
@@ -24,11 +25,13 @@ export class ThemeService {
   }
 
   private loadTheme(): void {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
+    const stored =
+      typeof window !== 'undefined' ? window.localStorage.getItem(this.STORAGE_KEY) : null;
 
     // Apply the theme immediately on load to avoid FOUC
     const htmlElement = this.document.documentElement;
-    htmlElement.classList.toggle('dark', stored === 'dark' || (!stored && this.mediaQuery.matches));
+    const prefersDarkBySystem = this.mediaQuery?.matches ?? false;
+    htmlElement.classList.toggle('dark', stored === 'dark' || (!stored && prefersDarkBySystem));
 
     if (stored === 'light' || stored === 'dark') {
       this.theme.set(stored);
@@ -45,6 +48,10 @@ export class ThemeService {
   }
 
   private setupSystemThemeListener(): void {
+    if (typeof window === 'undefined' || !this.mediaQuery) {
+      return;
+    }
+
     this.mediaQuery.addEventListener('change', () => {
       if (this.theme() === 'auto') {
         this.applyTheme('auto');
@@ -56,17 +63,23 @@ export class ThemeService {
     const htmlElement = this.document.documentElement;
 
     if (theme === 'light') {
-      localStorage.setItem(this.STORAGE_KEY, 'light');
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(this.STORAGE_KEY, 'light');
+      }
       htmlElement.classList.remove('dark');
       this.effectiveTheme.set('light');
     } else if (theme === 'dark') {
-      localStorage.setItem(this.STORAGE_KEY, 'dark');
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(this.STORAGE_KEY, 'dark');
+      }
       htmlElement.classList.add('dark');
       this.effectiveTheme.set('dark');
     } else {
       // Auto mode - respect OS preference
-      localStorage.removeItem(this.STORAGE_KEY);
-      const prefersDark = this.mediaQuery.matches;
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(this.STORAGE_KEY);
+      }
+      const prefersDark = this.mediaQuery?.matches ?? false;
       htmlElement.classList.toggle('dark', prefersDark);
       this.effectiveTheme.set(prefersDark ? 'dark' : 'light');
     }

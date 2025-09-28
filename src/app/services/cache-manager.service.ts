@@ -107,9 +107,9 @@ export class CacheManagerService {
   }
 
   private async initServiceWorker(): Promise<void> {
-    if ('serviceWorker' in navigator) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in window.navigator) {
       try {
-        this.swRegistration = await navigator.serviceWorker.ready;
+        this.swRegistration = await window.navigator.serviceWorker.ready;
       } catch (error) {
         console.error('Service Worker not available:', error);
       }
@@ -117,30 +117,38 @@ export class CacheManagerService {
   }
 
   private async initMigration(): Promise<void> {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Check if migration is needed
-    const migrationDone = localStorage.getItem('hnews_migration_v2');
+    const migrationDone = window.localStorage.getItem('hnews_migration_v2');
     if (!migrationDone) {
       await this.indexedDB.migrateFromLocalStorage();
-      localStorage.setItem('hnews_migration_v2', 'true');
+      window.localStorage.setItem('hnews_migration_v2', 'true');
     }
 
     // One-time reset of storyLists to correct any legacy key/aliasing issues
     // that could cause categories to display the wrong list. Safe to clear;
     // lists are cheap to refetch and repopulate.
     const listResetFlag = 'hnews_storyLists_reset_2025_09_14';
-    if (!localStorage.getItem(listResetFlag)) {
+    if (!window.localStorage.getItem(listResetFlag)) {
       try {
         await this.indexedDB.clear('storyLists');
       } catch {
         // Swallow errors; lack of IndexedDB shouldn't block startup
       }
-      localStorage.setItem(listResetFlag, 'true');
+      window.localStorage.setItem(listResetFlag, 'true');
     }
   }
 
   private startMemoryCacheCleanup(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Clean up expired memory cache items every minute
-    setInterval(() => {
+    window.setInterval(() => {
       const now = Date.now();
       for (const [key, item] of this.memoryCache.entries()) {
         if (now - item.timestamp > item.ttl) {
@@ -365,7 +373,9 @@ export class CacheManagerService {
         await this.deleteFromIndexedDB(type, key);
         break;
       case StorageType.LOCAL_STORAGE:
-        localStorage.removeItem(`hnews_cache_${type}_${key}`);
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem(`hnews_cache_${type}_${key}`);
+        }
         break;
       case StorageType.SERVICE_WORKER:
         // Service Worker cache deletion requires messaging
@@ -440,11 +450,15 @@ export class CacheManagerService {
     quota: number;
     percentage: number;
   }> {
-    if (!navigator.storage || !navigator.storage.estimate) {
+    if (
+      typeof window === 'undefined' ||
+      !window.navigator.storage ||
+      !window.navigator.storage.estimate
+    ) {
       return { used: 0, quota: 0, percentage: 0 };
     }
 
-    const estimate = await navigator.storage.estimate();
+    const estimate = await window.navigator.storage.estimate();
     const used = estimate.usage || 0;
     const quota = estimate.quota || 0;
     const percentage = quota > 0 ? (used / quota) * 100 : 0;
@@ -468,11 +482,13 @@ export class CacheManagerService {
 
     // localStorage size
     let localStorageSize = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('hnews_')) {
-        const value = localStorage.getItem(key) || '';
-        localStorageSize += key.length + value.length;
+    if (typeof window !== 'undefined') {
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (key?.startsWith('hnews_')) {
+          const value = window.localStorage.getItem(key) || '';
+          localStorageSize += key.length + value.length;
+        }
       }
     }
     sizes.set('localstorage', localStorageSize);
@@ -490,7 +506,10 @@ export class CacheManagerService {
   // Offline support
 
   isOffline(): boolean {
-    return !navigator.onLine;
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return !window.navigator.onLine;
   }
 
   async getOfflineData(): Promise<{
@@ -516,9 +535,9 @@ export class CacheManagerService {
     this.clearMemoryCache();
     await this.indexedDB.clearAll();
     this.legacyCache.clear();
-    if ('caches' in window) {
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map((name) => caches.delete(name)));
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      const cacheNames = await window.caches.keys();
+      await Promise.all(cacheNames.map((name) => window.caches.delete(name)));
     }
   }
 
@@ -555,8 +574,14 @@ export class CacheManagerService {
     let itemCount = 0;
 
     // Get IndexedDB stats
-    if ('navigator' in window && 'storage' in navigator && 'estimate' in navigator.storage) {
-      const estimate = await navigator.storage.estimate();
+    if (
+      typeof window !== 'undefined' &&
+      'navigator' in window &&
+      'storage' in window.navigator &&
+      window.navigator.storage &&
+      'estimate' in window.navigator.storage
+    ) {
+      const estimate = await window.navigator.storage.estimate();
       indexedDBSize = estimate.usage || 0;
     }
 
@@ -568,10 +593,10 @@ export class CacheManagerService {
     }
 
     // Get Service Worker cache size (estimate)
-    if ('caches' in window) {
-      const cacheNames = await caches.keys();
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      const cacheNames = await window.caches.keys();
       for (const name of cacheNames) {
-        const cache = await caches.open(name);
+        const cache = await window.caches.open(name);
         const keys = await cache.keys();
         // Rough approximation: assume ~10KB per cached item
         swCacheSize += keys.length * 10000;

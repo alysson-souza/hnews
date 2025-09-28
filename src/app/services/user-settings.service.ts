@@ -23,7 +23,11 @@ export class UserSettingsService {
 
   private load(): UserSettings {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      if (typeof window === 'undefined') {
+        return structuredClone(this.defaults);
+      }
+
+      const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return structuredClone(this.defaults);
       const parsed = JSON.parse(raw) as Partial<UserSettings>;
       return this.mergeSettings(structuredClone(this.defaults), parsed);
@@ -33,8 +37,11 @@ export class UserSettingsService {
   }
 
   private save(value: UserSettings): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
     } catch {
       // ignore storage errors
     }

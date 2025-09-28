@@ -183,9 +183,11 @@ export class StoryItem {
 
   constructor() {
     // Load voted items from localStorage
-    const stored = localStorage.getItem('votedItems');
-    if (stored) {
-      this.votedItems.set(new Set(JSON.parse(stored)));
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('votedItems');
+      if (stored) {
+        this.votedItems.set(new Set(JSON.parse(stored)));
+      }
     }
   }
 
@@ -212,7 +214,9 @@ export class StoryItem {
     newVoted.add(this.story.id);
     this.votedItems.set(newVoted);
 
-    localStorage.setItem('votedItems', JSON.stringify(Array.from(newVoted)));
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('votedItems', JSON.stringify(Array.from(newVoted)));
+    }
   }
 
   isTextPost(): boolean {
@@ -249,7 +253,10 @@ export class StoryItem {
   actionsMenuLeft = 0;
 
   canUseWebShare = computed(() => {
-    return 'share' in navigator && typeof navigator.share === 'function';
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return 'share' in window.navigator && typeof window.navigator.share === 'function';
   });
 
   openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
@@ -290,7 +297,11 @@ export class StoryItem {
     // Close menu when clicking outside
     if (this.showActionsMenu) {
       // Position the menu using viewport coordinates to avoid clipping
-      setTimeout(() => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      window.setTimeout(() => {
         const btn = this.actionsBtn?.nativeElement;
         const menu = this.actionsMenu?.nativeElement;
         if (!btn) return;
@@ -307,14 +318,18 @@ export class StoryItem {
         this.actionsMenuTop = Math.max(viewportPadding, Math.min(maxTop, desiredTop));
       }, 0);
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         const closeMenu = (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.story-actions-container')) {
             this.showActionsMenu = false;
-            document.removeEventListener('click', closeMenu);
+            if (typeof window !== 'undefined') {
+              window.document.removeEventListener('click', closeMenu);
+            }
           }
         };
-        document.addEventListener('click', closeMenu);
+        if (typeof window !== 'undefined') {
+          window.document.addEventListener('click', closeMenu);
+        }
       }, 0);
     }
   }
@@ -329,9 +344,9 @@ export class StoryItem {
     };
 
     // Try Web Share API first
-    if (navigator.share && this.canShare(shareData)) {
+    if (typeof window !== 'undefined' && window.navigator.share && this.canShare(shareData)) {
       try {
-        await navigator.share(shareData);
+        await window.navigator.share(shareData);
         this.showActionsMenu = false;
         return;
       } catch (err) {
@@ -343,12 +358,17 @@ export class StoryItem {
     }
 
     // Fallback to clipboard
-    navigator.clipboard
+    if (typeof window === 'undefined' || !window.navigator.clipboard) {
+      console.error('Clipboard API not available');
+      return;
+    }
+
+    window.navigator.clipboard
       .writeText(url)
       .then(() => {
         this.copiedStory = true;
         this.copiedComments = false;
-        setTimeout(() => {
+        window.setTimeout(() => {
           this.copiedStory = false;
           this.showActionsMenu = false;
         }, 1500);
@@ -361,6 +381,10 @@ export class StoryItem {
   async shareComments(): Promise<void> {
     if (!this.story) return;
 
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const url = `${window.location.origin}/item/${this.story.id}`;
     const shareData = {
       title: `${this.story.title} - Comments`,
@@ -369,9 +393,9 @@ export class StoryItem {
     };
 
     // Try Web Share API first
-    if (navigator.share && this.canShare(shareData)) {
+    if (window.navigator.share && this.canShare(shareData)) {
       try {
-        await navigator.share(shareData);
+        await window.navigator.share(shareData);
         this.showActionsMenu = false;
         return;
       } catch (err) {
@@ -383,12 +407,17 @@ export class StoryItem {
     }
 
     // Fallback to clipboard
-    navigator.clipboard
+    if (!window.navigator.clipboard) {
+      console.error('Clipboard API not available');
+      return;
+    }
+
+    window.navigator.clipboard
       .writeText(url)
       .then(() => {
         this.copiedComments = true;
         this.copiedStory = false;
-        setTimeout(() => {
+        window.setTimeout(() => {
           this.copiedComments = false;
           this.showActionsMenu = false;
         }, 1500);
@@ -415,7 +444,11 @@ export class StoryItem {
   }
 
   private canShare(data: ShareData): boolean {
-    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const nav = window.navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (typeof nav.canShare === 'function') {
       return nav.canShare(data);
     }

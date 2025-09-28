@@ -29,8 +29,8 @@ npm run watch        # Watch mode build
 npm run build        # Build (development)
 npm run build:prod   # Build (production)
 npm test             # Unit tests (Karma + Jasmine)
-npm run lint         # ESLint
-npm run lint:fix     # ESLint with autofix
+npm run lint         # ESLint (fails on warnings)
+npm run lint:fix     # ESLint with autofix (fails on warnings)
 npm run format       # Prettier write
 npm run format:check # Prettier check only
 npm run deploy       # Deploy to GitHub Pages (gh-pages)

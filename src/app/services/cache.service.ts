@@ -26,6 +26,12 @@ export class CacheService {
   }
 
   set<T>(key: string, data: T, ttl?: number): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storage = window.localStorage;
+
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
@@ -33,7 +39,7 @@ export class CacheService {
     };
 
     try {
-      localStorage.setItem(this.STORAGE_PREFIX + key, JSON.stringify(entry));
+      storage.setItem(this.STORAGE_PREFIX + key, JSON.stringify(entry));
     } catch (e) {
       console.warn('Cache storage failed:', e);
       this.cleanupOldEntries();
@@ -41,15 +47,21 @@ export class CacheService {
   }
 
   get<T>(key: string): T | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const storage = window.localStorage;
+
     try {
-      const item = localStorage.getItem(this.STORAGE_PREFIX + key);
+      const item = storage.getItem(this.STORAGE_PREFIX + key);
       if (!item) return null;
 
       const entry: CacheEntry<T> = JSON.parse(item);
       const now = Date.now();
 
       if (now - entry.timestamp > entry.ttl) {
-        localStorage.removeItem(this.STORAGE_PREFIX + key);
+        storage.removeItem(this.STORAGE_PREFIX + key);
         return null;
       }
 
@@ -61,32 +73,44 @@ export class CacheService {
   }
 
   clear(pattern?: string): void {
-    const keys = Object.keys(localStorage);
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storage = window.localStorage;
+
+    const keys = Object.keys(storage);
     keys.forEach((key) => {
       if (key.startsWith(this.STORAGE_PREFIX)) {
         if (!pattern || key.includes(pattern)) {
-          localStorage.removeItem(key);
+          storage.removeItem(key);
         }
       }
     });
   }
 
   private cleanupOldEntries(): void {
-    const keys = Object.keys(localStorage);
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storage = window.localStorage;
+
+    const keys = Object.keys(storage);
     const now = Date.now();
 
     keys.forEach((key) => {
       if (key.startsWith(this.STORAGE_PREFIX)) {
         try {
-          const item = localStorage.getItem(key);
+          const item = storage.getItem(key);
           if (item) {
             const entry: CacheEntry<unknown> = JSON.parse(item);
             if (now - entry.timestamp > entry.ttl) {
-              localStorage.removeItem(key);
+              storage.removeItem(key);
             }
           }
         } catch {
-          localStorage.removeItem(key);
+          storage.removeItem(key);
         }
       }
     });

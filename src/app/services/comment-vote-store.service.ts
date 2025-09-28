@@ -6,10 +6,10 @@ export const COMMENT_VOTE_STORAGE = new InjectionToken<Storage | null>('COMMENT_
   providedIn: 'root',
   factory: () => {
     try {
-      if (typeof localStorage === 'undefined') {
+      if (typeof window === 'undefined') {
         return null;
       }
-      return localStorage;
+      return window.localStorage;
     } catch {
       return null;
     }

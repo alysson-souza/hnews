@@ -21,24 +21,12 @@
     "test:coverage:watch": "ng test --code-coverage",
     "pretest:coverage:watch": "node ./scripts/clean-test-output.mjs && npm run generate:version",
     "predeploy": "npm run build:prod",
-    "lint": "ng lint",
-    "lint:fix": "ng lint --fix",
+    "lint": "ng lint --max-warnings=0",
+    "lint:fix": "ng lint --fix --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
     "generate:version": "node ./scripts/generate-version.mjs"
-  },
-  "prettier": {
-    "printWidth": 100,
-    "singleQuote": true,
-    "overrides": [
-      {
-        "files": "*.html",
-        "options": {
-          "parser": "angular"
-        }
-      }
-    ]
   },
   "private": true,
   "engines": {
@@ -79,7 +67,9 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.2.1",
     "husky": "^9.1.7",
+    "globals": "^15.12.0",
     "jasmine-core": "^5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

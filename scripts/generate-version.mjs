@@ -12,7 +12,7 @@ function resolveSha(command) {
     return execSync(command, { stdio: ['ignore', 'pipe', 'ignore'] })
       .toString()
       .trim();
-  } catch (error) {
+  } catch {
     return 'unknown';
   }
 }

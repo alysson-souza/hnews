@@ -6,13 +6,15 @@ import { Injectable, signal } from '@angular/core';
   providedIn: 'root',
 })
 export class DeviceService {
-  private userAgent = signal(navigator.userAgent);
-  private windowWidth = signal(window.innerWidth);
+  private userAgent = signal(typeof window !== 'undefined' ? window.navigator.userAgent : '');
+  private windowWidth = signal(typeof window !== 'undefined' ? window.innerWidth : 0);
 
   constructor() {
-    window.addEventListener('resize', () => {
-      this.windowWidth.set(window.innerWidth);
-    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', () => {
+        this.windowWidth.set(window.innerWidth);
+      });
+    }
   }
 
   isMobile(): boolean {

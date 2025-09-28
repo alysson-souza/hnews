@@ -28,9 +28,7 @@ class MockStateService {
     return null;
   }
   // Intentionally no-op in tests
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   saveState() {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   clearState() {}
 }
 
