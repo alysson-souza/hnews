@@ -1,13 +1,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SidebarService {
+  private router = inject(Router);
+
   isOpen = signal(false);
   currentItemId = signal<number | null>(null);
+
+  constructor() {
+    // Close sidebar on route changes
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+      if (this.isOpen()) {
+        this.closeSidebar();
+      }
+    });
+  }
 
   openSidebar(itemId: number): void {
     this.currentItemId.set(itemId);
