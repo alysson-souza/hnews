@@ -9,16 +9,13 @@ import {
   HostListener,
   ViewChild,
 } from '@angular/core';
-import { RouterOutlet, RouterLink, Router } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-comments.component';
 import { ScrollToTopComponent } from './components/shared/scroll-to-top/scroll-to-top.component';
-import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
 import { KeyboardShortcutsComponent } from './components/keyboard-shortcuts/keyboard-shortcuts.component';
-import { NavLinkComponent } from './components/shared/nav-link/nav-link.component';
 import { CacheManagerService } from './services/cache-manager.service';
 import { ThemeService } from './services/theme.service';
 import { SidebarService } from './services/sidebar.service';
@@ -27,6 +24,7 @@ import { NavigationHistoryService } from './services/navigation-history.service'
 import { StoryListStateService } from './services/story-list-state.service';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from './services/pwa-update.service';
+import { AppShellComponent } from './components/layout/app-shell/app-shell.component';
 
 @Component({
   selector: 'app-root',
@@ -34,13 +32,10 @@ import { PwaUpdateService } from './services/pwa-update.service';
   imports: [
     CommonModule,
     RouterOutlet,
-    RouterLink,
-    FormsModule,
     SidebarCommentsComponent,
     ScrollToTopComponent,
-    ThemeToggleComponent,
     KeyboardShortcutsComponent,
-    NavLinkComponent,
+    AppShellComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
