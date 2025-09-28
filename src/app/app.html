@@ -206,8 +206,39 @@
 <footer class="app-footer" role="contentinfo">
   <div class="container mx-auto px-4">
     <div class="text-center">
-      <p class="footer-text">HNews — Hacker News Reader</p>
-      <p class="footer-subtext">Built with Angular & Tailwind CSS | Data from Hacker News API</p>
+      <p class="footer-text">
+        HNews —
+        <a
+          href="https://news.ycombinator.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-link"
+          >Hacker News</a
+        >
+        Reader
+      </p>
+      <p class="footer-subtext">
+        Built with
+        <a href="https://angular.io" target="_blank" rel="noopener noreferrer" class="footer-link"
+          >Angular</a
+        >
+        &amp;
+        <a
+          href="https://tailwindcss.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-link"
+          >Tailwind CSS</a
+        >
+        | Data from the
+        <a
+          href="https://hn.algolia.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-link"
+          >HN Algolia API</a
+        >
+      </p>
       <p class="footer-subtext">
         Version
         @if (commitUrl) {
