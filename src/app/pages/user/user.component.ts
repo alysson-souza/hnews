@@ -3,7 +3,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNUser, HNItem } from '../../models/hn';
 import { forkJoin } from 'rxjs';
@@ -11,6 +11,8 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 import { CardComponent } from '../../components/shared/card/card.component';
 import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import { SearchResultComponent } from '../../components/search-result/search-result.component';
+import { ResultListComponent } from '../../components/result-list/result-list.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 
@@ -19,11 +21,12 @@ import { DeviceService } from '../../services/device.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     PageContainerComponent,
     CardComponent,
     UserTagComponent,
     AppButtonComponent,
+    SearchResultComponent,
+    ResultListComponent,
   ],
   template: `
     <app-page-container
@@ -66,7 +69,7 @@ import { DeviceService } from '../../services/device.service';
 
           <!-- About Section -->
           @if (user()!.about) {
-            <div class="mb-6">
+            <div>
               <h2 class="about-title">About</h2>
               <div class="about-prose" [innerHTML]="user()!.about"></div>
             </div>
@@ -74,87 +77,33 @@ import { DeviceService } from '../../services/device.service';
         </app-card>
 
         <!-- Recent Submissions -->
-        <app-card class="block">
-          <h2 class="subs-title">Recent Submissions</h2>
-
-          @if (loadingSubmissions()) {
-            <div class="animate-pulse space-y-2 sm:space-y-3">
+        @if (loadingSubmissions()) {
+          <app-result-list [showHeader]="true" [showLoadMore]="false">
+            <ng-container header> Recent Submissions </ng-container>
+            <div class="animate-pulse space-y-1 sm:space-y-2">
               <div class="skel-item"></div>
               <div class="skel-item"></div>
               <div class="skel-item"></div>
             </div>
-          } @else if (submissions().length > 0) {
-            <div class="space-y-1 sm:space-y-2">
-              @for (item of submissions(); track item.id) {
-                <div class="sub-item">
-                  @if (item.type === 'story') {
-                    <!-- Story -->
-                    <div>
-                      <h3 class="sub-title">
-                        @if (item.dead) {
-                          <a [routerLink]="['/item', item.id]" class="title-link dead-item">
-                            [flagged]
-                          </a>
-                        } @else if (item.url) {
-                          <a
-                            [href]="item.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="title-link"
-                          >
-                            {{ item.title || '[untitled]' }}
-                          </a>
-                        } @else {
-                          <a [routerLink]="['/item', item.id]" class="title-link">
-                            {{ item.title || '[untitled]' }}
-                          </a>
-                        }
-                      </h3>
-                      <div class="sub-meta">
-                        <span>{{ item.score || 0 }} points</span>
-                        <span>•</span>
-                        <span>{{ getTimeAgo(item.time) }}</span>
-                        <span>•</span>
-                        <a [routerLink]="['/item', item.id]" class="sub-meta-link">
-                          {{ item.descendants || 0 }} comments
-                        </a>
-                      </div>
-                    </div>
-                  } @else if (item.type === 'comment') {
-                    <!-- Comment -->
-                    <div>
-                      <div
-                        class="sub-comment prose prose-sm max-w-none mb-2 line-clamp-3"
-                        [innerHTML]="item.text"
-                      ></div>
-                      <div class="sub-meta">
-                        <span>{{ getTimeAgo(item.time) }}</span>
-                        <span>•</span>
-                        <a [routerLink]="['/item', item.parent]" class="sub-meta-link">
-                          View Context
-                        </a>
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-
-            @if (hasMore()) {
-              <app-button
-                (clicked)="loadMoreSubmissions()"
-                [disabled]="loadingMore()"
-                variant="primary"
-                size="sm"
-                [fullWidth]="true"
-              >
-                {{ loadingMore() ? 'Loading...' : 'Load More' }}
-              </app-button>
+          </app-result-list>
+        } @else if (submissions().length > 0) {
+          <app-result-list
+            [showHeader]="true"
+            [showLoadMore]="hasMore()"
+            [loadingMore]="loadingMore()"
+            (loadMore)="loadMoreSubmissions()"
+          >
+            <ng-container header> Recent Submissions </ng-container>
+            @for (item of submissions(); track item.id) {
+              <app-search-result [item]="item" [isSearchResult]="false"></app-search-result>
             }
-          } @else {
+          </app-result-list>
+        } @else {
+          <app-result-list [showHeader]="true" [showLoadMore]="false">
+            <ng-container header> Recent Submissions </ng-container>
             <p class="empty">No submissions yet</p>
-          }
-        </app-card>
+          </app-result-list>
+        }
       } @else if (error()) {
         <!-- Error State -->
         <div class="error-card">
@@ -213,30 +162,6 @@ import { DeviceService } from '../../services/device.service';
       /* About */
       .about-prose {
         @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200;
-      }
-
-      /* Submissions */
-      .sub-item {
-        @apply py-4 transition-all duration-200;
-        @apply hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded-xl;
-      }
-      .sub-title {
-        @apply font-medium text-gray-900 dark:text-gray-100 mb-1;
-      }
-      .title-link {
-        @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200;
-      }
-      .sub-meta {
-        @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
-      }
-      .sub-meta-link {
-        @apply text-blue-600 dark:text-blue-300 hover:underline transition-colors duration-200;
-      }
-      .sub-comment {
-        @apply text-gray-800 dark:text-gray-200;
-      }
-      .dead-item {
-        @apply text-gray-500 dark:text-gray-600 italic;
       }
 
       /* Empty */

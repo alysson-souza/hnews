@@ -3,7 +3,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { formatRelativeTime } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HackernewsService } from '../../services/hackernews.service';
 import { SearchOptions } from '../../models/search';
@@ -11,7 +11,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
-import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import { SearchResultComponent } from '../../components/search-result/search-result.component';
+import { ResultListComponent } from '../../components/result-list/result-list.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 
@@ -38,10 +39,10 @@ interface SearchHit {
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     PageContainerComponent,
     CardComponent,
-    AppButtonComponent,
+    SearchResultComponent,
+    ResultListComponent,
   ],
   template: `
     <app-page-container
@@ -119,11 +120,11 @@ interface SearchHit {
 
         <!-- Search Results -->
         @if (loading()) {
-          <app-card class="block" [noPadding]="true">
-            <div class="results-header">
+          <app-result-list [showHeader]="true" [showLoadMore]="false">
+            <ng-container header>
               <div class="skel-line-3 w-1/3"></div>
-            </div>
-            <div class="results-list animate-pulse px-4 pb-4 space-y-1 sm:space-y-2">
+            </ng-container>
+            <div class="animate-pulse space-y-1 sm:space-y-2">
               @for (row of [0, 1, 2, 3, 4, 5]; track row) {
                 <div class="result-row">
                   <div class="skel-title w-3/4 mb-2"></div>
@@ -132,97 +133,26 @@ interface SearchHit {
                 </div>
               }
             </div>
-          </app-card>
+          </app-result-list>
         } @else if (results().length > 0) {
-          <app-card class="block" [noPadding]="true">
-            <div class="results-header">
-              <p class="results-summary">
-                Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
-              </p>
-            </div>
-
-            <div class="results-list px-4 pb-4 space-y-1 sm:space-y-2">
-              @for (hit of results(); track hit.objectID) {
-                <div class="result-row">
-                  @if (hit.title) {
-                    <!-- Story Result -->
-                    <h3 class="result-title">
-                      @if (hit.url) {
-                        <a
-                          [href]="hit.url"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="title-link"
-                          [innerHTML]="getHighlightedText(hit, 'title')"
-                        >
-                        </a>
-                      } @else {
-                        <a
-                          [routerLink]="['/item', hit.objectID]"
-                          class="title-link"
-                          [innerHTML]="getHighlightedText(hit, 'title')"
-                        >
-                        </a>
-                      }
-                    </h3>
-
-                    @if (hit.story_text) {
-                      <div
-                        class="item-prose prose prose-sm max-w-none dark:prose-invert result-snippet line-clamp-2"
-                        [innerHTML]="getHighlightedText(hit, 'story_text')"
-                      ></div>
-                    }
-                  } @else if (hit.comment_text) {
-                    <!-- Comment Result -->
-                    <div
-                      class="result-comment comment-body prose prose-sm max-w-none dark:prose-invert line-clamp-3"
-                      [innerHTML]="getHighlightedText(hit, 'comment_text')"
-                    ></div>
-                  }
-
-                  <!-- Metadata -->
-                  <div class="result-meta">
-                    <span>{{ hit.points || 0 }} points</span>
-                    <span>•</span>
-                    <span
-                      >by
-                      <a [routerLink]="['/user', hit.author]" class="result-meta-link">
-                        {{ hit.author }}
-                      </a>
-                    </span>
-                    <span>•</span>
-                    <span>{{ getTimeAgo(hit.created_at) }}</span>
-                    <span>•</span>
-                    <a [routerLink]="['/item', hit.objectID]" class="result-meta-link">
-                      {{ hit.num_comments || 0 }} comments
-                    </a>
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- Pagination -->
-            @if (hasMore()) {
-              <div class="pagination-bar px-4">
-                <app-button
-                  (clicked)="loadMore()"
-                  [disabled]="loadingMore()"
-                  variant="primary"
-                  size="sm"
-                  [fullWidth]="true"
-                >
-                  {{ loadingMore() ? 'Loading...' : 'Load More' }}
-                </app-button>
-              </div>
+          <app-result-list
+            [showHeader]="true"
+            [showLoadMore]="hasMore()"
+            [loadingMore]="loadingMore()"
+            (loadMore)="loadMore()"
+          >
+            <ng-container header>
+              Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
+            </ng-container>
+            @for (hit of results(); track hit.objectID) {
+              <app-search-result [item]="hit" [isSearchResult]="true"></app-search-result>
             }
-          </app-card>
+          </app-result-list>
         } @else if (searchQuery && !loading()) {
-          <app-card class="block" [noPadding]="true">
-            <div class="results-header">
-              <p class="results-summary">
-                No results for <strong>"{{ searchQuery }}"</strong>
-              </p>
-            </div>
+          <app-result-list [showHeader]="true" [showLoadMore]="false">
+            <ng-container header>
+              No results for <strong>"{{ searchQuery }}"</strong>
+            </ng-container>
             <div class="p-6 text-center">
               <svg
                 class="w-16 h-16 text-gray-400 mx-auto mb-4"
@@ -239,12 +169,10 @@ interface SearchHit {
               </svg>
               <p class="empty-main">Try adjusting your search terms or filters</p>
             </div>
-          </app-card>
+          </app-result-list>
         } @else {
-          <app-card class="block" [noPadding]="true">
-            <div class="results-header">
-              <p class="results-summary">Search Hacker News</p>
-            </div>
+          <app-result-list [showHeader]="true" [showLoadMore]="false">
+            <ng-container header> Search Hacker News </ng-container>
             <div class="p-6 text-center">
               <svg
                 class="w-16 h-16 text-gray-400 mx-auto mb-4"
@@ -262,7 +190,7 @@ interface SearchHit {
               <p class="empty-main">Enter a search term to get started</p>
               <p class="empty-sub mt-2">Search across all Hacker News stories and comments</p>
             </div>
-          </app-card>
+          </app-result-list>
         }
       </div>
     </app-page-container>
@@ -304,51 +232,6 @@ interface SearchHit {
       }
       .skel-meta {
         @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
-      }
-
-      .results-header {
-        @apply px-4 py-2;
-      }
-      .results-summary {
-        @apply text-sm text-gray-600 dark:text-gray-300;
-      }
-      .result-row {
-        @apply py-4 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl;
-      }
-      .result-title {
-        @apply font-medium text-gray-900 dark:text-gray-100 mb-1;
-      }
-      .title-link {
-        @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200;
-      }
-
-      /* Search highlighting styles */
-      .title-link em,
-      .result-snippet em,
-      .result-comment em {
-        @apply font-semibold not-italic bg-yellow-200 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 px-1 rounded;
-      }
-
-      .title-link:hover em,
-      .result-snippet:hover em,
-      .result-comment:hover em {
-        @apply bg-yellow-300 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-50;
-      }
-      .result-snippet {
-        @apply text-sm text-gray-600 dark:text-gray-300 mb-2;
-      }
-      .result-comment {
-        @apply text-gray-800 dark:text-gray-200 mb-2;
-      }
-      .result-meta {
-        @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
-      }
-      .result-meta-link {
-        @apply text-blue-600 dark:text-blue-300 hover:underline transition-colors duration-200;
-      }
-
-      .pagination-bar {
-        @apply p-4 border-t border-gray-200 dark:border-gray-700;
       }
 
       .empty-main {
