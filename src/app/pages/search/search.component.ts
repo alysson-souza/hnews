@@ -11,6 +11,9 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
+import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import { SidebarService } from '../../services/sidebar.service';
+import { DeviceService } from '../../services/device.service';
 
 interface HighlightField {
   value: string;
@@ -32,12 +35,22 @@ interface SearchHit {
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PageContainerComponent, CardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    PageContainerComponent,
+    CardComponent,
+    AppButtonComponent,
+  ],
   template: `
-    <app-page-container variant="narrow">
-      <div class="space-y-6">
+    <app-page-container
+      [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
+      class="transition-all duration-300"
+    >
+      <div class="space-y-2 sm:space-y-3">
         <!-- Search Header -->
-        <app-card class="mb-6">
+        <app-card class="mb-2 sm:mb-3">
           <h1 class="search-title">Search Hacker News</h1>
 
           <!-- Search Input -->
@@ -110,7 +123,7 @@ interface SearchHit {
             <div class="results-header">
               <div class="skel-line-3 w-1/3"></div>
             </div>
-            <div class="results-list animate-pulse px-4 pb-4">
+            <div class="results-list animate-pulse px-4 pb-4 space-y-1 sm:space-y-2">
               @for (row of [0, 1, 2, 3, 4, 5]; track row) {
                 <div class="result-row">
                   <div class="skel-title w-3/4 mb-2"></div>
@@ -128,7 +141,7 @@ interface SearchHit {
               </p>
             </div>
 
-            <div class="results-list px-4 pb-4">
+            <div class="results-list px-4 pb-4 space-y-1 sm:space-y-2">
               @for (hit of results(); track hit.objectID) {
                 <div class="result-row">
                   @if (hit.title) {
@@ -191,9 +204,15 @@ interface SearchHit {
             <!-- Pagination -->
             @if (hasMore()) {
               <div class="pagination-bar px-4">
-                <button (click)="loadMore()" [disabled]="loadingMore()" class="pagination-btn">
+                <app-button
+                  (clicked)="loadMore()"
+                  [disabled]="loadingMore()"
+                  variant="primary"
+                  size="sm"
+                  [fullWidth]="true"
+                >
                   {{ loadingMore() ? 'Loading...' : 'Load More' }}
-                </button>
+                </app-button>
               </div>
             }
           </app-card>
@@ -256,7 +275,7 @@ interface SearchHit {
         @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4;
       }
       .search-input {
-        @apply w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg;
+        @apply w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200;
       }
       .search-icon {
         @apply absolute right-4 top-3.5 w-6 h-6 text-gray-400 dark:text-gray-500;
@@ -270,42 +289,52 @@ interface SearchHit {
         @apply w-full sm:w-auto;
       }
       .select {
-        @apply px-3 py-2 rounded border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500;
+        @apply px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200;
       }
 
       .skel-line-4 {
-        @apply h-4 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
       .skel-line-3 {
-        @apply h-3 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
       .skel-title {
-        @apply h-4 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
       .skel-snippet {
-        @apply h-3 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
       .skel-meta {
-        @apply h-3 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
 
       .results-header {
-        @apply px-4 py-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 rounded-t-lg;
+        @apply px-4 py-2;
       }
       .results-summary {
-        @apply text-sm text-gray-600 dark:text-gray-400;
-      }
-      .results-list {
-        @apply divide-y divide-gray-200 dark:divide-slate-800;
+        @apply text-sm text-gray-600 dark:text-gray-300;
       }
       .result-row {
-        @apply p-4 hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors;
+        @apply py-4 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl;
       }
       .result-title {
         @apply font-medium text-gray-900 dark:text-gray-100 mb-1;
       }
       .title-link {
-        @apply hover:text-blue-600 dark:hover:text-blue-400;
+        @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200;
+      }
+
+      /* Search highlighting styles */
+      .title-link em,
+      .result-snippet em,
+      .result-comment em {
+        @apply font-semibold not-italic bg-yellow-200 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 px-1 rounded;
+      }
+
+      .title-link:hover em,
+      .result-snippet:hover em,
+      .result-comment:hover em {
+        @apply bg-yellow-300 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-50;
       }
       .result-snippet {
         @apply text-sm text-gray-600 dark:text-gray-300 mb-2;
@@ -317,14 +346,11 @@ interface SearchHit {
         @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
       }
       .result-meta-link {
-        @apply text-blue-600 dark:text-blue-300 hover:underline;
+        @apply text-blue-600 dark:text-blue-300 hover:underline transition-colors duration-200;
       }
 
       .pagination-bar {
-        @apply p-4 border-t border-gray-200 dark:border-slate-700;
-      }
-      .pagination-btn {
-        @apply w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50;
+        @apply p-4 border-t border-gray-200 dark:border-gray-700;
       }
 
       .empty-main {
@@ -340,6 +366,8 @@ export class SearchComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private hnService = inject(HackernewsService);
+  sidebarService = inject(SidebarService);
+  deviceService = inject(DeviceService);
 
   searchQuery = '';
   searchType = 'all';

@@ -59,8 +59,8 @@
 /* Override the dark variant to use class selector */
 @variant dark (&:where(.dark, .dark *));
 
-/* Dark mode transitions */
-* {
+/* Dark mode transitions - excluding search highlights */
+*:not(em) {
   @apply transition-colors duration-200;
 }
 
