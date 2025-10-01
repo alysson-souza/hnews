@@ -26,11 +26,11 @@ import { CommonModule } from '@angular/common';
       @reference '../../../../styles.css';
 
       button {
-        @apply relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500;
+        @apply relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400;
       }
 
       button:not(.enabled) {
-        @apply bg-gray-200 dark:bg-slate-700;
+        @apply bg-gray-200 dark:bg-gray-600;
       }
 
       button.enabled {
@@ -42,7 +42,7 @@ import { CommonModule } from '@angular/common';
       }
 
       .slider {
-        @apply pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white dark:bg-slate-200 shadow transform transition ease-in-out duration-200;
+        @apply pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow-md transform transition ease-in-out duration-200 dark:bg-gray-100;
       }
 
       .slider.translate-x-5 {

@@ -72,26 +72,30 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
       }
 
       .section-subtitle {
-        @apply text-lg font-semibold text-gray-900 dark:text-gray-100;
+        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4;
       }
 
       .theme-options {
-        @apply space-y-3;
+        @apply space-y-2;
       }
 
       .theme-option {
-        @apply flex items-center gap-3 cursor-pointer;
+        @apply flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200;
+        @apply hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
-      .theme-radio {
-        @apply w-4 h-4 text-blue-600 focus:ring-blue-500;
+      .app-radio {
+        @apply w-4 h-4 text-blue-600 focus:ring-blue-500 focus:ring-2 dark:focus:ring-blue-400;
+        @apply dark:text-blue-500 dark:accent-blue-500;
       }
 
       .theme-label {
-        @apply text-gray-700 dark:text-gray-300;
+        @apply text-gray-700 dark:text-gray-300 flex items-center gap-2;
       }
 
-      /* Removed redundant status block */
+      .theme-label fa-icon {
+        @apply text-gray-500 dark:text-gray-400;
+      }
     `,
   ],
 })

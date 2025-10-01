@@ -21,14 +21,14 @@ import { CommonModule } from '@angular/common';
       }
 
       .card-base {
-        @apply bg-white dark:bg-slate-900;
-        @apply border border-gray-200 dark:border-slate-700;
-        @apply rounded-lg shadow-sm dark:shadow-md;
+        @apply bg-white dark:bg-gray-800;
+        @apply border border-gray-200 dark:border-gray-700;
+        @apply rounded-xl shadow-sm;
       }
 
       .card-hoverable {
-        @apply hover:shadow-md dark:hover:shadow-lg;
-        @apply transition-shadow duration-200;
+        @apply hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700;
+        @apply transition-all duration-200;
       }
 
       .card-clickable {

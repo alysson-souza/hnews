@@ -24,33 +24,33 @@ import { CommonModule } from '@angular/common';
       @reference '../../../../styles.css';
 
       .btn-base {
-        @apply font-medium rounded transition-all duration-200 cursor-pointer;
+        @apply font-medium rounded-lg transition-all duration-200 cursor-pointer;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
-        @apply dark:focus-visible:ring-offset-gray-900;
+        @apply dark:focus-visible:ring-offset-gray-800;
       }
 
       .btn-primary {
-        @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white;
-        @apply hover:from-blue-700 hover:to-blue-800;
+        @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm;
+        @apply hover:from-blue-700 hover:to-blue-800 hover:shadow-md;
         @apply dark:from-blue-500 dark:to-blue-600;
         @apply dark:hover:from-blue-600 dark:hover:to-blue-700;
         @apply focus-visible:ring-blue-500;
       }
 
       .btn-secondary {
-        @apply bg-gray-200 text-gray-800;
-        @apply hover:bg-gray-300;
-        @apply dark:bg-slate-700 dark:text-gray-200;
-        @apply dark:hover:bg-slate-600;
+        @apply bg-gray-100 text-gray-800 border border-gray-300 shadow-sm;
+        @apply hover:bg-gray-200 hover:shadow-md;
+        @apply dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600;
+        @apply dark:hover:bg-gray-600;
         @apply focus-visible:ring-gray-500;
       }
 
       .btn-danger {
-        @apply bg-red-800 text-white;
-        @apply hover:bg-red-900;
-        @apply dark:bg-red-900 dark:text-white;
-        @apply dark:hover:bg-red-800;
-        @apply focus-visible:ring-red-700;
+        @apply bg-red-600 text-white shadow-sm;
+        @apply hover:bg-red-700 hover:shadow-md;
+        @apply dark:bg-red-700 dark:text-white;
+        @apply dark:hover:bg-red-600;
+        @apply focus-visible:ring-red-500;
       }
 
       .btn-sm {

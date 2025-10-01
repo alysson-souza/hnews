@@ -8,6 +8,8 @@ import { UserTagsService, UserTag } from '../../services/user-tags.service';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { ThemeService } from '../../services/theme.service';
 import { UserSettingsService } from '../../services/user-settings.service';
+import { SidebarService } from '../../services/sidebar.service';
+import { DeviceService } from '../../services/device.service';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
@@ -48,8 +50,11 @@ import {
     FontAwesomeModule,
   ],
   template: `
-    <app-page-container variant="narrow">
-      <div class="space-y-6">
+    <app-page-container
+      [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
+      class="transition-all duration-300"
+    >
+      <div class="space-y-2 sm:space-y-3">
         <!-- Theme Settings Section -->
         <app-card class="block setting-section" role="region" aria-label="Theme Settings">
           <div class="section-header">
@@ -324,11 +329,6 @@ import {
     `
       @reference '../../../styles.css';
 
-      /* Page Header */
-      .page-header {
-        @apply text-center py-8 border-b border-gray-200 dark:border-slate-700 mb-8;
-      }
-
       /* Section Styling */
       .setting-section {
         @apply relative overflow-hidden;
@@ -343,15 +343,15 @@ import {
       }
 
       .section-icon {
-        @apply text-lg text-gray-600 dark:text-gray-400 flex-shrink-0;
+        @apply text-lg text-gray-500 dark:text-gray-400 flex-shrink-0;
       }
 
       /* Alert Messages */
       .alert-success {
-        @apply p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 mb-6;
+        @apply p-4 rounded-lg bg-green-50 dark:bg-green-950/50 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800/50 mb-6;
       }
       .alert-danger {
-        @apply p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800 mb-6;
+        @apply p-4 rounded-lg bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/50 mb-6;
       }
 
       /* Modern Toggle Switch */
@@ -360,8 +360,8 @@ import {
       }
 
       .modern-toggle-container {
-        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-slate-700 hover:shadow-md transition-all duration-200;
-        @apply bg-white dark:bg-slate-900;
+        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-all duration-200;
+        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
       .setting-info {
@@ -394,8 +394,8 @@ import {
       }
 
       .tag-item-modern {
-        @apply flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-slate-700 transition-all duration-200;
-        @apply bg-white dark:bg-slate-900;
+        @apply flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
+        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
       .tag-content {
@@ -432,12 +432,12 @@ import {
 
       .tag-remove-modern {
         @apply flex items-center justify-center w-10 h-10 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
-        @apply bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer;
+        @apply bg-red-50 dark:bg-red-950/50 hover:bg-red-100 dark:hover:bg-red-900/50 cursor-pointer;
       }
 
       /* Empty State */
       .empty-state {
-        @apply text-center py-6 space-y-4;
+        @apply text-center py-8 space-y-4;
       }
 
       .empty-icon {
@@ -475,8 +475,8 @@ import {
       }
 
       .stat-card-modern {
-        @apply flex items-center gap-4 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200;
-        @apply bg-white dark:bg-slate-900;
+        @apply flex items-center gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200;
+        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
       .stat-icon {
@@ -512,7 +512,7 @@ import {
       }
 
       .cache-actions-section {
-        @apply space-y-4 pt-6 border-t border-gray-200 dark:border-slate-700;
+        @apply space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700;
       }
 
       .cache-actions-header {
@@ -538,6 +538,8 @@ export class SettingsComponent implements OnInit {
   private cacheService = inject(CacheManagerService);
   themeService = inject(ThemeService);
   private userSettings = inject(UserSettingsService);
+  sidebarService = inject(SidebarService);
+  deviceService = inject(DeviceService);
 
   // FontAwesome icons
   faPalette = faPalette;
