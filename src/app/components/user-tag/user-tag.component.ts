@@ -115,17 +115,19 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
       }
 
       .username-link {
-        @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+        @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 rounded;
       }
 
       .tag-chip {
-        @apply px-1.5 py-0.5 text-xs text-white rounded cursor-pointer;
+        @apply px-1.5 py-0.5 text-xs text-white rounded-lg cursor-pointer transition-all duration-200;
+        @apply hover:shadow-md active:scale-95;
       }
 
       .add-btn {
-        @apply text-gray-400 hover:text-gray-600 text-xs cursor-pointer;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1;
+        @apply text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs cursor-pointer transition-colors duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 rounded px-1;
+        @apply hover:bg-gray-100 dark:hover:bg-gray-700 p-0.5 rounded;
       }
 
       .icon {
@@ -141,11 +143,13 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
       }
 
       .save-btn {
-        @apply text-green-600 hover:text-green-800 text-xs cursor-pointer;
+        @apply text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-xs cursor-pointer transition-colors duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 dark:focus-visible:ring-green-400 rounded p-0.5;
       }
 
       .remove-btn {
-        @apply text-red-600 hover:text-red-800 text-xs cursor-pointer;
+        @apply text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-xs cursor-pointer transition-colors duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:focus-visible:ring-red-400 rounded p-0.5;
       }
     `,
   ],

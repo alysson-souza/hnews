@@ -10,13 +10,26 @@ import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { UserTagComponent } from '../../components/user-tag/user-tag.component';
+import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import { SidebarService } from '../../services/sidebar.service';
+import { DeviceService } from '../../services/device.service';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageContainerComponent, CardComponent, UserTagComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    PageContainerComponent,
+    CardComponent,
+    UserTagComponent,
+    AppButtonComponent,
+  ],
   template: `
-    <app-page-container>
+    <app-page-container
+      [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
+      class="transition-all duration-300"
+    >
       @if (loading()) {
         <!-- Loading skeleton -->
         <div class="animate-pulse">
@@ -30,7 +43,7 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
         </div>
       } @else if (user()) {
         <!-- User Profile -->
-        <app-card class="block mb-6" id="user-profile">
+        <app-card class="block mb-2 sm:mb-3" id="user-profile">
           <h1 class="user-title">
             <app-user-tag [username]="user()!.id"></app-user-tag>
           </h1>
@@ -65,13 +78,13 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
           <h2 class="subs-title">Recent Submissions</h2>
 
           @if (loadingSubmissions()) {
-            <div class="animate-pulse space-y-4">
+            <div class="animate-pulse space-y-2 sm:space-y-3">
               <div class="skel-item"></div>
               <div class="skel-item"></div>
               <div class="skel-item"></div>
             </div>
           } @else if (submissions().length > 0) {
-            <div class="space-y-4">
+            <div class="space-y-1 sm:space-y-2">
               @for (item of submissions(); track item.id) {
                 <div class="sub-item">
                   @if (item.type === 'story') {
@@ -128,13 +141,15 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
             </div>
 
             @if (hasMore()) {
-              <button
-                (click)="loadMoreSubmissions()"
+              <app-button
+                (clicked)="loadMoreSubmissions()"
                 [disabled]="loadingMore()"
-                class="subs-load-btn"
+                variant="primary"
+                size="sm"
+                [fullWidth]="true"
               >
                 {{ loadingMore() ? 'Loading...' : 'Load More' }}
-              </button>
+              </app-button>
             }
           } @else {
             <p class="empty">No submissions yet</p>
@@ -144,7 +159,7 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
         <!-- Error State -->
         <div class="error-card">
           <p class="error-text">{{ error() }}</p>
-          <button (click)="loadUser()" class="error-btn">Try Again</button>
+          <app-button (clicked)="loadUser()" variant="danger" size="sm">Try Again</app-button>
         </div>
       }
     </app-page-container>
@@ -155,16 +170,16 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
       /* Skeleton */
       .skel-title {
-        @apply h-8 bg-gray-200 dark:bg-slate-800 rounded w-1/4;
+        @apply h-8 bg-gray-200 dark:bg-gray-700 rounded-xl w-1/4;
       }
       .skel-line {
-        @apply h-4 bg-gray-200 dark:bg-slate-800 rounded w-1/2;
+        @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-xl w-1/2;
       }
       .skel-block {
-        @apply h-20 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-20 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
       .skel-item {
-        @apply h-16 bg-gray-200 dark:bg-slate-800 rounded;
+        @apply h-16 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
 
       /* Titles */
@@ -185,13 +200,14 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
       /* Stats */
       .stat-box {
-        @apply rounded p-3 bg-gray-50 dark:bg-slate-900 border border-transparent dark:border-slate-800;
+        @apply rounded-xl p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all duration-200;
+        @apply hover:bg-gray-100 dark:hover:bg-gray-600;
       }
       .stat-label {
-        @apply text-sm text-gray-600 dark:text-gray-400;
+        @apply text-sm font-medium text-gray-600 dark:text-gray-300 mb-1;
       }
       .stat-value {
-        @apply text-xl font-semibold text-gray-900 dark:text-gray-100;
+        @apply text-xl font-bold text-gray-900 dark:text-gray-100;
       }
 
       /* About */
@@ -201,25 +217,23 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
       /* Submissions */
       .sub-item {
-        @apply border-b border-gray-200 dark:border-slate-800 pb-4 last:border-0;
+        @apply py-4 transition-all duration-200;
+        @apply hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded-xl;
       }
       .sub-title {
         @apply font-medium text-gray-900 dark:text-gray-100 mb-1;
       }
       .title-link {
-        @apply hover:text-blue-600 dark:hover:text-blue-400;
+        @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200;
       }
       .sub-meta {
         @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
       }
       .sub-meta-link {
-        @apply text-blue-600 dark:text-blue-300 hover:underline;
+        @apply text-blue-600 dark:text-blue-300 hover:underline transition-colors duration-200;
       }
       .sub-comment {
         @apply text-gray-800 dark:text-gray-200;
-      }
-      .subs-load-btn {
-        @apply mt-6 w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50;
       }
       .dead-item {
         @apply text-gray-500 dark:text-gray-600 italic;
@@ -232,13 +246,10 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 
       /* Error */
       .error-card {
-        @apply bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center;
+        @apply bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-xl p-6 text-center;
       }
       .error-text {
         @apply text-red-800 dark:text-red-300;
-      }
-      .error-btn {
-        @apply mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500;
       }
     `,
   ],
@@ -246,6 +257,8 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 export class UserComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private hnService = inject(HackernewsService);
+  sidebarService = inject(SidebarService);
+  deviceService = inject(DeviceService);
 
   user = signal<HNUser | null>(null);
   submissions = signal<HNItem[]>([]);
