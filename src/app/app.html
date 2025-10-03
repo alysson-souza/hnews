@@ -19,19 +19,13 @@
 
 <!-- PWA Update Indicator -->
 @if (updateAvailable()) {
-  <div
-    class="fixed top-32 left-1/2 -translate-x-1/2 z-50 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white px-6 py-3 rounded-full shadow-lg dark:shadow-gray-800/50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 font-medium text-sm animate-bounce flex items-center gap-3"
+  <button
     (click)="applyPwaUpdate()"
-    role="button"
+    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg dark:shadow-gray-800/50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 font-medium text-sm animate-bounce"
     aria-label="Apply app update"
-    tabindex="0"
-    (keydown.enter)="applyPwaUpdate()"
-    (keydown.space)="applyPwaUpdate()"
   >
-    <span>🔄</span>
-    <span>App update available</span>
-    <span class="text-xs opacity-75">(Press R to apply)</span>
-  </div>
+    Update available
+  </button>
 }
 
 <app-sidebar-comments></app-sidebar-comments>
