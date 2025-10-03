@@ -11,7 +11,7 @@
 
 ## Build, Test, and Development Commands
 
-- `npm start`: Run dev server at `http://localhost:4200`.
+- `npm start`: Run dev server at `http://localhost:4200`. You should assume it is already running.
 - `npm run build`: Development build (outputs to `dist/hnews`).
 - `npm run build:prod`: Production build; pass `--base-href` when needed (e.g., `-- --base-href=/hnews/`).
 - `npm test`: Single-run unit tests (Karma + Jasmine), exits cleanly (no coverage).
