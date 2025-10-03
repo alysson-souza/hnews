@@ -25,14 +25,14 @@ module.exports = function (config) {
       suppressAll: true, // removes the duplicated traces
     },
     browserConsoleLogOptions: {
-      level: 'log', // hide console.debug while keeping console.log/warn/error
+      level: 'warn', // only show console.warn/error, hide console.log/debug
     },
     coverageReporter: {
       dir: require('path').join(__dirname, './coverage/hnews'),
       subdir: '.',
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
     },
-    reporters: ['progress', 'kjhtml'],
+    reporters: ['dots', 'kjhtml'],
     browsers: ['ChromeHeadlessPlaywright'],
     customLaunchers: {
       ChromeHeadlessPlaywright: {
