@@ -9,6 +9,7 @@ import {
 } from '../../services/relative-time.util';
 import { HNItem } from '../../models/hn';
 import { UserTagComponent } from '../user-tag/user-tag.component';
+import { transformQuotesHtml } from '../comment-text/quote.transform';
 
 interface SearchHit {
   objectID: string;
@@ -223,7 +224,9 @@ export class SearchResultComponent {
 
     if (this.isSearchResult) {
       const searchHit = this.item as SearchHit;
-      return searchHit._highlightResult?.['story_text']?.value || searchHit.story_text || '';
+      const rawHtml =
+        searchHit._highlightResult?.['story_text']?.value || searchHit.story_text || '';
+      return transformQuotesHtml(rawHtml);
     }
 
     return (this.item as HNItem).text || '';
@@ -234,7 +237,9 @@ export class SearchResultComponent {
 
     if (this.isSearchResult) {
       const searchHit = this.item as SearchHit;
-      return searchHit._highlightResult?.['comment_text']?.value || searchHit.comment_text || '';
+      const rawHtml =
+        searchHit._highlightResult?.['comment_text']?.value || searchHit.comment_text || '';
+      return transformQuotesHtml(rawHtml);
     }
 
     return (this.item as HNItem).text || '';
