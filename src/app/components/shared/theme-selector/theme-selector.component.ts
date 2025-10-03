@@ -80,8 +80,8 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
       }
 
       .theme-option {
-        @apply flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200;
-        @apply hover:bg-gray-50 dark:hover:bg-gray-700;
+        @apply flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200;
+        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
       .app-radio {

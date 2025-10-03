@@ -536,7 +536,7 @@ import {
       }
 
       .stats-header {
-        @apply flex items-center justify-between mb-6;
+        @apply flex items-center justify-between mb-3;
       }
 
       .stats-title {
@@ -544,7 +544,7 @@ import {
       }
 
       .stats-grid {
-        @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+        @apply grid grid-cols-1 md:grid-cols-2 gap-3;
       }
 
       .stat-card-modern {
