@@ -116,37 +116,6 @@ import {
             <app-section-title>User Tags</app-section-title>
           </div>
 
-          <div class="tag-actions">
-            <div class="action-buttons justify-end">
-              <app-button
-                (clicked)="exportTags()"
-                variant="secondary"
-                size="sm"
-                ariaLabel="Export user tags"
-              >
-                <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
-                Export
-              </app-button>
-              <app-button
-                (clicked)="fileInput.click()"
-                variant="secondary"
-                size="sm"
-                ariaLabel="Import user tags"
-              >
-                <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
-                Import
-              </app-button>
-              <input
-                #fileInput
-                type="file"
-                accept=".json"
-                (change)="importTags($event)"
-                class="hidden"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-
           @if (message()) {
             <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
           }
@@ -261,6 +230,32 @@ import {
             <!-- Clear All Button - positioned consistently with other action buttons -->
             @if (tags().length > 0) {
               <div class="tag-action-buttons">
+                <app-button
+                  (clicked)="exportTags()"
+                  variant="secondary"
+                  size="sm"
+                  ariaLabel="Export user tags"
+                >
+                  <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
+                  Export
+                </app-button>
+                <app-button
+                  (clicked)="fileInput.click()"
+                  variant="secondary"
+                  size="sm"
+                  ariaLabel="Import user tags"
+                >
+                  <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
+                  Import
+                </app-button>
+                <input
+                  #fileInput
+                  type="file"
+                  accept=".json"
+                  (change)="importTags($event)"
+                  class="hidden"
+                  aria-hidden="true"
+                />
                 <app-button
                   (clicked)="clearAll()"
                   variant="danger"
@@ -446,10 +441,6 @@ import {
       }
 
       /* Tag Management */
-      .tag-actions {
-        @apply mb-6;
-      }
-
       .action-buttons {
         @apply flex flex-wrap items-center gap-3;
       }
@@ -536,7 +527,7 @@ import {
 
       /* Tag Action Buttons */
       .tag-action-buttons {
-        @apply flex justify-end pt-4;
+        @apply flex justify-end pt-4 gap-1;
       }
 
       /* Cache Management */

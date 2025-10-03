@@ -10,8 +10,8 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
   standalone: true,
   imports: [CommonModule, FontAwesomeModule],
   template: `
-    <div class="pagination-container">
-      <div class="pagination-info">
+    <nav class="pagination-container" role="navigation" aria-label="Pagination navigation">
+      <div class="pagination-info" role="status" aria-live="polite">
         <span class="text-sm text-gray-600 dark:text-gray-400">
           Showing {{ startItem }}-{{ endItem }} of {{ totalCount }} items
         </span>
@@ -19,22 +19,26 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
 
       <div class="pagination-controls">
         <button
+          type="button"
           (click)="previousPage()"
           [disabled]="currentPage <= 1"
+          [attr.aria-disabled]="currentPage <= 1"
           class="pagination-button"
-          [attr.aria-label]="'Previous page'"
+          aria-label="Previous page"
         >
-          <fa-icon [icon]="faChevronLeft"></fa-icon>
+          <fa-icon [icon]="faChevronLeft" aria-hidden="true"></fa-icon>
           Previous
         </button>
 
-        <div class="page-numbers">
+        <div class="page-numbers" role="group" aria-label="Page numbers">
           @for (page of visiblePages; track page) {
             <button
+              type="button"
               (click)="goToPage(page)"
               [class]="page === currentPage ? 'page-button active' : 'page-button'"
-              [attr.aria-label]="'Go to page ' + page"
+              [attr.aria-label]="'Page ' + page"
               [attr.aria-current]="page === currentPage ? 'page' : null"
+              [attr.aria-disabled]="page === currentPage"
             >
               {{ page }}
             </button>
@@ -42,26 +46,28 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
         </div>
 
         <button
+          type="button"
           (click)="nextPage()"
           [disabled]="currentPage >= totalPages"
+          [attr.aria-disabled]="currentPage >= totalPages"
           class="pagination-button"
-          [attr.aria-label]="'Next page'"
+          aria-label="Next page"
         >
           Next
-          <fa-icon [icon]="faChevronRight"></fa-icon>
+          <fa-icon [icon]="faChevronRight" aria-hidden="true"></fa-icon>
         </button>
       </div>
 
       <div class="items-per-page">
         <label for="items-per-page" class="text-sm text-gray-600 dark:text-gray-400">
-          Items per page:
+          Items per page
         </label>
         <select
           id="items-per-page"
           [value]="itemsPerPage"
           (change)="onItemsPerPageChange($event)"
           class="items-select"
-          aria-label="Items per page"
+          aria-label="Select number of items per page"
         >
           <option [value]="5">5</option>
           <option [value]="10">10</option>
@@ -69,7 +75,7 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
           <option [value]="50">50</option>
         </select>
       </div>
-    </div>
+    </nav>
   `,
   styles: [
     `
@@ -107,23 +113,31 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
       }
 
       .pagination-button {
-        @apply flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200;
+        @apply w-24 cursor-pointer;
+        @apply hover:bg-gray-50 dark:hover:bg-gray-600;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-700;
       }
 
       .page-numbers {
-        @apply flex items-center mx-1;
+        @apply flex items-center mx-1 gap-0.5;
       }
 
       .page-button {
-        @apply w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200;
+        @apply w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200;
+        @apply cursor-pointer;
+        @apply hover:bg-gray-50 dark:hover:bg-gray-600;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
       }
 
       .page-button.active {
-        @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700 focus:ring-blue-500;
+        @apply bg-blue-600 text-white border-blue-600 cursor-default;
+        @apply hover:bg-blue-700 focus:ring-blue-500;
       }
 
       .items-per-page {
-        @apply flex items-center order-3 mx-2;
+        @apply flex items-center order-3 mx-2 gap-2;
       }
 
       .items-select {

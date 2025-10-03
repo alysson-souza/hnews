@@ -46,10 +46,10 @@ import { CommonModule } from '@angular/common';
       }
 
       .btn-danger {
-        @apply bg-red-600 text-white shadow-sm;
-        @apply hover:bg-red-700 hover:shadow-md;
-        @apply dark:bg-red-700 dark:text-white;
-        @apply dark:hover:bg-red-600;
+        @apply bg-red-600 text-white border border-red-600 shadow-sm;
+        @apply hover:bg-red-700 hover:border-red-700 hover:shadow-md;
+        @apply dark:bg-red-700 dark:border-red-700 dark:text-white;
+        @apply dark:hover:bg-red-600 dark:hover:border-red-600;
         @apply focus-visible:ring-red-500;
       }
 
