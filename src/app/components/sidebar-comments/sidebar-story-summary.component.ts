@@ -70,10 +70,10 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         @apply text-xs text-gray-600 dark:text-gray-400;
       }
       .meta {
-        @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3;
+        @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
       }
       .actions {
-        @apply flex gap-3;
+        @apply flex gap-3 mt-3;
       }
       .open-link {
         @apply text-blue-600 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;

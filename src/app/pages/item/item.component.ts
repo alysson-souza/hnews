@@ -102,7 +102,7 @@ import { AppButtonComponent } from '../../components/shared/app-button/app-butto
         @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2;
       }
       .comments-title {
-        @apply text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-4;
       }
       .title-link {
         @apply hover:text-blue-600 dark:hover:text-blue-400;

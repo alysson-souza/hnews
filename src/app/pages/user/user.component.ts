@@ -133,18 +133,10 @@ import { DeviceService } from '../../services/device.service';
 
       /* Titles */
       .user-title {
-        @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4;
+        @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4;
       }
       .about-title {
-        @apply text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 md:mb-4;
-      }
-      .subs-title {
-        @apply text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-2 md:mb-4;
-      }
-
-      /* Improve Recent Submissions header contrast specifically in dark mode */
-      :host-context(.dark) .subs-title {
-        @apply text-white;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-4;
       }
 
       /* Stats */

@@ -49,11 +49,11 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
       }
 
       .results-header {
-        @apply px-4 py-2 border-b border-gray-200 dark:border-gray-700;
+        @apply px-6 py-2 border-b border-gray-200 dark:border-gray-700;
       }
 
       .results-summary {
-        @apply text-sm text-gray-600 dark:text-gray-300;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100;
       }
 
       .results-list {

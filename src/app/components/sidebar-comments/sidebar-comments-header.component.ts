@@ -33,7 +33,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
         @apply sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-3 sm:p-4 flex items-center justify-between shadow-sm dark:shadow-md;
       }
       .title {
-        @apply text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100;
+        @apply text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100;
       }
       .close-btn {
         @apply p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
