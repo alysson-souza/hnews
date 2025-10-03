@@ -8,6 +8,7 @@ import {
   ViewChild,
   ElementRef,
   ChangeDetectionStrategy,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -176,18 +177,27 @@ export class UserTagComponent {
 
   @ViewChild('tagInput') private tagInput?: ElementRef<HTMLInputElement>;
 
+  constructor() {
+    // Focus input when editing becomes true
+    effect(() => {
+      if (this.editing()) {
+        // Use queueMicrotask for more reliable timing after view update
+        queueMicrotask(() => {
+          const input = this.tagInput?.nativeElement;
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        });
+      }
+    });
+  }
+
   startEdit(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
     this.editing.set(true);
     this.editValue = this.tag()?.tag || '';
-
-    // Focus input after it renders
-    setTimeout(() => {
-      const input = this.tagInput?.nativeElement;
-      input?.focus();
-      input?.select();
-    }, 0);
   }
 
   saveTag(): void {
