@@ -30,6 +30,8 @@ interface SearchHit {
   created_at: string;
   story_text?: string;
   comment_text?: string;
+  story_id?: number;
+  parent_id?: number;
   _highlightResult?: HighlightResult;
 }
 

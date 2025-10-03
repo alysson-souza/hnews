@@ -20,6 +20,8 @@ interface SearchHit {
   created_at: string;
   story_text?: string;
   comment_text?: string;
+  story_id?: number;
+  parent_id?: number;
   _highlightResult?: Record<string, { value: string }>;
 }
 
@@ -269,7 +271,8 @@ export class SearchResultComponent {
     if (!this.item) return '';
 
     if (this.isSearchResult) {
-      return ''; // Search hits don't have parent info
+      const searchHit = this.item as SearchHit;
+      return String(searchHit.story_id || '');
     }
 
     return String((this.item as HNItem).parent || '');
