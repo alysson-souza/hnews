@@ -15,7 +15,7 @@ import { transformLinksToDomain } from './links.transform';
       @reference '../../../styles.css';
 
       .comment-body {
-        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200 mb-3 sm:mb-4 text-sm sm:text-base;
+        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200 text-sm sm:text-base;
       }
       .comment-body.dark {
         @apply prose-invert;
