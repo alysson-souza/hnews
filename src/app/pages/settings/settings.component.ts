@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
-import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { ThemeService } from '../../services/theme.service';
@@ -16,7 +16,11 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 import { ThemeSelectorComponent } from '../../components/shared/theme-selector/theme-selector.component';
 import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
 import { ToggleSwitchComponent } from '../../components/shared/toggle-switch/toggle-switch.component';
+import { PaginationComponent } from '../../components/shared/pagination/pagination.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   faPalette,
   faBook,
@@ -29,10 +33,10 @@ import {
   faChartBar,
   faRefresh,
   faUser,
-  faClock,
   faHardDrive,
   faMemory,
   faImages,
+  faSearch,
 } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -41,12 +45,14 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     AppButtonComponent,
     CardComponent,
     PageContainerComponent,
     ThemeSelectorComponent,
     SectionTitleComponent,
     ToggleSwitchComponent,
+    PaginationComponent,
     FontAwesomeModule,
   ],
   template: `
@@ -145,23 +151,56 @@ import {
             <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
           }
 
+          <!-- Search and Filter -->
+          <div class="tags-search-section">
+            <div class="search-container">
+              <div class="relative">
+                <input
+                  type="search"
+                  [ngModel]="searchQuery()"
+                  (ngModelChange)="onSearchChange($event)"
+                  placeholder="Search by username or tag..."
+                  aria-label="Search user tags"
+                  class="search-input"
+                />
+                <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
+                @if (searchQuery()) {
+                  <button (click)="clearSearch()" class="clear-search" aria-label="Clear search">
+                    <fa-icon [icon]="faTimes"></fa-icon>
+                  </button>
+                }
+              </div>
+              @if (searchQuery()) {
+                <div class="search-results-info">
+                  Found {{ paginatedTags().totalCount }}
+                  {{ paginatedTags().totalCount === 1 ? 'tag' : 'tags' }}
+                  @if (searchQuery()) {
+                    for "{{ searchQuery() }}"
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
           <!-- Tags Overview -->
           <div class="tags-overview">
-            @if (tags().length > 0) {
+            @if (paginatedTags().tags.length > 0) {
               <div class="tags-list">
-                @for (tag of tags(); track tag.username) {
+                @for (tag of paginatedTags().tags; track tag.username) {
                   <div class="tag-item-modern">
                     <div class="tag-content">
                       <div class="tag-user-info">
                         <fa-icon [icon]="faUser" class="user-icon"></fa-icon>
-                        <span class="tag-username">{{ tag.username }}</span>
+                        <a
+                          class="tag-username"
+                          [routerLink]="['/user', tag.username]"
+                          [attr.aria-label]="'View profile for ' + tag.username"
+                        >
+                          {{ tag.username }}
+                        </a>
                         <span class="tag-badge" [style.background-color]="tag.color">
                           {{ tag.tag }}
                         </span>
-                      </div>
-                      <div class="tag-meta">
-                        <fa-icon [icon]="faClock" class="meta-icon"></fa-icon>
-                        <span class="tag-time">{{ getTimeAgo(tag.createdAt) }}</span>
                       </div>
                     </div>
                     <button
@@ -177,6 +216,36 @@ import {
                     </button>
                   </div>
                 }
+              </div>
+
+              <!-- Pagination -->
+              @if (paginatedTags().totalPages > 1) {
+                <app-pagination
+                  [currentPage]="paginatedTags().currentPage"
+                  [totalPages]="paginatedTags().totalPages"
+                  [totalCount]="paginatedTags().totalCount"
+                  [itemsPerPage]="itemsPerPage()"
+                  (pageChange)="onPageChange($event)"
+                  (itemsPerPageChange)="onItemsPerPageChange($event)"
+                ></app-pagination>
+              }
+            } @else if (searchQuery()) {
+              <div class="empty-state">
+                <fa-icon [icon]="faSearch" class="empty-icon"></fa-icon>
+                <h4 class="empty-title">No tags found</h4>
+                <p class="empty-description">
+                  No tags match "{{ searchQuery() }}". Try a different search term or clear the
+                  search to see all tags.
+                </p>
+                <app-button
+                  (clicked)="clearSearch()"
+                  variant="secondary"
+                  size="sm"
+                  ariaLabel="Clear search"
+                >
+                  <fa-icon [icon]="faTimes" class="mr-2"></fa-icon>
+                  Clear Search
+                </app-button>
               </div>
             } @else {
               <div class="empty-state">
@@ -385,12 +454,36 @@ import {
         @apply flex flex-wrap items-center gap-3;
       }
 
+      .tags-search-section {
+        @apply mb-3;
+      }
+
+      .search-container {
+        @apply space-y-2;
+      }
+
+      .search-input {
+        @apply w-full pl-10 pr-10 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+      }
+
+      .search-icon {
+        @apply absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500;
+      }
+
+      .clear-search {
+        @apply absolute right-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200;
+      }
+
+      .search-results-info {
+        @apply text-sm text-gray-600 dark:text-gray-400 px-1;
+      }
+
       .tags-overview {
         @apply space-y-6;
       }
 
       .tags-list {
-        @apply space-y-3;
+        @apply space-y-2 mb-3;
       }
 
       .tag-item-modern {
@@ -411,23 +504,12 @@ import {
       }
 
       .tag-username {
-        @apply font-semibold text-gray-900 dark:text-gray-100;
+        @apply font-semibold text-gray-900 dark:text-gray-100 no-underline;
+        @apply hover:underline focus-visible:underline;
       }
 
       .tag-badge {
         @apply px-3 py-1 text-sm font-medium text-white rounded-full shadow-sm;
-      }
-
-      .tag-meta {
-        @apply flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400;
-      }
-
-      .meta-icon {
-        @apply text-xs;
-      }
-
-      .tag-time {
-        @apply font-medium;
       }
 
       .tag-remove-modern {
@@ -553,14 +635,27 @@ export class SettingsComponent implements OnInit {
   faChartBar = faChartBar;
   faRefresh = faRefresh;
   faUser = faUser;
-  faClock = faClock;
   faHardDrive = faHardDrive;
   faMemory = faMemory;
   faImages = faImages;
+  faSearch = faSearch;
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');
   isError = signal(false);
+
+  // Pagination and search state
+  searchQuery = signal('');
+  currentPage = signal(1);
+  itemsPerPage = signal(5);
+  paginatedTags = signal<{
+    tags: UserTag[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  }>({ tags: [], totalCount: 0, totalPages: 0, currentPage: 1 });
+
+  private searchSubject = new Subject<string>();
 
   // Cache management signals
   cacheStats = signal({
@@ -580,10 +675,53 @@ export class SettingsComponent implements OnInit {
 
   async ngOnInit() {
     await this.refreshStats();
+
+    // Set up search debouncing
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => {
+        this.updatePaginatedTags();
+      });
+
+    this.updatePaginatedTags();
   }
 
   loadTags(): void {
     this.tags.set(this.tagsService.getAllTags());
+    this.updatePaginatedTags();
+  }
+
+  updatePaginatedTags(): void {
+    const result = this.tagsService.getPaginatedTags(
+      this.searchQuery(),
+      this.currentPage(),
+      this.itemsPerPage(),
+    );
+    this.paginatedTags.set(result);
+    this.currentPage.set(result.currentPage);
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1); // Reset to first page on search
+    this.searchSubject.next(query);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.updatePaginatedTags();
+  }
+
+  onItemsPerPageChange(itemsPerPage: number): void {
+    this.itemsPerPage.set(itemsPerPage);
+    this.currentPage.set(1); // Reset to first page when changing items per page
+    this.updatePaginatedTags();
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    this.currentPage.set(1);
+    this.updatePaginatedTags();
   }
 
   exportTags(): void {
@@ -610,6 +748,7 @@ export class SettingsComponent implements OnInit {
       const content = e.target?.result as string;
       if (this.tagsService.importTags(content)) {
         this.loadTags();
+        this.clearSearch(); // Clear search when importing new tags
         this.showMessage('Tags imported successfully', false);
       } else {
         this.showMessage('Failed to import tags. Please check the file format.', true);
@@ -630,6 +769,7 @@ export class SettingsComponent implements OnInit {
     if (confirm('Are you sure you want to clear all tags? This cannot be undone.')) {
       this.tagsService.clearAllTags();
       this.loadTags();
+      this.clearSearch(); // Also clear search when clearing all tags
       this.showMessage('All tags cleared', false);
     }
   }
@@ -648,11 +788,6 @@ export class SettingsComponent implements OnInit {
     this.message.set(msg);
     this.isError.set(error);
     setTimeout(() => this.message.set(''), 3000);
-  }
-
-  getTimeAgo(timestamp: number): string {
-    // tags createdAt appears to be ms; convert to seconds
-    return formatRelativeTimeFromSeconds(Math.floor(timestamp / 1000));
   }
 
   // Cache management methods

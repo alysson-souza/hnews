@@ -97,6 +97,46 @@ export class UserTagsService {
     return Array.from(this.tagsMap().values());
   }
 
+  getFilteredTags(searchQuery: string = ''): UserTag[] {
+    const allTags = this.getAllTags();
+
+    if (!searchQuery.trim()) {
+      return allTags;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return allTags.filter(
+      (tag) => tag.username.toLowerCase().includes(query) || tag.tag.toLowerCase().includes(query),
+    );
+  }
+
+  getPaginatedTags(
+    searchQuery: string = '',
+    page: number = 1,
+    itemsPerPage: number = 10,
+  ): {
+    tags: UserTag[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  } {
+    const filteredTags = this.getFilteredTags(searchQuery);
+    const totalCount = filteredTags.length;
+    const safeItemsPerPage = Math.max(1, itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil(totalCount / safeItemsPerPage));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const startIndex = (safePage - 1) * safeItemsPerPage;
+    const endIndex = startIndex + safeItemsPerPage;
+    const tags = filteredTags.slice(startIndex, endIndex);
+
+    return {
+      tags,
+      totalCount,
+      totalPages,
+      currentPage: safePage,
+    };
+  }
+
   private getRandomColor(): string {
     return this.DEFAULT_COLORS[Math.floor(Math.random() * this.DEFAULT_COLORS.length)];
   }
