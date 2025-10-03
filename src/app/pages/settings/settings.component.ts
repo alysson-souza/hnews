@@ -662,19 +662,17 @@ export class SettingsComponent implements OnInit {
 
   constructor() {
     this.loadTags();
-  }
 
-  async ngOnInit() {
-    await this.refreshStats();
-
-    // Set up search debouncing
+    // Set up search debouncing - must be in constructor for takeUntilDestroyed()
     this.searchSubject
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe(() => {
         this.updatePaginatedTags();
       });
+  }
 
-    this.updatePaginatedTags();
+  async ngOnInit() {
+    await this.refreshStats();
   }
 
   loadTags(): void {

@@ -100,14 +100,21 @@ export class UserTagsService {
   getFilteredTags(searchQuery: string = ''): UserTag[] {
     const allTags = this.getAllTags();
 
-    if (!searchQuery.trim()) {
+    // Handle null/undefined/falsy values
+    const normalizedQuery = searchQuery?.trim() ?? '';
+
+    if (!normalizedQuery) {
       return allTags;
     }
 
-    const query = searchQuery.toLowerCase().trim();
-    return allTags.filter(
-      (tag) => tag.username.toLowerCase().includes(query) || tag.tag.toLowerCase().includes(query),
-    );
+    const query = normalizedQuery.toLowerCase();
+    return allTags.filter((tag) => {
+      // Defensive: skip tags with invalid data
+      if (!tag.username || !tag.tag) {
+        return false;
+      }
+      return tag.username.toLowerCase().includes(query) || tag.tag.toLowerCase().includes(query);
+    });
   }
 
   getPaginatedTags(
