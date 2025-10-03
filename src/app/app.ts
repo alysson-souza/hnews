@@ -55,6 +55,10 @@ export class App implements OnInit, OnDestroy {
   storyListStateService = inject(StoryListStateService);
   http = inject(HttpClient);
   private readonly _pwaUpdate = inject(PwaUpdateService);
+
+  // Expose PWA update signals to template
+  updateAvailable = this._pwaUpdate.updateAvailable;
+  updateVersionInfo = this._pwaUpdate.updateVersionInfo;
   version = VERSION;
   commitSha = COMMIT_SHA;
   commitShaShort = COMMIT_SHA_SHORT;
@@ -316,6 +320,12 @@ export class App implements OnInit, OnDestroy {
           this.refreshCurrentStoryList();
         }
         break;
+      case 'R': // Shift+R for PWA update
+        if (this.updateAvailable()) {
+          event.preventDefault();
+          this.applyPwaUpdate();
+        }
+        break;
     }
   }
 
@@ -462,6 +472,20 @@ export class App implements OnInit, OnDestroy {
         activatedComponent.refresh();
       }
     }
+  }
+
+  /**
+   * Apply PWA update when user presses 'R' or clicks update button
+   */
+  async applyPwaUpdate(): Promise<void> {
+    await this._pwaUpdate.applyUpdate();
+  }
+
+  /**
+   * Dismiss PWA update notification
+   */
+  dismissPwaUpdate(): void {
+    this._pwaUpdate.dismissUpdate();
   }
 
   handleDesktopSearchKeydown(event: KeyboardEvent): void {

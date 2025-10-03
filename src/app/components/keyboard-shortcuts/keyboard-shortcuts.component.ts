@@ -3,6 +3,7 @@
 import { Component, signal, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { PwaUpdateService } from '../../services/pwa-update.service';
 
 @Component({
   selector: 'app-keyboard-shortcuts',
@@ -160,6 +161,12 @@ import { Router } from '@angular/router';
                     <kbd class="shortcut-key">t</kbd>
                     <span class="shortcut-desc">Toggle theme</span>
                   </div>
+                  @if (updateAvailable()) {
+                    <div class="shortcut-row">
+                      <kbd class="shortcut-key">R</kbd>
+                      <span class="shortcut-desc">Apply app update</span>
+                    </div>
+                  }
                   <div class="shortcut-row">
                     <kbd class="shortcut-key">?</kbd>
                     <span class="shortcut-desc">Show help</span>
@@ -200,7 +207,11 @@ import { Router } from '@angular/router';
 })
 export class KeyboardShortcutsComponent {
   private router = inject(Router);
+  private pwaUpdate = inject(PwaUpdateService);
   isOpen = signal(false);
+
+  // Expose update available signal to template
+  updateAvailable = this.pwaUpdate.updateAvailable;
 
   get isOnStoryList(): boolean {
     const path = this.router.url;
