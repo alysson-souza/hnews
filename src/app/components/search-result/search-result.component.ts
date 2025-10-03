@@ -63,10 +63,12 @@ interface SearchHit {
         }
       } @else if (isComment()) {
         <!-- Comment Result -->
-        <div
-          class="result-comment comment-body prose prose-sm max-w-none dark:prose-invert line-clamp-3"
-          [innerHTML]="getHighlightedCommentText()"
-        ></div>
+        @if (getHighlightedCommentText()) {
+          <div
+            class="result-comment comment-body prose prose-sm max-w-none dark:prose-invert line-clamp-3"
+            [innerHTML]="getHighlightedCommentText()"
+          ></div>
+        }
       }
 
       <!-- Metadata -->
@@ -157,7 +159,8 @@ export class SearchResultComponent {
     if (this.isSearchResult) {
       return !!(this.item as SearchHit).title;
     }
-    return (this.item as HNItem).type === 'story';
+    const hnItem = this.item as HNItem;
+    return hnItem.type === 'story' || hnItem.type === 'job';
   });
 
   isComment = computed(() => {
