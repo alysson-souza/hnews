@@ -6,11 +6,12 @@ import { RouterLink } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
+import { UserTagComponent } from '../user-tag/user-tag.component';
 
 @Component({
   selector: 'app-sidebar-story-summary',
   standalone: true,
-  imports: [CommonModule, RouterLink, RelativeTimePipe, CommentTextComponent],
+  imports: [CommonModule, RouterLink, RelativeTimePipe, CommentTextComponent, UserTagComponent],
   template: `
     <section class="story">
       <h3 class="story-title">
@@ -31,8 +32,10 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
 
       <div class="meta">
         <span>{{ item.score || 0 }} points</span>
-        <span>•</span>
-        <span>by {{ item.by }}</span>
+        @if (item.by) {
+          <span>•</span>
+          <span>by <app-user-tag [username]="item.by"></app-user-tag></span>
+        }
         <span>•</span>
         <span class="time-text">{{ item.time | relativeTime }}</span>
       </div>
