@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
@@ -24,11 +24,25 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
           >
             {{ item.title }}
           </a>
-          <span class="domain ml-1">({{ getDomain(item.url) }})</span>
         } @else {
           {{ item.title }}
         }
       </h3>
+
+      <!-- Domain - clickable -->
+      @if (item.url && getDomain(item.url)) {
+        <button
+          type="button"
+          (click)="searchByDomain($event)"
+          (keyup.enter)="searchByDomain($event)"
+          (keyup.space)="searchByDomain($event)"
+          class="domain-btn"
+          [attr.aria-label]="'Search For More Stories From ' + getDomain(item.url)"
+          [title]="'Search For More Stories From ' + getDomain(item.url)"
+        >
+          ({{ getDomain(item.url) }})
+        </button>
+      }
 
       <div class="meta">
         <span>{{ item.score || 0 }} points</span>
@@ -66,8 +80,8 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
       .story-link {
         @apply text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
       }
-      .domain {
-        @apply text-xs text-gray-600 dark:text-gray-400;
+      .domain-btn {
+        @apply inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all mb-2;
       }
       .meta {
         @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
@@ -87,13 +101,28 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 export class SidebarStorySummaryComponent {
   @Input({ required: true }) item!: HNItem;
   @Input() showActions = true;
-  getDomain(url?: string): string | null {
-    if (!url) return null;
+  private router = inject(Router);
+
+  getDomain(url?: string): string {
+    if (!url) return '';
     try {
       const u = new URL(url);
       return u.hostname.replace(/^www\./i, '');
     } catch {
-      return null;
+      return '';
+    }
+  }
+
+  searchByDomain(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.item) return;
+
+    const domain = this.getDomain(this.item.url);
+    if (domain) {
+      this.router.navigate(['/search'], {
+        queryParams: { q: `site:${domain}` },
+      });
     }
   }
 }
