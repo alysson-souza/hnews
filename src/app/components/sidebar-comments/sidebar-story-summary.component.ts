@@ -58,7 +58,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
       @reference '../../../styles.css';
 
       .story {
-        @apply mb-4 sm:mb-6;
+        @apply mb-0;
       }
       .story-title {
         @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2;
