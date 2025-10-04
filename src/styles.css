@@ -4,6 +4,14 @@
 /* Load legacy JavaScript config for theme values */
 @config '../tailwind.config.js';
 
+/* CSS Custom Properties for Dynamic Viewport (PWA Orientation Fix) */
+:root {
+  /* These are set by DeviceService and update on orientation change */
+  --viewport-width: 100vw;
+  --viewport-height: 100vh;
+  --vh: 1vh; /* Calculated as viewport-height * 0.01 */
+}
+
 /* Define custom prose utilities for v4 compatibility */
 @utility prose {
   color: var(--tw-prose-body);
