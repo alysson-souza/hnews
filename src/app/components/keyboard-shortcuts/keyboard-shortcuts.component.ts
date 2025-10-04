@@ -45,8 +45,10 @@ import { PwaUpdateService } from '../../services/pwa-update.service';
                 (click)="close()"
                 (keydown.enter)="close()"
                 (keydown.space)="close()"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-1"
-                aria-label="Close"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-1 cursor-pointer"
+                role="button"
+                tabindex="0"
+                aria-label="Close keyboard shortcuts dialog"
               >
                 ×
               </button>
