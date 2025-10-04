@@ -1,0 +1,332 @@
+<app-page-container
+  [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
+  class="transition-all duration-300"
+>
+  <div class="space-y-2 sm:space-y-3">
+    <!-- Theme Settings Section -->
+    <app-card class="block setting-section" role="region" aria-label="Theme Settings">
+      <div class="section-header">
+        <fa-icon [icon]="faPalette" class="section-icon"></fa-icon>
+        <app-section-title>Appearance</app-section-title>
+      </div>
+      <app-theme-selector></app-theme-selector>
+    </app-card>
+
+    <!-- Reading Preferences -->
+    <app-card class="block setting-section" role="region" aria-label="Reading Preferences">
+      <div class="section-header">
+        <fa-icon [icon]="faBook" class="section-icon"></fa-icon>
+        <app-section-title>Reading Preferences</app-section-title>
+      </div>
+      <div class="space-y-6">
+        <div class="setting-group">
+          <div class="modern-toggle-container">
+            <div class="setting-info">
+              <label
+                class="setting-title cursor-pointer"
+                for="sidebar-toggle"
+                (click)="toggleSidebarPreference()"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="toggleSidebarPreference()"
+                (keydown.space)="toggleSidebarPreference()"
+                aria-label="Toggle open comments in sidebar on desktop"
+              >
+                Open comments in sidebar on desktop
+              </label>
+              <p class="setting-description" id="sidebar-toggle-description">
+                When enabled, comments will open in a sidebar instead of navigating to a new page
+              </p>
+            </div>
+            <app-toggle-switch
+              id="sidebar-toggle"
+              [checked]="openCommentsInSidebar()"
+              (checkedChange)="toggleSidebarPreference()"
+              ariaLabel="Toggle sidebar preference"
+              descriptionId="sidebar-toggle-description"
+            ></app-toggle-switch>
+          </div>
+        </div>
+      </div>
+    </app-card>
+
+    <!-- User Tags Section -->
+    <app-card class="block setting-section" role="region" aria-label="User Tags Management">
+      <div class="section-header">
+        <fa-icon [icon]="faTag" class="section-icon"></fa-icon>
+        <app-section-title>User Tags</app-section-title>
+      </div>
+
+      @if (message()) {
+        <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
+      }
+
+      <!-- Search and Filter -->
+      <div class="tags-search-section">
+        <div class="search-container">
+          <div class="relative">
+            <input
+              type="search"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search by username or tag..."
+              aria-label="Search user tags"
+              class="search-input"
+            />
+            <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
+            @if (searchQuery()) {
+              <button (click)="clearSearch()" class="clear-search" aria-label="Clear search">
+                <fa-icon [icon]="faTimes"></fa-icon>
+              </button>
+            }
+          </div>
+          @if (searchQuery()) {
+            <div class="search-results-info">
+              Found {{ paginatedTags().totalCount }}
+              {{ paginatedTags().totalCount === 1 ? 'tag' : 'tags' }}
+              @if (searchQuery()) {
+                for "{{ searchQuery() }}"
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Tags Overview -->
+      <div class="tags-overview">
+        @if (paginatedTags().tags.length > 0) {
+          <div class="tags-list">
+            @for (tag of paginatedTags().tags; track tag.username) {
+              <div class="tag-item-modern">
+                <div class="tag-content">
+                  <div class="tag-user-info">
+                    <fa-icon [icon]="faUser" class="user-icon"></fa-icon>
+                    <a
+                      class="tag-username"
+                      [routerLink]="['/user', tag.username]"
+                      [attr.aria-label]="'View profile for ' + tag.username"
+                    >
+                      {{ tag.username }}
+                    </a>
+                    <span class="tag-badge" [style.background-color]="tag.color">
+                      {{ tag.tag }}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  (click)="removeTag(tag.username)"
+                  class="tag-remove-modern"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-label]="'Remove tag for ' + tag.username"
+                  (keydown.enter)="removeTag(tag.username)"
+                  (keydown.space)="removeTag(tag.username)"
+                >
+                  <fa-icon [icon]="faTimes"></fa-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Pagination -->
+          @if (paginatedTags().totalPages > 1) {
+            <app-pagination
+              [currentPage]="paginatedTags().currentPage"
+              [totalPages]="paginatedTags().totalPages"
+              [totalCount]="paginatedTags().totalCount"
+              [itemsPerPage]="itemsPerPage()"
+              (pageChange)="onPageChange($event)"
+              (itemsPerPageChange)="onItemsPerPageChange($event)"
+            ></app-pagination>
+          }
+        } @else if (searchQuery()) {
+          <div class="empty-state">
+            <fa-icon [icon]="faSearch" class="empty-icon"></fa-icon>
+            <h4 class="empty-title">No tags found</h4>
+            <p class="empty-description">
+              No tags match "{{ searchQuery() }}". Try a different search term or clear the search
+              to see all tags.
+            </p>
+            <app-button
+              (clicked)="clearSearch()"
+              variant="secondary"
+              size="sm"
+              ariaLabel="Clear search"
+            >
+              <fa-icon [icon]="faTimes" class="mr-2"></fa-icon>
+              Clear Search
+            </app-button>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <fa-icon [icon]="faTag" class="empty-icon"></fa-icon>
+            <h4 class="empty-title">No tags yet</h4>
+            <p class="empty-description">
+              Start tagging users while browsing stories and comments. Your tags will help you
+              remember interesting contributors.
+            </p>
+          </div>
+        }
+
+        <!-- Import/Export and Clear All Actions -->
+        <div class="tag-action-buttons">
+          <app-button
+            (clicked)="exportTags()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Export user tags"
+            [disabled]="tags().length === 0"
+          >
+            <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
+            Export
+          </app-button>
+          <app-button
+            (clicked)="fileInput.click()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Import user tags"
+          >
+            <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
+            Import
+          </app-button>
+          <input
+            #fileInput
+            type="file"
+            accept=".json"
+            (change)="importTags($event)"
+            class="hidden"
+            aria-hidden="true"
+          />
+          @if (tags().length > 0) {
+            <app-button
+              (clicked)="clearAll()"
+              variant="danger"
+              size="sm"
+              ariaLabel="Clear all user tags"
+            >
+              <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
+              Clear All Tags
+            </app-button>
+          }
+        </div>
+      </div>
+    </app-card>
+
+    <!-- Cache Management Section -->
+    <app-card class="block setting-section" role="region" aria-label="Cache Management">
+      <div class="section-header">
+        <fa-icon [icon]="faDatabase" class="section-icon"></fa-icon>
+        <app-section-title>Cache Management</app-section-title>
+      </div>
+
+      <div class="space-y-8">
+        <!-- Cache Statistics -->
+        <div class="cache-stats-section">
+          <div class="stats-header">
+            <h3 class="stats-title">
+              <fa-icon [icon]="faChartBar" class="mr-2"></fa-icon>
+              Storage Statistics
+            </h3>
+            <app-button
+              (clicked)="refreshStats()"
+              variant="secondary"
+              size="sm"
+              ariaLabel="Refresh cache statistics"
+            >
+              <fa-icon [icon]="faRefresh" class="mr-2"></fa-icon>
+              Refresh
+            </app-button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card-modern">
+              <div class="stat-icon indexeddb">
+                <fa-icon [icon]="faHardDrive"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">IndexedDB Storage</div>
+                <div class="stat-value">{{ formatBytes(cacheStats().indexedDB) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-icon sw-cache">
+                <fa-icon [icon]="faImages"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Service Worker Cache</div>
+                <div class="stat-value">{{ formatBytes(cacheStats().swCache) }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-icon items">
+                <fa-icon [icon]="faDatabase"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Cached Items</div>
+                <div class="stat-value">{{ cacheStats().itemCount }}</div>
+              </div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-icon memory">
+                <fa-icon [icon]="faMemory"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Memory Cache</div>
+                <div class="stat-value">{{ cacheStats().memoryItems }} items</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cache Actions -->
+        <div class="cache-actions-section">
+          <div class="cache-actions-header">
+            <h3 class="actions-title">
+              <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
+              Clear Cache Data
+            </h3>
+          </div>
+          <p class="actions-description">
+            Free up storage space by clearing cached data. The app will re-download content as
+            needed.
+          </p>
+          <div class="action-buttons">
+            <app-button
+              (clicked)="clearCache('all')"
+              variant="danger"
+              size="sm"
+              ariaLabel="Clear all cached data"
+            >
+              Clear All Cache
+            </app-button>
+            <app-button
+              (clicked)="clearCache('stories')"
+              variant="secondary"
+              size="sm"
+              ariaLabel="Clear story cache"
+            >
+              Clear Stories
+            </app-button>
+            <app-button
+              (clicked)="clearCache('images')"
+              variant="secondary"
+              size="sm"
+              ariaLabel="Clear image cache"
+            >
+              Clear Images
+            </app-button>
+          </div>
+        </div>
+
+        @if (cacheMessage()) {
+          <div [class]="cacheError() ? 'alert-danger' : 'alert-success'">
+            {{ cacheMessage() }}
+          </div>
+        }
+      </div>
+    </app-card>
+  </div>
+</app-page-container>
