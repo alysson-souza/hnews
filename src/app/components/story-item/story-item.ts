@@ -34,13 +34,13 @@ import { UserSettingsService } from '../../services/user-settings.service';
       /* Story Item Card */
       .story-card {
         @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg mb-3 overflow-hidden;
-        @apply bg-gradient-to-b from-white to-gray-50/40;
+        @apply bg-gradient-to-b from-white to-gray-300/40;
         @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/40;
         transition: all 0.2s ease;
       }
 
       .story-card:hover {
-        @apply bg-gradient-to-b from-white to-gray-100/50;
+        @apply bg-gradient-to-b from-white to-gray-300/20;
         @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/60;
       }
 
