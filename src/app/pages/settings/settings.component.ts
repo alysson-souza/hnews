@@ -227,35 +227,36 @@ import {
               </div>
             }
 
-            <!-- Clear All Button - positioned consistently with other action buttons -->
-            @if (tags().length > 0) {
-              <div class="tag-action-buttons">
-                <app-button
-                  (clicked)="exportTags()"
-                  variant="secondary"
-                  size="sm"
-                  ariaLabel="Export user tags"
-                >
-                  <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
-                  Export
-                </app-button>
-                <app-button
-                  (clicked)="fileInput.click()"
-                  variant="secondary"
-                  size="sm"
-                  ariaLabel="Import user tags"
-                >
-                  <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
-                  Import
-                </app-button>
-                <input
-                  #fileInput
-                  type="file"
-                  accept=".json"
-                  (change)="importTags($event)"
-                  class="hidden"
-                  aria-hidden="true"
-                />
+            <!-- Import/Export and Clear All Actions -->
+            <div class="tag-action-buttons">
+              <app-button
+                (clicked)="exportTags()"
+                variant="secondary"
+                size="sm"
+                ariaLabel="Export user tags"
+                [disabled]="tags().length === 0"
+              >
+                <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
+                Export
+              </app-button>
+              <app-button
+                (clicked)="fileInput.click()"
+                variant="secondary"
+                size="sm"
+                ariaLabel="Import user tags"
+              >
+                <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
+                Import
+              </app-button>
+              <input
+                #fileInput
+                type="file"
+                accept=".json"
+                (change)="importTags($event)"
+                class="hidden"
+                aria-hidden="true"
+              />
+              @if (tags().length > 0) {
                 <app-button
                   (clicked)="clearAll()"
                   variant="danger"
@@ -265,8 +266,8 @@ import {
                   <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
                   Clear All Tags
                 </app-button>
-              </div>
-            }
+              }
+            </div>
           </div>
         </app-card>
 
