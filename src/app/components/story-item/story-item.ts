@@ -33,12 +33,21 @@ import { UserSettingsService } from '../../services/user-settings.service';
 
       /* Story Item Card */
       .story-card {
-        @apply relative flex flex-col sm:flex-row bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg transition-shadow duration-200 mb-3 overflow-hidden;
+        @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg mb-3 overflow-hidden;
+        @apply bg-gradient-to-b from-white to-gray-50/40;
+        @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/40;
+        transition: all 0.2s ease;
+      }
+
+      .story-card:hover {
+        @apply bg-gradient-to-b from-white to-gray-100/50;
+        @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/60;
       }
 
       .story-card-selected {
         @apply ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400;
-        @apply bg-blue-50 dark:bg-blue-900/20;
+        @apply bg-gradient-to-b from-blue-50 to-blue-100/50;
+        @apply dark:bg-gradient-to-b dark:from-blue-900/30 dark:to-slate-800/90;
       }
 
       /* Vote Sections */
@@ -76,8 +85,22 @@ import { UserSettingsService } from '../../services/user-settings.service';
 
       /* Content */
       .story-content {
-        @apply flex-1 p-3 min-w-0 overflow-hidden;
+        @apply flex-1 p-3 min-w-0 overflow-hidden relative;
       }
+
+      .story-content::before {
+        content: '';
+        @apply absolute inset-0 pointer-events-none rounded-r-lg;
+        @apply bg-gradient-to-r from-transparent via-transparent to-gray-50/20;
+        @apply dark:bg-gradient-to-r dark:from-transparent dark:via-transparent dark:to-slate-700/20;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .story-card:hover .story-content::before {
+        opacity: 1;
+      }
+
       .story-title {
         @apply text-base sm:text-lg font-semibold mb-1 break-words;
       }
