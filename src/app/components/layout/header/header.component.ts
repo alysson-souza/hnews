@@ -72,9 +72,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
 
       @media (display-mode: standalone) {
         .app-header {
-          --safe-area-top: env(safe-area-inset-top, 0px);
-          top: var(--safe-area-top);
-          padding-top: var(--safe-area-top);
+          padding-top: env(safe-area-inset-top, 0px);
         }
       }
     `,
