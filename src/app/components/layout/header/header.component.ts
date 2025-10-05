@@ -66,8 +66,8 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
 
       .app-header {
         @apply sticky top-0 z-40 shadow-lg;
-        @apply bg-gradient-to-r from-blue-600 to-blue-700;
-        @apply dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue;
+        @apply bg-blue-600;
+        @apply dark:bg-digg-blue;
       }
     `,
   ],

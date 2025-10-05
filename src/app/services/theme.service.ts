@@ -88,7 +88,7 @@ export class ThemeService {
     const metaThemeColor = this.document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
       const current = this.effectiveTheme();
-      metaThemeColor.setAttribute('content', current === 'dark' ? '#1f2937' : '#3B5998');
+      metaThemeColor.setAttribute('content', current === 'dark' ? '#3B5998' : '#155dfc');
     }
   }
 
