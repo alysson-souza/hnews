@@ -69,6 +69,13 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
         @apply bg-blue-600;
         @apply dark:bg-digg-blue;
       }
+
+      @media (display-mode: standalone) {
+        .app-header {
+          top: env(safe-area-inset-top, 0px);
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+      }
     `,
   ],
 })

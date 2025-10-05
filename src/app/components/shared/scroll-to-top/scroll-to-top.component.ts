@@ -42,6 +42,13 @@ import { ScrollService } from '../../../services/scroll.service';
       .scroll-to-top-btn:active > div {
         transform: scale(0.95);
       }
+
+      @media (display-mode: standalone) {
+        .scroll-to-top-btn {
+          inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+          inset-inline-start: calc(env(safe-area-inset-left, 0px) + 1.5rem);
+        }
+      }
     </style>
   `,
 })
