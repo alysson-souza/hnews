@@ -20,9 +20,9 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
       @if (themeService.theme() === 'auto') {
         <fa-icon [icon]="faCircleHalfStroke"></fa-icon>
       } @else if (themeService.effectiveTheme() === 'dark') {
-        <fa-icon [icon]="faSun"></fa-icon>
-      } @else {
         <fa-icon [icon]="faMoon"></fa-icon>
+      } @else {
+        <fa-icon [icon]="faSun"></fa-icon>
       }
     </button>
   `,
