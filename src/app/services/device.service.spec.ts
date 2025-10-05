@@ -81,6 +81,8 @@ describe('DeviceService', () => {
 
   describe('Platform Detection', () => {
     it('should detect macOS/iOS devices', () => {
+      service = TestBed.inject(DeviceService);
+
       // Service is already created with the current userAgent
       // Just test with the current environment
       const isMac = /Mac|iPhone|iPad|iPod/.test(window.navigator.userAgent);
