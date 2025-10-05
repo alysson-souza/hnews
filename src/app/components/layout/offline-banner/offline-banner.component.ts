@@ -32,6 +32,13 @@ import { CommonModule } from '@angular/common';
         @apply fixed top-0 left-0 right-0 z-50 transition-all duration-300;
       }
 
+      @media (display-mode: standalone) {
+        .offline-banner {
+          top: env(safe-area-inset-top, 0px);
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+      }
+
       .offline-banner-yellow {
         @apply bg-yellow-500 dark:bg-yellow-600;
       }
