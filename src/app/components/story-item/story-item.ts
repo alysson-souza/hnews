@@ -39,6 +39,13 @@ import { UserSettingsService } from '../../services/user-settings.service';
         transition: all 0.2s ease;
       }
 
+      @media (display-mode: standalone) {
+        .story-card {
+          margin-left: env(safe-area-inset-left, 0px);
+          margin-right: env(safe-area-inset-right, 0px);
+        }
+      }
+
       .story-card:hover {
         @apply bg-gradient-to-b from-white to-gray-300/10;
         @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/60;

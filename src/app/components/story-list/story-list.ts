@@ -62,6 +62,13 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
       .new-stories-indicator {
         @apply fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg dark:shadow-gray-800/50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 font-medium text-sm animate-bounce;
       }
+
+      @media (display-mode: standalone) {
+        .new-stories-indicator {
+          top: calc(5rem + env(safe-area-inset-top, 0px));
+          left: calc(50% + (env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) / 2);
+        }
+      }
     `,
   ],
 })
