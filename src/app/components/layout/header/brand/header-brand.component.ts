@@ -28,7 +28,7 @@ import { RouterLink } from '@angular/router';
       @reference '../../../../../styles.css';
 
       .app-logo-container {
-        @apply bg-white dark:bg-slate-800 rounded p-1;
+        @apply bg-white dark:bg-slate-800 rounded p-2;
       }
 
       .app-logo-icon {
