@@ -102,7 +102,9 @@ export class CacheManagerService {
 
   constructor() {
     this.initServiceWorker();
-    this.initMigration();
+    this.initMigration().catch((error) => {
+      console.warn('Cache migration failed, continuing with fresh cache:', error);
+    });
     this.startMemoryCacheCleanup();
   }
 

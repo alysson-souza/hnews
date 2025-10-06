@@ -42,7 +42,9 @@ export class IndexedDBService {
   };
 
   constructor() {
-    this.initDB();
+    this.initDB().catch((error) => {
+      console.warn('IndexedDB initialization failed, app will use fallback storage:', error);
+    });
   }
 
   private async initDB(): Promise<void> {
@@ -51,12 +53,12 @@ export class IndexedDBService {
       return;
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
       request.onerror = () => {
-        console.error('Failed to open IndexedDB:', request.error);
-        reject(request.error);
+        console.warn('Failed to open IndexedDB (likely private browsing mode):', request.error);
+        resolve(); // Resolve instead of reject to prevent blocking
       };
 
       request.onsuccess = () => {
