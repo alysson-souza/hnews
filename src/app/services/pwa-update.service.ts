@@ -34,14 +34,89 @@ export class PwaUpdateService {
 
     this.updates.versionUpdates.subscribe(async (event: VersionEvent) => {
       if (event.type === 'VERSION_READY') {
-        // Update is available, don't auto-activate
-        this.updateAvailable.set(true);
-        this.updateVersionInfo.set({
-          current: event.currentVersion.hash,
-          available: event.latestVersion.hash,
+        console.log('PWA Update: VERSION_READY detected', {
+          currentVersion: {
+            hash: event.currentVersion.hash,
+            appData: event.currentVersion.appData,
+          },
+          availableVersion: {
+            hash: event.latestVersion.hash,
+            appData: event.latestVersion.appData,
+          },
         });
+
+        // Check if this is a meaningful update (different version or commit)
+        const isMeaningfulUpdate = await this.isMeaningfulUpdate(
+          event.currentVersion as { hash: string; appData?: Record<string, unknown> },
+          event.latestVersion as { hash: string; appData?: Record<string, unknown> },
+        );
+
+        console.log('PWA Update: Is meaningful update?', isMeaningfulUpdate);
+
+        if (isMeaningfulUpdate) {
+          // Update is available, don't auto-activate
+          this.updateAvailable.set(true);
+          this.updateVersionInfo.set({
+            current: event.currentVersion.hash,
+            available: event.latestVersion.hash,
+          });
+        } else {
+          console.log('PWA Update: Ignoring non-meaningful update (same version/commit)');
+        }
       }
     });
+  }
+
+  /**
+   * Check if the update is meaningful (different version or commit)
+   * to prevent false positives from minor asset changes
+   */
+  protected async isMeaningfulUpdate(
+    currentVersion: { hash: string; appData?: Record<string, unknown> },
+    latestVersion: { hash: string; appData?: Record<string, unknown> },
+  ): Promise<boolean> {
+    // If hashes are the same, no update needed
+    if (currentVersion.hash === latestVersion.hash) {
+      return false;
+    }
+
+    // Extract version information from appData
+    const currentData = currentVersion.appData || {};
+    const latestData = latestVersion.appData || {};
+
+    const currentVersionInfo = {
+      version: (currentData['version'] as string) || 'unknown',
+      commit: (currentData['commit'] as string) || 'unknown',
+      buildTime: (currentData['buildTime'] as string) || 'unknown',
+    };
+
+    const latestVersionInfo = {
+      version: (latestData['version'] as string) || 'unknown',
+      commit: (latestData['commit'] as string) || 'unknown',
+      buildTime: (latestData['buildTime'] as string) || 'unknown',
+    };
+
+    console.log('PWA Update: Version comparison', {
+      current: currentVersionInfo,
+      latest: latestVersionInfo,
+    });
+
+    // Check if version, commit, or build time has changed
+    const versionChanged = currentVersionInfo.version !== latestVersionInfo.version;
+    const commitChanged = currentVersionInfo.commit !== latestVersionInfo.commit;
+    const buildTimeChanged = currentVersionInfo.buildTime !== latestVersionInfo.buildTime;
+
+    // In development mode, be more strict about what constitutes an update
+    if (
+      currentVersionInfo.version === 'development' ||
+      latestVersionInfo.version === 'development'
+    ) {
+      // In development, only consider it an update if commit changed
+      return commitChanged;
+    }
+
+    // In production, consider it meaningful if version, commit, or build time changed
+    return versionChanged || commitChanged || buildTimeChanged;
   }
 
   /**

@@ -85,7 +85,10 @@ export class App implements OnInit {
           commitSha: string;
           commitShaShort: string;
         }>('version.json', {
-          headers: { 'Cache-Control': 'no-cache' },
+          headers: {
+            // Use proper caching to prevent unnecessary re-fetches that could trigger update detection
+            'Cache-Control': 'max-age=300, stale-while-revalidate=600',
+          },
         }),
       );
 

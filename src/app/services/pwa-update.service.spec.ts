@@ -67,36 +67,77 @@ describe('PwaUpdateService', () => {
   });
 
   describe('when VERSION_READY event is received', () => {
-    const mockVersionEvent: VersionEvent = {
-      type: 'VERSION_READY',
-      currentVersion: { hash: 'abc123' },
-      latestVersion: { hash: 'def456' },
-    };
+    describe('with meaningful version changes', () => {
+      const mockVersionEvent: VersionEvent = {
+        type: 'VERSION_READY',
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.1.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+      };
 
-    beforeEach(() => {
-      versionUpdatesSubject.next(mockVersionEvent);
+      beforeEach(() => {
+        versionUpdatesSubject.next(mockVersionEvent);
+      });
+
+      it('should set updateAvailable to true', () => {
+        expect(service.updateAvailable()).toBe(true);
+      });
+
+      it('should store version information correctly', () => {
+        const versionInfo = service.updateVersionInfo();
+        expect(versionInfo).toEqual({
+          current: 'abc123',
+          available: 'def456',
+        });
+      });
     });
 
-    it('should set updateAvailable to true', () => {
-      expect(service.updateAvailable()).toBe(true);
-    });
+    describe('with non-meaningful changes', () => {
+      const mockVersionEvent: VersionEvent = {
+        type: 'VERSION_READY',
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+      };
 
-    it('should store version information correctly', () => {
-      const versionInfo = service.updateVersionInfo();
-      expect(versionInfo).toEqual({
-        current: 'abc123',
-        available: 'def456',
+      beforeEach(() => {
+        versionUpdatesSubject.next(mockVersionEvent);
+      });
+
+      it('should NOT set updateAvailable to true', () => {
+        expect(service.updateAvailable()).toBe(false);
+      });
+
+      it('should NOT store version information', () => {
+        const versionInfo = service.updateVersionInfo();
+        expect(versionInfo).toBeNull();
       });
     });
   });
 
   describe('applyUpdate()', () => {
     beforeEach(() => {
-      // Set up an available update first
+      // Set up an available update first with meaningful version change
       const versionEvent: VersionEvent = {
         type: 'VERSION_READY',
-        currentVersion: { hash: 'abc123' },
-        latestVersion: { hash: 'def456' },
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.1.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
       };
       versionUpdatesSubject.next(versionEvent);
     });
@@ -143,11 +184,17 @@ describe('PwaUpdateService', () => {
 
   describe('dismissUpdate()', () => {
     beforeEach(() => {
-      // Set up an available update first
+      // Set up an available update first with meaningful version change
       const versionEvent: VersionEvent = {
         type: 'VERSION_READY',
-        currentVersion: { hash: 'abc123' },
-        latestVersion: { hash: 'def456' },
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.1.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
       };
       versionUpdatesSubject.next(versionEvent);
     });
@@ -175,6 +222,266 @@ describe('PwaUpdateService', () => {
       expect(() => {
         TestBed.inject(PwaUpdateService);
       }).not.toThrow();
+    });
+  });
+
+  describe('isMeaningfulUpdate method', () => {
+    let serviceWithAccess: PwaUpdateService & {
+      isMeaningfulUpdate: (
+        current: { hash: string; appData?: Record<string, unknown> },
+        latest: { hash: string; appData?: Record<string, unknown> },
+      ) => Promise<boolean>;
+    };
+
+    beforeEach(() => {
+      serviceWithAccess = service as PwaUpdateService & {
+        isMeaningfulUpdate: (
+          current: { hash: string; appData?: Record<string, unknown> },
+          latest: { hash: string; appData?: Record<string, unknown> },
+        ) => Promise<boolean>;
+      };
+    });
+
+    describe('same hash detection', () => {
+      it('should return false when hashes are identical', async () => {
+        const current = { hash: 'same123', appData: {} };
+        const latest = { hash: 'same123', appData: {} };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('production mode validation', () => {
+      it('should return true when version changes', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: '1.1.0', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(true);
+      });
+
+      it('should return true when commit changes', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: '1.0.0', commit: 'commit2', buildTime: '2024-01-01' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(true);
+      });
+
+      it('should return true when buildTime changes', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-02' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(true);
+      });
+
+      it('should return false when all version info is identical despite hash change', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('development mode validation', () => {
+      it('should return true only when commit changes in development mode', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: 'development', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: 'development', commit: 'commit2', buildTime: '2024-01-01' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(true);
+      });
+
+      it('should return false when only buildTime changes in development mode', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: 'development', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: 'development', commit: 'commit1', buildTime: '2024-01-02' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false);
+      });
+
+      it('should return false when only version changes from development to development', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: 'development', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: 'development', commit: 'commit1', buildTime: '2024-01-01' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('missing appData handling', () => {
+      it('should handle missing appData gracefully', async () => {
+        const current = { hash: 'abc123' };
+        const latest = { hash: 'def456' };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false); // Should be false since all values will be 'unknown'
+      });
+
+      it('should handle partial appData gracefully', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: '1.0.0' }, // Missing commit and buildTime
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: '1.0.0' }, // Missing commit and buildTime
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should handle null/undefined appData values', async () => {
+        const current = {
+          hash: 'abc123',
+          appData: { version: null, commit: undefined, buildTime: '' },
+        };
+        const latest = {
+          hash: 'def456',
+          appData: { version: null, commit: undefined, buildTime: '' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(false);
+      });
+    });
+  });
+
+  describe('integrated update detection with validation', () => {
+    let consoleSpy: jasmine.Spy;
+
+    beforeEach(() => {
+      consoleSpy = spyOn(console, 'log');
+    });
+
+    it('should log detailed update information when VERSION_READY is received', () => {
+      const mockVersionEvent: VersionEvent = {
+        type: 'VERSION_READY',
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.1.0', commit: 'commit2', buildTime: '2024-01-02' },
+        },
+      };
+
+      versionUpdatesSubject.next(mockVersionEvent);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: VERSION_READY detected',
+        jasmine.any(Object),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: Version comparison',
+        jasmine.any(Object),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', true);
+    });
+
+    it('should ignore non-meaningful updates and log accordingly', () => {
+      const mockVersionEvent: VersionEvent = {
+        type: 'VERSION_READY',
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+      };
+
+      versionUpdatesSubject.next(mockVersionEvent);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: VERSION_READY detected',
+        jasmine.any(Object),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: Version comparison',
+        jasmine.any(Object),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', false);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: Ignoring non-meaningful update (same version/commit)',
+      );
+      expect(service.updateAvailable()).toBe(false);
+    });
+
+    it('should show update indicator for meaningful updates', (done) => {
+      const mockVersionEvent: VersionEvent = {
+        type: 'VERSION_READY',
+        currentVersion: {
+          hash: 'abc123',
+          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+        latestVersion: {
+          hash: 'def456',
+          appData: { version: '1.1.0', commit: 'commit1', buildTime: '2024-01-01' },
+        },
+      };
+
+      versionUpdatesSubject.next(mockVersionEvent);
+
+      // Use setTimeout to allow async validation to complete
+      setTimeout(() => {
+        expect(service.updateAvailable()).toBe(true);
+        expect(service.updateVersionInfo()).toEqual({
+          current: 'abc123',
+          available: 'def456',
+        });
+        done();
+      }, 0);
     });
   });
 
