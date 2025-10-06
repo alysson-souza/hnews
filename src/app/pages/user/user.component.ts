@@ -228,8 +228,9 @@ export class UserComponent implements OnInit {
               const elementRect = element.getBoundingClientRect();
               const elementTop = elementRect.top + window.scrollY;
 
-              // Account for sticky navbar (approximate height: 64px + some padding)
-              const navbarHeight = 80;
+              // Get actual header height to account for PWA safe area insets
+              const header = document.querySelector('.app-header');
+              const navbarHeight = header ? header.getBoundingClientRect().height : 80;
               const targetPosition = elementTop - navbarHeight;
 
               // Scroll to position accounting for navbar

@@ -216,11 +216,13 @@ export class ItemComponent implements OnInit {
           // Scroll to submission title after content loads
           setTimeout(() => {
             const element = document.getElementById('submission-title');
-            if (element) {
+            const header = document.querySelector('.app-header');
+            if (element && header) {
               const elementRect = element.getBoundingClientRect();
               const elementTop = elementRect.top + window.scrollY;
+              const headerRect = header.getBoundingClientRect();
+              const navbarHeight = headerRect.height;
 
-              const navbarHeight = 80;
               const targetPosition = elementTop - navbarHeight;
 
               window.scrollTo({
