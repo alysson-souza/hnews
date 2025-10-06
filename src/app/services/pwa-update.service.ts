@@ -126,18 +126,26 @@ export class PwaUpdateService {
   async applyUpdate(): Promise<void> {
     if (!this.updateAvailable()) return;
 
+    // Store current version info in case we need to restore it
+    const currentVersionInfo = this.updateVersionInfo();
+
     try {
-      // Clear the update signals first to prevent multiple clicks
+      // Activate the update first
+      await this.updates.activateUpdate();
+
+      // Clear the update signals after successful activation
       this.updateAvailable.set(false);
       this.updateVersionInfo.set(null);
 
-      // Activate the update and reload
-      await this.updates.activateUpdate();
+      // Then reload the page
       this.reloadPage();
     } catch (error) {
       console.error('Failed to apply PWA update:', error);
-      // If activation fails, reset the signals so user can try again
+      // If activation fails, restore signals so user can try again
       this.updateAvailable.set(true);
+      if (currentVersionInfo) {
+        this.updateVersionInfo.set(currentVersionInfo);
+      }
     }
   }
 

@@ -84,16 +84,24 @@ describe('PwaUpdateService', () => {
         versionUpdatesSubject.next(mockVersionEvent);
       });
 
-      it('should set updateAvailable to true', () => {
-        expect(service.updateAvailable()).toBe(true);
+      it('should set updateAvailable to true', (done) => {
+        // Use setTimeout to allow async validation to complete
+        setTimeout(() => {
+          expect(service.updateAvailable()).toBe(true);
+          done();
+        }, 0);
       });
 
-      it('should store version information correctly', () => {
-        const versionInfo = service.updateVersionInfo();
-        expect(versionInfo).toEqual({
-          current: 'abc123',
-          available: 'def456',
-        });
+      it('should store version information correctly', (done) => {
+        // Use setTimeout to allow async validation to complete
+        setTimeout(() => {
+          const versionInfo = service.updateVersionInfo();
+          expect(versionInfo).toEqual({
+            current: 'abc123',
+            available: 'def456',
+          });
+          done();
+        }, 0);
       });
     });
 
@@ -114,19 +122,27 @@ describe('PwaUpdateService', () => {
         versionUpdatesSubject.next(mockVersionEvent);
       });
 
-      it('should NOT set updateAvailable to true', () => {
-        expect(service.updateAvailable()).toBe(false);
+      it('should NOT set updateAvailable to true', (done) => {
+        // Use setTimeout to allow async validation to complete
+        setTimeout(() => {
+          expect(service.updateAvailable()).toBe(false);
+          done();
+        }, 0);
       });
 
-      it('should NOT store version information', () => {
-        const versionInfo = service.updateVersionInfo();
-        expect(versionInfo).toBeNull();
+      it('should NOT store version information', (done) => {
+        // Use setTimeout to allow async validation to complete
+        setTimeout(() => {
+          const versionInfo = service.updateVersionInfo();
+          expect(versionInfo).toBeNull();
+          done();
+        }, 0);
       });
     });
   });
 
   describe('applyUpdate()', () => {
-    beforeEach(() => {
+    beforeEach((done) => {
       // Set up an available update first with meaningful version change
       const versionEvent: VersionEvent = {
         type: 'VERSION_READY',
@@ -140,6 +156,9 @@ describe('PwaUpdateService', () => {
         },
       };
       versionUpdatesSubject.next(versionEvent);
+
+      // Wait for async validation to complete
+      setTimeout(done, 0);
     });
 
     it('should activate update and reload page when update is available', async () => {
@@ -179,11 +198,16 @@ describe('PwaUpdateService', () => {
       expect(reloadSpy).not.toHaveBeenCalled();
       // Should reset updateAvailable to true so user can try again
       expect(service.updateAvailable()).toBe(true);
+      // Should restore version info when activation fails
+      expect(service.updateVersionInfo()).toEqual({
+        current: 'abc123',
+        available: 'def456',
+      });
     });
   });
 
   describe('dismissUpdate()', () => {
-    beforeEach(() => {
+    beforeEach((done) => {
       // Set up an available update first with meaningful version change
       const versionEvent: VersionEvent = {
         type: 'VERSION_READY',
@@ -197,6 +221,9 @@ describe('PwaUpdateService', () => {
         },
       };
       versionUpdatesSubject.next(versionEvent);
+
+      // Wait for async validation to complete
+      setTimeout(done, 0);
     });
 
     it('should clear updateAvailable signal', () => {
@@ -402,7 +429,7 @@ describe('PwaUpdateService', () => {
       consoleSpy = spyOn(console, 'log');
     });
 
-    it('should log detailed update information when VERSION_READY is received', () => {
+    it('should log detailed update information when VERSION_READY is received', (done) => {
       const mockVersionEvent: VersionEvent = {
         type: 'VERSION_READY',
         currentVersion: {
@@ -417,18 +444,22 @@ describe('PwaUpdateService', () => {
 
       versionUpdatesSubject.next(mockVersionEvent);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: VERSION_READY detected',
-        jasmine.any(Object),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: Version comparison',
-        jasmine.any(Object),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', true);
+      // Use setTimeout to allow async validation to complete
+      setTimeout(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'PWA Update: VERSION_READY detected',
+          jasmine.any(Object),
+        );
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'PWA Update: Version comparison',
+          jasmine.any(Object),
+        );
+        expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', true);
+        done();
+      }, 0);
     });
 
-    it('should ignore non-meaningful updates and log accordingly', () => {
+    it('should ignore non-meaningful updates and log accordingly', (done) => {
       const mockVersionEvent: VersionEvent = {
         type: 'VERSION_READY',
         currentVersion: {
@@ -443,19 +474,23 @@ describe('PwaUpdateService', () => {
 
       versionUpdatesSubject.next(mockVersionEvent);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: VERSION_READY detected',
-        jasmine.any(Object),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: Version comparison',
-        jasmine.any(Object),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', false);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: Ignoring non-meaningful update (same version/commit)',
-      );
-      expect(service.updateAvailable()).toBe(false);
+      // Use setTimeout to allow async validation to complete
+      setTimeout(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'PWA Update: VERSION_READY detected',
+          jasmine.any(Object),
+        );
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'PWA Update: Version comparison',
+          jasmine.any(Object),
+        );
+        expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', false);
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'PWA Update: Ignoring non-meaningful update (same version/commit)',
+        );
+        expect(service.updateAvailable()).toBe(false);
+        done();
+      }, 0);
     });
 
     it('should show update indicator for meaningful updates', (done) => {
