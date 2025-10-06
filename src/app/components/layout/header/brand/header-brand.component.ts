@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ScrollService } from '../../../../services/scroll.service';
 
 @Component({
   selector: 'app-header-brand',
@@ -10,7 +11,7 @@ import { RouterLink } from '@angular/router';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="flex items-center flex-1 sm:flex-none">
-      <a routerLink="/" class="flex items-center gap-2 sm:gap-3">
+      <a routerLink="/" (click)="scrollToTop()" class="flex items-center gap-2 sm:gap-3">
         <div class="app-logo-container">
           <svg class="app-logo-icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
@@ -40,4 +41,11 @@ import { RouterLink } from '@angular/router';
 })
 export class HeaderBrandComponent {
   @Input() offline = false;
+
+  private router = inject(Router);
+  private scrollService = inject(ScrollService);
+
+  scrollToTop(): void {
+    this.scrollService.scrollToTop();
+  }
 }
