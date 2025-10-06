@@ -12,6 +12,15 @@
   --vh: 1vh; /* Calculated as viewport-height * 0.01 */
 }
 
+/* PWA: Prevent white flash during navigation */
+html {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+html.dark {
+  background-color: #172554; /* blue-950 */
+}
+
 /* Define custom prose utilities for v4 compatibility */
 @utility prose {
   color: var(--tw-prose-body);
