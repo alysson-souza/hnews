@@ -2,20 +2,16 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OfflineBannerComponent } from '../offline-banner/offline-banner.component';
 import { AppHeaderComponent } from '../header/header.component';
 import { AppFooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, OfflineBannerComponent, AppHeaderComponent, AppFooterComponent],
+  imports: [CommonModule, AppHeaderComponent, AppFooterComponent],
   template: `
-    <app-offline-banner [visible]="showOfflineBanner" [offline]="offline"></app-offline-banner>
-
     <app-header
       [offline]="offline"
-      [showOfflineBanner]="showOfflineBanner"
       [routerUrl]="routerUrl"
       [searchQuery]="searchQuery"
       [mobileMenuOpen]="mobileMenuOpen"
@@ -48,7 +44,6 @@ import { AppFooterComponent } from '../footer/footer.component';
 })
 export class AppShellComponent {
   @Input() offline = false;
-  @Input() showOfflineBanner = false;
   @Input() routerUrl = '';
   @Input() searchQuery = '';
   @Input() mobileMenuOpen = false;

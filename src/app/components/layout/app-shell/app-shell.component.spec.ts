@@ -13,7 +13,6 @@ import { AppHeaderComponent } from '../header/header.component';
   template: `
     <app-shell
       [offline]="offline"
-      [showOfflineBanner]="showBanner"
       [routerUrl]="routerUrl"
       [searchQuery]="searchQuery"
       [mobileMenuOpen]="mobileMenuOpen"
@@ -64,14 +63,7 @@ describe('AppShellComponent', () => {
     expect(content.textContent?.trim()).toBe('Projected Content');
   });
 
-  it('shows the offline banner when requested', () => {
-    host.showBanner = true;
-    host.offline = true;
-    fixture.detectChanges();
-
-    const banner = fixture.nativeElement.querySelector('.offline-banner');
-    expect(banner).toBeTruthy();
-  });
+  // Offline banner has been removed; covered by in-page indicators now
 
   it('re-emits search submissions from the header', () => {
     const headerDebug = fixture.debugElement.query(By.directive(AppHeaderComponent));

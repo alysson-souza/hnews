@@ -22,7 +22,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
     HeaderMobileNavComponent,
   ],
   template: `
-    <header class="app-header" [class.mt-10]="showOfflineBanner" role="banner">
+    <header class="app-header" role="banner">
       <div class="container mx-auto px-2 sm:px-4">
         <div class="flex items-center justify-between h-16">
           <app-header-brand [offline]="offline"></app-header-brand>
@@ -80,7 +80,6 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
 })
 export class AppHeaderComponent {
   @Input() offline = false;
-  @Input() showOfflineBanner = false;
   @Input() routerUrl = '';
   @Input() searchQuery = '';
   @Input() mobileMenuOpen = false;

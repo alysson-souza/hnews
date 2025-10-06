@@ -169,7 +169,7 @@ describe('StoryList', () => {
       expect(store.newStoriesAvailable()).toBe(0);
     });
 
-    it('should update totalStoryIds during silent refresh', async () => {
+    it('should stash new IDs and only apply after clicking indicator', async () => {
       // Initialize with some stories
       store.init('top', 3);
 
@@ -186,7 +186,13 @@ describe('StoryList', () => {
 
       // Wait for the refresh to complete
       await Promise.resolve();
-      // Should update totalStoryIds with new array
+      // Should NOT update totalStoryIds yet (stashed only)
+      expect(store.totalStoryIds()).toEqual([1, 2, 3, 4, 5]);
+
+      // Simulate user clicking the new stories indicator
+      component.loadNewStories();
+      await Promise.resolve();
+      // Now totalStoryIds should be applied
       expect(store.totalStoryIds()).toEqual([6, 7, 8, 9, 10]);
     });
   });

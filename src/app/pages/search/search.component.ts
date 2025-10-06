@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTime } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HackernewsService } from '../../services/hackernews.service';
+import { NetworkStateService } from '../../services/network-state.service';
 import { SearchOptions } from '../../models/search';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -56,6 +57,13 @@ interface SearchHit {
         <app-card class="mb-2 sm:mb-3">
           <h1 class="search-title">Search Hacker News</h1>
 
+          <!-- Offline Warning -->
+          @if (isOffline()) {
+            <div class="offline-warning" role="alert" aria-live="polite">
+              <p class="font-medium">Search unavailable offline</p>
+            </div>
+          }
+
           <!-- Search Input -->
           <div class="relative">
             <input
@@ -65,6 +73,9 @@ interface SearchHit {
               placeholder="Search stories, comments, users..."
               aria-label="Search Hacker News content"
               aria-describedby="search-hint"
+              [disabled]="isOffline()"
+              [class.opacity-50]="isOffline()"
+              [class.cursor-not-allowed]="isOffline()"
               class="app-input app-input-lg pr-12"
             />
             <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,16 +87,21 @@ interface SearchHit {
               ></path>
             </svg>
           </div>
-          <p id="search-hint" class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Tip: use site:example.com to filter by domain, or quotes to match exact phrases.
-          </p>
+          @if (!isOffline()) {
+            <p id="search-hint" class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              Tip: use site:example.com to filter by domain, or quotes to match exact phrases.
+            </p>
+          }
 
           <!-- Search Filters -->
           <div class="filters">
             <select
               [(ngModel)]="searchType"
               (ngModelChange)="performSearch()"
+              [disabled]="isOffline()"
               class="app-select"
+              [class.opacity-50]="isOffline()"
+              [class.cursor-not-allowed]="isOffline()"
               aria-label="Filter by type"
             >
               <option value="all">All</option>
@@ -96,7 +112,10 @@ interface SearchHit {
             <select
               [(ngModel)]="sortBy"
               (ngModelChange)="performSearch()"
+              [disabled]="isOffline()"
               class="app-select"
+              [class.opacity-50]="isOffline()"
+              [class.cursor-not-allowed]="isOffline()"
               aria-label="Sort by"
             >
               <option value="relevance">Relevance</option>
@@ -108,7 +127,10 @@ interface SearchHit {
             <select
               [(ngModel)]="dateRange"
               (ngModelChange)="performSearch()"
+              [disabled]="isOffline()"
               class="app-select"
+              [class.opacity-50]="isOffline()"
+              [class.cursor-not-allowed]="isOffline()"
               aria-label="Date range"
             >
               <option value="all">All Time</option>
@@ -242,6 +264,10 @@ interface SearchHit {
       .empty-sub {
         @apply text-sm text-gray-500 dark:text-gray-400;
       }
+
+      .offline-warning {
+        @apply mb-4 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center text-yellow-800 dark:text-yellow-300;
+      }
     `,
   ],
 })
@@ -249,6 +275,7 @@ export class SearchComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private hnService = inject(HackernewsService);
+  private networkState = inject(NetworkStateService);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
 
@@ -262,6 +289,9 @@ export class SearchComponent implements OnInit {
   loading = signal(false);
   loadingMore = signal(false);
   currentPage = signal(0);
+
+  // Offline state
+  isOffline = computed(() => this.networkState.isOffline());
 
   private searchSubject = new Subject<string>();
 

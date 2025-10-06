@@ -2,6 +2,13 @@
   [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
   class="transition-all duration-300"
 >
+  <!-- Offline Indicator -->
+  @if (isOffline()) {
+    <div class="offline-indicator" role="status" aria-live="polite">
+      <span class="offline-text">Showing saved results. Connect to refresh.</span>
+    </div>
+  }
+
   <!-- New Stories Indicator -->
   @if (newStoriesAvailable() > 0 && !refreshing()) {
     <button
@@ -50,6 +57,13 @@
       </app-story-item>
     }
   </div>
+
+  <!-- Offline empty state (no cached stories) -->
+  @if (isOffline() && stories().length === 0 && !loading()) {
+    <div class="empty">
+      <p>No saved results</p>
+    </div>
+  }
 
   <!-- Load More Button -->
   @if (hasMore() && !loading()) {

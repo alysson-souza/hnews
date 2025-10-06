@@ -13,12 +13,16 @@ import { CommonModule } from '@angular/common';
         class="offline-banner"
         [class.offline-banner-yellow]="offline"
         [class.offline-banner-green]="!offline"
+        role="status"
+        [attr.aria-live]="offline ? 'polite' : 'assertive'"
       >
-        <div class="container mx-auto px-4 py-2 text-center text-white font-medium">
+        <div
+          class="container mx-auto px-4 py-2 text-center text-white font-medium text-sm sm:text-base"
+        >
           @if (offline) {
-            <span>📡 You are offline. Showing cached content.</span>
+            <span>You are offline</span>
           } @else {
-            <span>✅ Back online!</span>
+            <span>Back online</span>
           }
         </div>
       </div>

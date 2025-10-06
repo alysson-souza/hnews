@@ -4,7 +4,7 @@ import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { HNItem } from '../models/hn';
 import { HackernewsService } from '../services/hackernews.service';
 import { StoryListStateService } from '../services/story-list-state.service';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, take } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 export type StoryType = 'top' | 'best' | 'new' | 'ask' | 'show' | 'job';
@@ -33,6 +33,8 @@ export class StoryListStore {
   readonly refreshing = signal<boolean>(false);
   /** Count of new items detected at top during background refresh */
   readonly newStoriesAvailable = signal<number>(0);
+  /** Pending fresh IDs detected by background refresh; applied on user intent */
+  private readonly pendingTotalIds = signal<number[] | null>(null);
 
   /** True when another page is available */
   readonly hasMore: Signal<boolean> = computed(
@@ -81,15 +83,17 @@ export class StoryListStore {
   loadStories(isRefresh = false, refreshStartTime?: number): void {
     this.loading.set(true);
     this.error.set(null);
-
+    // Use cached-first by default; on explicit refresh, force fetch IDs
     this.getStoryIds(isRefresh)
+      .pipe(take(1))
       .pipe(
         switchMap((ids) => {
           this.totalStoryIds.set(ids);
           const start = this.currentPage() * this.pageSize();
           const end = start + this.pageSize();
           const pageIds = ids.slice(start, end);
-          return this.hn.getItems(pageIds);
+          // For manual refresh we force-refresh item details to replace cached immediately
+          return this.hn.getItems(pageIds, isRefresh);
         }),
         map((items) => items.filter((i): i is HNItem => !!i)),
       )
@@ -106,14 +110,18 @@ export class StoryListStore {
             } else {
               this.refreshing.set(false);
             }
-            const storyIds = this.totalStoryIds().slice(0, this.pageSize());
-            this.refreshStoryDetails(storyIds);
+            // No indicator in manual refresh, we already replaced content
           }
+
+          // Non-manual loads do not auto-trigger silent refresh here; the component can decide
 
           this.saveCurrentState();
         },
         error: () => {
-          this.error.set('Failed to load stories. Please try again.');
+          // Preserve existing view; only show an error if we had nothing to show
+          if (this.stories().length === 0) {
+            this.error.set('Failed to load stories. Please try again.');
+          }
           this.loading.set(false);
           if (isRefresh) this.refreshing.set(false);
         },
@@ -122,11 +130,13 @@ export class StoryListStore {
 
   /** Clear persisted state for current category and reload from network. */
   refresh(): void {
+    // Manual refresh should clear any pending indicators/state
+    this.newStoriesAvailable.set(0);
+    this.pendingTotalIds.set(null);
     this.refreshing.set(true);
-    this.state.clearState(this.storyType());
-    this.currentPage.set(0);
-    this.stories.set([]);
-
+    // Do NOT clear current in-memory stories/ids; keep showing cached content.
+    // We'll attempt a network refresh; on success, loadStories will update state
+    // and save snapshot. On failure, we keep the existing cached view.
     const refreshStartTime = Date.now();
     this.loadStories(true, refreshStartTime);
   }
@@ -160,24 +170,36 @@ export class StoryListStore {
   /** Background refresh; updates top IDs and new-stories indicator only. */
   silentRefreshStoryList(): void {
     console.debug('🔄 Auto refresh: Checking for new stories...');
-    this.getStoryIds(true).subscribe({
-      next: (freshIds) => {
-        const currentIds = this.totalStoryIds();
-        const newStoryCount = this.countNewStoriesAtTop(currentIds, freshIds);
-        console.debug(`🔄 Auto refresh: Found ${newStoryCount} new stories`);
-        if (newStoryCount > 0 && window.scrollY < 100) {
-          console.debug(
-            `🔄 Auto refresh: Showing new stories indicator with ${newStoryCount} stories`,
-          );
-          this.newStoriesAvailable.set(newStoryCount);
-        }
-        this.totalStoryIds.set(freshIds);
-      },
-    });
+    this.getStoryIds(true)
+      .pipe(take(1))
+      .subscribe({
+        next: (freshIds) => {
+          const currentIds = this.totalStoryIds();
+          const newStoryCount = this.countNewStoriesAtTop(currentIds, freshIds);
+          console.debug(`🔄 Auto refresh: Found ${newStoryCount} new stories`);
+          if (newStoryCount > 0 && window.scrollY < 100) {
+            console.debug(
+              `🔄 Auto refresh: Showing new stories indicator with ${newStoryCount} stories`,
+            );
+            this.newStoriesAvailable.set(newStoryCount);
+            // Stash fresh ids to apply later when the user chooses
+            this.pendingTotalIds.set(freshIds);
+          } else {
+            // Clear pending if nothing new or user is not at top
+            this.pendingTotalIds.set(null);
+          }
+        },
+      });
   }
 
   loadNewStories(): void {
     this.newStoriesAvailable.set(0);
+    // Apply any pending ids discovered via silent refresh
+    const pending = this.pendingTotalIds();
+    if (pending && pending.length) {
+      this.totalStoryIds.set(pending);
+      this.pendingTotalIds.set(null);
+    }
     this.refresh();
   }
 

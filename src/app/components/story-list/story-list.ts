@@ -9,6 +9,7 @@ import {
   SimpleChanges,
   inject,
   effect,
+  computed,
 } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { CommonModule } from '@angular/common';
@@ -17,6 +18,7 @@ import { interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { KeyboardNavigationService } from '../../services/keyboard-navigation.service';
+import { NetworkStateService } from '../../services/network-state.service';
 import { StoryListStore } from '../../stores/story-list.store';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
 
@@ -59,6 +61,13 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
         @apply text-center py-8 text-gray-500 dark:text-gray-400;
       }
 
+      .offline-indicator {
+        @apply mb-4 px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-center justify-center text-yellow-800 dark:text-yellow-300;
+      }
+      .offline-text {
+        @apply text-sm font-medium;
+      }
+
       .new-stories-indicator {
         @apply fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg dark:shadow-gray-800/50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 font-medium text-sm animate-bounce;
       }
@@ -80,6 +89,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
   keyboardNavService = inject(KeyboardNavigationService);
+  networkState = inject(NetworkStateService);
 
   stories = this.store.stories;
   loading = this.store.loading;
@@ -88,6 +98,9 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   totalStoryIds = this.store.totalStoryIds;
   refreshing = this.store.refreshing;
   newStoriesAvailable = this.store.newStoriesAvailable;
+
+  // Offline state
+  isOffline = computed(() => this.networkState.isOffline());
 
   // Array for skeleton count based on page size
   skeletonArray = Array(this.pageSize)

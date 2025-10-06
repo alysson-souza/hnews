@@ -4,8 +4,8 @@ import {
   Component,
   inject,
   signal,
+  computed,
   OnInit,
-  OnDestroy,
   HostListener,
   ViewChild,
 } from '@angular/core';
@@ -22,6 +22,7 @@ import { SidebarService } from './services/sidebar.service';
 import { KeyboardNavigationService } from './services/keyboard-navigation.service';
 import { NavigationHistoryService } from './services/navigation-history.service';
 import { StoryListStateService } from './services/story-list-state.service';
+import { NetworkStateService } from './services/network-state.service';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { AppShellComponent } from './components/layout/app-shell/app-shell.component';
@@ -40,7 +41,7 @@ import { AppShellComponent } from './components/layout/app-shell/app-shell.compo
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit, OnDestroy {
+export class App implements OnInit {
   @ViewChild(KeyboardShortcutsComponent) keyboardShortcuts!: KeyboardShortcutsComponent;
   @ViewChild(RouterOutlet) outlet!: RouterOutlet;
 
@@ -53,6 +54,7 @@ export class App implements OnInit, OnDestroy {
   keyboardNavService = inject(KeyboardNavigationService);
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
+  networkState = inject(NetworkStateService);
   http = inject(HttpClient);
   private readonly _pwaUpdate = inject(PwaUpdateService);
 
@@ -67,13 +69,12 @@ export class App implements OnInit, OnDestroy {
       ? `https://github.com/alysson-souza/hnews/commit/${this.commitSha}`
       : null;
 
-  isOffline = signal(false);
-  showOfflineMessage = signal(false);
+  // Network state from NetworkStateService
+  isOffline = computed(() => !this.networkState.isOnline());
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
-  private offlineHandler?: () => void;
-  private onlineHandler?: () => void;
   private lastRefreshTime = 0;
+  // No global offline banner; page-level indicators handle UX
 
   private async loadBuildInfo(): Promise<void> {
     try {
@@ -102,33 +103,7 @@ export class App implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log(`HNews version: ${this.version}`);
-    this.isOffline.set(!navigator.onLine);
-
-    this.offlineHandler = () => {
-      this.isOffline.set(true);
-      this.showOfflineMessage.set(true);
-      setTimeout(() => this.showOfflineMessage.set(false), 5000);
-    };
-
-    this.onlineHandler = () => {
-      this.isOffline.set(false);
-      this.showOfflineMessage.set(true);
-      setTimeout(() => this.showOfflineMessage.set(false), 3000);
-    };
-
-    window.addEventListener('offline', this.offlineHandler);
-    window.addEventListener('online', this.onlineHandler);
-
     this.loadBuildInfo();
-  }
-
-  ngOnDestroy() {
-    if (this.offlineHandler) {
-      window.removeEventListener('offline', this.offlineHandler);
-    }
-    if (this.onlineHandler) {
-      window.removeEventListener('online', this.onlineHandler);
-    }
   }
 
   search() {
