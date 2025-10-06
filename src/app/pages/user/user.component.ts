@@ -15,6 +15,7 @@ import { SearchResultComponent } from '../../components/search-result/search-res
 import { ResultListComponent } from '../../components/result-list/result-list.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
+import { ScrollService } from '../../services/scroll.service';
 
 @Component({
   selector: 'app-user',
@@ -176,6 +177,7 @@ export class UserComponent implements OnInit {
   private hnService = inject(HackernewsService);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
+  private scrollService = inject(ScrollService);
 
   user = signal<HNUser | null>(null);
   submissions = signal<HNItem[]>([]);
@@ -221,25 +223,7 @@ export class UserComponent implements OnInit {
           this.user.set(user);
           this.loadSubmissions(user);
           // Scroll to user profile after content loads
-          setTimeout(() => {
-            const element = document.getElementById('user-profile');
-            if (element) {
-              // Get the element's position
-              const elementRect = element.getBoundingClientRect();
-              const elementTop = elementRect.top + window.scrollY;
-
-              // Get actual header height to account for PWA safe area insets
-              const header = document.querySelector('.app-header');
-              const navbarHeight = header ? header.getBoundingClientRect().height : 80;
-              const targetPosition = elementTop - navbarHeight;
-
-              // Scroll to position accounting for navbar
-              window.scrollTo({
-                top: Math.max(0, targetPosition),
-                behavior: 'smooth',
-              });
-            }
-          }, 100);
+          this.scrollService.scrollToElement('user-profile', { delay: 100 });
         } else {
           this.error.set('User not found');
         }

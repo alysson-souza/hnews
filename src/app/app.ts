@@ -23,6 +23,7 @@ import { KeyboardNavigationService } from './services/keyboard-navigation.servic
 import { NavigationHistoryService } from './services/navigation-history.service';
 import { StoryListStateService } from './services/story-list-state.service';
 import { NetworkStateService } from './services/network-state.service';
+import { ScrollService } from './services/scroll.service';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { AppShellComponent } from './components/layout/app-shell/app-shell.component';
@@ -55,6 +56,7 @@ export class App implements OnInit {
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
   networkState = inject(NetworkStateService);
+  private scrollService = inject(ScrollService);
   http = inject(HttpClient);
   private readonly _pwaUpdate = inject(PwaUpdateService);
 
@@ -198,7 +200,7 @@ export class App implements OnInit {
         } else if (this.keyboardNavService.selectedIndex() !== null) {
           this.keyboardNavService.clearSelection();
         } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          this.scrollService.scrollToTop();
         }
       }
       return;
@@ -307,14 +309,14 @@ export class App implements OnInit {
     }
   }
 
-  private scrollSelectedIntoView(): void {
-    setTimeout(() => {
-      const selectedIndex = this.keyboardNavService.selectedIndex();
-      if (selectedIndex !== null) {
-        const element = document.querySelector(`[data-story-index="${selectedIndex}"]`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  private async scrollSelectedIntoView(): Promise<void> {
+    const selectedIndex = this.keyboardNavService.selectedIndex();
+    if (selectedIndex !== null) {
+      const element = document.querySelector(`[data-story-index="${selectedIndex}"]`);
+      if (element) {
+        await this.scrollService.scrollElementIntoView(element, { block: 'center' });
       }
-    }, 0);
+    }
   }
 
   private openSelectedStory(): void {
@@ -440,7 +442,7 @@ export class App implements OnInit {
 
     // Clear selection and scroll to top for immediate feedback
     this.keyboardNavService.clearSelection();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.scrollService.scrollToTop();
 
     // Get the activated component from the router outlet
     if (this.outlet && this.outlet.component) {

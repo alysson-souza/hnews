@@ -7,6 +7,7 @@ import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
+import { ScrollService } from '../../services/scroll.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
@@ -151,6 +152,7 @@ export class ItemComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
+  private scrollService = inject(ScrollService);
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
@@ -214,23 +216,7 @@ export class ItemComponent implements OnInit {
           // Mark as visited with current comment count
           this.visitedService.markAsVisited(item.id, item.descendants);
           // Scroll to submission title after content loads
-          setTimeout(() => {
-            const element = document.getElementById('submission-title');
-            const header = document.querySelector('.app-header');
-            if (element && header) {
-              const elementRect = element.getBoundingClientRect();
-              const elementTop = elementRect.top + window.scrollY;
-              const headerRect = header.getBoundingClientRect();
-              const navbarHeight = headerRect.height;
-
-              const targetPosition = elementTop - navbarHeight;
-
-              window.scrollTo({
-                top: Math.max(0, targetPosition),
-                behavior: 'smooth',
-              });
-            }
-          }, 100);
+          this.scrollService.scrollToElement('submission-title', { delay: 100 });
         } else {
           this.error.set('Item not found');
         }
