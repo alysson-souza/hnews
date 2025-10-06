@@ -42,7 +42,6 @@ import { ScrollService } from '../../../../services/scroll.service';
 export class HeaderBrandComponent {
   @Input() offline = false;
 
-  private router = inject(Router);
   private scrollService = inject(ScrollService);
 
   scrollToTop(): void {
