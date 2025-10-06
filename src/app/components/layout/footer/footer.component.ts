@@ -41,11 +41,19 @@ import { CommonModule } from '@angular/common';
             >
             | Data from the
             <a
+              href="https://github.com/HackerNews/API"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link"
+              >Official HN API</a
+            >
+            &amp;
+            <a
               href="https://hn.algolia.com"
               target="_blank"
               rel="noopener noreferrer"
               class="footer-link"
-              >HN Algolia API</a
+              >Algolia API</a
             >
           </p>
           <p class="footer-subtext">
@@ -70,7 +78,7 @@ import { CommonModule } from '@angular/common';
         href="https://github.com/alysson-souza/hnews"
         target="_blank"
         rel="noopener noreferrer"
-        class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-white transition-colors"
+        class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-200 hover:text-white dark:text-blue-100 dark:hover:text-white transition-colors"
         aria-label="View Source Code On GitHub"
         title="View On GitHub"
       >
