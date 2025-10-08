@@ -401,19 +401,17 @@ export class StoryItem {
       return;
     }
 
-    window.navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        this.copiedStory = true;
-        this.copiedComments = false;
-        window.setTimeout(() => {
-          this.copiedStory = false;
-          this.showActionsMenu = false;
-        }, 1500);
-      })
-      .catch((err) => {
-        console.error('Failed to copy: ', err);
-      });
+    try {
+      await window.navigator.clipboard.writeText(url);
+      this.copiedStory = true;
+      this.copiedComments = false;
+      window.setTimeout(() => {
+        this.copiedStory = false;
+        this.showActionsMenu = false;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   }
 
   async shareComments(): Promise<void> {
@@ -450,19 +448,17 @@ export class StoryItem {
       return;
     }
 
-    window.navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        this.copiedComments = true;
-        this.copiedStory = false;
-        window.setTimeout(() => {
-          this.copiedComments = false;
-          this.showActionsMenu = false;
-        }, 1500);
-      })
-      .catch((err) => {
-        console.error('Failed to copy: ', err);
-      });
+    try {
+      await window.navigator.clipboard.writeText(url);
+      this.copiedComments = true;
+      this.copiedStory = false;
+      window.setTimeout(() => {
+        this.copiedComments = false;
+        this.showActionsMenu = false;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   }
 
   openCommentsInNewTab(): void {
