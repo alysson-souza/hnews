@@ -12,6 +12,7 @@ import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
 import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
+import { CommentStateService, CommentStateEntry } from '../../services/comment-state.service';
 
 import { CommentThread } from './comment-thread';
 
@@ -60,7 +61,64 @@ class MockCommentRepliesLoaderService {
   configureKids = jasmine.createSpy('configureKids');
   loadFirstPage = jasmine.createSpy('loadFirstPage');
   loadNextPage = jasmine.createSpy('loadNextPage');
+  loadUpToPage = jasmine.createSpy('loadUpToPage');
   remainingCount = jasmine.createSpy('remainingCount').and.returnValue(0);
+}
+
+class MockCommentStateService {
+  private states = new Map<number, CommentStateEntry>();
+
+  getState = jasmine.createSpy('getState').and.callFake((commentId: number) => {
+    return this.states.get(commentId);
+  });
+
+  setState = jasmine
+    .createSpy('setState')
+    .and.callFake((commentId: number, state: Partial<CommentStateEntry>) => {
+      const current = this.states.get(commentId);
+      const newState: CommentStateEntry = {
+        collapsed: current?.collapsed ?? false,
+        repliesExpanded: current?.repliesExpanded ?? false,
+        loadedPages: current?.loadedPages ?? 0,
+        lastAccessed: Date.now(),
+        ...state,
+      };
+      this.states.set(commentId, newState);
+    });
+
+  setCollapsed = jasmine
+    .createSpy('setCollapsed')
+    .and.callFake((commentId: number, collapsed: boolean) => {
+      this.setState(commentId, { collapsed });
+    });
+
+  setRepliesExpanded = jasmine
+    .createSpy('setRepliesExpanded')
+    .and.callFake((commentId: number, expanded: boolean) => {
+      this.setState(commentId, { repliesExpanded: expanded });
+    });
+
+  setLoadedPages = jasmine
+    .createSpy('setLoadedPages')
+    .and.callFake((commentId: number, pages: number) => {
+      this.setState(commentId, { loadedPages: pages });
+    });
+
+  clearAll = jasmine.createSpy('clearAll').and.callFake(() => {
+    this.states.clear();
+  });
+
+  // Test helper
+  setSavedState(commentId: number, state: Partial<CommentStateEntry>) {
+    const newState: CommentStateEntry = {
+      collapsed: false,
+      repliesExpanded: false,
+      loadedPages: 0,
+      lastAccessed: Date.now(),
+      ...state,
+    };
+    this.states.set(commentId, newState);
+  }
 }
 
 describe('CommentThread', () => {
@@ -69,6 +127,7 @@ describe('CommentThread', () => {
   let mockHnService: jasmine.SpyObj<HackernewsService>;
   let mockVoteStore: MockCommentVoteStoreService;
   let mockRepliesLoader: MockCommentRepliesLoaderService;
+  let mockCommentStateService: MockCommentStateService;
 
   // Test data
   const mockComment: HNItem = {
@@ -86,6 +145,7 @@ describe('CommentThread', () => {
     mockHnService = jasmine.createSpyObj<HackernewsService>('HackernewsService', ['getItem']);
     mockVoteStore = new MockCommentVoteStoreService();
     mockRepliesLoader = new MockCommentRepliesLoaderService();
+    mockCommentStateService = new MockCommentStateService();
 
     TestBed.overrideComponent(CommentThread, {
       set: {
@@ -102,6 +162,7 @@ describe('CommentThread', () => {
         { provide: HackernewsService, useValue: mockHnService },
         { provide: CacheManagerService, useClass: MockCacheManagerService },
         { provide: CommentVoteStoreService, useValue: mockVoteStore },
+        { provide: CommentStateService, useValue: mockCommentStateService },
       ],
     }).compileComponents();
 
@@ -403,6 +464,16 @@ describe('CommentThread', () => {
       component.toggleCollapse();
       expect(component.isCollapsed()).toBe(false);
     });
+
+    it('should persist collapse state to service', () => {
+      component.toggleCollapse();
+
+      expect(mockCommentStateService.setCollapsed).toHaveBeenCalledWith(123, true);
+
+      component.toggleCollapse();
+
+      expect(mockCommentStateService.setCollapsed).toHaveBeenCalledWith(123, false);
+    });
   });
 
   describe('upvoteComment', () => {
@@ -517,6 +588,142 @@ describe('CommentThread', () => {
     it('should cap indentation at depth 8', () => {
       component.depth = 10;
       expect(component.getIndentClass()).toBe('ml-32');
+    });
+  });
+
+  describe('comment state persistence', () => {
+    it('should restore saved collapse state when loading comment', () => {
+      mockCommentStateService.setSavedState(123, { collapsed: true });
+      mockHnService.getItem.and.returnValue(of(mockComment));
+
+      component.loadComment();
+      fixture.detectChanges();
+
+      expect(component.isCollapsed()).toBe(true);
+      expect(mockCommentStateService.getState).toHaveBeenCalledWith(123);
+    });
+
+    it('should restore saved expanded state when loading comment', () => {
+      mockCommentStateService.setSavedState(123, { collapsed: false });
+      mockHnService.getItem.and.returnValue(of(mockComment));
+
+      component.loadComment();
+      fixture.detectChanges();
+
+      expect(component.isCollapsed()).toBe(false);
+    });
+
+    it('should restore reply expansion and load pages', () => {
+      mockCommentStateService.setSavedState(123, {
+        collapsed: false,
+        repliesExpanded: true,
+        loadedPages: 3,
+      });
+      mockHnService.getItem.and.returnValue(of(mockComment));
+
+      component.loadComment();
+      fixture.detectChanges();
+
+      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalledWith(2, jasmine.any(Function));
+    });
+
+    it('should not restore replies if repliesExpanded is false', () => {
+      mockCommentStateService.setSavedState(123, {
+        collapsed: false,
+        repliesExpanded: false,
+        loadedPages: 0,
+      });
+      mockHnService.getItem.and.returnValue(of(mockComment));
+
+      component.loadComment();
+      fixture.detectChanges();
+
+      expect(mockRepliesLoader.loadUpToPage).not.toHaveBeenCalled();
+    });
+
+    it('should apply auto-collapse when no saved state exists', () => {
+      const kidsArray = Array.from({ length: 15 }, (_, i) => i);
+      const commentWithManyKids = { ...mockComment, kids: kidsArray };
+      mockHnService.getItem.and.returnValue(of(commentWithManyKids));
+
+      component.loadComment();
+      fixture.detectChanges();
+
+      expect(component.isCollapsed()).toBe(true);
+    });
+
+    it('should prioritize saved state over auto-collapse', () => {
+      const kidsArray = Array.from({ length: 15 }, (_, i) => i);
+      const commentWithManyKids = { ...mockComment, kids: kidsArray };
+
+      mockCommentStateService.setSavedState(123, { collapsed: false });
+      mockHnService.getItem.and.returnValue(of(commentWithManyKids));
+
+      component.loadComment();
+      fixture.detectChanges();
+
+      expect(component.isCollapsed()).toBe(false);
+    });
+
+    it('should restore state when hydrating from initial comment', () => {
+      mockCommentStateService.setSavedState(123, { collapsed: true });
+      component.initialComment = mockComment;
+
+      component.ngOnInit();
+
+      expect(component.isCollapsed()).toBe(true);
+      expect(mockCommentStateService.getState).toHaveBeenCalledWith(123);
+    });
+
+    it('should not restore replies for lazy-loaded comments until explicitly loaded', () => {
+      component.lazyLoad = true;
+      component.commentLoaded.set(false); // Not loaded yet
+      mockCommentStateService.setSavedState(123, {
+        collapsed: false,
+        repliesExpanded: true,
+        loadedPages: 2,
+      });
+
+      mockHnService.getItem.and.returnValue(of(mockComment));
+      component.loadComment();
+      fixture.detectChanges();
+
+      // After loadComment() completes, commentLoaded is set to true
+      // So state restoration should happen. Let's update the test expectation.
+      expect(mockCommentStateService.getState).toHaveBeenCalled();
+      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalled();
+    });
+
+    it('should save state when expanding replies', () => {
+      mockRepliesLoader.repliesLoaded.set(false);
+      mockRepliesLoader.loadingReplies.set(false);
+
+      component.expandReplies();
+
+      expect(mockRepliesLoader.loadFirstPage).toHaveBeenCalled();
+      expect(mockCommentStateService.setRepliesExpanded).toHaveBeenCalledWith(123, true);
+      expect(mockCommentStateService.setLoadedPages).toHaveBeenCalledWith(123, 1);
+    });
+
+    it('should save state when loading more replies', () => {
+      mockRepliesLoader.loadingMore.set(false);
+      mockRepliesLoader.hasMore.set(true);
+      mockRepliesLoader.currentPage.set(1); // Currently on page 1
+
+      component.loadMoreReplies();
+
+      expect(mockRepliesLoader.loadNextPage).toHaveBeenCalled();
+      expect(mockCommentStateService.setLoadedPages).toHaveBeenCalledWith(123, 3); // page 1 + 1 (next) + 1 (1-based)
+    });
+
+    it('should not restore state for deleted comments', () => {
+      const deletedComment = { ...mockComment, deleted: true };
+      mockCommentStateService.setSavedState(123, { collapsed: true });
+      component.initialComment = deletedComment;
+
+      component.ngOnInit();
+
+      expect(mockCommentStateService.getState).not.toHaveBeenCalled();
     });
   });
 });

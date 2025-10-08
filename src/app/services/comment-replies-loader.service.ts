@@ -63,6 +63,24 @@ export class CommentRepliesLoaderService {
     this.loadPage(nextPage);
   }
 
+  /**
+   * Load multiple pages up to targetPage (for state restoration).
+   * @param targetPage - Zero-based page index to load up to
+   * @param onComplete - Optional callback when all pages are loaded
+   */
+  loadUpToPage(targetPage: number, onComplete?: () => void) {
+    if (targetPage < 0 || this.kidsIds.length === 0) {
+      onComplete?.();
+      return;
+    }
+
+    // Cap at available pages
+    const maxPage = Math.floor((this.kidsIds.length - 1) / this.pageSize);
+    const cappedTarget = Math.min(targetPage, maxPage);
+
+    this.loadPagesSequentially(0, cappedTarget, onComplete);
+  }
+
   remainingCount(): number {
     if (this.kidsIds.length === 0) {
       return 0;
@@ -73,10 +91,27 @@ export class CommentRepliesLoaderService {
     return Math.max(0, Math.min(this.pageSize, remaining));
   }
 
-  private loadPage(page: number) {
+  private loadPagesSequentially(currentPage: number, targetPage: number, onComplete?: () => void) {
+    if (currentPage > targetPage) {
+      onComplete?.();
+      return;
+    }
+
+    this.loadPage(currentPage, () => {
+      // Load next page after this one completes
+      if (currentPage < targetPage) {
+        this.loadPagesSequentially(currentPage + 1, targetPage, onComplete);
+      } else {
+        onComplete?.();
+      }
+    });
+  }
+
+  private loadPage(page: number, onComplete?: () => void) {
     if (this.kidsIds.length === 0) {
       this.loadingRepliesState.set(false);
       this.loadingMoreState.set(false);
+      onComplete?.();
       return;
     }
 
@@ -103,10 +138,13 @@ export class CommentRepliesLoaderService {
 
         this.loadingRepliesState.set(false);
         this.loadingMoreState.set(false);
+
+        onComplete?.();
       },
       error: () => {
         this.loadingRepliesState.set(false);
         this.loadingMoreState.set(false);
+        onComplete?.();
       },
     });
   }

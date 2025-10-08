@@ -12,6 +12,7 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
 import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
+import { CommentStateService } from '../../services/comment-state.service';
 
 @Component({
   selector: 'app-comment-thread',
@@ -181,6 +182,7 @@ export class CommentThread implements OnInit {
   private readonly autoCollapseThreshold = 10;
 
   private hnService = inject(HackernewsService);
+  private commentStateService = inject(CommentStateService);
 
   comment = signal<HNItem | null>(null);
   isCollapsed = signal(false);
@@ -255,6 +257,7 @@ export class CommentThread implements OnInit {
       this.comment.set(item);
       this.commentLoaded.set(true);
       this.loading.set(false);
+      this.restoreCommentState();
     } else {
       this.repliesLoader.configureKids([]);
       this.loading.set(false);
@@ -270,8 +273,8 @@ export class CommentThread implements OnInit {
           this.repliesLoader.configureKids(item.kids);
           this.comment.set(item);
           this.commentLoaded.set(true);
-          // Parent is ready; children loading deferred until expand
           this.loading.set(false);
+          this.restoreCommentState();
         } else {
           this.repliesLoader.configureKids([]);
           this.loading.set(false);
@@ -286,17 +289,49 @@ export class CommentThread implements OnInit {
   loadMoreReplies() {
     if (!this.loadingMore() && this.hasMoreReplies()) {
       this.repliesLoader.loadNextPage();
+      // Save state after page loads
+      const newPageCount = this.currentPageValue + 2; // Current is 0-based, we just loaded next
+      this.commentStateService.setLoadedPages(this.commentId, newPageCount);
     }
   }
 
   expandReplies() {
     if (!this.repliesLoaded() && !this.loadingReplies()) {
       this.repliesLoader.loadFirstPage();
+      this.commentStateService.setRepliesExpanded(this.commentId, true);
+      this.commentStateService.setLoadedPages(this.commentId, 1);
     }
   }
 
   toggleCollapse() {
-    this.isCollapsed.update((v) => !v);
+    this.isCollapsed.update((v) => {
+      const newValue = !v;
+      this.commentStateService.setCollapsed(this.commentId, newValue);
+      return newValue;
+    });
+  }
+
+  private restoreCommentState() {
+    const state = this.commentStateService.getState(this.commentId);
+
+    if (state) {
+      // Restore collapsed state
+      this.isCollapsed.set(state.collapsed);
+
+      // Restore reply expansion and pagination
+      // But NOT for lazy-loaded comments that haven't been explicitly loaded yet
+      if (state.repliesExpanded && state.loadedPages > 0 && this.commentLoaded()) {
+        // Load all previously loaded pages
+        const targetPage = state.loadedPages - 1; // Convert to 0-based page index
+        this.repliesLoader.loadUpToPage(targetPage, () => {
+          // Update state after restoration completes to refresh lastAccessed
+          this.commentStateService.setState(this.commentId, state);
+        });
+      }
+    } else if (this.shouldAutoCollapse()) {
+      // No saved state - apply auto-collapse heuristic
+      this.isCollapsed.set(true);
+    }
   }
 
   upvoteComment() {
