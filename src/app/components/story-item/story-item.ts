@@ -192,12 +192,20 @@ import { UserSettingsService } from '../../services/user-settings.service';
   ],
 })
 export class StoryItem {
-  @Input() story?: HNItem;
+  @Input() set story(value: HNItem | undefined) {
+    this._story = value;
+    this.storyId.set(value?.id);
+  }
+  get story(): HNItem | undefined {
+    return this._story;
+  }
+  private _story?: HNItem;
   @Input() index = 0;
   @Input() isSelected = false;
   @Input() loading = false;
 
   private votedItems = signal<Set<number>>(new Set());
+  private storyId = signal<number | undefined>(undefined);
   private router = inject(Router);
   private visitedService = inject(VisitedService);
   private sidebarService = inject(SidebarService);
@@ -221,7 +229,7 @@ export class StoryItem {
     }
   }
 
-  hasVoted = computed(() => (this.story ? this.votedItems().has(this.story.id) : false));
+  hasVoted = computed(() => (this.storyId() ? this.votedItems().has(this.storyId()!) : false));
 
   getDomain(url?: string): string {
     if (!url) return '';

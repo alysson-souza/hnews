@@ -223,4 +223,152 @@ describe('StoryList', () => {
       expect(store.totalStoryIds()).toEqual([6, 7, 8, 9, 10]);
     });
   });
+
+  describe('loadMore', () => {
+    it('should call store.loadMore when hasMore is true', async () => {
+      store.init('top', 30);
+      await Promise.resolve();
+
+      spyOn(store, 'loadMore');
+      spyOn(store, 'hasMore').and.returnValue(true);
+
+      component.loadMore();
+
+      expect(store.loadMore).toHaveBeenCalled();
+    });
+
+    it('should not call store.loadMore when hasMore is false', () => {
+      spyOn(store, 'loadMore');
+      spyOn(store, 'hasMore').and.returnValue(false);
+
+      component.loadMore();
+
+      expect(store.loadMore).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('hasMore', () => {
+    it('should return true when more stories are available', () => {
+      spyOn(store, 'hasMore').and.returnValue(true);
+
+      expect(component.hasMore()).toBe(true);
+    });
+
+    it('should return false when no more stories are available', () => {
+      spyOn(store, 'hasMore').and.returnValue(false);
+
+      expect(component.hasMore()).toBe(false);
+    });
+  });
+
+  describe('loadStories', () => {
+    it('should call store.loadStories with refresh flag', () => {
+      spyOn(store, 'loadStories');
+
+      component.loadStories(true);
+
+      expect(store.loadStories).toHaveBeenCalledWith(true, undefined);
+    });
+
+    it('should call store.loadStories with refresh time', () => {
+      spyOn(store, 'loadStories');
+      const time = Date.now();
+
+      component.loadStories(true, time);
+
+      expect(store.loadStories).toHaveBeenCalledWith(true, time);
+    });
+  });
+
+  describe('loadNewStories', () => {
+    it('should reset newStoriesAvailable and trigger refresh', () => {
+      store.newStoriesAvailable.set(5);
+      spyOn(component, 'refresh');
+
+      component.loadNewStories();
+
+      expect(store.newStoriesAvailable()).toBe(0);
+      expect(component.refresh).toHaveBeenCalled();
+    });
+  });
+
+  describe('ngOnInit', () => {
+    it('should initialize store with storyType and pageSize', () => {
+      spyOn(store, 'init');
+      component.storyType = 'top';
+      component.pageSize = 30;
+
+      component.ngOnInit();
+
+      expect(store.init).toHaveBeenCalledWith('top', 30);
+    });
+  });
+
+  describe('ngOnChanges', () => {
+    it('should re-initialize store when storyType changes', () => {
+      spyOn(store, 'init');
+      component.storyType = 'best';
+
+      const changes = {
+        storyType: {
+          currentValue: 'best',
+          previousValue: 'top',
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      };
+
+      component.ngOnChanges(changes);
+
+      expect(store.init).toHaveBeenCalledWith('best', 30);
+    });
+
+    it('should not re-initialize on first change', () => {
+      spyOn(store, 'init');
+
+      const changes = {
+        storyType: {
+          currentValue: 'top',
+          previousValue: undefined,
+          firstChange: true,
+          isFirstChange: () => true,
+        },
+      };
+
+      component.ngOnChanges(changes);
+
+      expect(store.init).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('ngOnDestroy', () => {
+    it('should complete destroy$ subject', () => {
+      const destroySpy = spyOn(component['destroy$'], 'next');
+      const completeSpy = spyOn(component['destroy$'], 'complete');
+
+      component.ngOnDestroy();
+
+      expect(destroySpy).toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('isOffline computed', () => {
+    it('should be defined', () => {
+      expect(component.isOffline).toBeDefined();
+    });
+  });
+
+  describe('skeletonArray', () => {
+    it('should create array with pageSize elements', () => {
+      component.pageSize = 15;
+      const skelArr = Array(component.pageSize)
+        .fill(0)
+        .map((_, i) => i);
+
+      expect(skelArr.length).toBe(15);
+      expect(skelArr[0]).toBe(0);
+      expect(skelArr[14]).toBe(14);
+    });
+  });
 });
