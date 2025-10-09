@@ -8,6 +8,7 @@ import { HNItem } from '../../models/hn';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
 import { ScrollService } from '../../services/scroll.service';
+import { CommentSortService } from '../../services/comment-sort.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
@@ -165,13 +166,14 @@ export class ItemComponent implements OnInit {
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private scrollService = inject(ScrollService);
+  private commentSortService = inject(CommentSortService);
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
 
-  // Sorting state
-  sortOrder = signal<CommentSortOrder>('default');
+  // Sorting state - use global service
+  sortOrder = this.commentSortService.sortOrder;
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
 
@@ -254,8 +256,7 @@ export class ItemComponent implements OnInit {
     this.error.set(null);
     this.visibleTopLevelCount.set(this.commentsPageSize);
 
-    // Reset sorting state when loading a new item
-    this.sortOrder.set('default');
+    // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
     this.commentsLoading.set(false);
 
@@ -293,7 +294,7 @@ export class ItemComponent implements OnInit {
   }
 
   onSortChange(newSort: CommentSortOrder): void {
-    this.sortOrder.set(newSort);
+    this.commentSortService.setSortOrder(newSort);
 
     // Reset pagination to first page
     this.visibleTopLevelCount.set(this.commentsPageSize);
@@ -320,7 +321,7 @@ export class ItemComponent implements OnInit {
       error: () => {
         this.commentsLoading.set(false);
         // Fallback to default order on error
-        this.sortOrder.set('default');
+        this.commentSortService.setSortOrder('default');
       },
     });
   }

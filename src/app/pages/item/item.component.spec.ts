@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { of, throwError, BehaviorSubject } from 'rxjs';
 import { ItemComponent } from './item.component';
 import { HackernewsService } from '../../services/hackernews.service';
 import { VisitedService } from '../../services/visited.service';
 import { ScrollService } from '../../services/scroll.service';
+import { CommentSortService } from '../../services/comment-sort.service';
 import { HNItem } from '../../models/hn';
 
 describe('ItemComponent', () => {
@@ -15,11 +17,8 @@ describe('ItemComponent', () => {
   let mockHnService: jasmine.SpyObj<HackernewsService>;
   let mockVisitedService: jasmine.SpyObj<VisitedService>;
   let mockScrollService: jasmine.SpyObj<ScrollService>;
-  let mockActivatedRoute: {
-    params: BehaviorSubject<Params>;
-    queryParams: BehaviorSubject<Params>;
-    snapshot: { params: Params };
-  };
+  let mockCommentSortService: jasmine.SpyObj<CommentSortService>;
+  let mockActivatedRoute: Partial<ActivatedRoute>;
 
   const mockItem: HNItem = {
     id: 123,
@@ -68,10 +67,13 @@ describe('ItemComponent', () => {
     ]);
     mockVisitedService = jasmine.createSpyObj('VisitedService', ['markAsVisited']);
     mockScrollService = jasmine.createSpyObj('ScrollService', ['scrollToElement']);
+    mockCommentSortService = jasmine.createSpyObj('CommentSortService', ['setSortOrder'], {
+      sortOrder: signal('default'),
+    });
 
     mockActivatedRoute = {
-      params: new BehaviorSubject({ id: '123' }),
-      queryParams: new BehaviorSubject({}),
+      params: new BehaviorSubject<Params>({ id: '123' }),
+      queryParams: new BehaviorSubject<Params>({}),
       snapshot: { params: { id: '123' } },
     };
 
@@ -81,6 +83,7 @@ describe('ItemComponent', () => {
         { provide: HackernewsService, useValue: mockHnService },
         { provide: VisitedService, useValue: mockVisitedService },
         { provide: ScrollService, useValue: mockScrollService },
+        { provide: CommentSortService, useValue: mockCommentSortService },
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
       ],
     }).compileComponents();
@@ -103,39 +106,40 @@ describe('ItemComponent', () => {
     });
 
     it('should use default HN order when "default" is selected', () => {
-      component.sortOrder.set('default');
+      mockCommentSortService.sortOrder.set('default');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([1, 2, 3]);
     });
 
     it('should sort comments by newest when "newest" is selected', () => {
-      component.sortOrder.set('newest');
+      mockCommentSortService.sortOrder.set('newest');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([2, 3, 1]);
     });
 
     it('should sort comments by oldest when "oldest" is selected', () => {
-      component.sortOrder.set('oldest');
+      mockCommentSortService.sortOrder.set('oldest');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([1, 3, 2]);
     });
 
     it('should sort comments by best (score + replies * 2) when "best" is selected', () => {
-      component.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('best');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([3, 1, 2]);
     });
   });
 
   describe('State Management', () => {
-    it('should reset sort to default when loading new item', () => {
-      component.sortOrder.set('best');
+    it('should keep sort order when loading new item', () => {
+      mockCommentSortService.sortOrder.set('best');
       component.allComments.set(mockComments);
       component.commentsLoading.set(true);
 
       component.loadItem(456);
 
-      expect(component.sortOrder()).toBe('default');
+      // Sort order persists globally
+      expect(mockCommentSortService.sortOrder()).toBe('best');
       expect(component.allComments()).toEqual([]);
       expect(component.commentsLoading()).toBe(false);
     });
@@ -156,11 +160,11 @@ describe('ItemComponent', () => {
       component.item.set(mockItem);
       component.allComments.set(mockComments);
 
-      component.sortOrder.set('newest');
+      mockCommentSortService.sortOrder.set('newest');
       let visibleIds = component.visibleCommentIds();
       expect(visibleIds).toEqual([2, 3, 1]);
 
-      component.sortOrder.set('oldest');
+      mockCommentSortService.sortOrder.set('oldest');
       visibleIds = component.visibleCommentIds();
       expect(visibleIds).toEqual([1, 3, 2]);
     });
@@ -180,10 +184,10 @@ describe('ItemComponent', () => {
       );
 
       component.item.set(mockItem);
-      component.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('best');
       component.onSortChange('best');
 
-      expect(component.sortOrder()).toBe('default');
+      expect(mockCommentSortService.setSortOrder).toHaveBeenCalledWith('default');
       expect(component.commentsLoading()).toBe(false);
     });
   });
@@ -195,8 +199,8 @@ describe('ItemComponent', () => {
     });
 
     it('should handle query params correctly', () => {
-      mockActivatedRoute.params.next({});
-      mockActivatedRoute.queryParams.next({ id: '456' });
+      (mockActivatedRoute.params as BehaviorSubject<Params>).next({});
+      (mockActivatedRoute.queryParams as BehaviorSubject<Params>).next({ id: '456' });
 
       component.ngOnInit();
       expect(mockHnService.getItem).toHaveBeenCalledWith(456);

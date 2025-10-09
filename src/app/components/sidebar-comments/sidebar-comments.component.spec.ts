@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { SidebarCommentsComponent } from './sidebar-comments.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { HackernewsService } from '../../services/hackernews.service';
 import { VisitedService } from '../../services/visited.service';
+import { CommentSortService } from '../../services/comment-sort.service';
 import { HNItem } from '../../models/hn';
 
 describe('SidebarCommentsComponent', () => {
@@ -14,6 +16,7 @@ describe('SidebarCommentsComponent', () => {
   let mockHnService: jasmine.SpyObj<HackernewsService>;
   let mockSidebarService: jasmine.SpyObj<SidebarService>;
   let mockVisitedService: jasmine.SpyObj<VisitedService>;
+  let mockCommentSortService: jasmine.SpyObj<CommentSortService>;
 
   const mockItem: HNItem = {
     id: 123,
@@ -65,6 +68,9 @@ describe('SidebarCommentsComponent', () => {
       currentItemId: jasmine.createSpy().and.returnValue(123),
     });
     mockVisitedService = jasmine.createSpyObj('VisitedService', ['markAsVisited']);
+    mockCommentSortService = jasmine.createSpyObj('CommentSortService', ['setSortOrder'], {
+      sortOrder: signal('default'),
+    });
 
     await TestBed.configureTestingModule({
       imports: [SidebarCommentsComponent],
@@ -72,6 +78,7 @@ describe('SidebarCommentsComponent', () => {
         { provide: HackernewsService, useValue: mockHnService },
         { provide: SidebarService, useValue: mockSidebarService },
         { provide: VisitedService, useValue: mockVisitedService },
+        { provide: CommentSortService, useValue: mockCommentSortService },
       ],
     }).compileComponents();
 
@@ -93,27 +100,27 @@ describe('SidebarCommentsComponent', () => {
     });
 
     it('should use default HN order when "default" is selected', () => {
-      component.sortOrder.set('default');
+      mockCommentSortService.sortOrder.set('default');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([1, 2, 3]);
     });
 
     it('should sort comments by newest when "newest" is selected', () => {
-      component.sortOrder.set('newest');
+      mockCommentSortService.sortOrder.set('newest');
       const sortedIds = component.sortedCommentIds();
       // Sorted by time descending: comment2 (2000), comment3 (1500), comment1 (1000)
       expect(sortedIds).toEqual([2, 3, 1]);
     });
 
     it('should sort comments by oldest when "oldest" is selected', () => {
-      component.sortOrder.set('oldest');
+      mockCommentSortService.sortOrder.set('oldest');
       const sortedIds = component.sortedCommentIds();
       // Sorted by time ascending: comment1 (1000), comment3 (1500), comment2 (2000)
       expect(sortedIds).toEqual([1, 3, 2]);
     });
 
     it('should sort comments by best (score + replies * 2) when "best" is selected', () => {
-      component.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('best');
       const sortedIds = component.sortedCommentIds();
       // comment1: score 10 + kids 2 * 2 = 14
       // comment2: score 5 + kids 0 * 2 = 5
@@ -124,21 +131,22 @@ describe('SidebarCommentsComponent', () => {
 
     it('should fallback to default order when no comments loaded', () => {
       component.allComments.set([]);
-      component.sortOrder.set('newest');
+      mockCommentSortService.sortOrder.set('newest');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([1, 2, 3]); // Falls back to item kids
     });
   });
 
   describe('State Management', () => {
-    it('should reset sort to default when loading new item', () => {
-      component.sortOrder.set('best');
+    it('should keep sort order when loading new item', () => {
+      mockCommentSortService.sortOrder.set('best');
       component.allComments.set(mockComments);
       component.commentsLoading.set(true);
 
       component['loadItem'](456);
 
-      expect(component.sortOrder()).toBe('default');
+      // Sort order persists globally
+      expect(mockCommentSortService.sortOrder()).toBe('best');
       expect(component.allComments()).toEqual([]);
       expect(component.commentsLoading()).toBe(false);
     });
@@ -169,11 +177,11 @@ describe('SidebarCommentsComponent', () => {
       component.item.set(mockItem);
       component.allComments.set(mockComments);
 
-      component.sortOrder.set('newest');
+      mockCommentSortService.sortOrder.set('newest');
       let visibleIds = component.visibleCommentIds();
       expect(visibleIds).toEqual([2, 3, 1]);
 
-      component.sortOrder.set('oldest');
+      mockCommentSortService.sortOrder.set('oldest');
       visibleIds = component.visibleCommentIds();
       expect(visibleIds).toEqual([1, 3, 2]);
     });
@@ -200,10 +208,10 @@ describe('SidebarCommentsComponent', () => {
       );
 
       component.item.set(mockItem);
-      component.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('best');
       component.onSortChange('best');
 
-      expect(component.sortOrder()).toBe('default');
+      expect(mockCommentSortService.setSortOrder).toHaveBeenCalledWith('default');
       expect(component.commentsLoading()).toBe(false);
     });
   });
