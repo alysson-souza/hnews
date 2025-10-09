@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
+import { ActivatedRoute, ActivatedRouteSnapshot, Params } from '@angular/router';
 import { of, throwError, BehaviorSubject } from 'rxjs';
 import { ItemComponent } from './item.component';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -74,7 +74,9 @@ describe('ItemComponent', () => {
     mockActivatedRoute = {
       params: new BehaviorSubject<Params>({ id: '123' }),
       queryParams: new BehaviorSubject<Params>({}),
-      snapshot: { params: { id: '123' } },
+      snapshot: {
+        params: { id: '123' },
+      } as Partial<ActivatedRouteSnapshot> as ActivatedRouteSnapshot,
     };
 
     await TestBed.configureTestingModule({
