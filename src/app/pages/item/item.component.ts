@@ -13,6 +13,10 @@ import { CardComponent } from '../../components/shared/card/card.component';
 import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
 import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/sidebar-story-summary.component';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import {
+  CommentSortDropdownComponent,
+  CommentSortOrder,
+} from '../../components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
 
 @Component({
   selector: 'app-item',
@@ -25,6 +29,7 @@ import { AppButtonComponent } from '../../components/shared/app-button/app-butto
     VisitedIndicatorComponent,
     SidebarStorySummaryComponent,
     AppButtonComponent,
+    CommentSortDropdownComponent,
   ],
   template: `
     <app-page-container>
@@ -49,7 +54,14 @@ import { AppButtonComponent } from '../../components/shared/app-button/app-butto
 
         <!-- Comments Section -->
         <app-card class="block">
-          <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
+            <app-comment-sort-dropdown
+              [sortOrder]="sortOrder()"
+              [loading]="commentsLoading()"
+              (sortChange)="onSortChange($event)"
+            />
+          </div>
 
           @if (item()!.kids && item()!.kids!.length > 0) {
             <div class="space-y-4" role="tree" aria-label="Comments">
@@ -103,7 +115,7 @@ import { AppButtonComponent } from '../../components/shared/app-button/app-butto
         @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2;
       }
       .comments-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-4;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100;
       }
       .title-link {
         @apply hover:text-blue-600 dark:hover:text-blue-400;
@@ -158,11 +170,44 @@ export class ItemComponent implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
 
+  // Sorting state
+  sortOrder = signal<CommentSortOrder>('default');
+  allComments = signal<HNItem[]>([]);
+  commentsLoading = signal(false);
+
   private readonly commentsPageSize = 10;
   private visibleTopLevelCount = signal(this.commentsPageSize);
 
-  visibleCommentIds = computed(() => {
+  sortedCommentIds = computed(() => {
+    const order = this.sortOrder();
     const kids = this.item()?.kids ?? [];
+
+    if (order === 'default') {
+      return kids; // HN's native order
+    }
+
+    const comments = this.allComments();
+    if (comments.length === 0) {
+      return kids; // Fallback while loading
+    }
+
+    // Sort by timestamp or score
+    const sorted = [...comments].sort((a, b) => {
+      if (order === 'newest') return b.time - a.time;
+      if (order === 'oldest') return a.time - b.time;
+      if (order === 'best') {
+        // Combine score + replies with 2x weight on replies for engagement
+        const bestScore = (item: HNItem) => (item.score ?? 0) + (item.kids?.length ?? 0) * 2;
+        return bestScore(b) - bestScore(a);
+      }
+      return 0;
+    });
+
+    return sorted.map((c) => c.id);
+  });
+
+  visibleCommentIds = computed(() => {
+    const kids = this.sortedCommentIds();
     const count = Math.min(this.visibleTopLevelCount(), kids.length);
     return kids.slice(0, count);
   });
@@ -209,6 +254,11 @@ export class ItemComponent implements OnInit {
     this.error.set(null);
     this.visibleTopLevelCount.set(this.commentsPageSize);
 
+    // Reset sorting state when loading a new item
+    this.sortOrder.set('default');
+    this.allComments.set([]);
+    this.commentsLoading.set(false);
+
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
         if (item) {
@@ -239,6 +289,39 @@ export class ItemComponent implements OnInit {
     this.visibleTopLevelCount.update((current) => {
       const next = current + this.commentsPageSize;
       return Math.min(next, total);
+    });
+  }
+
+  onSortChange(newSort: CommentSortOrder): void {
+    this.sortOrder.set(newSort);
+
+    // Reset pagination to first page
+    this.visibleTopLevelCount.set(this.commentsPageSize);
+
+    // Fetch comments if not already loaded and sort requires them
+    if (newSort !== 'default' && this.allComments().length === 0) {
+      this.loadAllComments();
+    }
+  }
+
+  private loadAllComments(): void {
+    const storyId = this.item()?.id;
+    if (!storyId) {
+      return;
+    }
+
+    this.commentsLoading.set(true);
+
+    this.hnService.getStoryTopLevelComments(storyId).subscribe({
+      next: (comments) => {
+        this.allComments.set(comments);
+        this.commentsLoading.set(false);
+      },
+      error: () => {
+        this.commentsLoading.set(false);
+        // Fallback to default order on error
+        this.sortOrder.set('default');
+      },
     });
   }
 }
