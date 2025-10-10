@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { NavLinkComponent } from './nav-link.component';
 import { ScrollService } from '../../../services/scroll.service';
 import { By } from '@angular/platform-browser';
@@ -9,7 +9,6 @@ import { By } from '@angular/platform-browser';
 describe('NavLinkComponent', () => {
   let component: NavLinkComponent;
   let fixture: ComponentFixture<NavLinkComponent>;
-  let router: Router;
   let scrollService: jasmine.SpyObj<ScrollService>;
 
   beforeEach(async () => {
@@ -28,7 +27,6 @@ describe('NavLinkComponent', () => {
 
     fixture = TestBed.createComponent(NavLinkComponent);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router);
     scrollService = TestBed.inject(ScrollService) as jasmine.SpyObj<ScrollService>;
   });
 
@@ -37,88 +35,11 @@ describe('NavLinkComponent', () => {
   });
 
   describe('handleClick', () => {
-    it('should scroll to top when clicking any route', () => {
-      // Arrange
-      component.route = '/top';
-      Object.defineProperty(router, 'url', { value: '/top', writable: true });
-      const event = new MouseEvent('click') as unknown as MouseEvent & {
-        preventDefault: jasmine.Spy;
-      };
-      event.preventDefault = jasmine.createSpy();
-
+    it('should scroll to top when called', () => {
       // Act
-      component.handleClick(event);
+      component.handleClick();
 
       // Assert
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(scrollService.scrollToTop).toHaveBeenCalled();
-    });
-
-    it('should scroll to top when clicking any route with query params', () => {
-      // Arrange
-      component.route = '/top';
-      Object.defineProperty(router, 'url', { value: '/top?page=2', writable: true });
-      const event = new MouseEvent('click') as unknown as MouseEvent & {
-        preventDefault: jasmine.Spy;
-      };
-      event.preventDefault = jasmine.createSpy();
-
-      // Act
-      component.handleClick(event);
-
-      // Assert
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(scrollService.scrollToTop).toHaveBeenCalled();
-    });
-
-    it('should scroll to top when clicking a different route', () => {
-      // Arrange
-      component.route = '/best';
-      Object.defineProperty(router, 'url', { value: '/top', writable: true });
-      const event = new MouseEvent('click') as unknown as MouseEvent & {
-        preventDefault: jasmine.Spy;
-      };
-      event.preventDefault = jasmine.createSpy();
-
-      // Act
-      component.handleClick(event);
-
-      // Assert
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(scrollService.scrollToTop).toHaveBeenCalled();
-    });
-
-    it('should scroll to top when clicking route without leading slash', () => {
-      // Arrange
-      component.route = 'top';
-      Object.defineProperty(router, 'url', { value: '/top', writable: true });
-      const event = new MouseEvent('click') as unknown as MouseEvent & {
-        preventDefault: jasmine.Spy;
-      };
-      event.preventDefault = jasmine.createSpy();
-
-      // Act
-      component.handleClick(event);
-
-      // Assert
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(scrollService.scrollToTop).toHaveBeenCalled();
-    });
-
-    it('should handle empty route', () => {
-      // Arrange
-      component.route = '';
-      Object.defineProperty(router, 'url', { value: '/', writable: true });
-      const event = new MouseEvent('click') as unknown as MouseEvent & {
-        preventDefault: jasmine.Spy;
-      };
-      event.preventDefault = jasmine.createSpy();
-
-      // Act
-      component.handleClick(event);
-
-      // Assert
-      expect(event.preventDefault).toHaveBeenCalled();
       expect(scrollService.scrollToTop).toHaveBeenCalled();
     });
   });
