@@ -127,7 +127,7 @@ describe('CacheManagerService', () => {
   let indexedDBService: IndexedDBServiceStub;
   let cacheService: CacheServiceStub;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     indexedDBService = new IndexedDBServiceStub();
     cacheService = new CacheServiceStub();
 
@@ -139,6 +139,16 @@ describe('CacheManagerService', () => {
       ],
     });
     service = TestBed.inject(CacheManagerService);
+
+    // Wait for any async initialization to complete
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  afterEach(async () => {
+    // Clean up service state
+    service.clearMemoryCache();
+    await indexedDBService.clearAll();
+    cacheService.clear();
   });
 
   describe('Stale-While-Revalidate (SWR)', () => {
@@ -372,13 +382,30 @@ describe('CacheManagerService', () => {
         { id: 2, type: 'story', by: 'user2', time: Date.now(), title: 'Story 2' },
       ];
 
+      // Set up test data
       await indexedDBService.setStoryList('top', storyIds);
       for (const story of stories) {
         await indexedDBService.setStory(story);
       }
 
+      // Verify test data is set up correctly
+      const verifyList = await indexedDBService.getStoryList('top');
+      expect(verifyList).toEqual(storyIds);
+
+      const verifyStory1 = await indexedDBService.getStory(1);
+      const verifyStory2 = await indexedDBService.getStory(2);
+      expect(verifyStory1).toBeTruthy();
+      expect(verifyStory2).toBeTruthy();
+
+      // Get offline data
       const result = await service.getOfflineData();
-      expect(result.stories.length).toBe(2);
+
+      // Verify results with better error messages
+      expect(result.stories.length)
+        .withContext(
+          `Expected 2 stories but got ${result.stories.length}. Stories: ${JSON.stringify(result.stories)}`,
+        )
+        .toBe(2);
       expect(result.hasMore).toBe(false);
     });
   });
