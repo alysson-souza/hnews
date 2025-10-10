@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ScrollService } from '../../../services/scroll.service';
 
 @Component({
@@ -15,7 +15,7 @@ import { ScrollService } from '../../../services/scroll.service';
       routerLinkActive="nav-link-active"
       [class]="getLinkClasses()"
       [attr.aria-current]="isActive ? 'page' : null"
-      (click)="handleClick($event)"
+      (click)="handleClick()"
     >
       <ng-content></ng-content>
     </a>
@@ -47,17 +47,10 @@ export class NavLinkComponent {
   @Input() mobile = false;
   @Input() isActive = false;
 
-  private router = inject(Router);
   private scrollService = inject(ScrollService);
 
-  handleClick(event: MouseEvent): void {
-    // Always scroll to top when any navigation tab is clicked
-    event.preventDefault();
+  handleClick(): void {
     this.scrollService.scrollToTop();
-
-    // Navigate to the target route after scrolling
-    const targetUrl = this.route.startsWith('/') ? this.route : '/' + this.route;
-    this.router.navigateByUrl(targetUrl);
   }
 
   getLinkClasses(): string {
