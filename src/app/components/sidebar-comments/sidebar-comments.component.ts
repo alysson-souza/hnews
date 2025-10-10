@@ -94,7 +94,7 @@ import {
                 <!-- Comments Header with Sort -->
                 <div class="flex items-center justify-between mb-4">
                   <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Comments ({{ item()!.descendants || 0 }})
+                    Comments ({{ item()!.kids?.length || 0 }})
                   </h4>
 
                   <app-comment-sort-dropdown

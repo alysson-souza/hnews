@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { SidebarCommentsComponent } from './sidebar-comments.component';
@@ -63,10 +64,27 @@ describe('SidebarCommentsComponent', () => {
       'getItem',
       'getStoryTopLevelComments',
     ]);
-    mockSidebarService = jasmine.createSpyObj('SidebarService', ['closeSidebar'], {
-      isOpen: jasmine.createSpy().and.returnValue(true),
-      currentItemId: jasmine.createSpy().and.returnValue(123),
-    });
+    mockSidebarService = jasmine.createSpyObj(
+      'SidebarService',
+      [
+        'closeSidebar',
+        'goBack',
+        'canGoBack',
+        'isTransitioning',
+        'animatingOut',
+        'animationDirection',
+      ],
+      {
+        isOpen: jasmine.createSpy().and.returnValue(true),
+        currentItemId: jasmine.createSpy().and.returnValue(123),
+      },
+    );
+    // Set default return values for methods used in template
+    (mockSidebarService.canGoBack as jasmine.Spy).and.returnValue(false);
+    (mockSidebarService.isTransitioning as jasmine.Spy).and.returnValue(false);
+    (mockSidebarService.animatingOut as jasmine.Spy).and.returnValue(false);
+    (mockSidebarService.animationDirection as jasmine.Spy).and.returnValue('right');
+
     mockVisitedService = jasmine.createSpyObj('VisitedService', ['markAsVisited']);
     mockCommentSortService = jasmine.createSpyObj('CommentSortService', ['setSortOrder'], {
       sortOrder: signal('default'),
@@ -79,6 +97,7 @@ describe('SidebarCommentsComponent', () => {
         { provide: SidebarService, useValue: mockSidebarService },
         { provide: VisitedService, useValue: mockVisitedService },
         { provide: CommentSortService, useValue: mockCommentSortService },
+        provideRouter([]),
       ],
     }).compileComponents();
 
@@ -213,6 +232,79 @@ describe('SidebarCommentsComponent', () => {
 
       expect(mockCommentSortService.setSortOrder).toHaveBeenCalledWith('default');
       expect(component.commentsLoading()).toBe(false);
+    });
+  });
+
+  describe('Comments Counter Display', () => {
+    it('should display correct comment count for a story with kids array', () => {
+      const storyWithKids: HNItem = {
+        id: 456,
+        type: 'story',
+        by: 'testuser',
+        time: 1234567890,
+        title: 'Test Story',
+        descendants: 10, // Total nested comments
+        kids: [1, 2, 3], // Only 3 direct replies
+      };
+
+      // Mock the service to return this item
+      mockHnService.getItem.and.returnValue(of(storyWithKids));
+      (mockSidebarService.currentItemId as jasmine.Spy).and.returnValue(456);
+
+      // Trigger the effect by setting the item
+      component.item.set(storyWithKids);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const counterElement = compiled.querySelector('h4');
+      expect(counterElement?.textContent).toContain('Comments (3)');
+    });
+
+    it('should display correct comment count for a comment thread with kids', () => {
+      const commentWithKids: HNItem = {
+        id: 789,
+        type: 'comment',
+        by: 'testuser',
+        time: 1234567890,
+        text: 'Parent comment',
+        descendants: 0, // Comments may not have accurate descendants
+        kids: [10, 11], // 2 direct replies
+      };
+
+      // Mock the service to return this item
+      mockHnService.getItem.and.returnValue(of(commentWithKids));
+      (mockSidebarService.currentItemId as jasmine.Spy).and.returnValue(789);
+
+      // Trigger the effect by setting the item
+      component.item.set(commentWithKids);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const counterElement = compiled.querySelector('h4');
+      expect(counterElement?.textContent).toContain('Comments (2)');
+    });
+
+    it('should display zero when item has no kids', () => {
+      const itemWithoutKids: HNItem = {
+        id: 999,
+        type: 'comment',
+        by: 'testuser',
+        time: 1234567890,
+        text: 'Comment with no replies',
+        descendants: 0,
+      };
+
+      // Mock the service to return this item
+      mockHnService.getItem.and.returnValue(of(itemWithoutKids));
+      (mockSidebarService.currentItemId as jasmine.Spy).and.returnValue(999);
+
+      // Trigger the effect by setting the item
+      component.item.set(itemWithoutKids);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const counterElement = compiled.querySelector('h4');
+      expect(counterElement?.textContent).toContain('Comments (0)');
     });
   });
 });
