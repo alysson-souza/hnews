@@ -49,10 +49,36 @@ import {
         @if (sidebarService.currentItemId()) {
           <div class="h-full flex flex-col">
             <!-- Header -->
-            <app-sidebar-comments-header (dismiss)="sidebarService.closeSidebar()" />
+            <app-sidebar-comments-header
+              [canGoBack]="sidebarService.canGoBack()"
+              (dismiss)="sidebarService.closeSidebar()"
+              (back)="sidebarService.goBack()"
+            />
 
             <!-- Content -->
-            <div class="flex-1 overflow-y-auto p-3 sm:p-4">
+            <div
+              class="flex-1 overflow-y-auto p-3 sm:p-4"
+              [class.slide-out-left]="
+                sidebarService.isTransitioning() &&
+                sidebarService.animatingOut() &&
+                sidebarService.animationDirection() === 'left'
+              "
+              [class.slide-out-right]="
+                sidebarService.isTransitioning() &&
+                sidebarService.animatingOut() &&
+                sidebarService.animationDirection() === 'right'
+              "
+              [class.slide-in-left]="
+                sidebarService.isTransitioning() &&
+                !sidebarService.animatingOut() &&
+                sidebarService.animationDirection() === 'left'
+              "
+              [class.slide-in-right]="
+                sidebarService.isTransitioning() &&
+                !sidebarService.animatingOut() &&
+                sidebarService.animationDirection() === 'right'
+              "
+            >
               @if (loading()) {
                 <div class="animate-pulse space-y-4">
                   <div class="h-20 bg-gray-200 rounded"></div>
@@ -113,8 +139,70 @@ import {
   `,
   styles: [
     `
+      @reference '../../../styles.css';
+
       :host {
         display: contents;
+      }
+
+      .slide-out-left {
+        animation: slide-out-left 150ms ease-in-out forwards;
+      }
+
+      .slide-out-right {
+        animation: slide-out-right 150ms ease-in-out forwards;
+      }
+
+      .slide-in-left {
+        animation: slide-in-left 150ms ease-in-out forwards;
+      }
+
+      .slide-in-right {
+        animation: slide-in-right 150ms ease-in-out forwards;
+      }
+
+      @keyframes slide-out-left {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+      }
+
+      @keyframes slide-out-right {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      @keyframes slide-in-left {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slide-in-right {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
       }
     `,
   ],

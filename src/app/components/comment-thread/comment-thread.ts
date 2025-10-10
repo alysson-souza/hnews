@@ -49,6 +49,7 @@ import { CommentStateService } from '../../services/comment-state.service';
             [showExpand]="showExpandButton()"
             [loadingReplies]="loadingReplies()"
             [commentId]="commentId"
+            [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
             (upvote)="upvoteComment()"
             (expand)="expandReplies()"
           />
@@ -100,6 +101,8 @@ import { CommentStateService } from '../../services/comment-state.service';
                           [repliesCount]="0"
                           [showExpand]="false"
                           [loadingReplies]="false"
+                          [commentId]="reply.id"
+                          [hasChildren]="false"
                           (upvote)="upvoteById(reply.id)"
                         />
                       </div>

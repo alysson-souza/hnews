@@ -49,7 +49,13 @@ import {
         <app-card class="block mb-6" id="submission-title">
           <!-- Visited indicator -->
           <app-visited-indicator [storyId]="item()!.id"></app-visited-indicator>
-          <!-- Story summary -->
+
+          @if (item()!.type === 'comment') {
+            <!-- Discussion title for comment threads -->
+            <h1 class="story-title mb-4">Discussion</h1>
+          }
+
+          <!-- Story/Comment summary -->
           <app-sidebar-story-summary [item]="item()!" [showActions]="false" />
         </app-card>
 
@@ -112,6 +118,9 @@ import {
       }
 
       /* Titles */
+      .story-title {
+        @apply text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4;
+      }
       .item-title {
         @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2;
       }

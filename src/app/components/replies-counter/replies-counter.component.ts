@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { SidebarService } from '../../services/sidebar.service';
+import { DeviceService } from '../../services/device.service';
 
 @Component({
   selector: 'app-replies-counter',
   standalone: true,
-  imports: [RouterLink],
+  imports: [],
   template: `
     <button
       type="button"
@@ -40,15 +42,16 @@ import { RouterLink } from '@angular/router';
     </button>
 
     @if (commentId) {
-      <a
-        [routerLink]="['/item', commentId]"
+      <button
+        type="button"
+        (click)="viewThreadInSidebar($event)"
         class="view-thread-inline"
-        (click)="$event.stopPropagation()"
         title="View this thread"
-        [attr.aria-label]="'View thread for this comment'"
+        [attr.aria-label]="'View thread for comment ' + commentId"
+        role="button"
       >
         »
-      </a>
+      </button>
     }
   `,
   styles: [
@@ -67,13 +70,31 @@ import { RouterLink } from '@angular/router';
         @apply font-bold text-base;
         @apply transition-colors duration-150;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply cursor-pointer;
       }
     `,
   ],
 })
 export class RepliesCounterComponent {
+  private sidebarService = inject(SidebarService);
+  private router = inject(Router);
+  private deviceService = inject(DeviceService);
+
   @Input() count = 0;
   @Input() loading = false;
   @Input() commentId?: number;
   @Output() expand = new EventEmitter<void>();
+
+  viewThreadInSidebar(event: Event): void {
+    event.stopPropagation();
+    if (this.commentId) {
+      if (this.deviceService.isMobile()) {
+        // On mobile, navigate to the item page
+        this.router.navigate(['/item', this.commentId]);
+      } else {
+        // On desktop, open in sidebar with animation
+        this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
+      }
+    }
+  }
 }
