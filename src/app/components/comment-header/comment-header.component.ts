@@ -29,7 +29,6 @@ import { DeviceService } from '../../services/device.service';
 
       @if (showExpand) {
         <app-replies-counter
-          class="ml-2"
           [count]="repliesCount"
           [loading]="loadingReplies"
           [commentId]="commentId"
@@ -55,19 +54,26 @@ import { DeviceService } from '../../services/device.service';
 
       .comment-header {
         @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-0;
+        @apply w-full;
       }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;
       }
       .view-thread-inline {
         @apply inline-flex items-center justify-center;
-        @apply ml-1 px-1.5 py-0.5 rounded;
+        @apply rounded;
         @apply text-blue-600 dark:text-blue-400;
         @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
         @apply font-bold text-base;
         @apply transition-colors duration-150;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
         @apply cursor-pointer;
+        @apply ml-auto;
+        @apply px-2 py-2;
+        @apply sm:px-1.5 sm:py-0.5;
+        min-height: 44px;
+        min-width: 44px;
+        @apply sm:min-h-0 sm:min-w-0;
       }
     `,
   ],
