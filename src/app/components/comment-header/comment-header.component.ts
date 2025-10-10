@@ -31,10 +31,11 @@ import { DeviceService } from '../../services/device.service';
         <app-replies-counter
           [count]="repliesCount"
           [loading]="loadingReplies"
-          [commentId]="commentId"
           (expand)="expand.emit()"
         />
-      } @else if (hasChildren && commentId) {
+      }
+
+      @if (hasChildren && commentId) {
         <button
           type="button"
           (click)="viewThreadInSidebar($event)"

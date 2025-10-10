@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'app-replies-counter',
@@ -40,19 +37,6 @@ import { DeviceService } from '../../services/device.service';
         [+{{ count }} replies]
       }
     </button>
-
-    @if (commentId) {
-      <button
-        type="button"
-        (click)="viewThreadInSidebar($event)"
-        class="view-thread-inline"
-        title="View this thread"
-        [attr.aria-label]="'View thread for comment ' + commentId"
-        role="button"
-      >
-        »
-      </button>
-    }
   `,
   styles: [
     `
@@ -69,51 +53,16 @@ import { DeviceService } from '../../services/device.service';
         min-height: 44px;
         @apply sm:min-h-0;
       }
-
-      .view-thread-inline {
-        @apply inline-flex items-center justify-center;
-        @apply rounded;
-        @apply text-blue-600 dark:text-blue-400;
-        @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
-        @apply font-bold text-base;
-        @apply transition-colors duration-150;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
-        @apply cursor-pointer;
-        @apply ml-auto;
-        @apply px-2 py-2;
-        @apply sm:px-1.5 sm:py-0.5;
-        min-height: 44px;
-        min-width: 44px;
-        @apply sm:min-h-0 sm:min-w-0;
-      }
     `,
   ],
 })
 export class RepliesCounterComponent {
-  private sidebarService = inject(SidebarService);
-  private router = inject(Router);
-  private deviceService = inject(DeviceService);
-
   @Input() count = 0;
   @Input() loading = false;
-  @Input() commentId?: number;
   @Output() expand = new EventEmitter<void>();
 
   onExpandClick(event: Event): void {
     event.stopPropagation();
     this.expand.emit();
-  }
-
-  viewThreadInSidebar(event: Event): void {
-    event.stopPropagation();
-    if (this.commentId) {
-      if (this.deviceService.isMobile()) {
-        // On mobile, navigate to the item page
-        this.router.navigate(['/item', this.commentId]);
-      } else {
-        // On desktop, open in sidebar with animation
-        this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
-      }
-    }
   }
 }
