@@ -353,6 +353,12 @@ export class CommentThread implements OnInit {
 
   expandReplies() {
     if (!this.repliesLoaded() && !this.loadingReplies()) {
+      // Uncollapse the comment if it's currently collapsed
+      if (this.isCollapsed()) {
+        this.isCollapsed.set(false);
+        this.commentStateService.setCollapsed(this.commentId, false);
+      }
+
       this.repliesLoader.loadFirstPage();
       this.commentStateService.setRepliesExpanded(this.commentId, true);
       this.commentStateService.setLoadedPages(this.commentId, 1);
