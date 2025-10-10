@@ -103,7 +103,7 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
       }
 
       .pagination-controls {
-        @apply flex items-center order-1 mx-2;
+        @apply flex items-center order-1 mx-2 gap-2;
       }
 
       @media (min-width: 640px) {
@@ -121,7 +121,13 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
       }
 
       .page-numbers {
-        @apply flex items-center mx-1 gap-0.5;
+        @apply hidden items-center mx-1 gap-0.5;
+      }
+
+      @media (min-width: 640px) {
+        .page-numbers {
+          @apply flex;
+        }
       }
 
       .page-button {

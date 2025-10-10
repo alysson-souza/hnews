@@ -105,10 +105,11 @@
                       class="tag-username"
                       [routerLink]="['/user', tag.username]"
                       [attr.aria-label]="'View profile for ' + tag.username"
+                      [title]="tag.username"
                     >
                       {{ tag.username }}
                     </a>
-                    <span class="tag-badge" [style.background-color]="tag.color">
+                    <span class="tag-badge" [style.background-color]="tag.color" [title]="tag.tag">
                       {{ tag.tag }}
                     </span>
                   </div>
@@ -177,7 +178,7 @@
             ariaLabel="Export user tags"
             [disabled]="tags().length === 0"
           >
-            <fa-icon [icon]="faFileExport" class="mr-2"></fa-icon>
+            <fa-icon [icon]="faFileExport" class="hidden sm:inline mr-2"></fa-icon>
             Export
           </app-button>
           <app-button
@@ -186,7 +187,7 @@
             size="sm"
             ariaLabel="Import user tags"
           >
-            <fa-icon [icon]="faFileImport" class="mr-2"></fa-icon>
+            <fa-icon [icon]="faFileImport" class="hidden sm:inline mr-2"></fa-icon>
             Import
           </app-button>
           <input
@@ -204,7 +205,7 @@
               size="sm"
               ariaLabel="Clear all user tags"
             >
-              <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
+              <fa-icon [icon]="faTrash" class="hidden sm:inline mr-2"></fa-icon>
               Clear All Tags
             </app-button>
           }
@@ -295,14 +296,6 @@
           </p>
           <div class="action-buttons">
             <app-button
-              (clicked)="clearCache('all')"
-              variant="danger"
-              size="sm"
-              ariaLabel="Clear all cached data"
-            >
-              Clear All Cache
-            </app-button>
-            <app-button
               (clicked)="clearCache('stories')"
               variant="secondary"
               size="sm"
@@ -317,6 +310,14 @@
               ariaLabel="Clear image cache"
             >
               Clear Images
+            </app-button>
+            <app-button
+              (clicked)="clearCache('all')"
+              variant="danger"
+              size="sm"
+              ariaLabel="Clear all cached data"
+            >
+              Clear All Cache
             </app-button>
           </div>
         </div>

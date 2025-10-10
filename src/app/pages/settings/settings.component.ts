@@ -145,34 +145,37 @@ import {
       }
 
       .tag-item-modern {
-        @apply flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
+        @apply flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
         @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
       .tag-content {
-        @apply flex-1 space-y-2;
+        @apply flex-1 min-w-0;
       }
 
       .tag-user-info {
-        @apply flex items-center gap-3;
+        @apply flex items-center gap-3 min-w-0;
       }
 
       .user-icon {
-        @apply text-gray-500 dark:text-gray-400;
+        @apply text-gray-500 dark:text-gray-400 flex-shrink-0;
       }
 
       .tag-username {
         @apply font-semibold text-gray-900 dark:text-gray-100 no-underline;
         @apply hover:underline focus-visible:underline;
+        @apply max-w-40 truncate inline-block;
       }
 
       .tag-badge {
-        @apply px-3 py-1 text-sm font-medium text-white rounded-full shadow-sm;
+        @apply px-3 py-1 text-xs font-medium text-white text-center rounded-full shadow-sm;
+        @apply max-w-32 truncate inline-block;
       }
 
       .tag-remove-modern {
-        @apply flex items-center justify-center w-10 h-10 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
+        @apply flex items-center justify-center w-9 h-9 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
         @apply bg-red-50 dark:bg-red-950/50 hover:bg-red-100 dark:hover:bg-red-900/50 cursor-pointer;
+        @apply flex-shrink-0;
       }
 
       /* Empty State */
@@ -194,7 +197,13 @@ import {
 
       /* Tag Action Buttons */
       .tag-action-buttons {
-        @apply flex justify-end pt-4 gap-1;
+        @apply flex justify-center pt-4 gap-2;
+      }
+
+      @media (min-width: 640px) {
+        .tag-action-buttons {
+          @apply justify-end;
+        }
       }
 
       /* Cache Management */
@@ -268,7 +277,13 @@ import {
       }
 
       .action-buttons {
-        @apply flex flex-wrap items-center gap-3;
+        @apply flex flex-wrap items-center justify-center gap-2;
+      }
+
+      @media (min-width: 640px) {
+        .action-buttons {
+          @apply justify-end;
+        }
       }
     `,
   ],
