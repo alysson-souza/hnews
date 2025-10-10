@@ -20,18 +20,20 @@
       </div>
       <div class="space-y-6">
         <div class="setting-group">
-          <div class="modern-toggle-container">
+          <div
+            class="modern-toggle-container cursor-pointer"
+            (click)="toggleSidebarPreference()"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="toggleSidebarPreference()"
+            (keydown.space)="toggleSidebarPreference()"
+            [attr.aria-label]="
+              'Toggle open comments in sidebar on desktop. Currently ' +
+              (openCommentsInSidebar() ? 'enabled' : 'disabled')
+            "
+          >
             <div class="setting-info">
-              <label
-                class="setting-title cursor-pointer"
-                for="sidebar-toggle"
-                (click)="toggleSidebarPreference()"
-                role="button"
-                tabindex="0"
-                (keydown.enter)="toggleSidebarPreference()"
-                (keydown.space)="toggleSidebarPreference()"
-                aria-label="Toggle open comments in sidebar on desktop"
-              >
+              <label class="setting-title" for="sidebar-toggle">
                 Open comments in sidebar on desktop
               </label>
               <p class="setting-description" id="sidebar-toggle-description">
@@ -117,8 +119,8 @@
                 <button
                   (click)="removeTag(tag.username)"
                   class="tag-remove-modern"
-                  role="button"
-                  tabindex="0"
+                  type="button"
+                  [title]="'Remove tag for ' + tag.username"
                   [attr.aria-label]="'Remove tag for ' + tag.username"
                   (keydown.enter)="removeTag(tag.username)"
                   (keydown.space)="removeTag(tag.username)"
