@@ -23,9 +23,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
 
-    <!-- Preconnect to Google favicon service for faster favicon loads -->
-    <link rel="preconnect" href="https://www.google.com" />
-    <link rel="dns-prefetch" href="https://www.google.com" />
+    <!-- Preconnect to critical external resources -->
+    <link rel="preconnect" href="https://www.google.com" crossorigin />
+    <link rel="preconnect" href="https://hacker-news.firebaseio.com" />
+    <link rel="preconnect" href="https://hn.algolia.com" />
+
+    <link rel="manifest" href="manifest.webmanifest" fetchpriority="high" />
+
+    <!-- Critical: Prevent FOUC by applying theme before render -->
     <script>
       (function () {
         try {
@@ -36,7 +41,21 @@
           }
         } catch (e) {}
       })();
-      // Single Page Apps for GitHub Pages redirect script
+    </script>
+  </head>
+  <body class="bg-gray-50 dark:bg-blue-950">
+    <!-- Skip to main content link for screen readers -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 m-2 rounded"
+    >
+      Skip to main content
+    </a>
+    <app-root></app-root>
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
+
+    <!-- Deferred: SPA redirect for GitHub Pages -->
+    <script>
       (function (l) {
         if (l.search) {
           var q = {};
@@ -57,17 +76,5 @@
         }
       })(window.location);
     </script>
-    <link rel="manifest" href="manifest.webmanifest" />
-  </head>
-  <body class="bg-gray-50 dark:bg-blue-950">
-    <!-- Skip to main content link for screen readers -->
-    <a
-      href="#main-content"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 m-2 rounded"
-    >
-      Skip to main content
-    </a>
-    <app-root></app-root>
-    <noscript>Please enable JavaScript to continue using this application.</noscript>
   </body>
 </html>
