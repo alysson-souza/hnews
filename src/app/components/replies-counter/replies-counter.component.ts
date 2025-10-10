@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-replies-counter',
   standalone: true,
+  imports: [RouterLink],
   template: `
     <button
       type="button"
@@ -36,6 +38,18 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         [+{{ count }} replies]
       }
     </button>
+
+    @if (commentId) {
+      <a
+        [routerLink]="['/item', commentId]"
+        class="view-thread-inline"
+        (click)="$event.stopPropagation()"
+        title="View this thread"
+        [attr.aria-label]="'View thread for this comment'"
+      >
+        »
+      </a>
+    }
   `,
   styles: [
     `
@@ -44,11 +58,22 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       .expand-btn {
         @apply text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 ml-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1 text-xs disabled:opacity-50;
       }
+
+      .view-thread-inline {
+        @apply inline-flex items-center justify-center;
+        @apply ml-1 px-1.5 py-0.5 rounded;
+        @apply text-blue-600 dark:text-blue-400;
+        @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
+        @apply font-bold text-base;
+        @apply transition-colors duration-150;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+      }
     `,
   ],
 })
 export class RepliesCounterComponent {
   @Input() count = 0;
   @Input() loading = false;
+  @Input() commentId?: number;
   @Output() expand = new EventEmitter<void>();
 }

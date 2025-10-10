@@ -29,6 +29,7 @@ import { RepliesCounterComponent } from '../replies-counter/replies-counter.comp
           class="ml-2"
           [count]="repliesCount"
           [loading]="loadingReplies"
+          [commentId]="commentId"
           (expand)="expand.emit()"
         />
       }
@@ -54,6 +55,7 @@ export class CommentHeaderComponent {
   @Input() repliesCount = 0;
   @Input() showExpand = false;
   @Input() loadingReplies = false;
+  @Input() commentId?: number;
 
   @Output() upvote = new EventEmitter<void>();
   @Output() expand = new EventEmitter<void>();

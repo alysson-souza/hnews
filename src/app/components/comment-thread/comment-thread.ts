@@ -48,6 +48,7 @@ import { CommentStateService } from '../../services/comment-state.service';
             [repliesCount]="totalRepliesCount()"
             [showExpand]="showExpandButton()"
             [loadingReplies]="loadingReplies()"
+            [commentId]="commentId"
             (upvote)="upvoteComment()"
             (expand)="expandReplies()"
           />
@@ -163,10 +164,49 @@ import { CommentStateService } from '../../services/comment-state.service';
       .replies-loading {
         @apply ml-2 sm:ml-4 py-2;
       }
-      /* Buttons: now use shared app-button */
+
+      /* Collapsed Summary */
+      .collapsed-summary {
+        @apply flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer;
+        @apply bg-gray-50 dark:bg-slate-800/50;
+        @apply hover:bg-gray-100 dark:hover:bg-slate-800;
+        @apply transition-all duration-200;
+        @apply border border-gray-200 dark:border-slate-700;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+      }
+
+      .summary-participants {
+        @apply inline-flex flex-wrap items-center gap-1;
+      }
+
+      .summary-counts {
+        @apply flex-1 text-sm flex items-center flex-wrap gap-1;
+      }
+
+      .chevron-icon {
+        @apply flex-shrink-0 text-gray-500 dark:text-gray-400;
+        @apply transition-transform duration-200;
+      }
+
       /* Misc */
       .collapsed-text {
         @apply text-sm text-gray-500 dark:text-gray-400 italic;
+      }
+
+      /* Animation for expand/collapse */
+      @keyframes slide-fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      :host ::ng-deep .content > div {
+        animation: slide-fade-in 200ms ease-out;
       }
     `,
   ],
@@ -222,6 +262,42 @@ export class CommentThread implements OnInit {
 
   showExpandButton = computed(() => {
     return this.totalRepliesCount() > 0 && !this.repliesLoaded();
+  });
+
+  // Metadata-based reply count (works even without loading replies)
+  metadataReplyCount = computed(() => {
+    return this.comment()?.kids?.length || 0;
+  });
+
+  // Check if we have loaded reply data with participants
+  hasLoadedParticipantData = computed(() => {
+    return this.replies().length > 0 && this.participantUsernames().length > 0;
+  });
+
+  // Extract unique participant usernames from replies (for collapsed summary)
+  participantUsernames = computed(() => {
+    const replies = this.replies();
+    const usernames = new Set<string>();
+    replies.forEach((r) => {
+      if (r.by) {
+        usernames.add(r.by);
+      }
+    });
+    return Array.from(usernames).slice(0, 3);
+  });
+
+  // Count all nested replies recursively
+  totalNestedRepliesCount = computed(() => {
+    const countReplies = (items: HNItem[]): number => {
+      return items.reduce((sum, item) => {
+        const directCount = item.kids?.length || 0;
+        // If we have loaded replies, count them recursively
+        const nestedItems = this.replies().filter((r) => item.kids?.includes(r.id));
+        const nestedCount = nestedItems.length > 0 ? countReplies(nestedItems) : 0;
+        return sum + directCount + nestedCount;
+      }, 0);
+    };
+    return countReplies(this.replies());
   });
 
   showLoadButton(): boolean {
