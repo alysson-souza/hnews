@@ -10,8 +10,8 @@ import { ScrollService } from '../../../../services/scroll.service';
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="flex items-center flex-1 sm:flex-none">
-      <a routerLink="/" (click)="scrollToTop()" class="flex items-center gap-2 sm:gap-3">
+    <div class="flex items-center">
+      <a routerLink="/" (click)="scrollToTop()" class="flex items-center gap-2 sm:gap-3 p-2 lg:p-0">
         <div class="app-logo-container">
           <svg class="app-logo-icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />

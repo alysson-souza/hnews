@@ -23,12 +23,23 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
   ],
   template: `
     <header class="app-header" role="banner">
-      <div class="container mx-auto px-2 sm:px-4">
-        <div class="flex items-center justify-between h-16">
-          <app-header-brand [offline]="offline"></app-header-brand>
+      <div class="max-w-5xl mx-auto px-2 sm:px-4">
+        <div class="flex items-center h-16">
+          <!-- Brand: always visible, left-aligned -->
+          <div class="flex-shrink-0">
+            <app-header-brand [offline]="offline"></app-header-brand>
+          </div>
 
+          <!-- Desktop spacer 1: creates left padding for centered nav -->
+          <div class="hidden lg:block lg:flex-1"></div>
+
+          <!-- Desktop nav: centered between two spacers -->
           <app-header-desktop-nav [routerUrl]="routerUrl"></app-header-desktop-nav>
 
+          <!-- Desktop spacer 2: creates right padding for centered nav -->
+          <div class="hidden lg:block lg:flex-1"></div>
+
+          <!-- Desktop search: right-aligned -->
           <app-header-desktop-search
             [searchQuery]="searchQuery"
             (searchQueryChange)="searchQueryChange.emit($event)"
@@ -36,12 +47,15 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
             (desktopSearchKeydown)="desktopSearchKeydown.emit($event)"
           ></app-header-desktop-search>
 
-          <app-header-mobile-controls
-            [mobileMenuOpen]="mobileMenuOpen"
-            [showMobileSearch]="showMobileSearch"
-            (menuToggleRequested)="menuToggleRequested.emit()"
-            (searchToggleRequested)="searchToggleRequested.emit()"
-          ></app-header-mobile-controls>
+          <!-- Mobile controls: pushed to right on mobile -->
+          <div class="flex-1 lg:hidden flex justify-end">
+            <app-header-mobile-controls
+              [mobileMenuOpen]="mobileMenuOpen"
+              [showMobileSearch]="showMobileSearch"
+              (menuToggleRequested)="menuToggleRequested.emit()"
+              (searchToggleRequested)="searchToggleRequested.emit()"
+            ></app-header-mobile-controls>
+          </div>
         </div>
 
         @if (showMobileSearch) {
