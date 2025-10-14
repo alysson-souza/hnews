@@ -18,6 +18,11 @@
 - `npm run test:watch`: Unit tests in watch mode (Karma + Jasmine).
 - `npm run test:coverage`: Single-run tests with coverage output to `coverage/hnews`.
 - `npm run test:coverage:watch`: Watch mode with coverage (slower, for targeted work).
+- `npm run e2e`: Single-run e2e tests (Playwright), uses list reporter locally and dot reporter on CI.
+- `npm run e2e:chromium` / `e2e:firefox` / `e2e:webkit`: Run e2e tests on specific browser.
+- `npm run e2e:ui`: Interactive UI mode for e2e tests (watch mode).
+- `npm run e2e:headed`: Run e2e tests with visible browser.
+- `npm run e2e:debug`: Debug e2e tests with Playwright Inspector.
 - `npm run lint` / `npm run lint:fix`: ESLint check/fix.
 - `npm run format` / `npm run format:check`: Prettier write/check.
 - `npm run deploy`: Deploy to GitHub Pages (via `angular-cli-ghpages`).

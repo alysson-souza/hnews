@@ -65,10 +65,11 @@ interface SearchHit {
           }
 
           <!-- Search Input -->
-          <div class="relative">
+          <form (ngSubmit)="performSearch()" class="relative">
             <input
               type="search"
               [(ngModel)]="searchQuery"
+              name="searchQuery"
               (ngModelChange)="onSearchChange($event)"
               placeholder="Search stories, comments, users..."
               aria-label="Search Hacker News content"
@@ -78,15 +79,31 @@ interface SearchHit {
               [class.cursor-not-allowed]="isOffline()"
               class="app-input app-input-lg pr-12"
             />
-            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              ></path>
-            </svg>
-          </div>
+            <button
+              type="submit"
+              class="search-button"
+              aria-label="Submit Search"
+              title="Search"
+              [disabled]="isOffline()"
+              [class.opacity-50]="isOffline()"
+              [class.cursor-not-allowed]="isOffline()"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </button>
+          </form>
           @if (!isOffline()) {
             <p id="search-hint" class="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Tip: use site:example.com to filter by domain, or quotes to match exact phrases.
@@ -229,8 +246,12 @@ interface SearchHit {
       .search-input {
         @apply w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200;
       }
-      .search-icon {
-        @apply absolute right-4 top-3.5 w-6 h-6 text-gray-400 dark:text-gray-500;
+      .search-button {
+        @apply absolute right-3 top-1/2 transform -translate-y-1/2;
+        @apply text-gray-500 dark:text-gray-400;
+        @apply hover:text-gray-700 dark:hover:text-gray-200;
+        @apply cursor-pointer p-1;
+        @apply transition-colors duration-200;
       }
       .filters {
         /* Responsive layout: stack on small screens, wrap on larger */

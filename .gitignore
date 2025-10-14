@@ -52,3 +52,8 @@ Thumbs.db
 .env.local
 .env.*.local
 public/version.json
+
+# E2E test results
+/playwright-report
+/playwright/.cache
+/test-results

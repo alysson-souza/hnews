@@ -28,6 +28,7 @@ Concise rules and context to help AI agents work effectively in this Angular 20 
 - Start: `npm start` (http://localhost:4200)
 - Build: `npm run build` (dev) | `npm run build:prod` (prod; pass `--base-href` for subpaths, e.g., Pages)
 - Test: `npm test` (single‑run, Karma + Jasmine) | `npm run test:watch`
+- E2E: `npm run e2e` (single‑run, Playwright; list reporter locally, dot on CI) | `npm run e2e:ui` (interactive watch mode) | `npm run e2e:chromium` (single browser)
 - Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
 - Lint/Format: `npm run lint` | `npm run format`
 - Deploy: `npm run deploy` (GitHub Pages via `angular-cli-ghpages`)
