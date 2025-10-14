@@ -73,6 +73,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
             [(ngModel)]="editValue"
             (keyup.enter)="saveTag()"
             (keyup.escape)="cancelEdit()"
+            (keydown.space)="$event.stopPropagation()"
             (blur)="onInputBlur()"
             class="tag-input app-input app-input-xs w-20 px-2 py-1"
             placeholder="Tag..."
