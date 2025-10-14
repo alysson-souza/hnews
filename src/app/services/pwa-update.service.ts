@@ -8,12 +8,9 @@ import { first } from 'rxjs/operators';
 @Injectable({ providedIn: 'root' })
 export class PwaUpdateService {
   private readonly appRef = inject(ApplicationRef);
-  private readonly updates = inject(SwUpdate);
+  readonly updates = inject(SwUpdate);
 
-  // Signal to track when an update is available
   updateAvailable = signal(false);
-
-  // Signal to store update version information
   updateVersionInfo = signal<{ current: string; available: string } | null>(null);
 
   constructor() {

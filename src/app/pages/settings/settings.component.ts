@@ -17,6 +17,7 @@ import { ThemeSelectorComponent } from '../../components/shared/theme-selector/t
 import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
 import { ToggleSwitchComponent } from '../../components/shared/toggle-switch/toggle-switch.component';
 import { PaginationComponent } from '../../components/shared/pagination/pagination.component';
+import { PwaUpdateSectionComponent } from '../../components/pwa-update-section/pwa-update-section.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -53,6 +54,7 @@ import {
     SectionTitleComponent,
     ToggleSwitchComponent,
     PaginationComponent,
+    PwaUpdateSectionComponent,
     FontAwesomeModule,
   ],
   templateUrl: './settings.component.html',
