@@ -50,6 +50,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         @apply text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded text-xs disabled:opacity-50;
         @apply px-1 py-1;
         @apply sm:px-1 sm:py-0;
+        @apply self-stretch flex items-center justify-center;
         min-height: 44px;
         @apply sm:min-h-0;
       }
