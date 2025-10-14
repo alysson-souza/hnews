@@ -36,7 +36,7 @@ import {
     <app-page-container>
       @if (loading()) {
         <!-- Loading skeleton -->
-        <div class="animate-pulse">
+        <div class="skeleton-card">
           <div class="skel-title mb-4"></div>
           <div class="skel-subtitle mb-8"></div>
           <div class="space-y-4">
@@ -107,6 +107,9 @@ import {
       @reference '../../../styles.css';
 
       /* Skeleton */
+      .skeleton-card {
+        @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 mb-6;
+      }
       .skel-title {
         @apply h-8 bg-gray-200 dark:bg-slate-800 rounded w-3/4;
       }

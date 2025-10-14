@@ -212,6 +212,7 @@ export class StoryItem {
   public deviceService = inject(DeviceService);
   private locationStrategy = inject(LocationStrategy);
   private userSettings = inject(UserSettingsService);
+  private static itemComponentPrefetched = false;
 
   // Computed property to safely determine loading state
   isLoading = computed(() => this.loading || !this.story);
@@ -220,6 +221,7 @@ export class StoryItem {
   faEllipsisVertical = faEllipsisVertical;
 
   constructor() {
+    StoryItem.prefetchItemComponent();
     // Load voted items from localStorage
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('votedItems');
@@ -238,6 +240,20 @@ export class StoryItem {
       return domain.replace('www.', '');
     } catch {
       return '';
+    }
+  }
+
+  private static async prefetchItemComponent(): Promise<void> {
+    if (StoryItem.itemComponentPrefetched || typeof window === 'undefined') {
+      return;
+    }
+
+    StoryItem.itemComponentPrefetched = true;
+    try {
+      await import('../../pages/item/item.component');
+    } catch (error) {
+      StoryItem.itemComponentPrefetched = false;
+      console.warn('Failed to prefetch item component chunk', error);
     }
   }
 

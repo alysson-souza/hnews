@@ -8,7 +8,7 @@ describe('CommentSkeletonComponent', () => {
   let component: CommentSkeletonComponent;
 
   const getContainer = (): HTMLDivElement | null =>
-    fixture.nativeElement.querySelector('div.animate-pulse.mb-4');
+    fixture.nativeElement.querySelector('div.skeleton.mb-4');
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({

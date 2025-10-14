@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div
-      class="animate-pulse mb-4"
+      class="skeleton mb-4"
       [ngClass]="
         depth > 0 ? 'ml-4 border-l-2 border-gray-200 dark:border-slate-700 pl-4 relative group' : ''
       "

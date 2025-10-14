@@ -62,9 +62,6 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
       .thumb-placeholder {
         @apply w-full h-full flex items-center justify-center;
       }
-      .thumb-skeleton {
-        @apply w-full h-full bg-gray-200 dark:bg-slate-800 animate-pulse;
-      }
     `,
   ],
 })

@@ -165,7 +165,7 @@ interface SearchHit {
             <ng-container header>
               <div class="skel-line-3 w-1/3"></div>
             </ng-container>
-            <div class="animate-pulse space-y-1 sm:space-y-2">
+            <div class="skeleton space-y-1 sm:space-y-2">
               @for (row of [0, 1, 2, 3, 4, 5]; track row) {
                 <div class="result-row">
                   <div class="skel-title w-3/4 mb-2"></div>

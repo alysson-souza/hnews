@@ -21,6 +21,31 @@ html.dark {
   background-color: #172554; /* blue-950 */
 }
 
+/* Skeleton loader utility with gentle pulse */
+.skeleton {
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+.dark .skeleton {
+  opacity: 0.92;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Define custom prose utilities for v4 compatibility */
 @utility prose {
   color: var(--tw-prose-body);

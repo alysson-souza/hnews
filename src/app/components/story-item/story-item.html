@@ -9,8 +9,8 @@
     <!-- Mobile Vote Section (No Thumbnails) -->
     <div class="vote-section-mobile flex items-center gap-2">
       @if (isLoading()) {
-        <div class="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
-        <div class="w-12 h-6 bg-gray-300 rounded animate-pulse"></div>
+        <div class="w-6 h-6 bg-gray-300 rounded skeleton"></div>
+        <div class="w-12 h-6 bg-gray-300 rounded skeleton"></div>
       } @else {
         <button
           (click)="upvote()"
@@ -39,8 +39,8 @@
     <!-- Desktop Vote Section -->
     <div class="vote-section flex flex-col w-[100px] flex-shrink-0">
       @if (isLoading()) {
-        <div class="w-8 h-8 bg-gray-300 rounded mb-2 animate-pulse"></div>
-        <div class="w-12 h-6 bg-gray-300 rounded animate-pulse"></div>
+        <div class="w-8 h-8 bg-gray-300 rounded mb-2 skeleton"></div>
+        <div class="w-12 h-6 bg-gray-300 rounded skeleton"></div>
       } @else {
         <button
           (click)="upvote()"
@@ -70,7 +70,7 @@
   <!-- Desktop Thumbnail -->
   <div class="hidden sm:flex flex-shrink-0 w-28 items-center justify-center p-3">
     @if (isLoading()) {
-      <div class="w-20 h-20 bg-gray-200 animate-pulse"></div>
+      <div class="w-20 h-20 bg-gray-200 skeleton"></div>
     } @else {
       <app-story-thumbnail
         [storyUrl]="story!.url"
@@ -88,7 +88,7 @@
       <div class="flex-1 min-w-0 overflow-hidden">
         <!-- Title -->
         @if (isLoading()) {
-          <div class="h-6 sm:h-7 bg-gray-200 rounded w-3/4 mb-1 mt-1 animate-pulse"></div>
+          <div class="h-6 sm:h-7 bg-gray-200 rounded w-3/4 mb-1 mt-1 skeleton"></div>
         } @else {
           <h2
             class="story-title"
@@ -119,7 +119,7 @@
 
         <!-- Domain - Now clickable -->
         @if (isLoading()) {
-          <div class="h-4 bg-gray-200 rounded w-32 mb-1 animate-pulse"></div>
+          <div class="h-4 bg-gray-200 rounded w-32 mb-1 skeleton"></div>
         } @else if (story!.url && getDomain(story!.url)) {
           <button
             type="button"
@@ -138,9 +138,9 @@
         <div class="story-meta mt-2 overflow-hidden">
           @if (isLoading()) {
             <div class="flex items-center gap-3">
-              <div class="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
-              <div class="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
-              <div class="h-3 bg-gray-200 rounded w-28 animate-pulse"></div>
+              <div class="h-3 bg-gray-200 rounded w-20 skeleton"></div>
+              <div class="h-3 bg-gray-200 rounded w-24 skeleton"></div>
+              <div class="h-3 bg-gray-200 rounded w-28 skeleton"></div>
             </div>
           } @else {
             @if (story!.by) {
@@ -194,7 +194,7 @@
       <!-- Actions Button -->
       <div class="story-actions-container relative ml-2 sm:ml-0 flex-shrink-0">
         @if (isLoading()) {
-          <div class="w-9 h-9 bg-gray-200 rounded animate-pulse"></div>
+          <div class="w-9 h-9 bg-gray-200 rounded skeleton"></div>
         } @else {
           <button
             #actionsBtn

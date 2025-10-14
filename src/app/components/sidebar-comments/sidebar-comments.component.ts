@@ -80,7 +80,7 @@ import {
               "
             >
               @if (loading()) {
-                <div class="animate-pulse space-y-4">
+                <div class="skeleton space-y-4">
                   <div class="h-20 bg-gray-200 rounded"></div>
                   <div class="h-20 bg-gray-200 rounded"></div>
                   <div class="h-20 bg-gray-200 rounded"></div>

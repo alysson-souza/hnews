@@ -36,7 +36,7 @@ import { ScrollService } from '../../services/scroll.service';
     >
       @if (loading()) {
         <!-- Loading skeleton -->
-        <div class="animate-pulse">
+        <div class="skeleton">
           <div class="skel-title mb-4"></div>
           <div class="skel-line mb-2"></div>
           <div class="skel-line w-3/4 mb-8"></div>
@@ -81,7 +81,7 @@ import { ScrollService } from '../../services/scroll.service';
         @if (loadingSubmissions()) {
           <app-result-list [showHeader]="true" [showLoadMore]="false">
             <ng-container header> Recent Submissions </ng-container>
-            <div class="animate-pulse space-y-1 sm:space-y-2">
+            <div class="skeleton space-y-1 sm:space-y-2">
               <div class="skel-item"></div>
               <div class="skel-item"></div>
               <div class="skel-item"></div>
