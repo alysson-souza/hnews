@@ -1,6 +1,32 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Routes } from '@angular/router';
+import { Routes, UrlMatchResult, UrlSegment } from '@angular/router';
+
+const storyTypeMap = new Map<string, 'top' | 'best' | 'new' | 'ask' | 'show' | 'job'>([
+  ['top', 'top'],
+  ['best', 'best'],
+  ['newest', 'new'],
+  ['ask', 'ask'],
+  ['show', 'show'],
+  ['jobs', 'job'],
+]);
+
+export function storyRouteMatcher(segments: UrlSegment[]): UrlMatchResult | null {
+  if (!segments.length) {
+    return null;
+  }
+  const first = segments[0].path;
+  const mappedType = storyTypeMap.get(first);
+  if (!mappedType) {
+    return null;
+  }
+  return {
+    consumed: [segments[0]],
+    posParams: {
+      type: new UrlSegment(mappedType, {}),
+    },
+  };
+}
 
 export const routes: Routes = [
   {
@@ -14,11 +40,7 @@ export const routes: Routes = [
     redirectTo: '/top',
     pathMatch: 'full',
   },
-  {
-    path: 'new',
-    redirectTo: '/newest',
-    pathMatch: 'full',
-  },
+  { path: 'new', redirectTo: '/newest', pathMatch: 'full' },
   {
     path: 'front',
     redirectTo: '/top',
@@ -34,40 +56,9 @@ export const routes: Routes = [
   },
   // Our standard routes
   {
-    path: 'top',
+    matcher: storyRouteMatcher,
     loadComponent: () =>
       import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
-    data: { type: 'top' },
-  },
-  {
-    path: 'best',
-    loadComponent: () =>
-      import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
-    data: { type: 'best' },
-  },
-  {
-    path: 'newest',
-    loadComponent: () =>
-      import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
-    data: { type: 'new' },
-  },
-  {
-    path: 'ask',
-    loadComponent: () =>
-      import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
-    data: { type: 'ask' },
-  },
-  {
-    path: 'show',
-    loadComponent: () =>
-      import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
-    data: { type: 'show' },
-  },
-  {
-    path: 'jobs',
-    loadComponent: () =>
-      import('./pages/stories/stories.component').then((m) => m.StoriesComponent),
-    data: { type: 'job' },
   },
   {
     path: 'item/:id',

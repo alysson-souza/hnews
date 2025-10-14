@@ -17,17 +17,34 @@ export class StoriesComponent implements OnInit {
   storyType: 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' = 'top';
 
   ngOnInit() {
-    // Subscribe to route data changes to handle component reuse
-    this.route.data.subscribe((data) => {
-      const newType = data['type'] || 'top';
-      this.storyType = newType;
-      // StoryList will detect the change through ngOnChanges
+    // Listen to matcher-provided route params to handle reuse without destroying the component
+    this.route.paramMap.subscribe((params) => {
+      const paramType = params.get('type');
+      const mappedType = this.mapParamToStoryType(paramType);
+      this.storyType = mappedType;
+      // StoryList detects the change through Input updates
     });
   }
 
   refresh(): void {
     if (this.storyList) {
       this.storyList.refresh();
+    }
+  }
+
+  private mapParamToStoryType(
+    type: string | null,
+  ): 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' {
+    switch (type) {
+      case 'top':
+      case 'best':
+      case 'new':
+      case 'ask':
+      case 'show':
+      case 'job':
+        return type;
+      default:
+        return 'top';
     }
   }
 }
