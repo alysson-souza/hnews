@@ -109,7 +109,7 @@ import { UserSettingsService } from '../../services/user-settings.service';
       }
 
       .story-title {
-        @apply text-base sm:text-lg font-semibold mb-1 break-words;
+        @apply text-base sm:text-lg font-semibold break-words;
       }
       .story-title-unread {
         @apply text-gray-900 dark:text-gray-100;

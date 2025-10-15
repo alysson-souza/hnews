@@ -75,7 +75,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         @apply mb-0;
       }
       .story-title {
-        @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2;
+        @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100;
       }
       .story-link {
         @apply text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
