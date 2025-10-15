@@ -136,16 +136,4 @@ export class DeviceService implements OnDestroy {
     if (this.isTablet()) return 'tablet';
     return 'desktop';
   }
-
-  isPWA(): boolean {
-    if (typeof window === 'undefined') return false;
-
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isFullscreen = window.matchMedia('(display-mode: fullscreen)').matches;
-    const isIosStandalone =
-      'standalone' in window.navigator &&
-      (window.navigator as { standalone?: boolean }).standalone === true;
-
-    return isStandalone || isFullscreen || isIosStandalone;
-  }
 }
