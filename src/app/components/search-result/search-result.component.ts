@@ -74,9 +74,19 @@ interface SearchHit {
 
       <!-- Metadata -->
       <div class="result-meta">
-        <span>{{ getPoints() }} points</span>
-        <span>•</span>
         @if (!isComment()) {
+          <span>{{ getPoints() }} points</span>
+          <span>•</span>
+          <span
+            >by
+            @if (getAuthor()) {
+              <a [routerLink]="['/user', getAuthor()]" class="result-meta-link">
+                <app-user-tag [username]="getAuthor()!"></app-user-tag>
+              </a>
+            }
+          </span>
+          <span>•</span>
+        } @else {
           <span
             >by
             @if (getAuthor()) {
@@ -90,7 +100,9 @@ interface SearchHit {
         <span>{{ getTimeAgo() }}</span>
         <span>•</span>
         @if (isComment()) {
-          <a [routerLink]="['/item', getParentId()]" class="result-meta-link"> View Context </a>
+          <a [routerLink]="['/item', getItemId()]" class="result-meta-link">View Comment</a>
+          <span>•</span>
+          <a [routerLink]="['/item', getParentId()]" class="result-meta-link">View Story</a>
         } @else {
           <a [routerLink]="['/item', getItemId()]" class="result-meta-link">
             {{ getCommentCount() }} comments

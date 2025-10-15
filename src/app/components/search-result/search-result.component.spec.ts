@@ -667,4 +667,91 @@ describe('SearchResultComponent', () => {
       expect(component.getTimeAgo()).toBe('');
     });
   });
+
+  describe('comment metadata functionality', () => {
+    it('should provide all required data for comment metadata display', () => {
+      component.item = {
+        objectID: '123456',
+        title: '',
+        url: '',
+        author: 'testuser',
+        points: null as unknown as number, // Comments have null points
+        num_comments: null as unknown as number, // Comments have null num_comments
+        created_at: '2025-10-03T00:00:00Z',
+        comment_text: 'This is a test comment',
+        story_id: 789,
+        parent_id: 456,
+      };
+      component.isSearchResult = true;
+      fixture.detectChanges();
+
+      // Verify all methods used in the enhanced comment template work
+      expect(component.isComment()).toBe(true);
+      expect(component.isStory()).toBe(false);
+      expect(component.getAuthor()).toBe('testuser');
+      expect(component.getItemId()).toBe('123456'); // Comment ID
+      expect(component.getParentId()).toBe('789'); // Story ID
+      expect(component.getTimeAgo()).toBeTruthy();
+      // Comments should return 0 for points (null fallback)
+      expect(component.getPoints()).toBe(0);
+    });
+
+    it('should handle comment without author gracefully', () => {
+      component.item = {
+        objectID: '123456',
+        title: '',
+        url: '',
+        author: '',
+        points: null as unknown as number,
+        num_comments: null as unknown as number,
+        created_at: '2025-10-03T00:00:00Z',
+        comment_text: 'This is a test comment',
+        story_id: 789,
+      };
+      component.isSearchResult = true;
+      fixture.detectChanges();
+
+      expect(component.getAuthor()).toBe('');
+      expect(component.getItemId()).toBe('123456');
+      expect(component.getParentId()).toBe('789');
+    });
+
+    it('should display points for stories', () => {
+      component.item = {
+        objectID: '123456',
+        title: 'Test Story',
+        url: 'https://example.com',
+        author: 'testuser',
+        points: 42,
+        num_comments: 10,
+        created_at: '2025-10-03T00:00:00Z',
+      };
+      component.isSearchResult = true;
+      fixture.detectChanges();
+
+      expect(component.isStory()).toBe(true);
+      expect(component.isComment()).toBe(false);
+      expect(component.getPoints()).toBe(42);
+    });
+
+    it('should not display points for comments', () => {
+      component.item = {
+        objectID: '789012',
+        title: '',
+        url: '',
+        author: 'commenter',
+        points: null as unknown as number,
+        num_comments: null as unknown as number,
+        created_at: '2025-10-03T00:00:00Z',
+        comment_text: 'Test comment',
+        story_id: 123456,
+      };
+      component.isSearchResult = true;
+      fixture.detectChanges();
+
+      expect(component.isStory()).toBe(false);
+      expect(component.isComment()).toBe(true);
+      expect(component.getPoints()).toBe(0); // null fallback
+    });
+  });
 });
