@@ -26,12 +26,22 @@
   @apply dark:bg-gradient-to-b dark:from-blue-900/30 dark:to-slate-800/90;
 }
 
-/* Vote Sections */
+/* Vote Section */
 .vote-section {
-  @apply flex items-center justify-center px-4 py-3 md:px-0.5 bg-gradient-to-b from-blue-50 to-blue-100 dark:bg-gradient-to-b dark:from-digg-blue-dark dark:to-digg-blue rounded-l-lg w-[100px] md:w-[72px] md:min-w-[72px] md:max-w-[72px] flex-shrink-0;
-}
-.vote-section-mobile {
-  @apply flex items-center justify-start px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue rounded-t-lg w-full overflow-hidden;
+  /* Mobile-first (default): horizontal layout at top */
+  @apply flex flex-row items-center gap-2;
+  @apply px-3 py-3;
+  @apply bg-gradient-to-r from-blue-50 to-blue-100;
+  @apply dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue;
+  @apply rounded-t-lg w-full;
+
+  /* Desktop (sm: breakpoint): vertical layout on left */
+  @apply sm:flex-col sm:items-center sm:justify-center;
+  @apply sm:px-4 sm:py-3 md:px-0.5;
+  @apply sm:bg-gradient-to-b sm:dark:bg-gradient-to-b;
+  @apply sm:rounded-l-lg sm:rounded-t-none;
+  @apply sm:w-[100px] md:w-[72px] md:min-w-[72px] md:max-w-[72px];
+  @apply sm:flex-shrink-0;
 }
 .vote-button {
   @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1;
@@ -43,13 +53,21 @@
   @apply text-gray-400 dark:text-gray-400 opacity-50;
 }
 .vote-count {
-  @apply font-bold;
+  @apply font-bold text-xl sm:text-2xl;
 }
 .vote-count-active {
   @apply text-blue-600 dark:text-blue-400;
 }
 .vote-count-voted {
   @apply text-gray-500 dark:text-gray-400;
+}
+
+/* Vote Section Skeleton Loaders */
+.vote-skeleton-icon {
+  @apply w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded;
+}
+.vote-skeleton-count {
+  @apply w-12 h-6 sm:h-6 bg-gray-300 rounded;
 }
 
 /* Content */

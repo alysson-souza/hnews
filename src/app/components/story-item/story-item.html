@@ -4,68 +4,35 @@
     <app-visited-indicator [storyId]="story!.id"></app-visited-indicator>
   }
 
-  <!-- Responsive Vote Section -->
-  @if (deviceService.isMobile()) {
-    <!-- Mobile Vote Section (No Thumbnails) -->
-    <div class="vote-section-mobile flex items-center gap-2">
-      @if (isLoading()) {
-        <div class="w-6 h-6 bg-gray-300 rounded skeleton"></div>
-        <div class="w-12 h-6 bg-gray-300 rounded skeleton"></div>
-      } @else {
-        <button
-          (click)="upvote()"
-          class="vote-button"
-          [class.vote-button-active]="!hasVoted()"
-          [class.vote-button-voted]="hasVoted()"
-          [disabled]="hasVoted()"
-          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-          [attr.aria-pressed]="hasVoted()"
-          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-        >
-          <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-          </svg>
-        </button>
-        <span
-          class="vote-count text-xl"
-          [class.vote-count-active]="!hasVoted()"
-          [class.vote-count-voted]="hasVoted()"
-        >
-          {{ (story!.score || 0) + (hasVoted() ? 1 : 0) }}
-        </span>
-      }
-    </div>
-  } @else {
-    <!-- Desktop Vote Section -->
-    <div class="vote-section flex flex-col w-[100px] flex-shrink-0">
-      @if (isLoading()) {
-        <div class="w-8 h-8 bg-gray-300 rounded mb-2 skeleton"></div>
-        <div class="w-12 h-6 bg-gray-300 rounded skeleton"></div>
-      } @else {
-        <button
-          (click)="upvote()"
-          class="vote-button"
-          [class.vote-button-active]="!hasVoted()"
-          [class.vote-button-voted]="hasVoted()"
-          [disabled]="hasVoted()"
-          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-          [attr.aria-pressed]="hasVoted()"
-          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-        >
-          <svg class="w-8 h-8 fill-current" viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-          </svg>
-        </button>
-        <span
-          class="vote-count text-2xl"
-          [class.vote-count-active]="!hasVoted()"
-          [class.vote-count-voted]="hasVoted()"
-        >
-          {{ (story!.score || 0) + (hasVoted() ? 1 : 0) }}
-        </span>
-      }
-    </div>
-  }
+  <!-- Vote Section -->
+  <div class="vote-section">
+    @if (isLoading()) {
+      <div class="vote-skeleton-icon skeleton"></div>
+      <div class="vote-skeleton-count skeleton"></div>
+    } @else {
+      <button
+        (click)="upvote()"
+        class="vote-button"
+        [class.vote-button-active]="!hasVoted()"
+        [class.vote-button-voted]="hasVoted()"
+        [disabled]="hasVoted()"
+        [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+        [attr.aria-pressed]="hasVoted()"
+        [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+      >
+        <svg class="w-6 h-6 sm:w-8 sm:h-8 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
+        </svg>
+      </button>
+      <span
+        class="vote-count"
+        [class.vote-count-active]="!hasVoted()"
+        [class.vote-count-voted]="hasVoted()"
+      >
+        {{ (story!.score || 0) + (hasVoted() ? 1 : 0) }}
+      </span>
+    }
+  </div>
 
   <!-- Desktop Thumbnail -->
   <div class="hidden sm:flex flex-shrink-0 w-28 items-center justify-center p-3">
