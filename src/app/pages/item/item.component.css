@@ -1,4 +1,4 @@
-@reference '../../../styles.css';
+@import '../../../styles.css';
 
 /* Skeleton */
 .skeleton-card {

@@ -80,8 +80,37 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
   `,
   styles: [
     `
+      @import '../../../styles.css';
+
       .story-actions-container {
         position: relative;
+      }
+
+      /* Actions Button */
+      .story-actions-btn {
+        @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+      }
+
+      /* Actions Menu */
+      .story-actions-menu {
+        @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg dark:shadow-2xl border border-gray-200 dark:border-slate-700 z-20;
+      }
+      .story-actions-menu-fixed {
+        @apply fixed;
+      }
+
+      /* Menu Items */
+      .story-actions-item {
+        @apply w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500;
+      }
+      .story-actions-item-top {
+        @apply rounded-t-lg;
+      }
+      .story-actions-divider {
+        @apply border-t border-gray-200 dark:border-slate-700;
+      }
+      .story-actions-item-bottom {
+        @apply rounded-b-lg;
       }
     `,
   ],
