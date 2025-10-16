@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
+import { getDomain } from '../../services/domain.utils';
 
 /**
  * Transform anchor elements in the provided HTML so that:
@@ -20,20 +21,8 @@ export function transformLinksToDomain(html: string): string {
       const href = rawHref.trim();
       if (!href) continue;
 
-      // Try to parse the URL; support protocol-relative and missing protocol by prefixing with https://
-      let domain = '';
-      try {
-        const normalized = href.match(/^https?:\/\//i)
-          ? href
-          : `https://${href.replace(/^\/+/, '')}`;
-        const url = new URL(normalized);
-        domain = (url.hostname || '').replace(/^www\./i, '');
-      } catch {
-        // Fallback: crude domain extraction
-        const m = href.match(/^(?:https?:\/\/)?([^/:?#]+)(?:[/:?#]|$)/i);
-        domain = (m?.[1] || '').replace(/^www\./i, '');
-      }
-
+      // Extract domain using shared utility
+      const domain = getDomain(href);
       if (!domain) continue;
 
       // Replace visible text with domain only and mark with a class

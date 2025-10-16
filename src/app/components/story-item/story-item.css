@@ -1,0 +1,152 @@
+@reference '../../../styles.css';
+
+/* Story Item Card */
+.story-card {
+  @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm hover:shadow-md dark:shadow-md dark:hover:shadow-lg mb-3 overflow-hidden;
+  @apply bg-gradient-to-b from-white to-gray-300/30;
+  @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/40;
+  transition: all 0.2s ease;
+}
+
+@media (display-mode: standalone) {
+  .story-card {
+    margin-left: env(safe-area-inset-left, 0px);
+    margin-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+.story-card:hover {
+  @apply bg-gradient-to-b from-white to-gray-300/10;
+  @apply dark:bg-gradient-to-b dark:from-slate-800 dark:to-slate-700/60;
+}
+
+.story-card-selected {
+  @apply ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400;
+  @apply bg-gradient-to-b from-blue-50 to-blue-100/50;
+  @apply dark:bg-gradient-to-b dark:from-blue-900/30 dark:to-slate-800/90;
+}
+
+/* Vote Sections */
+.vote-section {
+  @apply flex items-center justify-center px-4 py-3 md:px-0.5 bg-gradient-to-b from-blue-50 to-blue-100 dark:bg-gradient-to-b dark:from-digg-blue-dark dark:to-digg-blue rounded-l-lg w-[100px] md:w-[72px] md:min-w-[72px] md:max-w-[72px] flex-shrink-0;
+}
+.vote-section-mobile {
+  @apply flex items-center justify-start px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue rounded-t-lg w-full overflow-hidden;
+}
+.vote-button {
+  @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1;
+}
+.vote-button-active {
+  @apply text-blue-600 dark:text-blue-400;
+}
+.vote-button-voted {
+  @apply text-gray-400 dark:text-gray-400 opacity-50;
+}
+.vote-count {
+  @apply font-bold;
+}
+.vote-count-active {
+  @apply text-blue-600 dark:text-blue-400;
+}
+.vote-count-voted {
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+/* Content */
+.story-content {
+  @apply flex-1 p-3 min-w-0 overflow-hidden relative;
+}
+
+.story-content::before {
+  content: '';
+  @apply absolute inset-0 pointer-events-none rounded-r-lg;
+  @apply bg-gradient-to-r from-transparent via-transparent to-gray-50/20;
+  @apply dark:bg-gradient-to-r dark:from-transparent dark:via-transparent dark:to-slate-700/20;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.story-card:hover .story-content::before {
+  opacity: 1;
+}
+
+.story-title {
+  @apply text-base sm:text-lg font-semibold break-words;
+}
+.story-title-unread {
+  @apply text-gray-900 dark:text-gray-100;
+}
+.story-title-visited {
+  @apply text-gray-800 dark:text-gray-200;
+}
+.story-title-link {
+  @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors;
+}
+.story-desc {
+  @apply hidden sm:block text-sm mt-1 truncate text-gray-600 dark:text-gray-300;
+}
+
+/* Meta */
+.story-meta {
+  @apply flex flex-nowrap items-center gap-2 whitespace-nowrap leading-none text-xs sm:text-sm text-gray-600 dark:text-gray-400;
+}
+.story-points {
+  @apply font-medium;
+}
+.story-points-high {
+  @apply text-orange-600 dark:text-orange-400;
+}
+.story-author {
+  @apply font-medium hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors;
+}
+.author-link {
+  @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer;
+}
+.story-time {
+  @apply text-gray-500 dark:text-gray-400;
+}
+.story-comments {
+  @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors;
+}
+
+.story-meta app-user-tag {
+  display: inline-flex;
+  align-items: center;
+}
+.new-comments-badge {
+  @apply text-gray-500 dark:text-gray-400 text-xs ml-1;
+}
+.story-domain {
+  @apply text-gray-500 dark:text-gray-400 truncate max-w-[150px] sm:max-w-[200px];
+}
+.domain-btn {
+  @apply inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all;
+}
+
+/* Actions */
+.story-actions-btn {
+  @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+}
+.story-actions-menu {
+  @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg dark:shadow-2xl border border-gray-200 dark:border-slate-700 z-20;
+}
+.story-actions-menu-fixed {
+  @apply fixed;
+}
+.story-actions-item {
+  @apply w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500;
+}
+.story-actions-item-top {
+  @apply rounded-t-lg;
+}
+.story-actions-divider {
+  @apply border-t border-gray-200 dark:border-slate-700;
+}
+.story-actions-item-bottom {
+  @apply rounded-b-lg;
+}
+
+/* Indicators & tags */
+.story-tag {
+  @apply px-2 py-0.5 text-xs text-white rounded-full;
+}

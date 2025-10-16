@@ -192,54 +192,19 @@
       </div>
 
       <!-- Actions Button -->
-      <div class="story-actions-container relative ml-2 sm:ml-0 flex-shrink-0">
+      <div class="relative ml-2 sm:ml-0 flex-shrink-0">
         @if (isLoading()) {
           <div class="w-9 h-9 bg-gray-200 rounded skeleton"></div>
         } @else {
-          <button
-            #actionsBtn
-            (click)="toggleActionsMenu($event)"
-            class="story-actions-btn"
-            [attr.aria-label]="'Open Actions Menu'"
-            [attr.aria-haspopup]="'menu'"
-            [attr.aria-expanded]="showActionsMenu"
-            [attr.aria-controls]="'actions-menu-' + story!.id"
-            [attr.id]="'actions-btn-' + story!.id"
-            [title]="'More Actions'"
+          <app-story-actions-menu
+            [storyId]="story!.id"
+            [shareStoryText]="getStoryActionText()"
+            [shareCommentsText]="getCommentsActionText()"
+            (shareStory)="shareStory()"
+            (shareComments)="shareComments()"
+            (openInNewTab)="openCommentsInNewTab()"
           >
-            <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]"></fa-icon>
-          </button>
-        }
-
-        <!-- Actions Menu Popup -->
-        @if (showActionsMenu && !isLoading()) {
-          <div
-            #actionsMenu
-            class="story-actions-menu story-actions-menu-fixed"
-            role="menu"
-            [attr.id]="'actions-menu-' + story!.id"
-            [attr.aria-labelledby]="'actions-btn-' + story!.id"
-            [style.top.px]="actionsMenuTop"
-            [style.left.px]="actionsMenuLeft"
-          >
-            <button
-              (click)="shareStory()"
-              class="story-actions-item story-actions-item-top"
-              role="menuitem"
-            >
-              {{ getStoryActionText() }}
-            </button>
-            <button (click)="shareComments()" class="story-actions-item" role="menuitem">
-              {{ getCommentsActionText() }}
-            </button>
-            <button
-              (click)="openCommentsInNewTab()"
-              class="story-actions-item story-actions-divider story-actions-item-bottom"
-              role="menuitem"
-            >
-              Open Comments in New Tab
-            </button>
-          </div>
+          </app-story-actions-menu>
         }
       </div>
     </div>

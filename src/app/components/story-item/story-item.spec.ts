@@ -15,6 +15,7 @@ import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { HNItem } from '../../models/hn';
 import { UserSettingsService } from '../../services/user-settings.service';
+import { StoryShareService } from '../../services/story-share.service';
 
 class MockDeviceService {
   private desktop = true;
@@ -366,55 +367,45 @@ describe('StoryItem comments link behaviour', () => {
       fixture.detectChanges();
     });
 
-    it('should toggle actions menu', () => {
-      const event = new MouseEvent('click');
-      spyOn(event, 'preventDefault');
-      spyOn(event, 'stopPropagation');
+    it('should render actions menu component', () => {
+      component.story = story;
+      fixture.detectChanges();
 
-      expect(component.showActionsMenu).toBeFalse();
-
-      component.toggleActionsMenu(event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(event.stopPropagation).toHaveBeenCalled();
-      expect(component.showActionsMenu).toBeTrue();
+      expect(component.actionsMenu).toBeDefined();
     });
 
-    it('should close actions menu on second toggle', () => {
-      const event = new MouseEvent('click');
-      spyOn(event, 'preventDefault');
+    it('should pass story id to actions menu component', () => {
+      component.story = story;
+      fixture.detectChanges();
 
-      component.toggleActionsMenu(event);
-      expect(component.showActionsMenu).toBeTrue();
-
-      component.toggleActionsMenu(event);
-      expect(component.showActionsMenu).toBeFalse();
+      expect(component.actionsMenu?.storyId).toBe(story.id);
     });
   });
 
   describe('Sharing functionality', () => {
+    let shareService: StoryShareService;
+
     beforeEach(() => {
       component.story = story;
+      shareService = TestBed.inject(StoryShareService);
     });
 
     it('should share story using clipboard when Web Share API is not available', async () => {
       spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
+      spyOn(shareService, 'shareStory').and.callThrough();
 
       await component.shareStory();
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
-      expect(component.copiedStory).toBeTrue();
-      expect(component.copiedComments).toBeFalse();
+      expect(shareService.shareStory).toHaveBeenCalledWith(story);
     });
 
     it('should share comments using clipboard', async () => {
       spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
+      spyOn(shareService, 'shareComments').and.callThrough();
 
       await component.shareComments();
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
-      expect(component.copiedComments).toBeTrue();
-      expect(component.copiedStory).toBeFalse();
+      expect(shareService.shareComments).toHaveBeenCalledWith(story);
     });
 
     it('should handle clipboard write failure gracefully', async () => {
@@ -422,6 +413,7 @@ describe('StoryItem comments link behaviour', () => {
         Promise.reject(new Error('Clipboard error')),
       );
       spyOn(console, 'error');
+      spyOn(shareService, 'shareStory').and.callThrough();
 
       await component.shareStory();
 
@@ -429,9 +421,6 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should compute share action text correctly', () => {
-      component.copiedStory = false;
-      component.copiedComments = false;
-
       const storyText = component.getStoryActionText();
       const commentsText = component.getCommentsActionText();
 
@@ -439,27 +428,24 @@ describe('StoryItem comments link behaviour', () => {
       expect(commentsText).toContain('Comments');
     });
 
-    it('should show copied confirmation text', () => {
-      component.copiedStory = true;
+    it('should compute action text from share service', () => {
+      // The component delegates to the service
+      const storyText = component.getStoryActionText();
+      const serviceStoryText = shareService.getStoryActionText();
 
-      expect(component.getStoryActionText()).toContain('Copied');
-
-      component.copiedStory = false;
-      component.copiedComments = true;
-
-      expect(component.getCommentsActionText()).toContain('Copied');
+      expect(storyText).toEqual(serviceStoryText);
     });
   });
 
   describe('Open comments in new tab', () => {
     it('should open comments in new tab', () => {
       component.story = story;
+      fixture.detectChanges();
       spyOn(window, 'open');
 
       component.openCommentsInNewTab();
 
       expect(window.open).toHaveBeenCalled();
-      expect(component.showActionsMenu).toBeFalse();
     });
   });
 
