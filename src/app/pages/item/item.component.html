@@ -1,0 +1,68 @@
+<app-page-container>
+  @if (loading()) {
+    <!-- Loading skeleton -->
+    <div class="skeleton-card">
+      <div class="skel-title mb-4"></div>
+      <div class="skel-subtitle mb-8"></div>
+      <div class="space-y-4">
+        <div class="skel-block"></div>
+        <div class="skel-block"></div>
+      </div>
+    </div>
+  } @else if (item()) {
+    <!-- Story Details -->
+    <app-card class="block mb-6" id="submission-title">
+      <!-- Visited indicator -->
+      <app-visited-indicator [storyId]="item()!.id"></app-visited-indicator>
+
+      @if (item()!.type === 'comment') {
+        <!-- Discussion title for comment threads -->
+        <h1 class="story-title mb-4">Discussion</h1>
+      }
+
+      <!-- Story/Comment summary -->
+      <app-sidebar-story-summary [item]="item()!" [showActions]="false" />
+    </app-card>
+
+    <!-- Comments Section -->
+    <app-card class="block">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
+        <app-comment-sort-dropdown
+          [sortOrder]="sortOrder()"
+          [loading]="commentsLoading()"
+          (sortChange)="onSortChange($event)"
+        />
+      </div>
+
+      @if (item()!.kids && item()!.kids!.length > 0) {
+        <div class="space-y-4" role="tree" aria-label="Comments">
+          @for (commentId of visibleCommentIds(); track commentId) {
+            <app-comment-thread [commentId]="commentId" [depth]="0"></app-comment-thread>
+          }
+        </div>
+
+        @if (hasMoreTopLevelComments()) {
+          <div class="mt-6 flex justify-center">
+            <app-button
+              variant="secondary"
+              size="sm"
+              [ariaLabel]="'Load more comments'"
+              (clicked)="loadMoreTopLevelComments()"
+            >
+              Load {{ remainingTopLevelCount() }} more comments
+            </app-button>
+          </div>
+        }
+      } @else {
+        <p class="empty">No comments yet</p>
+      }
+    </app-card>
+  } @else if (error()) {
+    <!-- Error State -->
+    <div class="error-card">
+      <p class="error-text">{{ error() }}</p>
+      <button (click)="loadItem()" class="error-btn">Try Again</button>
+    </div>
+  }
+</app-page-container>
