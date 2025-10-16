@@ -1,4 +1,4 @@
-@import '../../../styles.css';
+@reference '../../../styles.css';
 
 /* Story Item Card */
 .story-card {

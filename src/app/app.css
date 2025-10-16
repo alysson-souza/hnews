@@ -1,4 +1,4 @@
-@import '../styles.css';
+@reference '../styles.css';
 
 /* PWA Update Indicator Styles */
 .update-indicator {

@@ -80,7 +80,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
   `,
   styles: [
     `
-      @import '../../../styles.css';
+      @reference '../../../styles.css';
 
       .story-actions-container {
         position: relative;
