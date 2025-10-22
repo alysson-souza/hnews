@@ -198,9 +198,6 @@ export class CommentThread implements OnInit {
   // Optional: when a parent already fetched this comment, pass it to avoid refetching
   @Input() initialComment?: HNItem;
 
-  // Auto-collapse threshold
-  private readonly autoCollapseThreshold = 10;
-
   private hnService = inject(HackernewsService);
   private commentStateService = inject(CommentStateService);
 
@@ -228,12 +225,6 @@ export class CommentThread implements OnInit {
     }
 
     return this.voteStore.votedCommentIds().has(current.id);
-  });
-
-  // Auto-collapse logic
-  shouldAutoCollapse = computed(() => {
-    const comment = this.comment();
-    return comment?.kids && comment.kids.length >= this.autoCollapseThreshold;
   });
 
   totalRepliesCount = computed(() => {
@@ -390,9 +381,6 @@ export class CommentThread implements OnInit {
           this.commentStateService.setState(this.commentId, state);
         });
       }
-    } else if (this.shouldAutoCollapse()) {
-      // No saved state - apply auto-collapse heuristic
-      this.isCollapsed.set(true);
     }
   }
 

@@ -212,25 +212,6 @@ describe('CommentThread', () => {
       });
     });
 
-    describe('shouldAutoCollapse', () => {
-      it('should return falsy when comment is not loaded', () => {
-        expect(component.shouldAutoCollapse()).toBeFalsy();
-      });
-
-      it('should return falsy when comment has fewer kids than threshold', () => {
-        const commentWithFewKids = { ...mockComment, kids: [1, 2, 3, 4, 5] }; // 5 kids, threshold is 10
-        component.comment.set(commentWithFewKids);
-        expect(component.shouldAutoCollapse()).toBe(false);
-      });
-
-      it('should return truthy when comment has more kids than threshold', () => {
-        const kidsArray = Array.from({ length: 15 }, (_, i) => i); // 15 kids
-        const commentWithManyKids = { ...mockComment, kids: kidsArray };
-        component.comment.set(commentWithManyKids);
-        expect(component.shouldAutoCollapse()).toBe(true);
-      });
-    });
-
     describe('totalRepliesCount', () => {
       it('should return 0 when comment is not loaded', () => {
         expect(component.totalRepliesCount()).toBe(0);
@@ -639,30 +620,6 @@ describe('CommentThread', () => {
       fixture.detectChanges();
 
       expect(mockRepliesLoader.loadUpToPage).not.toHaveBeenCalled();
-    });
-
-    it('should apply auto-collapse when no saved state exists', () => {
-      const kidsArray = Array.from({ length: 15 }, (_, i) => i);
-      const commentWithManyKids = { ...mockComment, kids: kidsArray };
-      mockHnService.getItem.and.returnValue(of(commentWithManyKids));
-
-      component.loadComment();
-      fixture.detectChanges();
-
-      expect(component.isCollapsed()).toBe(true);
-    });
-
-    it('should prioritize saved state over auto-collapse', () => {
-      const kidsArray = Array.from({ length: 15 }, (_, i) => i);
-      const commentWithManyKids = { ...mockComment, kids: kidsArray };
-
-      mockCommentStateService.setSavedState(123, { collapsed: false });
-      mockHnService.getItem.and.returnValue(of(commentWithManyKids));
-
-      component.loadComment();
-      fixture.detectChanges();
-
-      expect(component.isCollapsed()).toBe(false);
     });
 
     it('should restore state when hydrating from initial comment', () => {
