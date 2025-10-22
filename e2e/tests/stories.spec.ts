@@ -89,4 +89,42 @@ test.describe('Stories Page', () => {
       expect(count).toBeGreaterThan(0);
     });
   });
+
+  test.describe('Comments Link', () => {
+    test('should navigate to item page when shift+clicking comments link', async ({
+      storiesPage,
+    }) => {
+      await storiesPage.navigateToTop();
+      const count = await storiesPage.getStoryCount();
+      expect(count).toBeGreaterThan(0);
+
+      // Find first story with comments
+      let storyWithComments = -1;
+      for (let i = 0; i < Math.min(count, 10); i++) {
+        const commentsText = await storiesPage.getCommentsLinkText(i);
+        if (commentsText && !commentsText.includes('0 comments')) {
+          storyWithComments = i;
+          break;
+        }
+      }
+
+      // If no story with comments found, just use the first story
+      if (storyWithComments === -1) {
+        storyWithComments = 0;
+      }
+
+      // Shift+click the comments link
+      const newPage = await storiesPage.shiftClickCommentsLink(storyWithComments);
+
+      // Verify the new page has the correct URL (/item/:id, not /top)
+      expect(newPage.url()).toMatch(/\/item\/\d+/);
+      expect(newPage.url()).not.toMatch(/\/top/);
+
+      // Verify the item page loads correctly by checking for comments section
+      const commentsSection = newPage.locator('text=Comments');
+      await expect(commentsSection).toBeVisible({ timeout: 10000 });
+
+      await newPage.close();
+    });
+  });
 });

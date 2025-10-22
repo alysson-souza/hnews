@@ -184,6 +184,23 @@ export class StoryItem {
   openComments(event: MouseEvent | KeyboardEvent): void {
     if (!this.story) return;
 
+    // Check for modifier keys FIRST, before any other code
+    // This ensures we don't interfere with the browser's native Shift+click behavior
+    if (event instanceof MouseEvent) {
+      const isShiftClick = event.shiftKey;
+      const isCmdClick = event.metaKey;
+      const isCtrlClick = event.ctrlKey;
+      // For auxclick events (non-primary mouse buttons), always allow default navigation
+      const isAuxClick = event.type === 'auxclick';
+      const isMiddleClick = event.button === 1;
+
+      // Allow default navigation for modifier clicks - return immediately without any side effects
+      if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick || isAuxClick) {
+        return;
+      }
+    }
+
+    // Only mark as visited for regular clicks (non-modifier)
     this.markAsVisited();
 
     const shouldUseSidebar = this.deviceService.isDesktop() && this.openCommentsInSidebar();
@@ -193,19 +210,6 @@ export class StoryItem {
         this.sidebarService.closeSidebar();
       }
       return;
-    }
-
-    if (event instanceof MouseEvent) {
-      const isShiftClick = event.shiftKey;
-      const isCmdClick = event.metaKey;
-      const isCtrlClick = event.ctrlKey;
-      // For auxclick events (non-primary mouse buttons), always allow default navigation
-      const isAuxClick = event.type === 'auxclick';
-      const isMiddleClick = event.button === 1;
-
-      if (isShiftClick || isCmdClick || isCtrlClick || isMiddleClick || isAuxClick) {
-        return;
-      }
     }
 
     event.preventDefault();

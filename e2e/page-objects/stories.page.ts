@@ -85,4 +85,32 @@ export class StoriesPage extends BasePage {
     const upvoteButton = this.storyItems.nth(index).locator('app-upvote-button');
     await upvoteButton.click();
   }
+
+  async shiftClickCommentsLink(index: number): Promise<Page> {
+    const storyItem = this.storyItems.nth(index);
+    const commentsLink = storyItem.locator('.story-comments');
+
+    // Wait for the comments link to be visible
+    await commentsLink.waitFor({ timeout: 10000 });
+
+    // Get the href attribute before clicking
+    const href = await commentsLink.getAttribute('href');
+    if (!href || href === '#') {
+      throw new Error(`Invalid comments link href: ${href}`);
+    }
+
+    // Open new page via shift+click
+    const pagePromise = this.page.context().waitForEvent('page');
+    await commentsLink.click({ modifiers: ['Shift'] });
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState('networkidle');
+
+    return newPage;
+  }
+
+  async getCommentsLinkText(index: number): Promise<string> {
+    const storyItem = this.storyItems.nth(index);
+    const commentsLink = storyItem.locator('.story-comments');
+    return (await commentsLink.textContent()) ?? '';
+  }
 }

@@ -129,54 +129,54 @@ describe('StoryItem comments link behaviour', () => {
     expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
   });
 
-  it('allows shift+click to open in new tab while marking visited', () => {
+  it('allows shift+click to open in new tab without any side effects', () => {
     const event = createMouseEvent('click', { shiftKey: true });
 
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
   });
 
-  it('allows cmd/meta+click to open in new tab while marking visited', () => {
+  it('allows cmd/meta+click to open in new tab without any side effects', () => {
     const event = createMouseEvent('click', { metaKey: true });
 
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
   });
 
-  it('allows ctrl+click to open in new tab while marking visited', () => {
+  it('allows ctrl+click to open in new tab without any side effects', () => {
     const event = createMouseEvent('click', { ctrlKey: true });
 
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
   });
 
-  it('allows middle click to open in new tab while marking visited', () => {
+  it('allows middle click to open in new tab without any side effects', () => {
     const event = createMouseEvent('click', { button: 1 });
 
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
   });
 
-  it('allows auxclick events to open in new tab while marking visited', () => {
+  it('allows auxclick events to open in new tab without any side effects', () => {
     const event = createMouseEvent('auxclick', { button: 1 });
 
     component.openComments(event);
 
     expect(event.defaultPrevented).toBeFalse();
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
   });
 
   it('supports keyboard activation on desktop by opening sidebar', () => {
