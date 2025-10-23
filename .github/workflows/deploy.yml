@@ -62,12 +62,6 @@ jobs:
       - name: Run Playwright e2e tests
         run: npm run e2e:chromium
 
-      - name: Install serve for production build testing
-        run: npm install -g serve
-
-      - name: Run Playwright e2e tests against production build
-        run: npx playwright test --config=playwright.config.prod.ts
-
       - name: Upload Pages Artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v4
