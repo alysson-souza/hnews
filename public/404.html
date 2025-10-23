@@ -36,17 +36,26 @@
           var hash = window.location.hash || '';
           var segments = window.location.pathname.split('/').filter(Boolean);
           var base = '/';
+          var route = '';
 
           // Handle GitHub Pages or subpath deployments
           if (segments.length > 0) {
             if (window.location.hostname.endsWith('github.io')) {
+              // GitHub Pages: first segment is repo name
               base = '/' + segments[0] + '/';
+              // Remaining segments form the SPA route
+              route = '/' + segments.slice(1).join('/');
             } else {
-              base = '/' + segments[0] + '/';
+              // Regular domain: all segments form the SPA route
+              route = '/' + segments.join('/');
             }
           }
 
-          var target = base + (hash ? hash : '');
+          // Redirect with SPA route encoded as query parameter
+          // The index.html decoder will parse this and navigate accordingly
+          // Note: We DON'T use encodeURIComponent here because the index.html decoder
+          // expects the raw route path. The browser will handle URL encoding.
+          var target = base + (route ? '?p=' + route : '') + (hash ? '#' + hash : '');
           window.location.replace(target);
         } catch (_) {}
       })();
