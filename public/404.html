@@ -33,14 +33,16 @@
       // Redirect to app root (SPA fallback)
       (function () {
         try {
-          var hash = window.location.hash || '';
-          var segments = window.location.pathname.split('/').filter(Boolean);
+          var l = window.location;
+          var hash = l.hash || '';
+          var query = l.search ? l.search.substring(1).replace(/&/g, '~and~') : '';
+          var segments = l.pathname.split('/').filter(Boolean);
           var base = '/';
           var route = '';
 
           // Handle GitHub Pages or subpath deployments
           if (segments.length > 0) {
-            if (window.location.hostname.endsWith('github.io')) {
+            if (l.hostname.endsWith('github.io')) {
               // GitHub Pages: first segment is repo name
               base = '/' + segments[0] + '/';
               // Remaining segments form the SPA route
@@ -51,9 +53,9 @@
             }
           }
 
-          // Redirect with SPA route encoded as query parameter
+          // Redirect with SPA route and query encoded as parameters
           // The index.html decoder will parse this and navigate accordingly
-          var target = base + (route ? '?p=' + route : '') + (hash ? '#' + hash : '');
+          var target = base + (route ? '?p=' + route : '?') + (query ? '&q=' + query : '') + hash;
           window.location.replace(target);
         } catch (_) {}
       })();
