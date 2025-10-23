@@ -121,7 +121,7 @@ test.describe('Stories Page', () => {
       expect(newPage.url()).not.toMatch(/\/top/);
 
       // Verify the item page loads correctly by checking for comments section
-      const commentsSection = newPage.locator('text=Comments');
+      const commentsSection = newPage.getByRole('heading', { name: /Comments/ });
       await expect(commentsSection).toBeVisible({ timeout: 10000 });
 
       await newPage.close();
