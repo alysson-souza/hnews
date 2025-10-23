@@ -55,7 +55,10 @@
 
           // Redirect with SPA route and query encoded as parameters
           // The index.html decoder will parse this and navigate accordingly
-          var target = base + (route ? '?p=' + route : '?') + (query ? '&q=' + query : '') + hash;
+          var params = [];
+          if (route) params.push('p=' + route);
+          if (query) params.push('q=' + query);
+          var target = base + (params.length ? '?' + params.join('&') : '') + hash;
           window.location.replace(target);
         } catch (_) {}
       })();
