@@ -8,7 +8,7 @@ import {
   formatRelativeTimeFromSeconds,
 } from '../../services/relative-time.util';
 import { HNItem } from '../../models/hn';
-import { UserTagComponent } from '../user-tag/user-tag.component';
+import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
 
 interface SearchHit {
@@ -29,7 +29,7 @@ interface SearchHit {
 @Component({
   selector: 'app-search-result',
   standalone: true,
-  imports: [CommonModule, RouterLink, UserTagComponent],
+  imports: [CommonModule, RouterLink, ResultMetaComponent],
   template: `
     <div class="result-row">
       @if (isStory()) {
@@ -73,31 +73,15 @@ interface SearchHit {
       }
 
       <!-- Metadata -->
-      <div class="result-meta">
-        @if (getAuthor()) {
-          <span class="flex items-center gap-1">
-            <span>by</span>
-            <app-user-tag [username]="getAuthor()!" class="hidden sm:inline-flex"></app-user-tag>
-            <span class="username sm:hidden">{{ getAuthor()! }}</span>
-          </span>
-          <span>•</span>
-        }
-        <span>{{ getTimeAgo() }}</span>
-        <span>•</span>
-        @if (!isComment()) {
-          <span>{{ getPoints() }} points</span>
-          <span>•</span>
-        }
-        @if (isComment()) {
-          <a [routerLink]="['/item', getItemId()]" class="result-meta-link">View Comment</a>
-          <span>•</span>
-          <a [routerLink]="['/item', getParentId()]" class="result-meta-link">View Story</a>
-        } @else {
-          <a [routerLink]="['/item', getItemId()]" class="result-meta-link">
-            {{ getCommentCount() }} comments
-          </a>
-        }
-      </div>
+      <app-result-meta
+        [author]="getAuthor()"
+        [timeAgo]="getTimeAgo()"
+        [points]="getPoints()"
+        [commentCount]="getCommentCount()"
+        [itemId]="getItemId()"
+        [parentId]="getParentId()"
+        [isComment]="isComment()"
+      ></app-result-meta>
     </div>
   `,
   styles: [
@@ -135,19 +119,6 @@ interface SearchHit {
 
       .result-comment {
         @apply text-gray-800 dark:text-gray-200 mb-2;
-      }
-
-      .result-meta {
-        @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
-      }
-
-      .result-meta-link {
-        @apply text-blue-600 dark:text-blue-300 hover:underline transition-colors duration-200;
-        @apply flex items-center gap-1;
-      }
-
-      .username {
-        @apply text-blue-600 dark:text-blue-300;
       }
 
       .dead-item {
