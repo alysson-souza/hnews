@@ -74,31 +74,18 @@ interface SearchHit {
 
       <!-- Metadata -->
       <div class="result-meta">
-        @if (!isComment()) {
-          <span>{{ getPoints() }} points</span>
-          <span>•</span>
-          <span
-            >by
-            @if (getAuthor()) {
-              <a [routerLink]="['/user', getAuthor()]" class="result-meta-link">
-                <app-user-tag [username]="getAuthor()!"></app-user-tag>
-              </a>
-            }
-          </span>
-          <span>•</span>
-        } @else {
-          <span
-            >by
-            @if (getAuthor()) {
-              <a [routerLink]="['/user', getAuthor()]" class="result-meta-link">
-                <app-user-tag [username]="getAuthor()!"></app-user-tag>
-              </a>
-            }
-          </span>
+        @if (getAuthor()) {
+          <span>by</span>
+          <app-user-tag [username]="getAuthor()!" class="hidden sm:inline-flex"></app-user-tag>
+          <span class="username sm:hidden">{{ getAuthor()! }}</span>
           <span>•</span>
         }
         <span>{{ getTimeAgo() }}</span>
         <span>•</span>
+        @if (!isComment()) {
+          <span>{{ getPoints() }} points</span>
+          <span>•</span>
+        }
         @if (isComment()) {
           <a [routerLink]="['/item', getItemId()]" class="result-meta-link">View Comment</a>
           <span>•</span>
@@ -154,6 +141,11 @@ interface SearchHit {
 
       .result-meta-link {
         @apply text-blue-600 dark:text-blue-300 hover:underline transition-colors duration-200;
+        @apply flex items-center gap-1;
+      }
+
+      .username {
+        @apply text-blue-600 dark:text-blue-300;
       }
 
       .dead-item {
