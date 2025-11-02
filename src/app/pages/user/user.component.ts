@@ -99,18 +99,14 @@ import {
             [loadingMore]="loadingMore()"
             (loadMore)="loadMoreSubmissions()"
           >
-            <ng-container header>
-              <div
-                class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-              >
-                <span>Recent Submissions</span>
-                <app-segmented-control
-                  [options]="filterOptions"
-                  [value]="submissionFilter()"
-                  (valueChange)="onFilterChange($event)"
-                ></app-segmented-control>
-              </div>
-            </ng-container>
+            <ng-container header>Recent Submissions</ng-container>
+            <div filter>
+              <app-segmented-control
+                [options]="filterOptions"
+                [value]="submissionFilter()"
+                (valueChange)="onFilterChange($event)"
+              ></app-segmented-control>
+            </div>
             @for (item of filteredSubmissions(); track item.id) {
               <app-search-result [item]="item" [isSearchResult]="false"></app-search-result>
             }

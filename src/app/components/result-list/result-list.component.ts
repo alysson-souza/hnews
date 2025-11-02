@@ -19,6 +19,9 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
         </div>
       }
 
+      <!-- Filter -->
+      <ng-content select="[filter]"></ng-content>
+
       <!-- Results List -->
       <div class="results-list">
         <ng-content></ng-content>
@@ -56,8 +59,28 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
         @apply text-base font-semibold text-gray-900 dark:text-gray-100;
       }
 
+      /* Filter section - optional content projection */
+      ::ng-deep [filter] {
+        @apply px-4 sm:px-6 py-3 flex justify-center;
+      }
+
       .results-list {
-        @apply px-4 pt-4 pb-4 space-y-1 sm:space-y-2;
+        @apply px-4 pb-4 space-y-1 sm:space-y-2;
+      }
+
+      /* Add top padding when there's no filter */
+      .results-list:first-child {
+        @apply pt-4;
+      }
+
+      /* Remove top padding from results list when there's a filter */
+      ::ng-deep [filter] + .results-list {
+        @apply pt-0;
+      }
+
+      /* Remove top padding from first result row when it follows a filter */
+      ::ng-deep [filter] + .results-list > :first-child .result-row {
+        @apply pt-0;
       }
 
       .pagination-bar {
