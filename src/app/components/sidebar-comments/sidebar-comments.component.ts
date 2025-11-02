@@ -107,7 +107,11 @@ import {
                 @if (item()!.kids && item()!.kids!.length > 0) {
                   <div class="space-y-4" role="tree" aria-label="Comments">
                     @for (commentId of visibleCommentIds(); track commentId) {
-                      <app-comment-thread [commentId]="commentId" [depth]="0"></app-comment-thread>
+                      <app-comment-thread
+                        [commentId]="commentId"
+                        [depth]="0"
+                        [storyAuthor]="item()?.by"
+                      ></app-comment-thread>
                     }
                   </div>
 

@@ -50,6 +50,7 @@ import { CommentStateService } from '../../services/comment-state.service';
             [loadingReplies]="loadingReplies()"
             [commentId]="commentId"
             [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
+            [storyAuthor]="storyAuthor"
             (upvote)="upvoteComment()"
             (expand)="expandReplies()"
           />
@@ -67,6 +68,7 @@ import { CommentStateService } from '../../services/comment-state.service';
                       [depth]="depth + 1"
                       [lazyLoad]="true"
                       [initialComment]="reply"
+                      [storyAuthor]="storyAuthor"
                     ></app-comment-thread>
                   } @else {
                     <app-thread-gutter [depth]="depth + 1" [clickable]="true" [collapsed]="false">
@@ -80,6 +82,7 @@ import { CommentStateService } from '../../services/comment-state.service';
                           [loadingReplies]="false"
                           [commentId]="reply.id"
                           [hasChildren]="false"
+                          [storyAuthor]="storyAuthor"
                           (upvote)="upvoteById(reply.id)"
                         />
                       </div>
@@ -197,6 +200,7 @@ export class CommentThread implements OnInit {
   @Input() lazyLoad = false;
   // Optional: when a parent already fetched this comment, pass it to avoid refetching
   @Input() initialComment?: HNItem;
+  @Input() storyAuthor?: string;
 
   private hnService = inject(HackernewsService);
   private commentStateService = inject(CommentStateService);

@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { UpvoteButtonComponent } from '../upvote-button/upvote-button.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { RepliesCounterComponent } from '../replies-counter/replies-counter.component';
+import { OPBadgeComponent } from '../shared/op-badge/op-badge.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 
 @Component({
   selector: 'app-comment-header',
   standalone: true,
-  imports: [UpvoteButtonComponent, UserTagComponent, RelativeTimePipe, RepliesCounterComponent],
+  imports: [
+    UpvoteButtonComponent,
+    UserTagComponent,
+    RelativeTimePipe,
+    RepliesCounterComponent,
+    OPBadgeComponent,
+  ],
   template: `
     <div class="comment-header">
       <app-upvote-button
@@ -23,6 +30,9 @@ import { DeviceService } from '../../services/device.service';
 
       @if (by) {
         <app-user-tag [username]="by!"></app-user-tag>
+        @if (isOP()) {
+          <app-op-badge />
+        }
       }
 
       <span class="time-text">{{ timestamp | relativeTime }}</span>
@@ -92,9 +102,12 @@ export class CommentHeaderComponent {
   @Input() loadingReplies = false;
   @Input() commentId?: number;
   @Input() hasChildren = false;
+  @Input() storyAuthor?: string;
 
   @Output() upvote = new EventEmitter<void>();
   @Output() expand = new EventEmitter<void>();
+
+  isOP = computed(() => this.by && this.storyAuthor && this.by === this.storyAuthor);
 
   viewThreadInSidebar(event: Event): void {
     event.stopPropagation();
