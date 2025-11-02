@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
-import { HNUser, HNItem } from '../../models/hn';
+import { HNUser, HNItem, isStory, isComment } from '../../models/hn';
 import { forkJoin } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
@@ -16,6 +16,10 @@ import { ResultListComponent } from '../../components/result-list/result-list.co
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { ScrollService } from '../../services/scroll.service';
+import {
+  SegmentedControlComponent,
+  SegmentOption,
+} from '../../components/shared/segmented-control/segmented-control.component';
 
 @Component({
   selector: 'app-user',
@@ -28,6 +32,7 @@ import { ScrollService } from '../../services/scroll.service';
     AppButtonComponent,
     SearchResultComponent,
     ResultListComponent,
+    SegmentedControlComponent,
   ],
   template: `
     <app-page-container
@@ -94,8 +99,19 @@ import { ScrollService } from '../../services/scroll.service';
             [loadingMore]="loadingMore()"
             (loadMore)="loadMoreSubmissions()"
           >
-            <ng-container header> Recent Submissions </ng-container>
-            @for (item of submissions(); track item.id) {
+            <ng-container header>
+              <div
+                class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              >
+                <span>Recent Submissions</span>
+                <app-segmented-control
+                  [options]="filterOptions"
+                  [value]="submissionFilter()"
+                  (valueChange)="onFilterChange($event)"
+                ></app-segmented-control>
+              </div>
+            </ng-container>
+            @for (item of filteredSubmissions(); track item.id) {
               <app-search-result [item]="item" [isSearchResult]="false"></app-search-result>
             }
           </app-result-list>
@@ -174,6 +190,7 @@ import { ScrollService } from '../../services/scroll.service';
 })
 export class UserComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private hnService = inject(HackernewsService);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
@@ -187,6 +204,30 @@ export class UserComponent implements OnInit {
   error = signal<string | null>(null);
   currentPage = signal(0);
   pageSize = 20;
+
+  // Filter for submission type
+  submissionFilter = signal<'all' | 'stories' | 'comments'>('all');
+  filterOptions: SegmentOption[] = [
+    { value: 'all', label: 'All' },
+    { value: 'stories', label: 'Stories' },
+    { value: 'comments', label: 'Comments' },
+  ];
+
+  // Computed signal for filtered submissions
+  filteredSubmissions = computed(() => {
+    const filter = this.submissionFilter();
+    const allSubmissions = this.submissions();
+
+    if (filter === 'all') {
+      return allSubmissions;
+    } else if (filter === 'stories') {
+      return allSubmissions.filter((item) => isStory(item));
+    } else if (filter === 'comments') {
+      return allSubmissions.filter((item) => isComment(item));
+    }
+
+    return allSubmissions;
+  });
 
   ngOnInit() {
     // Check for both path params and query params (HN compatibility)
@@ -202,6 +243,14 @@ export class UserComponent implements OnInit {
             this.loadUser(queryId);
           }
         });
+      }
+    });
+
+    // Read filter from query params
+    this.route.queryParams.subscribe((queryParams) => {
+      const filter = queryParams['filter'];
+      if (filter === 'stories' || filter === 'comments' || filter === 'all') {
+        this.submissionFilter.set(filter);
       }
     });
   }
@@ -298,5 +347,17 @@ export class UserComponent implements OnInit {
 
   getDate(timestamp: number): string {
     return new Date(timestamp * 1000).toLocaleDateString();
+  }
+
+  onFilterChange(filter: string): void {
+    if (filter === 'stories' || filter === 'comments' || filter === 'all') {
+      this.submissionFilter.set(filter);
+      // Update query params to persist filter state
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { filter: filter !== 'all' ? filter : null },
+        queryParamsHandling: 'merge',
+      });
+    }
   }
 }
