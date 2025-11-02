@@ -58,7 +58,7 @@ import {
           </h1>
 
           <!-- User Stats -->
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <div class="stat-box">
               <div class="stat-label">Karma</div>
               <div class="stat-value">{{ user()!.karma }}</div>
@@ -158,14 +158,14 @@ import {
 
       /* Stats */
       .stat-box {
-        @apply rounded-xl p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all duration-200;
+        @apply rounded-xl p-3 sm:p-4 md:p-5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all duration-200;
         @apply hover:bg-gray-100 dark:hover:bg-gray-600;
       }
       .stat-label {
-        @apply text-sm font-medium text-gray-600 dark:text-gray-300 mb-1;
+        @apply text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1;
       }
       .stat-value {
-        @apply text-xl font-bold text-gray-900 dark:text-gray-100;
+        @apply text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100;
       }
 
       /* About */
