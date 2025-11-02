@@ -75,9 +75,11 @@ interface SearchHit {
       <!-- Metadata -->
       <div class="result-meta">
         @if (getAuthor()) {
-          <span>by</span>
-          <app-user-tag [username]="getAuthor()!" class="hidden sm:inline-flex"></app-user-tag>
-          <span class="username sm:hidden">{{ getAuthor()! }}</span>
+          <span class="flex items-center gap-1">
+            <span>by</span>
+            <app-user-tag [username]="getAuthor()!" class="hidden sm:inline-flex"></app-user-tag>
+            <span class="username sm:hidden">{{ getAuthor()! }}</span>
+          </span>
           <span>•</span>
         }
         <span>{{ getTimeAgo() }}</span>
