@@ -284,6 +284,7 @@ code {
   margin-bottom: 0.75rem;
   color: var(--tw-prose-quotes, #111827);
   font-style: italic;
+  text-wrap: pretty;
 }
 .dark .comment-body blockquote {
   border-left-color: #4b5563; /* gray-600 */

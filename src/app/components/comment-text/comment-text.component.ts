@@ -16,6 +16,7 @@ import { transformLinksToDomain } from './links.transform';
 
       .comment-body {
         @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200 text-sm sm:text-base;
+        text-wrap: pretty;
       }
       .comment-body.dark {
         @apply prose-invert;
