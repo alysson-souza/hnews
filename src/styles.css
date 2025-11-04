@@ -4,6 +4,21 @@
 /* Load legacy JavaScript config for theme values */
 @config '../tailwind.config.js';
 
+/* Import Prism.js syntax highlighting theme */
+@import 'prismjs/themes/prism-tomorrow';
+
+/* Override Prism theme for dark mode compatibility */
+@layer base {
+  .dark pre {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+  }
+  .dark pre code {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+  }
+}
+
 /* CSS Custom Properties for Dynamic Viewport (PWA Orientation Fix) */
 :root {
   /* These are set by DeviceService and update on orientation change */

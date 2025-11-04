@@ -48,6 +48,32 @@ describe('transformQuotesHtml', () => {
     expect(typeof output).toBe('string');
   });
 
+  it('handles the exact HN format: italic tags with quote markers', () => {
+    const input =
+      "<i>&gt; Benchmark today's AI boom using five gauges:</i>" +
+      '<p>&gt; 1. Economic strain (investment as a share of GDP)</p>' +
+      '<p>&gt; 2. Industry strain (capex to revenue ratios)</p>' +
+      '<p>&gt; 3. Revenue growth trajectories (doubling time)</p>';
+
+    const output = transformQuotesHtml(input);
+
+    // Should create a blockquote
+    expect(output).toContain('<blockquote>');
+    expect(output).toContain('</blockquote>');
+
+    // Should remove all the &gt; markers
+    expect(output).not.toContain('&gt; Benchmark');
+    expect(output).not.toContain('&gt; 1.');
+    expect(output).not.toContain('&gt; 2.');
+    expect(output).not.toContain('&gt; 3.');
+
+    // Should contain the text without markers
+    expect(output).toContain("Benchmark today's AI boom");
+    expect(output).toContain('1. Economic strain');
+    expect(output).toContain('2. Industry strain');
+    expect(output).toContain('3. Revenue growth');
+  });
+
   it('does not strip ">" when not at the start of a line', () => {
     const input = '<p>x &gt; y</p>';
     const output = transformQuotesHtml(input);

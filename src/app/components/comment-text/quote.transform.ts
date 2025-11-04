@@ -8,7 +8,9 @@ export function transformQuotesHtml(inputHtml: string): string {
 
   // Fast path: if no potential quote markers, skip parsing entirely
   const hasQuoteMarkers =
-    /<p[^>]*>\s*(?:&gt;|>)/i.test(inputHtml) || /^\s*(?:&gt;|>)/.test(inputHtml);
+    /<p[^>]*>\s*(?:&gt;|>)/i.test(inputHtml) ||
+    /^\s*(?:&gt;|>)/.test(inputHtml) ||
+    /<[^>]+>\s*(?:&gt;|>)/.test(inputHtml);
   if (!hasQuoteMarkers) {
     return inputHtml;
   }
@@ -30,10 +32,11 @@ export function transformQuotesHtml(inputHtml: string): string {
 
     const removeLeadingQuoteMarker = (el: Element) => {
       const stripInNode = (node: Node): boolean => {
-        // Returns true once a marker was stripped; stops further descent.
+        // Process node and return true if ANY marker was found at this level
         if (node.nodeType === Node.TEXT_NODE) {
           const text = node.nodeValue ?? '';
-          const m = text.match(/^(\s*)>(\s?)([\s\S]*)/);
+          // Match both plain > and HTML-encoded &gt;
+          const m = text.match(/^(\s*)(?:&gt;|>)(\s?)([\s\S]*)/);
           if (m) {
             // keep original leading whitespace (m[1]) and the rest (m[3])
             node.nodeValue = `${m[1]}${m[3]}`;
@@ -43,11 +46,13 @@ export function transformQuotesHtml(inputHtml: string): string {
         }
         if (node.nodeType === Node.ELEMENT_NODE) {
           const children = Array.from(node.childNodes);
+          let foundAny = false;
           for (const child of children) {
-            if (stripInNode(child)) return true;
-            // If this child has any non-whitespace text content and we didn't strip, stop.
-            if (child.textContent && child.textContent.trim().length > 0) return false;
+            // Process all children, don't stop after first match
+            const stripped = stripInNode(child);
+            if (stripped) foundAny = true;
           }
+          return foundAny;
         }
         return false;
       };
@@ -56,16 +61,29 @@ export function transformQuotesHtml(inputHtml: string): string {
 
     const children = Array.from(body.childNodes);
     for (const node of children) {
-      if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName === 'P') {
-        const isQuote = (node as HTMLElement).textContent?.trimStart().startsWith('>');
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        const isQuote = element.textContent?.trimStart().startsWith('>');
+
         if (isQuote) {
-          const p = (node as HTMLElement).cloneNode(true) as HTMLElement;
-          removeLeadingQuoteMarker(p);
+          const cloned = element.cloneNode(true) as HTMLElement;
           if (!currentBQ) currentBQ = doc.createElement('blockquote');
-          currentBQ.appendChild(p);
+
+          // Remove the leading quote marker from the cloned element
+          removeLeadingQuoteMarker(cloned);
+
+          // Wrap non-paragraph elements in <p> tags for proper blockquote structure
+          if (element.tagName === 'P') {
+            currentBQ.appendChild(cloned);
+          } else {
+            const p = doc.createElement('p');
+            p.appendChild(cloned);
+            currentBQ.appendChild(p);
+          }
           continue;
         }
-        // Non-quote <p>
+
+        // Non-quote element
         flushBQ();
         container.appendChild(node.cloneNode(true));
         continue;

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import DOMPurify from 'dompurify';
 import { transformQuotesHtml } from './quote.transform';
 import { transformLinksToDomain } from './links.transform';
+import { highlightCodeBlocks } from './code-highlight.transform';
 
 @Component({
   selector: 'app-comment-text',
@@ -33,19 +36,41 @@ import { transformLinksToDomain } from './links.transform';
         line-height: 1.15rem !important;
       }
 
+      /* Code block syntax highlighting */
+      .comment-body pre {
+        @apply bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 overflow-x-auto;
+      }
+      .comment-body code {
+        @apply font-mono text-xs sm:text-sm;
+      }
+      .comment-body pre code {
+        @apply p-3 block;
+      }
+
       /* Blockquote visual styles are defined globally in styles.css */
     `,
   ],
 })
 export class CommentTextComponent {
   private _html = '';
-  processedHtml = '';
+  private sanitizer = inject(DomSanitizer);
+  processedHtml: SafeHtml = '';
 
   @Input()
   set html(value: string) {
     this._html = value || '';
     const withQuotes = transformQuotesHtml(this._html);
-    this.processedHtml = transformLinksToDomain(withQuotes);
+    const withLinks = transformLinksToDomain(withQuotes);
+    const withHighlight = highlightCodeBlocks(withLinks);
+
+    // Sanitize HTML to prevent XSS attacks while preserving formatting
+    const sanitized = DOMPurify.sanitize(withHighlight, {
+      ALLOWED_TAGS: ['p', 'blockquote', 'a', 'pre', 'code', 'br', 'i', 'em', 'b', 'strong', 'span'],
+      ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class'],
+      KEEP_CONTENT: true,
+    });
+
+    this.processedHtml = this.sanitizer.bypassSecurityTrustHtml(sanitized);
   }
   get html(): string {
     return this._html;

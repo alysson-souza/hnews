@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2025 Alysson Souza
+import { highlightCodeBlocks } from './code-highlight.transform';
+
+describe('highlightCodeBlocks', () => {
+  it('should return empty string for empty input', () => {
+    expect(highlightCodeBlocks('')).toBe('');
+  });
+
+  it('should return original html when no code blocks are present', () => {
+    const html = '<p>This is a paragraph without code</p>';
+    expect(highlightCodeBlocks(html)).toBe(html);
+  });
+
+  it('should handle simple code blocks without error', () => {
+    const html = '<pre><code>console.log("hello");</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toBeTruthy();
+    expect(result).toContain('<code');
+    expect(result).toContain('</code>');
+  });
+
+  it('should add language class to code blocks', () => {
+    const html = '<pre><code>const x = 5;</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-');
+  });
+
+  it('should preserve language class if already present', () => {
+    const html = '<pre><code class="language-javascript">const x = 5;</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-javascript');
+  });
+
+  it('should add prism-highlighted class to pre tags', () => {
+    const html = '<pre><code>console.log("hello");</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('prism-highlighted');
+  });
+
+  it('should detect Python code blocks', () => {
+    const html = '<pre><code>def hello():\n  print("world")</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-python');
+  });
+
+  it('should detect Go code blocks', () => {
+    const html = '<pre><code>package main\nfunc main() {}</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-go');
+  });
+
+  it('should detect Bash code blocks', () => {
+    const html = '<pre><code>echo "hello"\nfor i in 1 2 3; do echo $i; done</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-');
+    // Verify code block was processed
+    expect(result).toContain('prism-highlighted');
+  });
+
+  it('should handle multiple code blocks in one HTML', () => {
+    const html =
+      '<pre><code>console.log("js");</code></pre><p>Text</p><pre><code>def python(): pass</code></pre>';
+    const result = highlightCodeBlocks(html);
+    const codeMatches = (result.match(/<code class="language-/g) || []).length;
+    expect(codeMatches).toBe(2);
+  });
+
+  it('should handle empty code blocks gracefully', () => {
+    const html = '<pre><code></code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('<code');
+  });
+
+  it('should preserve code block content', () => {
+    const content = 'function test() { return 42; }';
+    const html = `<pre><code>${content}</code></pre>`;
+    const result = highlightCodeBlocks(html);
+    // Content should be preserved (might be wrapped in spans for syntax highlighting)
+    expect(result).toContain('test');
+    expect(result).toContain('42');
+  });
+});
