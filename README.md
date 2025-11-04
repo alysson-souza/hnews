@@ -9,6 +9,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 - Story feeds: Top, Best, Newest, Ask HN, Show HN, Jobs
 - Auto-refresh: Story rankings update every 5 minutes (tab visibility aware)
 - Comments: Nested threads, lazy loading, auto-collapse for large threads
+- Syntax highlighting: Automatic language detection for code in comments (25 languages)
 - Voting UX: Local upvote state for comments (persisted in localStorage)
 - User profiles: Karma, member since, recent submissions with paging
 - Search: Algolia-powered with type, sort, and date range filters
@@ -39,6 +40,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 - Angular 20 (standalone components, signals)
 - Tailwind CSS v4 (with @tailwind/postcss)
 - TypeScript 5.8, RxJS 7.8
+- highlight.js (syntax highlighting with auto-detection)
 - Angular Service Worker (PWA)
 - ESLint (angular-eslint), Prettier, Husky + lint-staged
 - APIs: Hacker News Firebase, Algolia HN Search
