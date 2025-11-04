@@ -4,10 +4,10 @@
 /* Load legacy JavaScript config for theme values */
 @config '../tailwind.config.js';
 
-/* Import Prism.js syntax highlighting theme */
-@import 'prismjs/themes/prism-tomorrow';
+/* Import highlight.js syntax highlighting theme */
+@import 'highlight.js/styles/atom-one-dark.css';
 
-/* Override Prism theme for dark mode compatibility */
+/* Override highlight.js theme for dark mode compatibility */
 @layer base {
   .dark pre {
     background-color: #1e293b !important;

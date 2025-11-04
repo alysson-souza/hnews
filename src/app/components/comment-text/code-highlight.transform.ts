@@ -1,83 +1,95 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-python';
-import 'prismjs/components/prism-go';
-import 'prismjs/components/prism-rust';
-import 'prismjs/components/prism-bash';
-import 'prismjs/components/prism-sql';
-import 'prismjs/components/prism-json';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-markup';
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import python from 'highlight.js/lib/languages/python';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import bash from 'highlight.js/lib/languages/bash';
+import sql from 'highlight.js/lib/languages/sql';
+import json from 'highlight.js/lib/languages/json';
+import css from 'highlight.js/lib/languages/css';
+import xml from 'highlight.js/lib/languages/xml';
+import cpp from 'highlight.js/lib/languages/cpp';
+import java from 'highlight.js/lib/languages/java';
+import ruby from 'highlight.js/lib/languages/ruby';
+import php from 'highlight.js/lib/languages/php';
+import swift from 'highlight.js/lib/languages/swift';
+import kotlin from 'highlight.js/lib/languages/kotlin';
+import csharp from 'highlight.js/lib/languages/csharp';
+import shell from 'highlight.js/lib/languages/shell';
+import scala from 'highlight.js/lib/languages/scala';
+import elixir from 'highlight.js/lib/languages/elixir';
+import haskell from 'highlight.js/lib/languages/haskell';
+import lua from 'highlight.js/lib/languages/lua';
+import perl from 'highlight.js/lib/languages/perl';
+import r from 'highlight.js/lib/languages/r';
+import plaintext from 'highlight.js/lib/languages/plaintext';
+
+// Register languages with highlight.js
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('go', go);
+hljs.registerLanguage('rust', rust);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('sql', sql);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('cpp', cpp);
+hljs.registerLanguage('java', java);
+hljs.registerLanguage('ruby', ruby);
+hljs.registerLanguage('php', php);
+hljs.registerLanguage('swift', swift);
+hljs.registerLanguage('kotlin', kotlin);
+hljs.registerLanguage('csharp', csharp);
+hljs.registerLanguage('shell', shell);
+hljs.registerLanguage('scala', scala);
+hljs.registerLanguage('elixir', elixir);
+hljs.registerLanguage('haskell', haskell);
+hljs.registerLanguage('lua', lua);
+hljs.registerLanguage('perl', perl);
+hljs.registerLanguage('r', r);
+hljs.registerLanguage('plaintext', plaintext);
+
+/** Supported languages for auto-detection */
+const SUPPORTED_LANGUAGES = [
+  'javascript',
+  'typescript',
+  'python',
+  'go',
+  'rust',
+  'bash',
+  'sql',
+  'json',
+  'css',
+  'xml',
+  'cpp',
+  'java',
+  'ruby',
+  'php',
+  'swift',
+  'kotlin',
+  'csharp',
+  'shell',
+  'scala',
+  'elixir',
+  'haskell',
+  'lua',
+  'perl',
+  'r',
+];
+
+/** Minimum relevance score threshold for auto-detection.
+ * Below this threshold, code is treated as plaintext to avoid false positives. */
+const RELEVANCE_THRESHOLD = 3;
 
 /**
- * Detects the programming language from a code block based on common patterns.
- * Falls back to 'javascript' as default.
- */
-function detectLanguage(codeText: string): string {
-  const trimmed = codeText.trim().toLowerCase();
-
-  // Bash/Shell shebang patterns (check first to avoid JavaScript comment confusion)
-  if (
-    trimmed.includes('bin/bash') ||
-    trimmed.includes('bin/sh') ||
-    trimmed.startsWith('usr/bin/env')
-  ) {
-    // Double-check it looks like a shebang
-    if (trimmed.startsWith('!') || trimmed.startsWith('bin/')) {
-      return 'bash';
-    }
-  }
-
-  // Python patterns
-  if (/^(import|from|def|class)\s|^#!.*python|\.py:|if __name__/.test(trimmed)) {
-    return 'python';
-  }
-
-  // Go patterns
-  if (/^(package|import)\s|func\s+\w+\s*\(|:=\s/.test(trimmed)) {
-    return 'go';
-  }
-
-  // Rust patterns
-  if (/^(fn|impl|struct|enum|mod|use)\s|->|&&|\.iter/.test(trimmed)) {
-    return 'rust';
-  }
-
-  // Bash/Shell command patterns
-  if (/^(export\s|\$\(|for\s+\w+\s+in|if\s+\[|echo\s|grep\s|sed\s|awk\s)/.test(trimmed)) {
-    return 'bash';
-  }
-
-  // SQL patterns
-  if (/^(select|insert|update|delete|create|alter|drop|from|where)\s/i.test(trimmed)) {
-    return 'sql';
-  }
-
-  // JSON patterns
-  if (/^[{[]/.test(trimmed) && (/["\w]+\s*:\s*/.test(trimmed) || /^\[/.test(trimmed))) {
-    return 'json';
-  }
-
-  // CSS patterns
-  if (/^[.#\w-]+\s*{|:\s*(color|font|margin|padding|border|background)/.test(trimmed)) {
-    return 'css';
-  }
-
-  // HTML/XML patterns
-  if (/^<[!?]?[a-z]/i.test(trimmed)) {
-    return 'markup';
-  }
-
-  // Default to JavaScript/TypeScript
-  return 'javascript';
-}
-
-/**
- * Highlights code blocks in HTML using Prism.js.
- * Searches for <pre><code> elements and applies syntax highlighting based on detected language.
+ * Highlights code blocks in HTML using highlight.js with automatic language detection.
+ * Searches for <pre><code> elements and applies syntax highlighting.
+ * Falls back to plaintext if detection confidence is too low.
  */
 export function highlightCodeBlocks(html: string): string {
   if (!html || typeof document === 'undefined') return html || '';
@@ -91,34 +103,53 @@ export function highlightCodeBlocks(html: string): string {
       const code = codeBlock.textContent || '';
       if (!code.trim()) continue;
 
-      // Detect language from code or from class attribute
-      let language = 'javascript';
+      let language: string;
+      let highlighted: string;
+
+      // Check for explicit language class
       const classAttr = codeBlock.className || '';
       const classMatch = classAttr.match(/language-(\w+)/);
+
       if (classMatch) {
+        // Use explicit language specification
         language = classMatch[1];
+        try {
+          const result = hljs.highlight(code, { language, ignoreIllegals: true });
+          highlighted = result.value;
+        } catch {
+          // If language is not recognized or highlighting fails, use plaintext
+          highlighted = hljs.highlight(code, { language: 'plaintext' }).value;
+          language = 'plaintext';
+        }
       } else {
-        language = detectLanguage(code);
+        // Auto-detect language with subset restriction
+        try {
+          const result = hljs.highlightAuto(code, SUPPORTED_LANGUAGES);
+
+          // Only apply highlighting if confidence is above threshold
+          if (result.relevance >= RELEVANCE_THRESHOLD) {
+            language = result.language || 'plaintext';
+            highlighted = result.value;
+          } else {
+            // Low confidence: treat as plaintext
+            language = 'plaintext';
+            highlighted = hljs.highlight(code, { language: 'plaintext' }).value;
+          }
+        } catch {
+          // Fallback to plaintext on any error
+          language = 'plaintext';
+          highlighted = hljs.highlight(code, { language: 'plaintext' }).value;
+        }
       }
 
-      // Highlight using Prism
-      try {
-        const highlighted = Prism.highlight(
-          code,
-          Prism.languages[language] || Prism.languages['javascript'],
-          language,
-        );
-        codeBlock.innerHTML = highlighted;
-        codeBlock.className = `language-${language}`;
+      // Update the code block with highlighted content
+      codeBlock.innerHTML = highlighted;
+      codeBlock.className = `language-${language}`;
 
-        // Mark the parent <pre> as having been highlighted
-        const preBlock = codeBlock.parentElement;
-        if (preBlock && preBlock.tagName === 'PRE') {
-          preBlock.classList.add('prism-highlighted');
-        }
-      } catch {
-        // If highlighting fails, leave the code as-is
-        continue;
+      // Mark the parent <pre> as having been highlighted
+      const preBlock = codeBlock.parentElement;
+      if (preBlock && preBlock.tagName === 'PRE') {
+        preBlock.classList.add('hljs-highlighted');
       }
     }
 

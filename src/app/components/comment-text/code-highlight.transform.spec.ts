@@ -32,10 +32,10 @@ describe('highlightCodeBlocks', () => {
     expect(result).toContain('language-javascript');
   });
 
-  it('should add prism-highlighted class to pre tags', () => {
+  it('should add hljs-highlighted class to pre tags', () => {
     const html = '<pre><code>console.log("hello");</code></pre>';
     const result = highlightCodeBlocks(html);
-    expect(result).toContain('prism-highlighted');
+    expect(result).toContain('hljs-highlighted');
   });
 
   it('should detect Python code blocks', () => {
@@ -55,7 +55,7 @@ describe('highlightCodeBlocks', () => {
     const result = highlightCodeBlocks(html);
     expect(result).toContain('language-');
     // Verify code block was processed
-    expect(result).toContain('prism-highlighted');
+    expect(result).toContain('hljs-highlighted');
   });
 
   it('should handle multiple code blocks in one HTML', () => {
@@ -79,5 +79,74 @@ describe('highlightCodeBlocks', () => {
     // Content should be preserved (might be wrapped in spans for syntax highlighting)
     expect(result).toContain('test');
     expect(result).toContain('42');
+  });
+
+  it('should detect TypeScript code blocks', () => {
+    const html = '<pre><code>interface User { name: string; }</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-');
+  });
+
+  it('should detect Ruby code blocks', () => {
+    const html = '<pre><code>def hello\n  puts "world"\nend</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-');
+  });
+
+  it('should detect Java code blocks', () => {
+    const html =
+      '<pre><code>public class HelloWorld {\n  public static void main(String[] args) {}\n}</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-');
+  });
+
+  it('should detect C++ code blocks', () => {
+    const html = '<pre><code>#include <iostream>\nint main() { return 0; }</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-');
+  });
+
+  it('should handle plaintext fallback for ambiguous code', () => {
+    const html =
+      '<pre><code>this is just some text\nwith multiple lines\nbut no code patterns</code></pre>';
+    const result = highlightCodeBlocks(html);
+    // Should be marked with a language class (either detected or plaintext)
+    expect(result).toContain('language-');
+    // Should still be highlighted
+    expect(result).toContain('hljs-highlighted');
+  });
+
+  it('should respect explicit language class over auto-detection', () => {
+    const html = '<pre><code class="language-python">const x = 5;</code></pre>';
+    const result = highlightCodeBlocks(html);
+    expect(result).toContain('language-python');
+  });
+
+  it('should handle unrecognized explicit language gracefully', () => {
+    const html = '<pre><code class="language-unknownlang">some code here</code></pre>';
+    const result = highlightCodeBlocks(html);
+    // Should fall back to plaintext instead of crashing
+    expect(result).toContain('language-plaintext');
+  });
+
+  it('should highlight all registered languages', () => {
+    const languages = [
+      'const x = 1;',
+      'x = 1',
+      'package main',
+      'fn main() {}',
+      'echo hello',
+      'SELECT * FROM table',
+      '{"key": "value"}',
+      'body { color: red; }',
+      '&lt;root&gt;&lt;/root&gt;',
+    ];
+
+    for (const code of languages) {
+      const html = `<pre><code>${code}</code></pre>`;
+      const result = highlightCodeBlocks(html);
+      expect(result).toContain('language-');
+      expect(result).toContain('hljs-highlighted');
+    }
   });
 });
