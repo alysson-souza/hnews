@@ -51,8 +51,6 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         @apply px-1 py-1;
         @apply sm:px-1 sm:py-0;
         @apply self-stretch flex items-center justify-center;
-        min-height: 44px;
-        @apply sm:min-h-0;
       }
     `,
   ],

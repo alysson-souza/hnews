@@ -65,7 +65,7 @@ import { DeviceService } from '../../services/device.service';
 
       .comment-header {
         @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-0;
-        @apply w-full;
+        @apply w-full min-h-11 sm:min-h-7;
       }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;
@@ -82,9 +82,7 @@ import { DeviceService } from '../../services/device.service';
         @apply ml-auto;
         @apply px-2 py-2;
         @apply sm:px-1.5 sm:py-0.5;
-        min-height: 44px;
-        min-width: 44px;
-        @apply sm:min-h-0 sm:min-w-0;
+        @apply self-stretch;
       }
     `,
   ],
