@@ -281,6 +281,11 @@ code {
 .sub-comment pre {
   @apply bg-gray-100 dark:bg-gray-900 p-3 rounded my-2 overflow-x-auto;
 }
+.comment-body pre:first-child,
+.item-prose pre:first-child,
+.sub-comment pre:first-child {
+  margin-top: 0;
+}
 
 /* Inline code styling */
 .comment-body :not(pre) > code,
@@ -301,6 +306,9 @@ code {
   font-style: italic;
   text-wrap: pretty;
 }
+.comment-body blockquote:first-child {
+  margin-top: 0;
+}
 .dark .comment-body blockquote {
   border-left-color: #4b5563; /* gray-600 */
   color: #d1d5db; /* gray-300 */
@@ -308,6 +316,9 @@ code {
 .comment-body blockquote p {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+}
+.comment-body blockquote p:first-child {
+  margin-top: 0;
 }
 
 /* Distinct URL styling inside comment text and story bodies */

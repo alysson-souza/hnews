@@ -90,8 +90,8 @@ import { CommonModule } from '@angular/common';
         cursor: pointer;
         transition: background-color 150ms ease;
         border-radius: 4px;
-        margin: -4px;
-        padding: 4px;
+        margin: 0 -4px;
+        padding: 0 4px;
       }
 
       .clickable-header:hover {
@@ -108,7 +108,7 @@ import { CommonModule } from '@angular/common';
       }
 
       .content {
-        @apply relative pt-1;
+        @apply relative;
       }
     `,
   ],

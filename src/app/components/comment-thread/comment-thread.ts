@@ -60,7 +60,7 @@ import { CommentStateService } from '../../services/comment-state.service';
             <app-comment-text [html]="comment()!.text || ''" />
 
             @if (replies().length > 0 || loadingReplies()) {
-              <div class="mt-2">
+              <div class="mt-1">
                 @for (reply of replies(); track reply.id) {
                   @if (reply.kids && reply.kids.length > 0) {
                     <app-comment-thread
@@ -94,7 +94,7 @@ import { CommentStateService } from '../../services/comment-state.service';
                 }
 
                 @if (hasMoreReplies()) {
-                  <div class="mt-3 ml-2 sm:ml-4">
+                  <div class="mt-2 ml-2 sm:ml-4">
                     <app-button
                       variant="secondary"
                       size="sm"
