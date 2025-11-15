@@ -300,8 +300,8 @@ code {
   border-left-style: solid;
   border-left-color: #d1d5db; /* gray-300 */
   padding-left: 0.75rem; /* pl-3 */
-  margin-top: 0.75rem; /* my-3 */
-  margin-bottom: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
   color: var(--tw-prose-quotes, #111827);
   font-style: italic;
   text-wrap: pretty;
@@ -309,16 +309,39 @@ code {
 .comment-body blockquote:first-child {
   margin-top: 0;
 }
+.comment-body blockquote:last-child {
+  margin-bottom: 0;
+}
+.comment-body blockquote + * {
+  margin-top: 0.25rem !important;
+}
 .dark .comment-body blockquote {
   border-left-color: #4b5563; /* gray-600 */
   color: #d1d5db; /* gray-300 */
 }
 .comment-body blockquote p {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 .comment-body blockquote p:first-child {
   margin-top: 0;
+}
+/* Comments panel: control bottom spacing via last child margin, not card padding */
+.comments-card .space-y-4 > :last-child {
+  /* Last top-level thread should not add extra space beyond card padding */
+  margin-bottom: 0;
+}
+
+.comments-card .space-y-4 + .mt-6 {
+  /* Load-more container itself should not push the card bottom further down */
+  margin-bottom: 0;
+}
+
+/* When there is no "Load more comments" section, reduce bottom padding on the
+   main comments card so that the space below the last comment roughly matches
+   the space above the "Comments" heading. */
+.comments-card:not(:has(div.mt-6.flex.justify-center)) .card-base.card-padding {
+  padding-bottom: 0.75rem; /* 12px instead of default 24px */
 }
 
 /* Distinct URL styling inside comment text and story bodies */

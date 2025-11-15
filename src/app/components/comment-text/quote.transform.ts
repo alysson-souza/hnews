@@ -1,6 +1,61 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 
+const BLOCK_LIKE_TAGS = new Set([
+  'P',
+  'DIV',
+  'BLOCKQUOTE',
+  'UL',
+  'OL',
+  'LI',
+  'PRE',
+  'TABLE',
+  'THEAD',
+  'TBODY',
+  'TFOOT',
+  'TR',
+  'TD',
+  'TH',
+  'SECTION',
+  'ARTICLE',
+  'ASIDE',
+  'HEADER',
+  'FOOTER',
+  'FIGURE',
+  'HR',
+]);
+
+const isBlockElement = (node: Node) => {
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return false;
+  }
+  return BLOCK_LIKE_TAGS.has((node as HTMLElement).tagName);
+};
+
+const hasVisibleContent = (el: HTMLElement) => (el.textContent ?? '').trim().length > 0;
+
+const collectInlineQuoteRun = (
+  doc: Document,
+  nodes: Node[],
+  startIndex: number,
+): { paragraph: HTMLParagraphElement; consumed: number } => {
+  const paragraph = doc.createElement('p');
+  let consumed = 0;
+
+  for (let idx = startIndex; idx < nodes.length; idx++) {
+    const current = nodes[idx];
+
+    if (consumed > 0 && isBlockElement(current)) {
+      break;
+    }
+
+    paragraph.appendChild(current.cloneNode(true));
+    consumed++;
+  }
+
+  return { paragraph, consumed };
+};
+
 // Transforms HTML where lines beginning with ">" represent quotes.
 // Groups consecutive quoted lines into <blockquote> and removes the leading marker.
 export function transformQuotesHtml(inputHtml: string): string {
@@ -60,7 +115,9 @@ export function transformQuotesHtml(inputHtml: string): string {
     };
 
     const children = Array.from(body.childNodes);
-    for (const node of children) {
+    for (let idx = 0; idx < children.length; ) {
+      const node = children[idx];
+
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as HTMLElement;
         const isQuote = element.textContent?.trimStart().startsWith('>');
@@ -74,18 +131,24 @@ export function transformQuotesHtml(inputHtml: string): string {
 
           // Wrap non-paragraph elements in <p> tags for proper blockquote structure
           if (element.tagName === 'P') {
-            currentBQ.appendChild(cloned);
+            if (hasVisibleContent(cloned)) {
+              currentBQ.appendChild(cloned);
+            }
           } else {
             const p = doc.createElement('p');
             p.appendChild(cloned);
-            currentBQ.appendChild(p);
+            if (hasVisibleContent(p)) {
+              currentBQ.appendChild(p);
+            }
           }
+          idx++;
           continue;
         }
 
         // Non-quote element
         flushBQ();
         container.appendChild(node.cloneNode(true));
+        idx++;
         continue;
       }
 
@@ -93,25 +156,33 @@ export function transformQuotesHtml(inputHtml: string): string {
         const raw = node.nodeValue || '';
         if (raw.trim().length === 0) {
           // ignore pure whitespace between blocks
+          idx++;
           continue;
         }
         const startsQuote = raw.trimStart().startsWith('>');
-        const p = doc.createElement('p');
-        p.textContent = raw;
         if (startsQuote) {
-          removeLeadingQuoteMarker(p);
-          if (!currentBQ) currentBQ = doc.createElement('blockquote');
-          currentBQ.appendChild(p);
+          const { paragraph, consumed } = collectInlineQuoteRun(doc, children, idx);
+          removeLeadingQuoteMarker(paragraph);
+          if (hasVisibleContent(paragraph)) {
+            if (!currentBQ) currentBQ = doc.createElement('blockquote');
+            currentBQ.appendChild(paragraph);
+          }
+          idx += consumed;
+          continue;
         } else {
+          const p = doc.createElement('p');
+          p.textContent = raw;
           flushBQ();
           container.appendChild(p);
+          idx++;
+          continue;
         }
-        continue;
       }
 
       // Any other node types: close blockquote and pass through
       flushBQ();
       container.appendChild(node.cloneNode(true));
+      idx++;
     }
 
     // Flush at end

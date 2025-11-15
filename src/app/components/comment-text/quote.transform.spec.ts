@@ -74,6 +74,15 @@ describe('transformQuotesHtml', () => {
     expect(output).toContain('3. Revenue growth');
   });
 
+  it('keeps inline siblings after standalone quote markers inside the blockquote', () => {
+    const input = "&gt; <i>There's hope though!</i><p>Where would that be?</p>";
+    const output = transformQuotesHtml(input);
+
+    expect(output).toContain('<blockquote>');
+    expect(output).toContain("<p><i>There's hope though!</i></p>");
+    expect(output).not.toContain('<blockquote><p></p>');
+  });
+
   it('does not strip ">" when not at the start of a line', () => {
     const input = '<p>x &gt; y</p>';
     const output = transformQuotesHtml(input);
