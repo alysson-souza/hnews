@@ -25,14 +25,34 @@ export function transformLinksToDomain(html: string): string {
       const domain = getDomain(href);
       if (!domain) continue;
 
+      // Construct display text: domain + last 15 chars of path (excluding query/anchor)
+      let displayText = domain;
+      try {
+        // Use the same normalization logic as getDomain to ensure we can parse the URL
+        const normalized = href.match(/^https?:\/\//i)
+          ? href
+          : `https://${href.replace(/^\/+/, '')}`;
+        const urlObj = new URL(normalized);
+        const path = urlObj.pathname;
+
+        if (path && path !== '/') {
+          // Remove trailing slash for cleaner display if it's just the root or similar
+          const cleanPath = path.replace(/\/$/, '');
+          if (cleanPath.length > 0) {
+            const last15 = cleanPath.slice(-15);
+            displayText = `${domain}/…/${last15.replace(/^\//, '')}`;
+          }
+        }
+      } catch {
+        // If URL parsing fails, fallback to just domain (already set)
+      }
+
       // Replace visible text with domain only and mark with a class
-      a.textContent = domain;
+      a.textContent = displayText;
       a.classList.add('ext-link');
 
-      // Fallback: enforce smaller size inline to win over conflicting styles
-      const existingStyle = a.getAttribute('style') || '';
-      const smallStyle = 'font-size:0.75rem;line-height:1.15rem;';
-      a.setAttribute('style', `${existingStyle} ${smallStyle}`.trim());
+      // Remove inline style injection to let CSS handle it
+      // a.setAttribute('style', ...);
 
       // Preserve original URL in title for discoverability
       if (!a.getAttribute('title')) {

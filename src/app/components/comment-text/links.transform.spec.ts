@@ -22,21 +22,21 @@ describe('transformLinksToDomain', () => {
   it('should extract domain from https urls', () => {
     const html = '<a href="https://www.github.com/user/repo">https://www.github.com/user/repo</a>';
     const result = transformLinksToDomain(html);
-    expect(result).toContain('>github.com<');
+    expect(result).toContain('>github.com/…/user/repo<');
     expect(result).toContain('href="https://www.github.com/user/repo"');
   });
 
   it('should handle protocol-relative urls', () => {
     const html = '<a href="//example.com/path">Link text</a>';
     const result = transformLinksToDomain(html);
-    expect(result).toContain('>example.com<');
+    expect(result).toContain('>example.com/…/path<');
     expect(result).toContain('href="//example.com/path"');
   });
 
   it('should handle urls without protocol', () => {
     const html = '<a href="example.com/path">Link text</a>';
     const result = transformLinksToDomain(html);
-    expect(result).toContain('>example.com<');
+    expect(result).toContain('>example.com/…/path<');
   });
 
   it('should add ext-link class to anchors', () => {
@@ -104,17 +104,38 @@ describe('transformLinksToDomain', () => {
     expect(result).toContain('not-a-url');
   });
 
-  it('should preserve existing styles and add font sizing', () => {
+  it('should preserve existing styles but not add inline font sizing', () => {
     const html = '<a href="https://example.com" style="color: red;">Link</a>';
     const result = transformLinksToDomain(html);
     expect(result).toContain('color: red;');
-    expect(result).toContain('font-size:0.75rem');
-    expect(result).toContain('line-height:1.15rem');
+    expect(result).not.toContain('font-size:0.75rem');
+    expect(result).not.toContain('line-height:1.15rem');
   });
 
   it('should handle complex urls with subdomains', () => {
     const html = '<a href="https://news.ycombinator.com/item?id=12345">HN Link</a>';
     const result = transformLinksToDomain(html);
-    expect(result).toContain('>news.ycombinator.com<');
+    expect(result).toContain('>news.ycombinator.com/…/item<');
+  });
+
+  it('should exclude query parameters from display text but preserve them in href', () => {
+    const html = '<a href="https://example.com/path?query=123&sort=desc">Link</a>';
+    const result = transformLinksToDomain(html);
+    expect(result).toContain('>example.com/…/path<');
+    expect(result).toContain('href="https://example.com/path?query=123&amp;sort=desc"');
+  });
+
+  it('should exclude anchors from display text but preserve them in href', () => {
+    const html = '<a href="https://example.com/path#section-1">Link</a>';
+    const result = transformLinksToDomain(html);
+    expect(result).toContain('>example.com/…/path<');
+    expect(result).toContain('href="https://example.com/path#section-1"');
+  });
+
+  it('should exclude both query and anchors from display text', () => {
+    const html = '<a href="https://example.com/path?q=1#top">Link</a>';
+    const result = transformLinksToDomain(html);
+    expect(result).toContain('>example.com/…/path<');
+    expect(result).toContain('href="https://example.com/path?q=1#top"');
   });
 });

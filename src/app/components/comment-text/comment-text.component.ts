@@ -30,10 +30,8 @@ import { highlightCodeBlocks } from './code-highlight.transform';
 
       /* Transformed external links inside comments */
       .comment-body a.ext-link {
-        /* Use Tailwind tokens and force smaller size to win over prose defaults */
-        @apply text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 underline;
-        font-size: 0.75rem !important; /* ~text-xs */
-        line-height: 1.15rem !important;
+        @apply text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 no-underline;
+        font-size: 0.85em;
       }
 
       /* Code block syntax highlighting */
