@@ -29,10 +29,10 @@ export class KeyboardContextService {
    * Check if we're on a story list page where story navigation shortcuts apply
    */
   isOnStoryList = computed(() => {
-    const path = this.router.url;
-    return ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'].some(
-      (p) => path === p || path.startsWith(p + '?'),
-    );
+    const url = this.router.url;
+    // Remove fragment and query params to get the base path
+    const path = url.split('#')[0].split('?')[0];
+    return ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'].includes(path);
   });
 
   /**

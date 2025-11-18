@@ -63,7 +63,7 @@ describe('CommentTextComponent', () => {
     const a = bodyEl.querySelector('a.ext-link') as HTMLAnchorElement | null;
     expect(a).withContext('transformed anchor should exist').not.toBeNull();
     if (a) {
-      expect(a.textContent?.trim()).toBe('example.com');
+      expect(a.textContent?.trim()).toBe('example.com/…/some/path');
       expect(a.getAttribute('href')).toBe('https://example.com/some/path?q=1');
       expect(a.getAttribute('title')).toBe('https://example.com/some/path?q=1');
       expect(a.getAttribute('target')).toBe('_blank');
