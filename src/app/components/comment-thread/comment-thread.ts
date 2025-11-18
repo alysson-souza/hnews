@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs/operators';
+import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
 import { CommonModule } from '@angular/common';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
@@ -13,6 +16,9 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
 import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
 import { CommentStateService } from '../../services/comment-state.service';
+import { SidebarService } from '../../services/sidebar.service';
+import { DeviceService } from '../../services/device.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-comment-thread',
@@ -38,6 +44,7 @@ import { CommentStateService } from '../../services/comment-state.service';
         [depth]="depth"
         [clickable]="true"
         [collapsed]="isCollapsed()"
+        [commentId]="commentId"
         (toggleThread)="toggleCollapse()"
       >
         <div header>
@@ -71,7 +78,12 @@ import { CommentStateService } from '../../services/comment-state.service';
                       [storyAuthor]="storyAuthor"
                     ></app-comment-thread>
                   } @else {
-                    <app-thread-gutter [depth]="depth + 1" [clickable]="true" [collapsed]="false">
+                    <app-thread-gutter
+                      [depth]="depth + 1"
+                      [clickable]="true"
+                      [collapsed]="false"
+                      [commentId]="reply.id"
+                    >
                       <div header>
                         <app-comment-header
                           [by]="reply.by || ''"
@@ -287,19 +299,49 @@ export class CommentThread implements OnInit {
     return this.repliesLoader.remainingCount();
   }
 
+  private interactionService = inject(SidebarCommentsInteractionService);
+  private destroyRef = inject(DestroyRef);
+  private sidebarService = inject(SidebarService);
+  private deviceService = inject(DeviceService);
+  private router = inject(Router);
+
   ngOnInit() {
     // If parent provided the comment, hydrate without fetching
     if (this.initialComment) {
       this.hydrateFromInitial(this.initialComment);
-      return;
-    }
-
-    if (!this.lazyLoad) {
+    } else if (!this.lazyLoad) {
       this.loadComment();
     } else {
       // Lazy instances render a small loader card until user opts-in
       this.loading.set(false);
     }
+
+    // Listen for keyboard actions targeting this comment
+    this.interactionService.action$
+      .pipe(
+        filter((action) => action.commentId === this.commentId),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((action) => {
+        switch (action.action) {
+          case 'collapse':
+            this.toggleCollapse();
+            break;
+          case 'upvote':
+            this.upvoteComment();
+            break;
+          case 'expandReplies':
+            this.expandReplies();
+            break;
+          case 'viewThread':
+            if (this.deviceService.isMobile()) {
+              this.router.navigate(['/item', this.commentId]);
+            } else {
+              this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
+            }
+            break;
+        }
+      });
   }
 
   private hydrateFromInitial(item: HNItem) {

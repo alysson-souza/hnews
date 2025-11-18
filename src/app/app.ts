@@ -10,7 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-comments.component';
@@ -27,6 +27,10 @@ import { ScrollService } from './services/scroll.service';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { AppShellComponent } from './components/layout/app-shell/app-shell.component';
+import { CommandRegistryService } from './services/command-registry.service';
+import { KeyboardContextService } from './services/keyboard-context.service';
+import { SidebarKeyboardNavigationService } from './services/sidebar-keyboard-navigation.service';
+import { KeyboardShortcutConfigService } from './services/keyboard-shortcut-config.service';
 
 @Component({
   selector: 'app-root',
@@ -58,11 +62,17 @@ export class App implements OnInit {
   networkState = inject(NetworkStateService);
   private scrollService = inject(ScrollService);
   http = inject(HttpClient);
-  private readonly _pwaUpdate = inject(PwaUpdateService);
+  private pwaUpdate = inject(PwaUpdateService);
+  private keyboardConfig = inject(KeyboardShortcutConfigService);
+  private keyboardContext = inject(KeyboardContextService);
+  // Injected to ensure it initializes and registers commands
+  private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
+  private commandRegistry = inject(CommandRegistryService);
+  private location = inject(Location);
 
   // Expose PWA update signals to template
-  updateAvailable = this._pwaUpdate.updateAvailable;
-  updateVersionInfo = this._pwaUpdate.updateVersionInfo;
+  updateAvailable = this.pwaUpdate.updateAvailable;
+  updateVersionInfo = this.pwaUpdate.updateVersionInfo;
   version = VERSION;
   commitSha = COMMIT_SHA;
   commitShaShort = COMMIT_SHA_SHORT;
@@ -76,7 +86,19 @@ export class App implements OnInit {
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
   private lastRefreshTime = 0;
-  // No global offline banner; page-level indicators handle UX
+
+  constructor() {
+    this.registerGlobalCommands();
+  }
+
+  private registerGlobalCommands() {
+    this.commandRegistry.register('global.showHelp', () => this.showKeyboardShortcuts());
+    this.commandRegistry.register('global.search', () => this.focusSearch());
+    this.commandRegistry.register('global.toggleTheme', () => this.toggleTheme());
+    this.commandRegistry.register('global.applyUpdate', () => this.applyPwaUpdate());
+    this.commandRegistry.register('global.escape', () => this.handleEscapeDefault());
+    this.commandRegistry.register('story.refresh', () => this.refreshCurrentStoryList());
+  }
 
   private async loadBuildInfo(): Promise<void> {
     try {
@@ -88,7 +110,6 @@ export class App implements OnInit {
           commitShaShort: string;
         }>('version.json', {
           headers: {
-            // Use proper caching to prevent unnecessary re-fetches that could trigger update detection
             'Cache-Control': 'max-age=300, stale-while-revalidate=600',
           },
         }),
@@ -160,156 +181,71 @@ export class App implements OnInit {
       return;
     }
 
-    // Handle Escape key specially
-    if (event.key === 'Escape') {
-      // Allow Escape to work in search inputs to close mobile search
-      if (isSearchInput && this.showMobileSearch()) {
-        if (this.searchQuery.trim()) {
-          this.searchQuery = '';
-        } else {
-          this.showMobileSearch.set(false);
-          (target as HTMLInputElement).blur();
-        }
-        return;
-      }
-
-      // Handle other Escape scenarios
-      if (!isInputField) {
-        // Check if we're on an item page and can go back
-        const currentPath = this.router.url;
-        const isOnItemPage = currentPath.includes('/item/');
-
-        if (isOnItemPage && this.navigationHistory.canGoBack()) {
-          const previousState = this.navigationHistory.goBack();
-          if (previousState) {
-            // The cached state will be restored automatically by StoryList
-            // Just restore the selected index after navigation completes
-            if (previousState.selectedIndex !== null) {
-              setTimeout(() => {
-                this.keyboardNavService.setSelectedIndex(previousState.selectedIndex);
-                this.scrollSelectedIntoView();
-              }, 100);
-            }
-          }
-        } else if (this.sidebarService.isOpen()) {
-          this.sidebarService.closeSidebar();
-        } else if (this.showMobileSearch()) {
-          this.showMobileSearch.set(false);
-        } else if (this.mobileMenuOpen()) {
-          this.mobileMenuOpen.set(false);
-        } else if (this.keyboardNavService.selectedIndex() !== null) {
-          this.keyboardNavService.clearSelection();
-        } else {
-          this.scrollService.scrollToTop();
-        }
+    // Special handling for Escape in search inputs
+    if (event.key === 'Escape' && isSearchInput && this.showMobileSearch()) {
+      if (this.searchQuery.trim()) {
+        this.searchQuery = '';
+      } else {
+        this.showMobileSearch.set(false);
+        (target as HTMLInputElement).blur();
       }
       return;
     }
 
-    // For other keys, don't process if in an input field
-    if (isInputField) {
+    // For non-Escape keys, don't process if in an input field
+    if (event.key !== 'Escape' && isInputField) {
       return;
     }
 
-    const currentPath = this.router.url;
-    const isOnStoryList = ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'].some(
-      (path) => currentPath === path || currentPath.startsWith(path + '?'),
-    );
+    // Get current context (sidebar or default)
+    const context = this.keyboardContext.currentContext();
+    const isOnStoryList = this.keyboardContext.isOnStoryList();
 
-    // Allow global shortcuts (/, ?, t) on all pages, but restrict story-specific shortcuts to story lists
-    const globalShortcuts = ['/', '?', 't'];
-    if (!isOnStoryList && !globalShortcuts.includes(event.key)) {
-      return;
+    // For default context, only allow story shortcuts on story list pages
+    // (global shortcuts always work)
+    if (context === 'default' && !isOnStoryList) {
+      // Only allow global shortcuts
+      const shortcut = this.keyboardConfig.getShortcut(event.key, 'global');
+      if (!shortcut) return;
     }
 
-    switch (event.key) {
-      case 'j':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.blurActiveElement();
-          if (this.keyboardNavService.isAtLastItem()) {
-            const loadMoreBtn = document.querySelector('.load-more-btn') as HTMLElement;
-            loadMoreBtn?.click();
-          } else {
-            this.keyboardNavService.selectNext();
-            this.scrollSelectedIntoView();
-          }
-        }
-        break;
-      case 'k':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.blurActiveElement();
-          this.keyboardNavService.selectPrevious();
-          this.scrollSelectedIntoView();
-        }
-        break;
-      case 'o':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.openSelectedStory();
-        }
-        break;
-      case 'O': // Shift+O
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.openSelectedStoryFullPage();
-        }
-        break;
-      case 'c':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.openSelectedComments();
-        }
-        break;
-      case 'C': // Shift+C
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.navigateToItemPage();
-        }
-        break;
-      case 'h':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.blurActiveElement();
-          this.navigateToTab('prev');
-        }
-        break;
-      case 'l':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.blurActiveElement();
-          this.navigateToTab('next');
-        }
-        break;
-      case '?':
-        event.preventDefault();
-        this.showKeyboardShortcuts();
-        break;
-      case '/':
-        event.preventDefault();
-        this.focusSearch();
-        break;
-      case 't':
-        event.preventDefault();
-        this.themeService.toggleTheme();
-        break;
-      case 'r':
-        if (isOnStoryList) {
-          event.preventDefault();
-          this.refreshCurrentStoryList();
-        }
-        break;
-      case 'R': // Shift+R for PWA update
-        if (this.updateAvailable()) {
-          event.preventDefault();
-          this.applyPwaUpdate();
-        }
-        break;
+    // Look up shortcut in configuration
+    const shortcut = this.keyboardConfig.getShortcut(event.key, context);
+    if (!shortcut) return;
+
+    // Execute the command
+    event.preventDefault();
+    this.commandRegistry.execute(shortcut.commandId);
+  }
+
+  // ============================================================================
+  // Keyboard Shortcut Handlers - Story List (Default Context)
+  // ============================================================================
+
+  private handleEscapeDefault(): void {
+    // Check if we're on an item page and can go back
+    const isOnItemPage = this.keyboardContext.isOnItemPage();
+
+    if (isOnItemPage && this.navigationHistory.canGoBack()) {
+      const previousState = this.navigationHistory.goBack();
+      if (previousState && previousState.selectedIndex !== null) {
+        setTimeout(() => {
+          this.keyboardNavService.setSelectedIndex(previousState.selectedIndex);
+          this.scrollSelectedStoryIntoView();
+        }, 100);
+      }
+    } else if (this.showMobileSearch()) {
+      this.showMobileSearch.set(false);
+    } else if (this.mobileMenuOpen()) {
+      this.mobileMenuOpen.set(false);
+    } else if (this.keyboardNavService.selectedIndex() !== null) {
+      this.keyboardNavService.clearSelection();
+    } else {
+      this.scrollService.scrollToTop();
     }
   }
 
-  private async scrollSelectedIntoView(): Promise<void> {
+  private async scrollSelectedStoryIntoView(): Promise<void> {
     const selectedIndex = this.keyboardNavService.selectedIndex();
     if (selectedIndex !== null) {
       const element = document.querySelector(`[data-story-index="${selectedIndex}"]`);
@@ -319,111 +255,21 @@ export class App implements OnInit {
     }
   }
 
-  private openSelectedStory(): void {
-    const selectedIndex = this.keyboardNavService.selectedIndex();
-    if (selectedIndex !== null) {
-      const element = document.querySelector(
-        `[data-story-index="${selectedIndex}"] .story-link-trigger`,
-      ) as HTMLAnchorElement;
-      // Check if this is a text post by looking at the href content
-      // RouterLink creates href="/item/xxx" while external links have full URLs
-      if (element && element.href && element.href.includes('/item/')) {
-        // Text post (Ask HN, etc.) - open comments sidebar instead
-        this.openSelectedComments();
-      } else {
-        // Regular story with external URL - open the link
-        element?.click();
-      }
-    }
-  }
-
-  private openSelectedComments(): void {
-    const selectedIndex = this.keyboardNavService.selectedIndex();
-    if (selectedIndex !== null) {
-      const element = document.querySelector(
-        `[data-story-index="${selectedIndex}"] .story-comments-trigger`,
-      ) as HTMLElement;
-      element?.click();
-    }
-  }
-
-  private openSelectedStoryFullPage(): void {
-    const selectedIndex = this.keyboardNavService.selectedIndex();
-    if (selectedIndex !== null) {
-      const element = document.querySelector(
-        `[data-story-index="${selectedIndex}"] .story-link-trigger`,
-      ) as HTMLAnchorElement;
-      // For text posts (Shift+O), navigate to the item page
-      if (element && element.href && element.href.includes('/item/')) {
-        // Extract item ID and navigate to item page
-        const match = element.href.match(/\/item\/(\d+)/);
-        if (match && match[1]) {
-          const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
-          const storyType = currentPath === '' ? 'top' : currentPath;
-          this.navigationHistory.pushCurrentState(
-            this.keyboardNavService.selectedIndex(),
-            storyType,
-          );
-          this.router.navigate(['/item', match[1]]);
-        }
-      } else {
-        // Regular story - just open the external link
-        element?.click();
-      }
-    }
-  }
-
-  private navigateToItemPage(): void {
-    const selectedIndex = this.keyboardNavService.selectedIndex();
-    if (selectedIndex !== null) {
-      // Get the story ID from the data attribute
-      const storyElement = document.querySelector(`[data-story-index="${selectedIndex}"]`);
-      if (storyElement) {
-        const storyId = storyElement.getAttribute('data-story-id');
-        if (storyId) {
-          const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
-          const storyType = currentPath === '' ? 'top' : currentPath;
-          this.navigationHistory.pushCurrentState(
-            this.keyboardNavService.selectedIndex(),
-            storyType,
-          );
-          this.router.navigate(['/item', storyId]);
-        }
-      }
-    }
-  }
-
-  private navigateToTab(direction: 'next' | 'prev'): void {
-    const tabs = ['top', 'best', 'newest', 'ask', 'show', 'jobs'];
-    const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
-    const currentIndex = tabs.indexOf(currentPath);
-
-    if (currentIndex === -1) return;
-
-    if (direction === 'next') {
-      const nextIndex = (currentIndex + 1) % tabs.length;
-      this.router.navigate(['/' + tabs[nextIndex]]);
-    } else {
-      const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-      this.router.navigate(['/' + tabs[prevIndex]]);
-    }
-
-    this.keyboardNavService.clearSelection();
-  }
-
   private showKeyboardShortcuts(): void {
     if (this.keyboardShortcuts) {
       this.keyboardShortcuts.open();
     }
   }
 
+  private toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
+
   private focusSearch(): void {
-    // On mobile, open the search bar first
-    const isMobile = window.innerWidth < 1024; // lg breakpoint
+    const isMobile = window.innerWidth < 1024;
     if (isMobile && !this.showMobileSearch()) {
       this.showMobileSearch.set(true);
       this.mobileMenuOpen.set(false);
-      // Wait for Angular to render the search input
       setTimeout(() => {
         this.focusVisibleSearchInput();
       }, 50);
@@ -433,39 +279,29 @@ export class App implements OnInit {
   }
 
   private refreshCurrentStoryList(): void {
-    // Prevent refresh spam - require at least 1 second between refreshes
     const now = Date.now();
     if (now - this.lastRefreshTime < 1000) {
       return;
     }
     this.lastRefreshTime = now;
 
-    // Clear selection and scroll to top for immediate feedback
     this.keyboardNavService.clearSelection();
     this.scrollService.scrollToTop();
 
-    // Get the activated component from the router outlet
     if (this.outlet && this.outlet.component) {
       const activatedComponent = this.outlet.component as { refresh?: () => void };
-      // Check if it's a StoriesComponent (has a refresh method)
       if (activatedComponent && typeof activatedComponent.refresh === 'function') {
         activatedComponent.refresh();
       }
     }
   }
 
-  /**
-   * Apply PWA update when user presses 'R' or clicks update button
-   */
   async applyPwaUpdate(): Promise<void> {
-    await this._pwaUpdate.applyUpdate();
+    await this.pwaUpdate.applyUpdate();
   }
 
-  /**
-   * Dismiss PWA update notification
-   */
   dismissPwaUpdate(): void {
-    this._pwaUpdate.dismissUpdate();
+    this.pwaUpdate.dismissUpdate();
   }
 
   handleDesktopSearchKeydown(event: KeyboardEvent): void {
@@ -488,13 +324,11 @@ export class App implements OnInit {
   }
 
   private focusVisibleSearchInput(): void {
-    // Try to find any visible search input
     const searchInputs = document.querySelectorAll(
       '.search-input, .search-input-mobile, input[type="search"]',
     ) as NodeListOf<HTMLInputElement>;
 
     for (const input of searchInputs) {
-      // Check if the input is visible
       const rect = input.getBoundingClientRect();
       const isVisible = rect.width > 0 && rect.height > 0;
 

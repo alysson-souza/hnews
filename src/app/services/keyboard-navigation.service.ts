@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommandRegistryService } from './command-registry.service';
+import { ScrollService } from './scroll.service';
+import { NavigationHistoryService } from './navigation-history.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,6 +12,26 @@ import { Injectable, signal, computed } from '@angular/core';
 export class KeyboardNavigationService {
   selectedIndex = signal<number | null>(null);
   totalItems = signal<number>(0);
+
+  private commandRegistry = inject(CommandRegistryService);
+  private scrollService = inject(ScrollService);
+  private router = inject(Router);
+  private navigationHistory = inject(NavigationHistoryService);
+
+  constructor() {
+    this.registerCommands();
+  }
+
+  private registerCommands() {
+    this.commandRegistry.register('story.next', () => this.selectNextStory());
+    this.commandRegistry.register('story.previous', () => this.selectPreviousStory());
+    this.commandRegistry.register('story.open', () => this.openSelectedStory());
+    this.commandRegistry.register('story.openFull', () => this.openSelectedStoryFullPage());
+    this.commandRegistry.register('story.openComments', () => this.openSelectedComments());
+    this.commandRegistry.register('story.openCommentsPage', () => this.navigateToItemPage());
+    this.commandRegistry.register('navigation.previousTab', () => this.navigateToPreviousTab());
+    this.commandRegistry.register('navigation.nextTab', () => this.navigateToNextTab());
+  }
 
   isSelected = computed(() => {
     const index = this.selectedIndex();
@@ -98,5 +122,131 @@ export class KeyboardNavigationService {
   isAtFirstItem(): boolean {
     const current = this.selectedIndex();
     return current === 0;
+  }
+
+  // Command Handlers
+
+  private selectNextStory(): void {
+    this.blurActiveElement();
+    if (this.isAtLastItem()) {
+      const loadMoreBtn = document.querySelector('.load-more-btn') as HTMLElement;
+      loadMoreBtn?.click();
+    } else {
+      this.selectNext();
+      this.scrollSelectedStoryIntoView();
+    }
+  }
+
+  private selectPreviousStory(): void {
+    this.blurActiveElement();
+    this.selectPrevious();
+    this.scrollSelectedStoryIntoView();
+  }
+
+  private async scrollSelectedStoryIntoView(): Promise<void> {
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex !== null) {
+      const element = document.querySelector(`[data-story-index="${selectedIndex}"]`);
+      if (element) {
+        await this.scrollService.scrollElementIntoView(element, { block: 'center' });
+      }
+    }
+  }
+
+  private openSelectedStory(): void {
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex !== null) {
+      const element = document.querySelector(
+        `[data-story-index="${selectedIndex}"] .story-link-trigger`,
+      ) as HTMLAnchorElement;
+      if (element && element.href && element.href.includes('/item/')) {
+        this.openSelectedComments();
+      } else {
+        element?.click();
+      }
+    }
+  }
+
+  private openSelectedComments(): void {
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex !== null) {
+      const element = document.querySelector(
+        `[data-story-index="${selectedIndex}"] .story-comments-trigger`,
+      ) as HTMLElement;
+      element?.click();
+    }
+  }
+
+  private openSelectedStoryFullPage(): void {
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex !== null) {
+      const element = document.querySelector(
+        `[data-story-index="${selectedIndex}"] .story-link-trigger`,
+      ) as HTMLAnchorElement;
+      if (element && element.href && element.href.includes('/item/')) {
+        const match = element.href.match(/\/item\/(\d+)/);
+        if (match && match[1]) {
+          this.pushNavigationState();
+          this.router.navigate(['/item', match[1]]);
+        }
+      } else {
+        element?.click();
+      }
+    }
+  }
+
+  private navigateToItemPage(): void {
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex !== null) {
+      const storyElement = document.querySelector(`[data-story-index="${selectedIndex}"]`);
+      if (storyElement) {
+        const storyId = storyElement.getAttribute('data-story-id');
+        if (storyId) {
+          this.pushNavigationState();
+          this.router.navigate(['/item', storyId]);
+        }
+      }
+    }
+  }
+
+  private navigateToPreviousTab(): void {
+    this.blurActiveElement();
+    this.navigateToTab('prev');
+  }
+
+  private navigateToNextTab(): void {
+    this.blurActiveElement();
+    this.navigateToTab('next');
+  }
+
+  private navigateToTab(direction: 'next' | 'prev'): void {
+    const tabs = ['top', 'best', 'newest', 'ask', 'show', 'jobs'];
+    const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
+    const currentIndex = tabs.indexOf(currentPath);
+
+    if (currentIndex === -1) return;
+
+    if (direction === 'next') {
+      const nextIndex = (currentIndex + 1) % tabs.length;
+      this.router.navigate(['/' + tabs[nextIndex]]);
+    } else {
+      const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      this.router.navigate(['/' + tabs[prevIndex]]);
+    }
+
+    this.clearSelection();
+  }
+
+  private pushNavigationState(): void {
+    const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
+    const storyType = currentPath === '' ? 'top' : currentPath;
+    this.navigationHistory.pushCurrentState(this.selectedIndex(), storyType);
+  }
+
+  private blurActiveElement(): void {
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && activeElement.blur) {
+      activeElement.blur();
+    }
   }
 }

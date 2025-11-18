@@ -13,6 +13,8 @@ import { HNItem } from '../../models/hn';
 import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
 import { CommentStateService, CommentStateEntry } from '../../services/comment-state.service';
+import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
+import { Subject } from 'rxjs';
 
 import { CommentThread } from './comment-thread';
 
@@ -163,6 +165,13 @@ describe('CommentThread', () => {
         { provide: CacheManagerService, useClass: MockCacheManagerService },
         { provide: CommentVoteStoreService, useValue: mockVoteStore },
         { provide: CommentStateService, useValue: mockCommentStateService },
+        {
+          provide: SidebarCommentsInteractionService,
+          useValue: {
+            action$: new Subject(),
+            dispatchAction: jasmine.createSpy('dispatchAction'),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -681,6 +690,43 @@ describe('CommentThread', () => {
       component.ngOnInit();
 
       expect(mockCommentStateService.getState).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('keyboard interaction', () => {
+    let interactionService: SidebarCommentsInteractionService;
+    let actionSubject: Subject<{ commentId: number; action: string }>;
+
+    beforeEach(() => {
+      interactionService = TestBed.inject(SidebarCommentsInteractionService);
+      actionSubject = interactionService.action$ as unknown as Subject<{
+        commentId: number;
+        action: string;
+      }>;
+    });
+
+    it('should toggle collapse when collapse action is received', () => {
+      spyOn(component, 'toggleCollapse');
+      actionSubject.next({ commentId: 123, action: 'collapse' });
+      expect(component.toggleCollapse).toHaveBeenCalled();
+    });
+
+    it('should not toggle collapse when action is for another comment', () => {
+      spyOn(component, 'toggleCollapse');
+      actionSubject.next({ commentId: 999, action: 'collapse' });
+      expect(component.toggleCollapse).not.toHaveBeenCalled();
+    });
+
+    it('should upvote when upvote action is received', () => {
+      spyOn(component, 'upvoteComment');
+      actionSubject.next({ commentId: 123, action: 'upvote' });
+      expect(component.upvoteComment).toHaveBeenCalled();
+    });
+
+    it('should expand replies when expandReplies action is received', () => {
+      spyOn(component, 'expandReplies');
+      actionSubject.next({ commentId: 123, action: 'expandReplies' });
+      expect(component.expandReplies).toHaveBeenCalled();
     });
   });
 });

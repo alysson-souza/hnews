@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, signal, HostListener, inject } from '@angular/core';
+import { Component, signal, HostListener, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { PwaUpdateService } from '../../services/pwa-update.service';
+import { KeyboardShortcutConfigService } from '../../services/keyboard-shortcut-config.service';
+import { KeyboardContextService } from '../../services/keyboard-context.service';
 
 @Component({
   selector: 'app-keyboard-shortcuts',
@@ -40,6 +40,11 @@ import { PwaUpdateService } from '../../services/pwa-update.service';
                 class="text-xl font-semibold text-gray-900 dark:text-gray-100"
               >
                 Keyboard Shortcuts
+                @if (contextLabel()) {
+                  <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    - {{ contextLabel() }}
+                  </span>
+                }
               </h2>
               <button
                 (click)="close()"
@@ -56,131 +61,26 @@ import { PwaUpdateService } from '../../services/pwa-update.service';
 
             <!-- Content -->
             <div class="px-6 py-4 overflow-y-auto">
-              <!-- Context-specific shortcuts -->
-              @if (isOnStoryList) {
-                <!-- Story List Navigation -->
-                <div class="mb-6">
+              @for (category of categories(); track category) {
+                <div class="mb-6 last:mb-0">
                   <h3
                     class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3"
                   >
-                    Navigation
+                    {{ category }}
                   </h3>
                   <div class="space-y-2">
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">j</kbd>
-                      <span class="shortcut-desc">Next story</span>
-                    </div>
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">k</kbd>
-                      <span class="shortcut-desc">Previous story</span>
-                    </div>
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">h</kbd>
-                      <span class="shortcut-desc">Previous tab</span>
-                    </div>
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">l</kbd>
-                      <span class="shortcut-desc">Next tab</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Story Actions -->
-                <div class="mb-6">
-                  <h3
-                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3"
-                  >
-                    Story Actions
-                  </h3>
-                  <div class="space-y-2">
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">o</kbd>
-                      <span class="shortcut-desc">Open story</span>
-                    </div>
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">c</kbd>
-                      <span class="shortcut-desc">Open comments in sidebar</span>
-                    </div>
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">Shift+C</kbd>
-                      <span class="shortcut-desc">Open comments page</span>
-                    </div>
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">r</kbd>
-                      <span class="shortcut-desc">Refresh stories</span>
-                    </div>
+                    @for (
+                      shortcut of shortcutsByCategory().get(category);
+                      track shortcut.key + shortcut.description
+                    ) {
+                      <div class="shortcut-row">
+                        <kbd class="shortcut-key">{{ shortcut.key }}</kbd>
+                        <span class="shortcut-desc">{{ shortcut.description }}</span>
+                      </div>
+                    }
                   </div>
                 </div>
               }
-
-              @if (isOnItemPage) {
-                <!-- Item Page Navigation -->
-                <div class="mb-6">
-                  <h3
-                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3"
-                  >
-                    Navigation
-                  </h3>
-                  <div class="space-y-2">
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">Esc</kbd>
-                      <span class="shortcut-desc">Go back to stories</span>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              @if (isOnUserPage) {
-                <!-- User Page Navigation -->
-                <div class="mb-6">
-                  <h3
-                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3"
-                  >
-                    Navigation
-                  </h3>
-                  <div class="space-y-2">
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">Esc</kbd>
-                      <span class="shortcut-desc">Go to top of page</span>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              <!-- Always available -->
-              <div>
-                <h3
-                  class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3"
-                >
-                  General
-                </h3>
-                <div class="space-y-2">
-                  <div class="shortcut-row">
-                    <kbd class="shortcut-key">/</kbd>
-                    <span class="shortcut-desc">Search</span>
-                  </div>
-                  <div class="shortcut-row">
-                    <kbd class="shortcut-key">t</kbd>
-                    <span class="shortcut-desc">Toggle theme</span>
-                  </div>
-                  @if (updateAvailable()) {
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">R</kbd>
-                      <span class="shortcut-desc">Apply app update</span>
-                    </div>
-                  }
-                  <div class="shortcut-row">
-                    <kbd class="shortcut-key">?</kbd>
-                    <span class="shortcut-desc">Show help</span>
-                  </div>
-                  @if (!isOnItemPage && !isOnUserPage) {
-                    <div class="shortcut-row">
-                      <kbd class="shortcut-key">Esc</kbd>
-                      <span class="shortcut-desc">Close / Clear / Top</span>
-                    </div>
-                  }
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -208,28 +108,32 @@ import { PwaUpdateService } from '../../services/pwa-update.service';
   ],
 })
 export class KeyboardShortcutsComponent {
-  private router = inject(Router);
-  private pwaUpdate = inject(PwaUpdateService);
+  private shortcutConfig = inject(KeyboardShortcutConfigService);
+  private keyboardContext = inject(KeyboardContextService);
+
   isOpen = signal(false);
 
-  // Expose update available signal to template
-  updateAvailable = this.pwaUpdate.updateAvailable;
+  // Get current context for displaying relevant shortcuts
+  currentContext = this.keyboardContext.currentContext;
 
-  get isOnStoryList(): boolean {
-    const path = this.router.url;
-    return ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'].some(
-      (p) => path === p || path.startsWith(p + '?'),
-    );
-  }
+  // Get shortcuts grouped by category for the current context
+  shortcutsByCategory = computed(() => {
+    return this.shortcutConfig.getShortcutsByCategory(this.currentContext());
+  });
 
-  get isOnItemPage(): boolean {
-    return this.router.url.includes('/item/');
-  }
+  // Get ordered list of categories
+  categories = computed(() => {
+    return this.shortcutConfig.getCategories(this.currentContext());
+  });
 
-  get isOnUserPage(): boolean {
-    const path = this.router.url;
-    return path.startsWith('/user/') || path === '/user' || path.startsWith('/user?');
-  }
+  // Context label for the modal header
+  contextLabel = computed(() => {
+    const context = this.currentContext();
+    if (context === 'sidebar') {
+      return 'Comments Sidebar';
+    }
+    return null;
+  });
 
   open(): void {
     this.isOpen.set(true);

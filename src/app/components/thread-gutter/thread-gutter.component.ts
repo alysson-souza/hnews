@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboard-navigation.service';
 
 @Component({
   selector: 'app-thread-gutter',
@@ -13,11 +14,13 @@ import { CommonModule } from '@angular/common';
       [ngClass]="{
         'thread-indent': depth > 0,
         collapsed: collapsed,
+        'keyboard-focused': isKeyboardFocused(),
       }"
+      [attr.data-comment-id]="commentId"
       role="treeitem"
       [attr.aria-level]="depth + 1"
       [attr.aria-expanded]="clickable ? !collapsed : null"
-      aria-selected="false"
+      [attr.aria-selected]="isKeyboardFocused()"
       tabindex="-1"
     >
       <div
@@ -107,6 +110,26 @@ import { CommonModule } from '@angular/common';
         outline-offset: 2px;
       }
 
+      /* Keyboard focus indicator */
+      .thread-container.keyboard-focused {
+        @apply relative;
+      }
+
+      .thread-container.keyboard-focused::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border: 2px solid rgb(59 130 246); /* blue-500 */
+        border-radius: 6px;
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 200ms ease;
+      }
+
+      :host-context(.dark) .thread-container.keyboard-focused::after {
+        border-color: rgb(96 165 250); /* blue-400 */
+      }
+
       .content {
         @apply relative;
       }
@@ -117,5 +140,14 @@ export class ThreadGutterComponent {
   @Input() depth = 0;
   @Input() clickable = true;
   @Input() collapsed = false;
+  @Input() commentId?: number;
   @Output() toggleThread = new EventEmitter<void>();
+
+  private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
+
+  // Check if this comment is keyboard-focused
+  isKeyboardFocused = computed(() => {
+    if (!this.commentId) return false;
+    return this.sidebarKeyboardNav.isSelected()(this.commentId);
+  });
 }

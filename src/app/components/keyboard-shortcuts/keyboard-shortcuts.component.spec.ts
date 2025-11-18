@@ -1,36 +1,68 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { signal } from '@angular/core';
 import { KeyboardShortcutsComponent } from './keyboard-shortcuts.component';
-import { PwaUpdateService } from '../../services/pwa-update.service';
+import { KeyboardShortcutConfigService } from '../../services/keyboard-shortcut-config.service';
+import { KeyboardContextService } from '../../services/keyboard-context.service';
 
 describe('KeyboardShortcutsComponent', () => {
   let component: KeyboardShortcutsComponent;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockPwaUpdateService: jasmine.SpyObj<PwaUpdateService>;
+  let mockShortcutConfig: jasmine.SpyObj<KeyboardShortcutConfigService>;
+  let mockKeyboardContext: {
+    currentContext: jasmine.Spy;
+  };
 
   beforeEach(() => {
-    // Create mock Router with configurable url property
-    class MockRouter {
-      url = '/top';
-    }
+    // Create mock services
+    mockShortcutConfig = jasmine.createSpyObj('KeyboardShortcutConfigService', [
+      'getShortcutsByCategory',
+      'getCategories',
+    ]);
 
-    mockRouter = new MockRouter() as unknown as jasmine.SpyObj<Router>;
+    // Mock currentContext as a signal
+    const currentContextSignal = signal<'default' | 'sidebar'>('default');
+    mockKeyboardContext = {
+      currentContext: jasmine.createSpy().and.callFake(() => currentContextSignal()),
+    };
 
-    // Create mock PwaUpdateService with signal-like behavior
-    class MockPwaUpdateService {
-      updateAvailable = jasmine.createSpy('updateAvailable').and.returnValue(false);
-    }
+    // Setup default return values
+    mockShortcutConfig.getShortcutsByCategory.and.returnValue(
+      new Map([
+        [
+          'General',
+          [
+            {
+              key: '?',
+              contexts: ['global'],
+              description: 'Show help',
+              category: 'General',
+              commandId: 'global.showHelp',
+            },
+          ],
+        ],
+        [
+          'Navigation',
+          [
+            {
+              key: 'j',
+              contexts: ['default'],
+              description: 'Next story',
+              category: 'Navigation',
+              commandId: 'story.next',
+            },
+          ],
+        ],
+      ]),
+    );
 
-    mockPwaUpdateService =
-      new MockPwaUpdateService() as unknown as jasmine.SpyObj<PwaUpdateService>;
+    mockShortcutConfig.getCategories.and.returnValue(['Navigation', 'General']);
 
     TestBed.configureTestingModule({
       imports: [KeyboardShortcutsComponent],
       providers: [
-        { provide: Router, useValue: mockRouter },
-        { provide: PwaUpdateService, useValue: mockPwaUpdateService },
+        { provide: KeyboardShortcutConfigService, useValue: mockShortcutConfig },
+        { provide: KeyboardContextService, useValue: mockKeyboardContext },
       ],
     });
 
@@ -43,21 +75,6 @@ describe('KeyboardShortcutsComponent', () => {
 
   it('should initialize with isOpen set to false', () => {
     expect(component.isOpen()).toBe(false);
-  });
-
-  describe('Router URL Detection', () => {
-    it('should have a router dependency injected', () => {
-      expect(mockRouter).toBeDefined();
-    });
-
-    it('should have getter methods for URL detection', () => {
-      expect(typeof component.isOnStoryList).toBe('boolean');
-      expect(typeof component.isOnItemPage).toBe('boolean');
-      expect(typeof component.isOnUserPage).toBe('boolean');
-    });
-
-    // Note: Testing the actual URL detection logic is challenging due to readonly properties
-    // The functionality is tested in integration/e2e tests
   });
 
   describe('open()', () => {
@@ -75,19 +92,59 @@ describe('KeyboardShortcutsComponent', () => {
     });
   });
 
-  describe('updateAvailable', () => {
-    it('should expose updateAvailable signal from PwaUpdateService', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(true);
+  describe('currentContext', () => {
+    it('should expose currentContext from KeyboardContextService', () => {
+      expect(component.currentContext).toBeDefined();
+      expect(typeof component.currentContext).toBe('function');
+    });
+  });
 
-      expect(component.updateAvailable()).toBe(true);
-      expect(mockPwaUpdateService.updateAvailable).toHaveBeenCalled();
+  describe('shortcutsByCategory', () => {
+    it('should be a computed signal', () => {
+      expect(typeof component.shortcutsByCategory).toBe('function');
     });
 
-    it('should return false when no update is available', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(false);
+    it('should get shortcuts from config service', () => {
+      const shortcuts = component.shortcutsByCategory();
+      expect(mockShortcutConfig.getShortcutsByCategory).toHaveBeenCalled();
+      expect(shortcuts).toBeDefined();
+    });
+  });
 
-      expect(component.updateAvailable()).toBe(false);
-      expect(mockPwaUpdateService.updateAvailable).toHaveBeenCalled();
+  describe('categories', () => {
+    it('should be a computed signal', () => {
+      expect(typeof component.categories).toBe('function');
+    });
+
+    it('should get categories from config service', () => {
+      const categories = component.categories();
+      expect(mockShortcutConfig.getCategories).toHaveBeenCalled();
+      expect(categories).toContain('Navigation');
+      expect(categories).toContain('General');
+    });
+  });
+
+  describe('contextLabel', () => {
+    it('should be a computed signal', () => {
+      expect(typeof component.contextLabel).toBe('function');
+    });
+
+    it('should return null for default context', () => {
+      mockKeyboardContext.currentContext.and.returnValue('default');
+      // Re-evaluate computed signal
+      const label = component.contextLabel();
+      expect(label).toBeNull();
+    });
+
+    it('should return "Comments Sidebar" for sidebar context', () => {
+      const sidebarSignal = signal<'default' | 'sidebar'>('sidebar');
+      mockKeyboardContext.currentContext.and.callFake(() => sidebarSignal());
+
+      // Re-create component to get updated signal
+      component = TestBed.createComponent(KeyboardShortcutsComponent).componentInstance;
+
+      const label = component.contextLabel();
+      expect(label).toBe('Comments Sidebar');
     });
   });
 
@@ -152,39 +209,6 @@ describe('KeyboardShortcutsComponent', () => {
     });
   });
 
-  describe('PWA Update Integration', () => {
-    describe('when update is available', () => {
-      beforeEach(() => {
-        mockPwaUpdateService.updateAvailable.and.returnValue(true);
-      });
-
-      it('should expose updateAvailable as true', () => {
-        expect(component.updateAvailable()).toBe(true);
-      });
-
-      it('should show R key in template when update is available', () => {
-        // This tests the integration between the component and PWA update service
-        // The template conditionally renders the R key based on updateAvailable()
-        expect(component.updateAvailable()).toBe(true);
-      });
-    });
-
-    describe('when no update is available', () => {
-      beforeEach(() => {
-        mockPwaUpdateService.updateAvailable.and.returnValue(false);
-      });
-
-      it('should expose updateAvailable as false', () => {
-        expect(component.updateAvailable()).toBe(false);
-      });
-
-      it('should not show R key in template when no update is available', () => {
-        // This tests that the template conditionally hides the R key
-        expect(component.updateAvailable()).toBe(false);
-      });
-    });
-  });
-
   describe('Accessibility', () => {
     it('should be properly configured for screen readers', () => {
       // The component template includes proper ARIA attributes
@@ -219,10 +243,10 @@ describe('KeyboardShortcutsComponent', () => {
       expect(component.isOpen()).toBe(false);
       expect(typeof component.open).toBe('function');
       expect(typeof component.close).toBe('function');
-      expect(typeof component.isOnStoryList).toBe('boolean');
-      expect(typeof component.isOnItemPage).toBe('boolean');
-      expect(typeof component.isOnUserPage).toBe('boolean');
-      expect(typeof component.updateAvailable).toBe('function');
+      expect(typeof component.currentContext).toBe('function');
+      expect(typeof component.shortcutsByCategory).toBe('function');
+      expect(typeof component.categories).toBe('function');
+      expect(typeof component.contextLabel).toBe('function');
     });
 
     it('should handle multiple open/close operations', () => {
@@ -238,6 +262,22 @@ describe('KeyboardShortcutsComponent', () => {
 
       component.close();
       expect(component.isOpen()).toBe(false);
+    });
+  });
+
+  describe('Integration with services', () => {
+    it('should call getShortcutsByCategory with current context', () => {
+      mockKeyboardContext.currentContext.and.returnValue('default');
+      component.shortcutsByCategory();
+
+      expect(mockShortcutConfig.getShortcutsByCategory).toHaveBeenCalledWith('default');
+    });
+
+    it('should call getCategories with current context', () => {
+      mockKeyboardContext.currentContext.and.returnValue('default');
+      component.categories();
+
+      expect(mockShortcutConfig.getCategories).toHaveBeenCalledWith('default');
     });
   });
 });

@@ -57,7 +57,7 @@ import {
 
             <!-- Content -->
             <div
-              class="flex-1 overflow-y-auto p-3 sm:p-4"
+              class="sidebar-comments-panel flex-1 overflow-y-auto p-3 sm:p-4"
               [class.slide-out-left]="
                 sidebarService.isTransitioning() &&
                 sidebarService.animatingOut() &&
