@@ -39,11 +39,15 @@ describe('SidebarKeyboardNavigationService', () => {
     service = TestBed.inject(SidebarKeyboardNavigationService);
 
     // Clear any existing DOM elements
-    document.body.innerHTML = '';
+    if (document.body) {
+      document.body.innerHTML = '';
+    }
   });
 
   afterEach(() => {
-    document.body.innerHTML = '';
+    if (document.body) {
+      document.body.innerHTML = '';
+    }
   });
 
   describe('initialization', () => {
@@ -175,7 +179,9 @@ describe('SidebarKeyboardNavigationService', () => {
   function createSidebarPanel(): HTMLElement {
     const panel = document.createElement('div');
     panel.className = 'sidebar-comments-panel';
-    document.body.appendChild(panel);
+    if (document.body) {
+      document.body.appendChild(panel);
+    }
     return panel;
   }
 
