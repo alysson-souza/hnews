@@ -30,6 +30,7 @@
 /* PWA: Prevent white flash during navigation */
 html {
   background-color: #f9fafb; /* gray-50 */
+  @apply transition-colors duration-200;
 }
 
 html.dark {
@@ -62,6 +63,11 @@ html.dark {
 }
 
 /* Define custom prose utilities for v4 compatibility */
+@utility glass {
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-slate-700/50 shadow-sm dark:shadow-slate-900/50;
+  @apply transition-colors duration-200;
+}
+
 @utility prose {
   color: var(--tw-prose-body);
   max-width: 65ch;
@@ -115,11 +121,6 @@ html.dark {
 
 /* Override the dark variant to use class selector */
 @variant dark (&:where(.dark, .dark *));
-
-/* Dark mode transitions - excluding search highlights */
-*:not(em) {
-  @apply transition-colors duration-200;
-}
 
 /* Animations */
 @keyframes fade-in {
@@ -206,12 +207,12 @@ a {
 
 /* Unified form controls */
 .app-input {
-  @apply w-full px-3 py-2 rounded border outline-none;
+  @apply w-full px-3 py-2 rounded-lg border-0 ring-1 ring-gray-200 dark:ring-slate-700 outline-none;
   @apply text-gray-900 dark:text-gray-100;
   @apply placeholder-gray-500 dark:placeholder-gray-400;
-  @apply bg-white dark:bg-slate-900;
-  @apply border-gray-300 dark:border-slate-700;
-  @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply bg-gray-50 dark:bg-slate-800;
+  @apply focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900;
+  @apply transition-all;
   @apply disabled:opacity-60 disabled:cursor-not-allowed;
 }
 .app-input-xs {

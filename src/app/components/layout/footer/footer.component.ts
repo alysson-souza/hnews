@@ -78,7 +78,7 @@ import { CommonModule } from '@angular/common';
         href="https://github.com/alysson-souza/hnews"
         target="_blank"
         rel="noopener noreferrer"
-        class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-200 hover:text-white dark:text-blue-100 dark:hover:text-white transition-colors"
+        class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
         aria-label="View Source Code On GitHub"
         title="View On GitHub"
       >
@@ -97,8 +97,8 @@ import { CommonModule } from '@angular/common';
       @reference '../../../../styles.css';
 
       .app-footer {
-        @apply bg-gray-800 dark:bg-gradient-to-r dark:from-digg-blue-dark dark:to-digg-blue;
-        @apply text-white py-8 mt-12 relative;
+        @apply bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800;
+        @apply text-gray-600 dark:text-gray-400 py-8 mt-12 relative;
       }
 
       .footer-text {
@@ -107,12 +107,12 @@ import { CommonModule } from '@angular/common';
 
       .footer-subtext {
         @apply text-xs mt-2;
-        @apply text-gray-400 dark:text-blue-200;
+        @apply text-gray-500 dark:text-gray-500;
       }
 
       .footer-link {
-        @apply underline decoration-dotted decoration-1 underline-offset-4;
-        @apply text-gray-200 hover:text-white dark:text-blue-100 dark:hover:text-white;
+        @apply hover:underline decoration-dotted decoration-1 underline-offset-4;
+        @apply text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300;
       }
     `,
   ],

@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="lg:hidden py-3 px-4 border-t border-blue-800">
+    <div class="lg:hidden py-3 px-4 border-t border-gray-200 dark:border-slate-700">
       <form (ngSubmit)="onSubmit()" class="relative" role="search">
         <input
           type="search"
@@ -23,7 +23,7 @@ import { FormsModule } from '@angular/forms';
         />
         <button
           type="submit"
-          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 p-1"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1"
           aria-label="Submit Search"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

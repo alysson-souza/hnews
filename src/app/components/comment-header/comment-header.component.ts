@@ -64,25 +64,23 @@ import { DeviceService } from '../../services/device.service';
       @reference '../../../styles.css';
 
       .comment-header {
-        @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-0;
-        @apply w-full min-h-11 sm:min-h-7;
+        @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1;
+        @apply w-full min-h-8;
       }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;
       }
       .view-thread-inline {
         @apply inline-flex items-center justify-center;
-        @apply rounded;
+        @apply rounded-md;
         @apply text-blue-600 dark:text-blue-400;
-        @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
+        @apply hover:bg-blue-50 dark:hover:bg-blue-900/20;
         @apply font-bold text-base;
         @apply transition-colors duration-150;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
         @apply cursor-pointer;
         @apply ml-auto;
-        @apply px-2 py-2;
-        @apply sm:px-1.5 sm:py-0.5;
-        @apply self-stretch;
+        @apply px-2 py-1;
       }
     `,
   ],

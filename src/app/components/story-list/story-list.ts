@@ -40,7 +40,7 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
       }
 
       .stories-space {
-        @apply space-y-2 sm:space-y-3;
+        @apply space-y-3 sm:space-y-4;
       }
 
       .load-more-btn {

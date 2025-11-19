@@ -32,8 +32,8 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
 
       .theme-toggle {
         @apply p-2 rounded-lg transition-colors flex items-center;
-        @apply text-white hover:bg-blue-800;
-        @apply dark:text-white dark:hover:bg-blue-800;
+        @apply text-gray-500 hover:bg-gray-100 hover:text-gray-900;
+        @apply dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-200;
         @apply cursor-pointer;
       }
     `,

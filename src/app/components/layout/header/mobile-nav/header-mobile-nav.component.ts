@@ -10,7 +10,7 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
   imports: [CommonModule, NavLinkComponent],
   template: `
     <nav
-      class="lg:hidden py-2 border-t border-blue-800"
+      class="lg:hidden py-2 border-t border-gray-200 dark:border-slate-700"
       role="navigation"
       aria-label="Mobile Navigation"
     >

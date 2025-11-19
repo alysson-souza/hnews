@@ -42,7 +42,7 @@ import {
 
       <!-- Sidebar Panel -->
       <div
-        class="fixed right-0 top-0 lg:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700 shadow-2xl dark:shadow-2xl transition-transform duration-300 overflow-hidden z-50 lg:z-30"
+        class="fixed right-0 top-0 lg:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700/60 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 lg:z-30"
         [class.translate-x-full]="!sidebarService.isOpen()"
         [class.translate-x-0]="sidebarService.isOpen()"
       >
@@ -57,7 +57,7 @@ import {
 
             <!-- Content -->
             <div
-              class="sidebar-comments-panel flex-1 overflow-y-auto p-3 sm:p-4"
+              class="sidebar-comments-panel flex-1 overflow-y-auto p-4 sm:p-6"
               [class.slide-out-left]="
                 sidebarService.isTransitioning() &&
                 sidebarService.animatingOut() &&
@@ -81,18 +81,18 @@ import {
             >
               @if (loading()) {
                 <div class="skeleton space-y-4">
-                  <div class="h-20 bg-gray-200 rounded"></div>
-                  <div class="h-20 bg-gray-200 rounded"></div>
-                  <div class="h-20 bg-gray-200 rounded"></div>
+                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
                 </div>
               } @else if (item()) {
                 <!-- Story Details -->
                 <app-sidebar-story-summary [item]="item()!" />
 
-                <hr class="my-4 border-gray-200 dark:border-slate-700" />
+                <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
 
                 <!-- Comments Header with Sort -->
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-6">
                   <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Comments ({{ item()!.kids?.length || 0 }})
                   </h4>

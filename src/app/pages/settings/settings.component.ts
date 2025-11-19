@@ -79,10 +79,10 @@ import {
 
       /* Alert Messages */
       .alert-success {
-        @apply p-4 rounded-lg bg-green-50 dark:bg-green-950/50 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800/50 mb-6;
+        @apply p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800/30 mb-6;
       }
       .alert-danger {
-        @apply p-4 rounded-lg bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/50 mb-6;
+        @apply p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/30 mb-6;
       }
 
       /* Modern Toggle Switch */
@@ -91,8 +91,8 @@ import {
       }
 
       .modern-toggle-container {
-        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-all duration-200;
-        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
+        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all duration-200;
+        @apply bg-gray-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm;
       }
 
       .setting-info {
@@ -121,7 +121,7 @@ import {
       }
 
       .search-input {
-        @apply w-full pl-10 pr-10 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+        @apply w-full pl-10 pr-10 py-3 rounded-xl border-0 ring-1 ring-gray-200 dark:ring-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200;
       }
 
       .search-icon {
@@ -145,8 +145,8 @@ import {
       }
 
       .tag-item-modern {
-        @apply flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
-        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
+        @apply flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all duration-200;
+        @apply bg-gray-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm;
       }
 
       .tag-content {
@@ -174,7 +174,7 @@ import {
 
       .tag-remove-modern {
         @apply flex items-center justify-center w-9 h-9 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
-        @apply bg-red-50 dark:bg-red-950/50 hover:bg-red-100 dark:hover:bg-red-900/50 cursor-pointer;
+        @apply bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer;
         @apply flex-shrink-0;
       }
 
@@ -184,7 +184,7 @@ import {
       }
 
       .empty-icon {
-        @apply text-5xl text-gray-300 dark:text-gray-600 mx-auto mb-4;
+        @apply text-5xl text-gray-300 dark:text-slate-700 mx-auto mb-4;
       }
 
       .empty-title {

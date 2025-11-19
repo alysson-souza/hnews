@@ -18,7 +18,7 @@ import { highlightCodeBlocks } from './code-highlight.transform';
       @reference '../../../styles.css';
 
       .comment-body {
-        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200 text-sm sm:text-base;
+        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-300 text-sm sm:text-base leading-relaxed;
         text-wrap: pretty;
       }
       .comment-body.dark {
@@ -30,19 +30,19 @@ import { highlightCodeBlocks } from './code-highlight.transform';
 
       /* Transformed external links inside comments */
       .comment-body a.ext-link {
-        @apply text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 no-underline;
-        font-size: 0.85em;
+        @apply text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline decoration-dotted decoration-1 underline-offset-2;
+        font-size: 0.9em;
       }
 
       /* Code block syntax highlighting */
       .comment-body pre {
-        @apply bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 overflow-x-auto;
+        @apply bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-200 dark:border-slate-700/60 overflow-x-auto my-3;
       }
       .comment-body code {
-        @apply font-mono text-xs sm:text-sm;
+        @apply font-mono text-xs sm:text-sm text-gray-800 dark:text-gray-200;
       }
       .comment-body pre code {
-        @apply p-3 block;
+        @apply p-4 block;
       }
 
       /* Blockquote visual styles are defined globally in styles.css */

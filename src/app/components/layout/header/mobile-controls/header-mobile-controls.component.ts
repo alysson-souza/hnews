@@ -58,8 +58,8 @@ import { CommonModule } from '@angular/common';
       @reference '../../../../../styles.css';
 
       .mobile-menu-button {
-        @apply p-2 text-white rounded-lg transition-colors;
-        @apply hover:bg-blue-800 dark:hover:bg-blue-800;
+        @apply p-2 text-gray-600 dark:text-gray-300 rounded-lg transition-colors;
+        @apply hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-slate-800 dark:hover:text-white;
       }
     `,
   ],

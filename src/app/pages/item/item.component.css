@@ -2,16 +2,16 @@
 
 /* Skeleton */
 .skeleton-card {
-  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 mb-6;
+  @apply bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700/60 rounded-xl shadow-sm dark:shadow-md dark:shadow-black/20 p-6 mb-6;
 }
 .skel-title {
-  @apply h-8 bg-gray-200 dark:bg-slate-800 rounded w-3/4;
+  @apply h-8 bg-gray-100 dark:bg-slate-700 rounded w-3/4;
 }
 .skel-subtitle {
-  @apply h-4 bg-gray-200 dark:bg-slate-800 rounded w-1/2;
+  @apply h-4 bg-gray-100 dark:bg-slate-700 rounded w-1/2;
 }
 .skel-block {
-  @apply h-20 bg-gray-200 dark:bg-slate-800 rounded;
+  @apply h-20 bg-gray-100 dark:bg-slate-700 rounded;
 }
 
 /* Titles */
@@ -22,13 +22,13 @@
   @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2;
 }
 .comments-title {
-  @apply text-base font-semibold text-gray-900 dark:text-gray-100;
+  @apply text-lg font-semibold text-gray-900 dark:text-gray-100;
 }
 .title-link {
-  @apply hover:text-blue-600 dark:hover:text-blue-400;
+  @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors;
 }
 .dead-item {
-  @apply text-gray-500 dark:text-gray-600 italic;
+  @apply text-gray-500 dark:text-gray-500 italic;
 }
 
 /* Metadata */
@@ -36,7 +36,7 @@
   @apply flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400;
 }
 .meta-link {
-  @apply text-blue-600 dark:text-blue-300 hover:underline;
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
 }
 
 /* Body */
@@ -47,18 +47,18 @@
 
 /* Empty */
 .empty {
-  @apply text-gray-500 dark:text-gray-400 text-center py-8;
+  @apply text-gray-500 dark:text-gray-400 text-center py-12;
 }
 
 /* Error */
 .error-card {
-  @apply bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center;
+  @apply bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-xl p-6 text-center;
 }
 .error-text {
-  @apply text-red-800 dark:text-red-300;
+  @apply text-red-800 dark:text-red-300 mb-4;
 }
 .error-btn {
-  @apply mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500;
+  @apply px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition-colors;
 }
 
 /* Make app-card relative for visited indicator positioning */

@@ -79,9 +79,8 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
       @reference '../../../../styles.css';
 
       .app-header {
-        @apply sticky top-0 z-40 shadow-lg;
-        @apply bg-blue-600;
-        @apply dark:bg-digg-blue;
+        @apply sticky top-0 z-40;
+        @apply glass;
       }
 
       @media (display-mode: standalone) {

@@ -49,8 +49,8 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
       @reference '../../../styles.css';
 
       .thread-container {
-        @apply relative mb-4;
-        --line-width: 3px;
+        @apply relative mb-3;
+        --line-width: 2px;
         --avatar-size: 32px;
         --header-height: 28px;
       }
@@ -68,7 +68,7 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
         top: 0;
         width: var(--line-width);
         height: calc(100% + 12px); /* Extend to bridge gap between comments */
-        background-color: rgb(209 213 219); /* gray-300 */
+        background-color: rgb(229 231 235); /* gray-200 */
         transition:
           background-color 200ms ease,
           opacity 200ms ease;
@@ -76,7 +76,7 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
 
       /* Dark mode line color */
       :host-context(.dark) .thread-indent::before {
-        background-color: rgb(71 85 105); /* slate-600 */
+        background-color: rgb(51 65 85); /* slate-700 */
       }
 
       /* Collapsed state - dim the line */
