@@ -212,9 +212,7 @@ describe('ItemComponent', () => {
       component.ngOnInit();
 
       setTimeout(() => {
-        expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title', {
-          delay: 100,
-        });
+        expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title');
         done();
       }, 150);
     });
