@@ -97,8 +97,8 @@ export class KeyboardShortcutConfigService {
     },
     {
       key: 'c',
-      contexts: ['default'],
-      description: 'Open comments in sidebar',
+      contexts: ['default', 'sidebar'],
+      description: 'Toggle comments sidebar',
       category: 'Story Actions',
       commandId: 'story.openComments',
     },

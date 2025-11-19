@@ -55,6 +55,7 @@ describe('KeyboardShortcutConfigService', () => {
       expect(sidebarKeys).toContain('r'); // Expand replies
       expect(sidebarKeys).toContain('v'); // View thread
       expect(sidebarKeys).toContain('b'); // Go back
+      expect(sidebarKeys).toContain('c'); // Toggle sidebar
     });
 
     it('should filter out conditional shortcuts when condition is false', () => {
@@ -181,7 +182,7 @@ describe('KeyboardShortcutConfigService', () => {
       const sidebarGrouped = service.getShortcutsByCategory('sidebar');
 
       expect(defaultGrouped.has('Story Actions')).toBeTrue();
-      expect(sidebarGrouped.has('Story Actions')).toBeFalse();
+      expect(sidebarGrouped.has('Story Actions')).toBeTrue();
 
       expect(sidebarGrouped.has('Comment Actions')).toBeTrue();
       expect(defaultGrouped.has('Comment Actions')).toBeFalse();
@@ -226,7 +227,7 @@ describe('KeyboardShortcutConfigService', () => {
       const sidebarCategories = service.getCategories('sidebar');
 
       expect(defaultCategories).toContain('Story Actions');
-      expect(sidebarCategories).not.toContain('Story Actions');
+      expect(sidebarCategories).toContain('Story Actions');
 
       expect(sidebarCategories).toContain('Comment Actions');
       expect(defaultCategories).not.toContain('Comment Actions');
