@@ -58,6 +58,7 @@ import { Router } from '@angular/router';
             [commentId]="commentId"
             [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
             [storyAuthor]="storyAuthor"
+            [isStandalonePage]="isStandalonePage"
             (upvote)="upvoteComment()"
             (expand)="expandReplies()"
           />
@@ -76,6 +77,7 @@ import { Router } from '@angular/router';
                       [lazyLoad]="true"
                       [initialComment]="reply"
                       [storyAuthor]="storyAuthor"
+                      [isStandalonePage]="isStandalonePage"
                     ></app-comment-thread>
                   } @else {
                     <app-thread-gutter
@@ -95,6 +97,7 @@ import { Router } from '@angular/router';
                           [commentId]="reply.id"
                           [hasChildren]="false"
                           [storyAuthor]="storyAuthor"
+                          [isStandalonePage]="isStandalonePage"
                           (upvote)="upvoteById(reply.id)"
                         />
                       </div>
@@ -213,6 +216,7 @@ export class CommentThread implements OnInit {
   // Optional: when a parent already fetched this comment, pass it to avoid refetching
   @Input() initialComment?: HNItem;
   @Input() storyAuthor?: string;
+  @Input() isStandalonePage = false;
 
   private hnService = inject(HackernewsService);
   private commentStateService = inject(CommentStateService);

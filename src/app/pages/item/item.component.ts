@@ -140,8 +140,15 @@ export class ItemComponent implements OnInit {
           this.item.set(item);
           // Mark as visited with current comment count
           this.visitedService.markAsVisited(item.id, item.descendants);
-          // Scroll to submission title after content loads
-          this.scrollService.scrollToElement('submission-title', { delay: 100 });
+
+          // Scroll to first comment if available, otherwise submission title
+          setTimeout(() => {
+            if (document.getElementById('first-comment')) {
+              this.scrollService.scrollToElement('first-comment');
+            } else {
+              this.scrollService.scrollToElement('submission-title');
+            }
+          }, 100);
         } else {
           this.error.set('Item not found');
         }

@@ -48,7 +48,7 @@ import { DeviceService } from '../../services/device.service';
       @if (hasChildren && commentId) {
         <button
           type="button"
-          (click)="viewThreadInSidebar($event)"
+          (click)="onViewThread($event)"
           class="view-thread-inline"
           title="View this thread"
           [attr.aria-label]="'View thread for comment ' + commentId"
@@ -99,22 +99,21 @@ export class CommentHeaderComponent {
   @Input() commentId?: number;
   @Input() hasChildren = false;
   @Input() storyAuthor?: string;
+  @Input() isStandalonePage = false;
 
   @Output() upvote = new EventEmitter<void>();
   @Output() expand = new EventEmitter<void>();
 
   isOP = computed(() => this.by && this.storyAuthor && this.by === this.storyAuthor);
 
-  viewThreadInSidebar(event: Event): void {
+  onViewThread(event: Event): void {
     event.stopPropagation();
-    if (this.commentId) {
-      if (this.deviceService.isMobile()) {
-        // On mobile, navigate to the item page
-        this.router.navigate(['/item', this.commentId]);
-      } else {
-        // On desktop, open in sidebar with animation
-        this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
-      }
+    if (!this.commentId) return;
+
+    if (this.isStandalonePage || this.deviceService.isMobile()) {
+      this.router.navigate(['/item', this.commentId]);
+    } else {
+      this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
     }
   }
 }
