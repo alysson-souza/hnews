@@ -2,7 +2,7 @@
 
 /* Story Item Card */
 .story-card {
-  @apply relative flex flex-col sm:flex-row border border-gray-100 dark:border-slate-700/50 rounded-2xl shadow-sm hover:shadow-md mb-2 overflow-hidden;
+  @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700/50 rounded-2xl shadow-sm hover:shadow-md mb-2 overflow-hidden;
   @apply bg-white dark:bg-slate-800/80 backdrop-blur-sm;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -28,8 +28,8 @@
   /* Mobile-first (default): horizontal layout at top */
   @apply flex flex-row items-center gap-2;
   @apply px-3 py-1.5;
-  @apply bg-gray-50/80 dark:bg-slate-900/50;
-  @apply border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-slate-700/50;
+  @apply bg-gray-50 dark:bg-slate-900/50;
+  @apply border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-slate-700/50;
   @apply w-full;
 
   /* Desktop (sm: breakpoint): vertical layout on left */
@@ -41,7 +41,7 @@
 
 .vote-button {
   @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full p-1.5;
-  @apply text-gray-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400;
+  @apply text-gray-500 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400;
   @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .vote-count {
-  @apply font-bold text-base sm:text-xl text-gray-700 dark:text-slate-300;
+  @apply font-bold text-base sm:text-xl text-gray-900 dark:text-slate-300;
 }
 
 .vote-count-active {
