@@ -1,5 +1,6 @@
 /* Import Tailwind CSS */
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Load legacy JavaScript config for theme values */
 @config '../tailwind.config.js';
@@ -64,8 +65,8 @@ html.dark {
 
 /* Define custom prose utilities for v4 compatibility */
 @utility glass {
-  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-slate-700/50 shadow-sm dark:shadow-slate-900/50;
-  @apply transition-colors duration-200;
+  @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 dark:border-slate-700/30 shadow-lg;
+  @apply transition-all duration-300;
 }
 
 @utility prose {

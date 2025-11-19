@@ -64,7 +64,7 @@ import { DeviceService } from '../../services/device.service';
       @reference '../../../styles.css';
 
       .comment-header {
-        @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1;
+        @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
         @apply w-full min-h-8;
       }
       .time-text {

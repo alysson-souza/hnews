@@ -32,11 +32,11 @@ import { ScrollService } from '../../../../services/scroll.service';
       @reference '../../../../../styles.css';
 
       .app-logo-container {
-        @apply bg-blue-600 dark:bg-blue-500 rounded p-2;
+        @apply bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-xl p-2 shadow-lg shadow-blue-500/20;
       }
 
       .app-logo-icon {
-        @apply w-6 h-6 sm:w-8 sm:h-8;
+        @apply w-6 h-6 sm:w-7 sm:h-7;
         @apply text-white;
       }
     `,

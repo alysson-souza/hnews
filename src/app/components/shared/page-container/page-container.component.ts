@@ -26,7 +26,7 @@ export class PageContainerComponent {
       wide: 'max-w-7xl px-4',
     };
 
-    const paddingClasses = this.noPadding ? '' : 'py-4 sm:py-6';
+    const paddingClasses = this.noPadding ? '' : 'py-6 sm:py-8';
 
     return `${baseClasses} ${variantClasses[this.variant]} ${paddingClasses}`.trim();
   }

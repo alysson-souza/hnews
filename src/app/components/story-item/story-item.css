@@ -2,9 +2,9 @@
 
 /* Story Item Card */
 .story-card {
-  @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700/60 rounded-xl shadow-sm hover:shadow-md dark:shadow-md dark:shadow-black/40 dark:hover:shadow-lg dark:hover:shadow-black/50 mb-3 overflow-hidden;
-  @apply bg-white dark:bg-slate-800;
-  transition: all 0.2s ease;
+  @apply relative flex flex-col sm:flex-row border border-gray-100 dark:border-slate-700/50 rounded-2xl shadow-sm hover:shadow-md mb-2 overflow-hidden;
+  @apply bg-white dark:bg-slate-800/80 backdrop-blur-sm;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (display-mode: standalone) {
@@ -15,46 +15,52 @@
 }
 
 .story-card:hover {
-  @apply border-gray-300 dark:border-slate-600;
+  @apply border-blue-200 dark:border-blue-900/50 transform -translate-y-[1px];
 }
 
 .story-card-selected {
   @apply ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400;
-  @apply bg-blue-50/30 dark:bg-blue-900/10;
+  @apply bg-blue-50/50 dark:bg-blue-900/20;
 }
 
 /* Vote Section */
 .vote-section {
   /* Mobile-first (default): horizontal layout at top */
   @apply flex flex-row items-center gap-3;
-  @apply px-4 py-2;
-  @apply bg-gray-50/50 dark:bg-slate-800/50;
+  @apply px-4 py-3;
+  @apply bg-gray-50/80 dark:bg-slate-900/50;
   @apply border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-slate-700/50;
   @apply w-full;
 
   /* Desktop (sm: breakpoint): vertical layout on left */
-  @apply sm:flex-col sm:items-center sm:justify-center sm:gap-1;
-  @apply sm:px-2 sm:py-3;
-  @apply sm:w-[80px] sm:min-w-[80px];
+  @apply sm:flex-col sm:items-center sm:justify-center sm:gap-0.5;
+  @apply sm:px-2 sm:py-4;
+  @apply sm:w-[88px] sm:min-w-[88px];
   @apply sm:flex-shrink-0;
 }
+
 .vote-button {
-  @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full p-1;
+  @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full p-1.5;
   @apply text-gray-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400;
-  @apply hover:bg-blue-50 dark:hover:bg-blue-900/20;
+  @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
 }
+
 .vote-button-active {
   @apply text-blue-600 dark:text-blue-400;
 }
+
 .vote-button-voted {
   @apply text-blue-600 dark:text-blue-400 opacity-100;
 }
+
 .vote-count {
   @apply font-bold text-lg sm:text-xl text-gray-700 dark:text-slate-300;
 }
+
 .vote-count-active {
   @apply text-blue-600 dark:text-blue-400;
 }
+
 .vote-count-voted {
   @apply text-blue-600 dark:text-blue-400;
 }
@@ -63,13 +69,14 @@
 .vote-skeleton-icon {
   @apply w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 dark:bg-slate-700 rounded-full;
 }
+
 .vote-skeleton-count {
   @apply w-8 h-5 sm:h-6 bg-gray-200 dark:bg-slate-700 rounded;
 }
 
 /* Content */
 .story-content {
-  @apply flex-1 p-4 min-w-0 overflow-hidden relative;
+  @apply flex-1 p-4 sm:p-5 min-w-0 overflow-hidden relative;
 }
 
 .story-content::before {
@@ -77,7 +84,7 @@
   @apply absolute inset-0 pointer-events-none;
   @apply bg-gradient-to-r from-transparent via-transparent to-white/0;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s ease;
 }
 
 .story-card:hover .story-content::before {
@@ -85,82 +92,113 @@
 }
 
 .story-title {
-  @apply text-base sm:text-lg font-semibold break-words;
+  @apply text-lg sm:text-xl font-bold break-words leading-tight tracking-tight;
 }
+
 .story-title-unread {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-gray-900 dark:text-gray-50;
 }
+
 .story-title-visited {
-  @apply text-gray-800 dark:text-gray-200;
+  @apply text-gray-600 dark:text-gray-400 font-medium;
 }
+
 .story-title-link {
-  @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors;
+  @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors decoration-2 decoration-blue-100 dark:decoration-blue-900 underline-offset-2;
 }
+
 .story-desc {
-  @apply hidden sm:block text-sm mt-1 truncate text-gray-600 dark:text-gray-300;
+  @apply hidden sm:block text-sm mt-2 truncate text-gray-500 dark:text-gray-400 font-medium;
 }
 
 /* Meta */
 .story-meta {
-  @apply flex flex-nowrap items-center gap-2 whitespace-nowrap leading-none text-xs sm:text-sm text-gray-600 dark:text-gray-400;
+  @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium;
 }
+
 .story-points {
-  @apply font-medium;
+  @apply font-semibold text-gray-700 dark:text-gray-300;
 }
+
 .story-points-high {
   @apply text-orange-600 dark:text-orange-400;
 }
+
 .story-author {
   @apply font-medium hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors;
 }
+
 .author-link {
-  @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer;
+  @apply text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:underline cursor-pointer;
 }
+
 .story-time {
-  @apply text-gray-500 dark:text-gray-400;
+  @apply text-gray-400 dark:text-gray-500;
 }
+
 .story-comments {
-  @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors;
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700/50 text-gray-600 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer font-medium;
 }
 
 .story-meta app-user-tag {
   display: inline-flex;
   align-items: center;
 }
+
 .new-comments-badge {
-  @apply text-gray-500 dark:text-gray-400 text-xs ml-1;
+  @apply text-blue-600 dark:text-blue-400 font-bold ml-0.5 text-[10px] relative -top-0.5;
 }
+
 .story-domain {
-  @apply text-gray-500 dark:text-gray-400 truncate max-w-[150px] sm:max-w-[200px];
+  @apply text-gray-400 dark:text-gray-500 truncate max-w-[150px] sm:max-w-[200px];
 }
+
 .domain-btn {
-  @apply inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all;
+  @apply inline-block text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:underline cursor-pointer break-all transition-colors;
 }
 
 /* Actions */
 .story-actions-btn {
-  @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+  @apply p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700/50 rounded-full transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
 }
+
 .story-actions-menu {
-  @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg dark:shadow-2xl border border-gray-200 dark:border-slate-700 z-20;
+  @apply w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl dark:shadow-black/50 border border-gray-100 dark:border-slate-700 z-20 overflow-hidden ring-1 ring-black/5;
+  animation: menu-slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+@keyframes menu-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .story-actions-menu-fixed {
   @apply fixed;
 }
+
 .story-actions-item {
-  @apply w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500;
+  @apply w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 transition-colors;
 }
+
 .story-actions-item-top {
   @apply rounded-t-lg;
 }
+
 .story-actions-divider {
-  @apply border-t border-gray-200 dark:border-slate-700;
+  @apply border-t border-gray-100 dark:border-slate-700/50 my-1;
 }
+
 .story-actions-item-bottom {
   @apply rounded-b-lg;
 }
 
 /* Indicators & tags */
 .story-tag {
-  @apply px-2 py-0.5 text-xs text-white rounded-full;
+  @apply px-2.5 py-0.5 text-xs font-bold text-white rounded-full shadow-sm;
 }

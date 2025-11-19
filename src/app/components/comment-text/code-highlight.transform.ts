@@ -87,6 +87,38 @@ const SUPPORTED_LANGUAGES = [
 const RELEVANCE_THRESHOLD = 3;
 
 /**
+ * Strips common leading whitespace from code lines, using the first line's indentation as the baseline.
+ * This fixes issues where the entire code block is indented because of how it was formatted in the comment.
+ */
+function stripCommonIndentation(code: string): string {
+  if (!code) return code;
+  const lines = code.split('\n');
+
+  // Find the indentation of the first non-empty line
+  let baseIndent = '';
+  for (const line of lines) {
+    if (line.trim()) {
+      const match = line.match(/^(\s+)/);
+      if (match) {
+        baseIndent = match[1];
+      }
+      break;
+    }
+  }
+
+  if (!baseIndent) return code;
+
+  return lines
+    .map((line) => {
+      if (line.startsWith(baseIndent)) {
+        return line.substring(baseIndent.length);
+      }
+      return line;
+    })
+    .join('\n');
+}
+
+/**
  * Highlights code blocks in HTML using highlight.js with automatic language detection.
  * Searches for <pre><code> elements and applies syntax highlighting.
  * Falls back to plaintext if detection confidence is too low.
@@ -100,8 +132,10 @@ export function highlightCodeBlocks(html: string): string {
 
     const codeBlocks = Array.from(container.querySelectorAll('pre code')) as HTMLElement[];
     for (const codeBlock of codeBlocks) {
-      const code = codeBlock.textContent || '';
-      if (!code.trim()) continue;
+      const rawCode = codeBlock.textContent || '';
+      if (!rawCode.trim()) continue;
+
+      const code = stripCommonIndentation(rawCode);
 
       let language: string;
       let highlighted: string;

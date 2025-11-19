@@ -18,7 +18,7 @@ import { highlightCodeBlocks } from './code-highlight.transform';
       @reference '../../../styles.css';
 
       .comment-body {
-        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-300 text-sm sm:text-base leading-relaxed;
+        @apply prose prose-sm max-w-none text-gray-700 dark:text-gray-300 text-[15px] leading-7 tracking-normal;
         text-wrap: pretty;
       }
       .comment-body.dark {
@@ -27,16 +27,18 @@ import { highlightCodeBlocks } from './code-highlight.transform';
       .comment-body > :first-child {
         margin-top: 0 !important;
       }
+      .comment-body p {
+        margin-bottom: 0.75em;
+      }
 
       /* Transformed external links inside comments */
       .comment-body a.ext-link {
-        @apply text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline decoration-dotted decoration-1 underline-offset-2;
-        font-size: 0.9em;
+        @apply text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline decoration-2 underline-offset-2 transition-colors;
       }
 
       /* Code block syntax highlighting */
       .comment-body pre {
-        @apply bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-200 dark:border-slate-700/60 overflow-x-auto my-3;
+        @apply bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700/60 overflow-x-auto my-4 shadow-sm;
       }
       .comment-body code {
         @apply font-mono text-xs sm:text-sm text-gray-800 dark:text-gray-200;

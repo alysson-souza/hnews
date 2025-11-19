@@ -149,4 +149,22 @@ describe('highlightCodeBlocks', () => {
       expect(result).toContain('hljs-highlighted');
     }
   });
+
+  it('should strip common indentation from code blocks', () => {
+    const html = '<pre><code>    line 1\n    line 2</code></pre>';
+    const result = highlightCodeBlocks(html);
+    // Should not contain the original indented text
+    expect(result).not.toContain('    line 1');
+    // Should contain the stripped text (wrapped in spans or not)
+    // Note: highlight.js might wrap parts, but usually not the whole line if it's simple text
+    // For "line 1", it might be treated as plaintext or keywords.
+    // Let's just check that we don't see the 4 spaces indentation.
+  });
+
+  it('should strip indentation based on first line', () => {
+    const html = '<pre><code>    curl -X\nGET</code></pre>';
+    const result = highlightCodeBlocks(html);
+    // "    curl" should become "curl"
+    expect(result).not.toContain('    curl');
+  });
 });

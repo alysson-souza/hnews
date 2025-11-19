@@ -133,7 +133,7 @@
                 {{ story!.descendants || 0 }}
                 {{ story!.descendants === 1 ? 'comment' : 'comments' }}
                 @if (hasNewComments()) {
-                  <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
+                  <span class="new-comments-badge">+{{ getNewCommentCount() }}</span>
                 }
               </a>
             } @else {
@@ -150,7 +150,7 @@
                 {{ story!.descendants || 0 }}
                 {{ story!.descendants === 1 ? 'comment' : 'comments' }}
                 @if (hasNewComments()) {
-                  <span class="new-comments-badge">[+{{ getNewCommentCount() }}]</span>
+                  <span class="new-comments-badge">+{{ getNewCommentCount() }}</span>
                 }
               </a>
             }
