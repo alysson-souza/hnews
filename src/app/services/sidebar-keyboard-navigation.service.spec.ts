@@ -96,20 +96,26 @@ describe('SidebarKeyboardNavigationService', () => {
       createMockComments([1, 2, 3]);
       service.selectedCommentId.set(1);
 
+      const nextElement = document.querySelector('[data-comment-id="2"]') as HTMLElement;
+      const scrollSpy = spyOn(nextElement, 'scrollIntoView');
+
       service.selectNext();
 
       expect(service.selectedCommentId()).toBe(2);
-      expect(mockScrollService.scrollElementIntoView).toHaveBeenCalled();
+      expect(scrollSpy).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
     });
 
     it('should select previous comment', () => {
       createMockComments([1, 2, 3]);
       service.selectedCommentId.set(2);
 
+      const prevElement = document.querySelector('[data-comment-id="1"]') as HTMLElement;
+      const scrollSpy = spyOn(prevElement, 'scrollIntoView');
+
       service.selectPrevious();
 
       expect(service.selectedCommentId()).toBe(1);
-      expect(mockScrollService.scrollElementIntoView).toHaveBeenCalled();
+      expect(scrollSpy).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
     });
 
     it('should select first comment if none selected on next', () => {

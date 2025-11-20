@@ -3,7 +3,7 @@
 import { Injectable, inject } from '@angular/core';
 import { PwaUpdateService } from './pwa-update.service';
 
-export type KeyboardContext = 'default' | 'sidebar' | 'global' | 'item-page';
+export type KeyboardContext = 'default' | 'sidebar' | 'global' | 'item-page' | 'settings-page';
 
 export interface KeyboardShortcut {
   key: string;
@@ -235,6 +235,36 @@ export class KeyboardShortcutConfigService {
       description: 'Navigate back / Clear selection',
       category: 'General',
       commandId: 'global.escape',
+    },
+
+    // Settings Page context shortcuts
+    {
+      key: 'h',
+      contexts: ['settings-page'],
+      description: 'Select previous tab',
+      category: 'Navigation',
+      commandId: 'navigation.previousTab',
+    },
+    {
+      key: 'l',
+      contexts: ['settings-page'],
+      description: 'Select next tab',
+      category: 'Navigation',
+      commandId: 'navigation.nextTab',
+    },
+    {
+      key: 'j',
+      contexts: ['settings-page'],
+      description: 'Scroll to next section',
+      category: 'Navigation',
+      commandId: 'settings.nextSection',
+    },
+    {
+      key: 'k',
+      contexts: ['settings-page'],
+      description: 'Scroll to previous section',
+      category: 'Navigation',
+      commandId: 'settings.previousSection',
     },
   ];
 

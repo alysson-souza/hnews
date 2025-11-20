@@ -220,7 +220,7 @@ export class KeyboardNavigationService {
   }
 
   private navigateToTab(direction: 'next' | 'prev'): void {
-    const tabs = ['top', 'best', 'newest', 'ask', 'show', 'jobs'];
+    const tabs = ['top', 'best', 'newest', 'ask', 'show', 'jobs', 'settings'];
     const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
     const currentIndex = tabs.indexOf(currentPath);
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
+import { Subject } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { KeyboardContextService } from './keyboard-context.service';
@@ -16,6 +17,7 @@ describe('KeyboardContextService', () => {
     // Create mock router with url property
     mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
       url: '/',
+      events: new Subject(),
     });
 
     // Create mock sidebar service with signal
@@ -30,17 +32,17 @@ describe('KeyboardContextService', () => {
         { provide: SidebarService, useValue: mockSidebarService },
       ],
     });
-
-    service = TestBed.inject(KeyboardContextService);
   });
 
   describe('initialization', () => {
     it('should be created', () => {
+      service = TestBed.inject(KeyboardContextService);
       expect(service).toBeTruthy();
     });
 
     it('should initialize with default context when sidebar is closed', () => {
       mockSidebarService.isOpen.and.returnValue(false);
+      service = TestBed.inject(KeyboardContextService);
       expect(service.currentContext()).toBe('default');
     });
   });
@@ -203,6 +205,29 @@ describe('KeyboardContextService', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/item/123', writable: true });
       service = TestBed.inject(KeyboardContextService);
       expect(service.isOnUserPage()).toBeFalse();
+    });
+  });
+
+  describe('isOnSettingsPage', () => {
+    it('should return true for settings page', () => {
+      Object.defineProperty(mockRouter, 'url', { value: '/settings', writable: true });
+      service = TestBed.inject(KeyboardContextService);
+      expect(service.isOnSettingsPage()).toBeTrue();
+    });
+
+    it('should return true for settings page with query params', () => {
+      Object.defineProperty(mockRouter, 'url', {
+        value: '/settings?tab=appearance',
+        writable: true,
+      });
+      service = TestBed.inject(KeyboardContextService);
+      expect(service.isOnSettingsPage()).toBeTrue();
+    });
+
+    it('should return false for story list', () => {
+      Object.defineProperty(mockRouter, 'url', { value: '/top', writable: true });
+      service = TestBed.inject(KeyboardContextService);
+      expect(service.isOnSettingsPage()).toBeFalse();
     });
   });
 

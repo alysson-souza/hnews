@@ -10,6 +10,8 @@ import { ThemeService } from '../../services/theme.service';
 import { UserSettingsService } from '../../services/user-settings.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
+import { CommandRegistryService } from '../../services/command-registry.service';
+import { ScrollService } from '../../services/scroll.service';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
@@ -295,6 +297,8 @@ export class SettingsComponent implements OnInit {
   private userSettings = inject(UserSettingsService);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
+  private commandRegistry = inject(CommandRegistryService);
+  private scrollService = inject(ScrollService);
 
   // FontAwesome icons
   faPalette = faPalette;
@@ -344,6 +348,7 @@ export class SettingsComponent implements OnInit {
 
   constructor() {
     this.loadTags();
+    this.registerCommands();
 
     // Set up search debouncing - must be in constructor for takeUntilDestroyed()
     this.searchSubject
@@ -351,6 +356,76 @@ export class SettingsComponent implements OnInit {
       .subscribe(() => {
         this.updatePaginatedTags();
       });
+  }
+
+  private registerCommands(): void {
+    this.commandRegistry.register('settings.nextSection', () => this.scrollToNextSection());
+    this.commandRegistry.register('settings.previousSection', () => this.scrollToPreviousSection());
+  }
+
+  private scrollToNextSection(): void {
+    const sections = document.querySelectorAll('.setting-section');
+    if (!sections.length) return;
+
+    // Find currently visible section or the first one
+    let currentIndex = -1;
+    const viewportHeight = window.innerHeight;
+    const viewportCenter = window.scrollY + viewportHeight / 2;
+
+    sections.forEach((section, index) => {
+      const rect = section.getBoundingClientRect();
+      const absoluteTop = window.scrollY + rect.top;
+      const absoluteBottom = absoluteTop + rect.height;
+
+      if (absoluteTop <= viewportCenter && absoluteBottom >= viewportCenter) {
+        currentIndex = index;
+      }
+    });
+
+    // If no section is clearly "active", find the first one that is mostly in view or below
+    if (currentIndex === -1) {
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top >= 0 && currentIndex === -1) {
+          currentIndex = index;
+        }
+      });
+    }
+
+    // If still nothing, start at -1 so next is 0
+    if (currentIndex === -1) currentIndex = -1;
+
+    const nextIndex = Math.min(currentIndex + 1, sections.length - 1);
+    this.scrollToSection(sections[nextIndex] as HTMLElement);
+  }
+
+  private scrollToPreviousSection(): void {
+    const sections = document.querySelectorAll('.setting-section');
+    if (!sections.length) return;
+
+    // Find currently visible section
+    let currentIndex = -1;
+    const viewportHeight = window.innerHeight;
+    const viewportCenter = window.scrollY + viewportHeight / 2;
+
+    sections.forEach((section, index) => {
+      const rect = section.getBoundingClientRect();
+      const absoluteTop = window.scrollY + rect.top;
+      const absoluteBottom = absoluteTop + rect.height;
+
+      if (absoluteTop <= viewportCenter && absoluteBottom >= viewportCenter) {
+        currentIndex = index;
+      }
+    });
+
+    if (currentIndex === -1) currentIndex = 0;
+
+    const prevIndex = Math.max(currentIndex - 1, 0);
+    this.scrollToSection(sections[prevIndex] as HTMLElement);
+  }
+
+  private scrollToSection(element: HTMLElement): void {
+    this.scrollService.scrollToHTMLElement(element, { offset: 20 });
   }
 
   async ngOnInit() {

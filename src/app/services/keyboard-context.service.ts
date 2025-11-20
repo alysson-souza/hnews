@@ -32,6 +32,11 @@ export class KeyboardContextService {
       return 'item-page';
     }
 
+    // Settings page context
+    if (this.isOnSettingsPage()) {
+      return 'settings-page';
+    }
+
     // Default context (story list, etc.)
     return 'default';
   });
@@ -51,6 +56,14 @@ export class KeyboardContextService {
    */
   isOnItemPage = computed(() => {
     return this.currentUrl().includes('/item/');
+  });
+
+  /**
+   * Check if we're on the settings page
+   */
+  isOnSettingsPage = computed(() => {
+    const path = this.currentUrl();
+    return path.startsWith('/settings') || path === '/settings' || path.startsWith('/settings?');
   });
 
   /**

@@ -6,15 +6,30 @@ import { Subject } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal, WritableSignal } from '@angular/core';
 import { App } from './app';
 import { PwaUpdateService } from './services/pwa-update.service';
+import { KeyboardContextService } from './services/keyboard-context.service';
 
 describe('App', () => {
   let mockPwaUpdateService: jasmine.SpyObj<PwaUpdateService>;
   let versionUpdatesSubject: Subject<VersionEvent>;
+  let mockKeyboardContextService: {
+    currentContext: WritableSignal<string>;
+    isOnStoryList: WritableSignal<boolean>;
+    isOnItemPage: WritableSignal<boolean>;
+    isOnUserPage: WritableSignal<boolean>;
+  };
 
   beforeEach(async () => {
     versionUpdatesSubject = new Subject<VersionEvent>();
+
+    mockKeyboardContextService = {
+      currentContext: signal('default'),
+      isOnStoryList: signal(true),
+      isOnItemPage: signal(false),
+      isOnUserPage: signal(false),
+    };
 
     // Create mock PwaUpdateService with signal-like behavior
     class MockPwaUpdateService {
@@ -51,6 +66,10 @@ describe('App', () => {
         {
           provide: PwaUpdateService,
           useValue: mockPwaUpdateService,
+        },
+        {
+          provide: KeyboardContextService,
+          useValue: mockKeyboardContextService,
         },
       ],
     }).compileComponents();
@@ -494,6 +513,7 @@ describe('App', () => {
     });
 
     it('should close sidebar on Escape when sidebar is open', () => {
+      mockKeyboardContextService.currentContext.set('sidebar');
       spyOn(app.sidebarService, 'isOpen').and.returnValue(true);
       spyOn(app.sidebarService, 'closeSidebar');
 
@@ -574,10 +594,7 @@ describe('App', () => {
     });
 
     it('should not process story shortcuts when not on story list page', () => {
-      Object.defineProperty(app.router, 'url', {
-        get: () => '/user/test',
-        configurable: true,
-      });
+      mockKeyboardContextService.isOnStoryList.set(false);
       spyOn(app.keyboardNavService, 'selectNext');
 
       const event = new KeyboardEvent('keydown', { key: 'j' });
