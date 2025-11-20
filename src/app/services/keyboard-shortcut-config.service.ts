@@ -7,6 +7,7 @@ export type KeyboardContext = 'default' | 'sidebar' | 'global' | 'item-page';
 
 export interface KeyboardShortcut {
   key: string;
+  label?: string; // Optional label for display (e.g. "Shift+C")
   contexts: KeyboardContext[];
   description: string;
   category: string;
@@ -32,7 +33,7 @@ export class KeyboardShortcutConfigService {
     {
       key: '/',
       contexts: ['global'],
-      description: 'Search',
+      description: 'Search stories',
       category: 'General',
       commandId: 'global.search',
     },
@@ -45,6 +46,7 @@ export class KeyboardShortcutConfigService {
     },
     {
       key: 'R',
+      label: 'Shift+r',
       contexts: ['global'],
       description: 'Apply app update',
       category: 'General',
@@ -56,28 +58,28 @@ export class KeyboardShortcutConfigService {
     {
       key: 'j',
       contexts: ['default'],
-      description: 'Next story',
+      description: 'Select next story',
       category: 'Navigation',
       commandId: 'story.next',
     },
     {
       key: 'k',
       contexts: ['default'],
-      description: 'Previous story',
+      description: 'Select previous story',
       category: 'Navigation',
       commandId: 'story.previous',
     },
     {
       key: 'h',
       contexts: ['default'],
-      description: 'Previous tab',
+      description: 'Select previous tab',
       category: 'Navigation',
       commandId: 'navigation.previousTab',
     },
     {
       key: 'l',
       contexts: ['default'],
-      description: 'Next tab',
+      description: 'Select next tab',
       category: 'Navigation',
       commandId: 'navigation.nextTab',
     },
@@ -90,8 +92,9 @@ export class KeyboardShortcutConfigService {
     },
     {
       key: 'O',
+      label: 'Shift+o',
       contexts: ['default'],
-      description: 'Open story in full page',
+      description: 'Open story in new tab',
       category: 'Story Actions',
       commandId: 'story.openFull',
     },
@@ -104,6 +107,7 @@ export class KeyboardShortcutConfigService {
     },
     {
       key: 'C',
+      label: 'Shift+c',
       contexts: ['default'],
       description: 'Open comments page',
       category: 'Story Actions',
@@ -119,7 +123,7 @@ export class KeyboardShortcutConfigService {
     {
       key: 'Escape',
       contexts: ['default'],
-      description: 'Close / Clear / Top',
+      description: 'Clear selection / Close view',
       category: 'General',
       commandId: 'global.escape',
     },
@@ -128,21 +132,28 @@ export class KeyboardShortcutConfigService {
     {
       key: 'j',
       contexts: ['sidebar'],
-      description: 'Next comment',
+      description: 'Select next comment',
       category: 'Navigation',
       commandId: 'sidebar.nextComment',
     },
     {
       key: 'k',
       contexts: ['sidebar'],
-      description: 'Previous comment',
+      description: 'Select previous comment',
       category: 'Navigation',
       commandId: 'sidebar.previousComment',
     },
     {
+      key: 'b',
+      contexts: ['sidebar'],
+      description: 'Navigate back',
+      category: 'Navigation',
+      commandId: 'sidebar.back',
+    },
+    {
       key: 'o',
       contexts: ['sidebar'],
-      description: 'Toggle expand/collapse comment',
+      description: 'Toggle comment collapse',
       category: 'Comment Actions',
       commandId: 'sidebar.toggleExpand',
     },
@@ -156,7 +167,7 @@ export class KeyboardShortcutConfigService {
     {
       key: 'r',
       contexts: ['sidebar'],
-      description: 'Expand replies',
+      description: 'Expand comment replies',
       category: 'Comment Actions',
       commandId: 'sidebar.expandReplies',
     },
@@ -168,16 +179,9 @@ export class KeyboardShortcutConfigService {
       commandId: 'sidebar.viewThread',
     },
     {
-      key: 'b',
-      contexts: ['sidebar'],
-      description: 'Go back',
-      category: 'Navigation',
-      commandId: 'sidebar.back',
-    },
-    {
       key: 'Escape',
       contexts: ['sidebar'],
-      description: 'Go back / Close sidebar',
+      description: 'Navigate back / Close sidebar',
       category: 'General',
       commandId: 'sidebar.backOrClose',
     },
@@ -186,21 +190,21 @@ export class KeyboardShortcutConfigService {
     {
       key: 'j',
       contexts: ['item-page'],
-      description: 'Next comment',
+      description: 'Select next comment',
       category: 'Navigation',
       commandId: 'item.nextComment',
     },
     {
       key: 'k',
       contexts: ['item-page'],
-      description: 'Previous comment',
+      description: 'Select previous comment',
       category: 'Navigation',
       commandId: 'item.previousComment',
     },
     {
       key: 'o',
       contexts: ['item-page'],
-      description: 'Toggle expand/collapse comment',
+      description: 'Toggle comment collapse',
       category: 'Comment Actions',
       commandId: 'item.toggleExpand',
     },
@@ -214,7 +218,7 @@ export class KeyboardShortcutConfigService {
     {
       key: 'r',
       contexts: ['item-page'],
-      description: 'Expand replies',
+      description: 'Expand comment replies',
       category: 'Comment Actions',
       commandId: 'item.expandReplies',
     },
@@ -228,7 +232,7 @@ export class KeyboardShortcutConfigService {
     {
       key: 'Escape',
       contexts: ['item-page'],
-      description: 'Go back / Clear',
+      description: 'Navigate back / Clear selection',
       category: 'General',
       commandId: 'global.escape',
     },
@@ -277,8 +281,8 @@ export class KeyboardShortcutConfigService {
    */
   getShortcutsByCategory(context: KeyboardContext): Map<string, KeyboardShortcut[]> {
     const shortcuts = [
-      ...this.getShortcutsForContext('global'),
-      ...this.getShortcutsForContext(context),
+      ...this.getShortcutsForContext(context), // Context specific first (usually Navigation)
+      ...this.getShortcutsForContext('global'), // Global last (General)
     ];
 
     const grouped = new Map<string, KeyboardShortcut[]>();
@@ -295,9 +299,29 @@ export class KeyboardShortcutConfigService {
   }
 
   /**
-   * Get all unique categories
+   * Get all unique categories in a specific order
    */
   getCategories(context: KeyboardContext): string[] {
-    return Array.from(this.getShortcutsByCategory(context).keys());
+    const categories = Array.from(this.getShortcutsByCategory(context).keys());
+    const order = ['Navigation', 'Story Actions', 'Comment Actions', 'General'];
+
+    return categories.sort((a, b) => {
+      const indexA = order.indexOf(a);
+      const indexB = order.indexOf(b);
+      // If both are in the order list, sort by index
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      // If only a is in the list, it comes first
+      if (indexA !== -1) {
+        return -1;
+      }
+      // If only b is in the list, it comes first
+      if (indexB !== -1) {
+        return 1;
+      }
+      // Otherwise sort alphabetically
+      return a.localeCompare(b);
+    });
   }
 }

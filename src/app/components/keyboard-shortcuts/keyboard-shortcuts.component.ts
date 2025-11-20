@@ -74,7 +74,7 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
                       track shortcut.key + shortcut.description
                     ) {
                       <div class="shortcut-row">
-                        <kbd class="shortcut-key">{{ shortcut.key }}</kbd>
+                        <kbd class="shortcut-key">{{ shortcut.label || shortcut.key }}</kbd>
                         <span class="shortcut-desc">{{ shortcut.description }}</span>
                       </div>
                     }
