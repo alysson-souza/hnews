@@ -3,8 +3,13 @@
 /* Story Item Card */
 .story-card {
   @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700/50 rounded-2xl shadow-sm hover:shadow-md mb-2 overflow-hidden;
-  @apply bg-white dark:bg-slate-800/80 backdrop-blur-sm;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  @apply bg-white dark:bg-slate-800;
+  top: 0;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background-color 0.2s,
+    top 0.2s;
 }
 
 @media (display-mode: standalone) {
@@ -15,7 +20,8 @@
 }
 
 .story-card:hover {
-  @apply border-blue-200 dark:border-blue-900/50 transform -translate-y-[1px];
+  @apply border-blue-200 dark:border-blue-900/50;
+  top: -1px;
 }
 
 .story-card-selected {

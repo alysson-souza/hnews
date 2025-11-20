@@ -1,12 +1,12 @@
+/* Import Fonts and External Styles first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import 'highlight.js/styles/atom-one-dark.css';
+
 /* Import Tailwind CSS */
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Load legacy JavaScript config for theme values */
 @config '../tailwind.config.js';
-
-/* Import highlight.js syntax highlighting theme */
-@import 'highlight.js/styles/atom-one-dark.css';
 
 /* Override highlight.js theme for dark mode compatibility */
 @layer base {
