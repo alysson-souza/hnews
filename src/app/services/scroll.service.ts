@@ -46,6 +46,20 @@ export class ScrollService {
   }
 
   /**
+   * Scroll to a specific HTMLElement with automatic header offset
+   */
+  async scrollToHTMLElement(element: HTMLElement, options?: ScrollOptions): Promise<void> {
+    return this.performScroll(() => {
+      const targetPosition = this.calculateTargetPosition(element, options?.offset);
+
+      window.scrollTo({
+        top: Math.max(0, targetPosition),
+        behavior: options?.behavior ?? 'smooth',
+      });
+    }, options?.delay);
+  }
+
+  /**
    * Scroll an element into view (for keyboard navigation)
    */
   async scrollElementIntoView(element: Element, options?: ScrollIntoViewOptions): Promise<void> {

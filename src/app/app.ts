@@ -31,6 +31,7 @@ import { CommandRegistryService } from './services/command-registry.service';
 import { KeyboardContextService } from './services/keyboard-context.service';
 import { SidebarKeyboardNavigationService } from './services/sidebar-keyboard-navigation.service';
 import { KeyboardShortcutConfigService } from './services/keyboard-shortcut-config.service';
+import { ItemKeyboardNavigationService } from './services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-root',
@@ -67,6 +68,7 @@ export class App implements OnInit {
   private keyboardContext = inject(KeyboardContextService);
   // Injected to ensure it initializes and registers commands
   private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
+  private itemKeyboardNav = inject(ItemKeyboardNavigationService);
   private commandRegistry = inject(CommandRegistryService);
   private location = inject(Location);
 

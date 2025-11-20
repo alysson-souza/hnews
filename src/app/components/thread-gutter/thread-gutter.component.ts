@@ -3,6 +3,7 @@
 import { Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboard-navigation.service';
+import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-thread-gutter',
@@ -14,7 +15,6 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
       [ngClass]="{
         'thread-indent': depth > 0,
         collapsed: collapsed,
-        'keyboard-focused': isKeyboardFocused(),
       }"
       [attr.data-comment-id]="commentId"
       role="treeitem"
@@ -23,24 +23,32 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
       [attr.aria-selected]="isKeyboardFocused()"
       tabindex="-1"
     >
-      <div
-        class="header"
-        [class.clickable-header]="clickable"
-        [attr.role]="clickable ? 'button' : null"
-        [attr.tabindex]="clickable ? '0' : null"
-        [attr.aria-label]="clickable ? (collapsed ? 'Expand comment' : 'Collapse comment') : null"
-        (click)="clickable ? toggleThread.emit() : null"
-        (keydown.enter)="clickable ? toggleThread.emit() : null"
-        (keydown.space)="
-          clickable ? toggleThread.emit() : null; clickable ? $event.preventDefault() : null
-        "
-      >
-        <ng-content select="[header]"></ng-content>
-      </div>
-      <div class="content relative">
-        <div role="group">
-          <ng-content select="[body]"></ng-content>
+      <!-- Wrapper for the comment itself (header + text) -->
+      <div class="comment-node" [class.keyboard-focused]="isKeyboardFocused()">
+        <div
+          class="header"
+          [class.clickable-header]="clickable"
+          [attr.role]="clickable ? 'button' : null"
+          [attr.tabindex]="clickable ? '0' : null"
+          [attr.aria-label]="clickable ? (collapsed ? 'Expand comment' : 'Collapse comment') : null"
+          (click)="clickable ? toggleThread.emit() : null"
+          (keydown.enter)="clickable ? toggleThread.emit() : null"
+          (keydown.space)="
+            clickable ? toggleThread.emit() : null; clickable ? $event.preventDefault() : null
+          "
+        >
+          <ng-content select="[header]"></ng-content>
         </div>
+        <div class="content relative">
+          <div role="group">
+            <ng-content select="[body]"></ng-content>
+          </div>
+        </div>
+      </div>
+
+      <!-- Children/Replies -->
+      <div class="children-wrapper">
+        <ng-content select="[children]"></ng-content>
       </div>
     </div>
   `,
@@ -111,11 +119,11 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
       }
 
       /* Keyboard focus indicator */
-      .thread-container.keyboard-focused {
+      .comment-node.keyboard-focused {
         @apply relative;
       }
 
-      .thread-container.keyboard-focused::after {
+      .comment-node.keyboard-focused::after {
         content: '';
         position: absolute;
         inset: -4px;
@@ -126,7 +134,7 @@ import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboar
         transition: opacity 200ms ease;
       }
 
-      :host-context(.dark) .thread-container.keyboard-focused::after {
+      :host-context(.dark) .comment-node.keyboard-focused::after {
         border-color: rgb(96 165 250); /* blue-400 */
       }
 
@@ -144,10 +152,14 @@ export class ThreadGutterComponent {
   @Output() toggleThread = new EventEmitter<void>();
 
   private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
+  private itemKeyboardNav = inject(ItemKeyboardNavigationService);
 
   // Check if this comment is keyboard-focused
   isKeyboardFocused = computed(() => {
     if (!this.commentId) return false;
-    return this.sidebarKeyboardNav.isSelected()(this.commentId);
+    return (
+      this.sidebarKeyboardNav.isSelected()(this.commentId) ||
+      this.itemKeyboardNav.isSelected()(this.commentId)
+    );
   });
 }

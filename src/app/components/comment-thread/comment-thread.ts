@@ -66,86 +66,87 @@ import { Router } from '@angular/router';
         <div body>
           @if (!isCollapsed()) {
             <app-comment-text [html]="comment()!.text || ''" />
-
-            @if (replies().length > 0 || loadingReplies()) {
-              <div class="mt-1">
-                @for (reply of replies(); track reply.id) {
-                  @if (reply.kids && reply.kids.length > 0) {
-                    <app-comment-thread
-                      [commentId]="reply.id"
-                      [depth]="depth + 1"
-                      [lazyLoad]="true"
-                      [initialComment]="reply"
-                      [storyAuthor]="storyAuthor"
-                      [isStandalonePage]="isStandalonePage"
-                    ></app-comment-thread>
-                  } @else {
-                    <app-thread-gutter
-                      [depth]="depth + 1"
-                      [clickable]="true"
-                      [collapsed]="false"
-                      [commentId]="reply.id"
-                    >
-                      <div header>
-                        <app-comment-header
-                          [by]="reply.by || ''"
-                          [timestamp]="reply.time"
-                          [voted]="hasVotedById(reply.id)"
-                          [repliesCount]="0"
-                          [showExpand]="false"
-                          [loadingReplies]="false"
-                          [commentId]="reply.id"
-                          [hasChildren]="false"
-                          [storyAuthor]="storyAuthor"
-                          [isStandalonePage]="isStandalonePage"
-                          (upvote)="upvoteById(reply.id)"
-                        />
-                      </div>
-                      <div body>
-                        <app-comment-text [html]="reply.text || ''" />
-                      </div>
-                    </app-thread-gutter>
-                  }
-                }
-
-                @if (hasMoreReplies()) {
-                  <div class="mt-2 ml-2 sm:ml-4">
-                    <app-button
-                      variant="secondary"
-                      size="sm"
-                      [disabled]="loadingMore()"
-                      [ariaLabel]="loadingMore() ? 'Loading more replies' : 'Load more replies'"
-                      (clicked)="loadMoreReplies()"
-                    >
-                      @if (loadingMore()) {
-                        <span class="flex items-center gap-1">
-                          <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle
-                              class="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              stroke-width="4"
-                            ></circle>
-                            <path
-                              class="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Loading...
-                        </span>
-                      } @else {
-                        Load {{ remainingRepliesCount }} more replies
-                      }
-                    </app-button>
-                  </div>
-                }
-              </div>
-            }
           } @else {
             <span class="collapsed-text">[collapsed]</span>
+          }
+        </div>
+        <div children>
+          @if (!isCollapsed() && (replies().length > 0 || loadingReplies())) {
+            <div class="mt-1">
+              @for (reply of replies(); track reply.id) {
+                @if (reply.kids && reply.kids.length > 0) {
+                  <app-comment-thread
+                    [commentId]="reply.id"
+                    [depth]="depth + 1"
+                    [lazyLoad]="true"
+                    [initialComment]="reply"
+                    [storyAuthor]="storyAuthor"
+                    [isStandalonePage]="isStandalonePage"
+                  ></app-comment-thread>
+                } @else {
+                  <app-thread-gutter
+                    [depth]="depth + 1"
+                    [clickable]="true"
+                    [collapsed]="false"
+                    [commentId]="reply.id"
+                  >
+                    <div header>
+                      <app-comment-header
+                        [by]="reply.by || ''"
+                        [timestamp]="reply.time"
+                        [voted]="hasVotedById(reply.id)"
+                        [repliesCount]="0"
+                        [showExpand]="false"
+                        [loadingReplies]="false"
+                        [commentId]="reply.id"
+                        [hasChildren]="false"
+                        [storyAuthor]="storyAuthor"
+                        [isStandalonePage]="isStandalonePage"
+                        (upvote)="upvoteById(reply.id)"
+                      />
+                    </div>
+                    <div body>
+                      <app-comment-text [html]="reply.text || ''" />
+                    </div>
+                  </app-thread-gutter>
+                }
+              }
+
+              @if (hasMoreReplies()) {
+                <div class="mt-2 ml-2 sm:ml-4">
+                  <app-button
+                    variant="secondary"
+                    size="sm"
+                    [disabled]="loadingMore()"
+                    [ariaLabel]="loadingMore() ? 'Loading more replies' : 'Load more replies'"
+                    (clicked)="loadMoreReplies()"
+                  >
+                    @if (loadingMore()) {
+                      <span class="flex items-center gap-1">
+                        <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Loading...
+                      </span>
+                    } @else {
+                      Load {{ remainingRepliesCount }} more replies
+                    }
+                  </app-button>
+                </div>
+              }
+            </div>
           }
         </div>
       </app-thread-gutter>

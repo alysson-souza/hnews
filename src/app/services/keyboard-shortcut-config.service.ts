@@ -3,7 +3,7 @@
 import { Injectable, inject } from '@angular/core';
 import { PwaUpdateService } from './pwa-update.service';
 
-export type KeyboardContext = 'default' | 'sidebar' | 'global';
+export type KeyboardContext = 'default' | 'sidebar' | 'global' | 'item-page';
 
 export interface KeyboardShortcut {
   key: string;
@@ -180,6 +180,57 @@ export class KeyboardShortcutConfigService {
       description: 'Go back / Close sidebar',
       category: 'General',
       commandId: 'sidebar.backOrClose',
+    },
+
+    // Item Page context shortcuts
+    {
+      key: 'j',
+      contexts: ['item-page'],
+      description: 'Next comment',
+      category: 'Navigation',
+      commandId: 'item.nextComment',
+    },
+    {
+      key: 'k',
+      contexts: ['item-page'],
+      description: 'Previous comment',
+      category: 'Navigation',
+      commandId: 'item.previousComment',
+    },
+    {
+      key: 'o',
+      contexts: ['item-page'],
+      description: 'Toggle expand/collapse comment',
+      category: 'Comment Actions',
+      commandId: 'item.toggleExpand',
+    },
+    {
+      key: 'u',
+      contexts: ['item-page'],
+      description: 'Upvote comment',
+      category: 'Comment Actions',
+      commandId: 'item.upvote',
+    },
+    {
+      key: 'r',
+      contexts: ['item-page'],
+      description: 'Expand replies',
+      category: 'Comment Actions',
+      commandId: 'item.expandReplies',
+    },
+    {
+      key: 'v',
+      contexts: ['item-page'],
+      description: 'View comment thread',
+      category: 'Comment Actions',
+      commandId: 'item.viewThread',
+    },
+    {
+      key: 'Escape',
+      contexts: ['item-page'],
+      description: 'Go back / Clear',
+      category: 'General',
+      commandId: 'global.escape',
     },
   ];
 

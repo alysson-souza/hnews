@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, inject, computed } from '@angular/core';
-import { Router } from '@angular/router';
+import { Injectable, inject, computed, signal } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { SidebarService } from './sidebar.service';
 import { KeyboardContext } from './keyboard-shortcut-config.service';
 
@@ -13,6 +14,11 @@ export class KeyboardContextService {
   private router = inject(Router);
 
   /**
+   * Reactive signal for the current URL
+   */
+  private currentUrl = signal(this.router.url);
+
+  /**
    * Current keyboard context based on sidebar state and route
    */
   currentContext = computed<KeyboardContext>(() => {
@@ -21,7 +27,12 @@ export class KeyboardContextService {
       return 'sidebar';
     }
 
-    // Default context (story list, item page, etc.)
+    // Item page context (when not in sidebar)
+    if (this.isOnItemPage()) {
+      return 'item-page';
+    }
+
+    // Default context (story list, etc.)
     return 'default';
   });
 
@@ -29,7 +40,7 @@ export class KeyboardContextService {
    * Check if we're on a story list page where story navigation shortcuts apply
    */
   isOnStoryList = computed(() => {
-    const url = this.router.url;
+    const url = this.currentUrl();
     // Remove fragment and query params to get the base path
     const path = url.split('#')[0].split('?')[0];
     return ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'].includes(path);
@@ -39,18 +50,23 @@ export class KeyboardContextService {
    * Check if we're on an item page
    */
   isOnItemPage = computed(() => {
-    return this.router.url.includes('/item/');
+    return this.currentUrl().includes('/item/');
   });
 
   /**
    * Check if we're on a user page
    */
   isOnUserPage = computed(() => {
-    const path = this.router.url;
+    const path = this.currentUrl();
     return path.startsWith('/user/') || path === '/user' || path.startsWith('/user?');
   });
 
   constructor() {
+    // Update currentUrl signal on navigation end
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+      this.currentUrl.set(this.router.url);
+    });
+
     // Optional: Log context changes in development (disabled in production)
     // Uncomment for debugging:
     // effect(() => {

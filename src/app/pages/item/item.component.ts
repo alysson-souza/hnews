@@ -18,6 +18,7 @@ import {
   CommentSortDropdownComponent,
   CommentSortOrder,
 } from '../../components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
+import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-item',
@@ -41,6 +42,7 @@ export class ItemComponent implements OnInit {
   private visitedService = inject(VisitedService);
   private scrollService = inject(ScrollService);
   private commentSortService = inject(CommentSortService);
+  private itemKeyboardNav = inject(ItemKeyboardNavigationService);
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
@@ -133,6 +135,7 @@ export class ItemComponent implements OnInit {
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
     this.commentsLoading.set(false);
+    this.itemKeyboardNav.clearSelection();
 
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
