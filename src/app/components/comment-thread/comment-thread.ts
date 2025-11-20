@@ -117,6 +117,7 @@ import { Router } from '@angular/router';
                   <app-button
                     variant="secondary"
                     size="sm"
+                    class="load-more-btn"
                     [disabled]="loadingMore()"
                     [ariaLabel]="loadingMore() ? 'Loading more replies' : 'Load more replies'"
                     (clicked)="loadMoreReplies()"

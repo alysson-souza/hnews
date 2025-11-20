@@ -36,33 +36,37 @@ export abstract class BaseCommentNavigationService {
   });
 
   /**
-   * Get all visible comment elements in the container in DOM order (depth-first)
+   * Get all visible comment elements and load more buttons in the container in DOM order (depth-first)
    */
   protected getVisibleCommentElements(): HTMLElement[] {
-    const comments: HTMLElement[] = [];
+    const elements: HTMLElement[] = [];
 
-    // Find all thread containers that are not collapsed
-    const threadContainers = document.querySelectorAll(
-      `${this.containerSelector} [role="treeitem"]`,
+    // Find all thread containers that are not collapsed AND load more buttons
+    const allCandidates = document.querySelectorAll(
+      `${this.containerSelector} [role="treeitem"], ${this.containerSelector} .load-more-btn`,
     ) as NodeListOf<HTMLElement>;
 
-    threadContainers.forEach((container) => {
+    allCandidates.forEach((container) => {
       // Skip if this is inside a collapsed thread
       let parent = container.parentElement;
+      let isCollapsed = false;
       while (parent) {
         if (
           parent.classList.contains('thread-container') &&
           parent.classList.contains('collapsed')
         ) {
-          return; // Skip this comment
+          isCollapsed = true;
+          break;
         }
         parent = parent.parentElement;
       }
 
-      comments.push(container);
+      if (!isCollapsed) {
+        elements.push(container);
+      }
     });
 
-    return comments;
+    return elements;
   }
 
   /**
@@ -86,40 +90,58 @@ export abstract class BaseCommentNavigationService {
    * Select next comment in depth-first order
    */
   selectNext(): void {
-    const visibleComments = this.getVisibleCommentElements();
-    if (visibleComments.length === 0) return;
+    const visibleElements = this.getVisibleCommentElements();
+    if (visibleElements.length === 0) return;
 
     const currentId = this.selectedCommentId();
-    let nextId: number | null = null;
 
-    // If nothing selected, select first
+    // If nothing selected, select first comment
     if (currentId === null) {
-      const firstId = this.getCommentId(visibleComments[0]);
-      if (firstId !== null) {
-        nextId = firstId;
-      }
-    } else {
-      // Find current comment index
-      const currentIndex = visibleComments.findIndex((el) => this.getCommentId(el) === currentId);
-
-      if (currentIndex === -1) {
-        // Current selection not found, select first
-        const firstId = this.getCommentId(visibleComments[0]);
-        if (firstId !== null) {
-          nextId = firstId;
-        }
-      } else if (currentIndex < visibleComments.length - 1) {
-        // Select next if available
-        const id = this.getCommentId(visibleComments[currentIndex + 1]);
+      const firstComment = visibleElements.find((el) => this.getCommentId(el) !== null);
+      if (firstComment) {
+        const id = this.getCommentId(firstComment);
         if (id !== null) {
-          nextId = id;
+          this.selectedCommentId.set(id);
+          this.scrollSelectedIntoView();
         }
       }
+      return;
     }
 
-    if (nextId !== null) {
-      this.selectedCommentId.set(nextId);
-      this.scrollSelectedIntoView();
+    // Find current comment index
+    const currentIndex = visibleElements.findIndex((el) => this.getCommentId(el) === currentId);
+
+    if (currentIndex === -1) {
+      // Current selection not found, select first comment
+      const firstComment = visibleElements.find((el) => this.getCommentId(el) !== null);
+      if (firstComment) {
+        const id = this.getCommentId(firstComment);
+        if (id !== null) {
+          this.selectedCommentId.set(id);
+          this.scrollSelectedIntoView();
+        }
+      }
+    } else if (currentIndex < visibleElements.length - 1) {
+      // Check next element
+      const nextElement = visibleElements[currentIndex + 1];
+
+      if (nextElement.classList.contains('load-more-btn')) {
+        // It's a button, click it
+        if (nextElement.tagName.toLowerCase() === 'app-button') {
+          const innerBtn = nextElement.querySelector('button');
+          innerBtn?.click();
+        } else {
+          nextElement.click();
+        }
+        // Do not change selection
+      } else {
+        // It's a comment
+        const id = this.getCommentId(nextElement);
+        if (id !== null) {
+          this.selectedCommentId.set(id);
+          this.scrollSelectedIntoView();
+        }
+      }
     }
   }
 
@@ -127,40 +149,52 @@ export abstract class BaseCommentNavigationService {
    * Select previous comment
    */
   selectPrevious(): void {
-    const visibleComments = this.getVisibleCommentElements();
-    if (visibleComments.length === 0) return;
+    const visibleElements = this.getVisibleCommentElements();
+    if (visibleElements.length === 0) return;
 
     const currentId = this.selectedCommentId();
-    let prevId: number | null = null;
 
-    // If nothing selected, select first
+    // If nothing selected, select first comment
     if (currentId === null) {
-      const firstId = this.getCommentId(visibleComments[0]);
-      if (firstId !== null) {
-        prevId = firstId;
-      }
-    } else {
-      // Find current comment index
-      const currentIndex = visibleComments.findIndex((el) => this.getCommentId(el) === currentId);
-
-      if (currentIndex === -1) {
-        // Current selection not found, select first
-        const firstId = this.getCommentId(visibleComments[0]);
-        if (firstId !== null) {
-          prevId = firstId;
-        }
-      } else if (currentIndex > 0) {
-        // Select previous if available
-        const id = this.getCommentId(visibleComments[currentIndex - 1]);
+      const firstComment = visibleElements.find((el) => this.getCommentId(el) !== null);
+      if (firstComment) {
+        const id = this.getCommentId(firstComment);
         if (id !== null) {
-          prevId = id;
+          this.selectedCommentId.set(id);
+          this.scrollSelectedIntoView();
         }
       }
+      return;
     }
 
-    if (prevId !== null) {
-      this.selectedCommentId.set(prevId);
-      this.scrollSelectedIntoView();
+    // Find current comment index
+    const currentIndex = visibleElements.findIndex((el) => this.getCommentId(el) === currentId);
+
+    if (currentIndex === -1) {
+      // Current selection not found, select first comment
+      const firstComment = visibleElements.find((el) => this.getCommentId(el) !== null);
+      if (firstComment) {
+        const id = this.getCommentId(firstComment);
+        if (id !== null) {
+          this.selectedCommentId.set(id);
+          this.scrollSelectedIntoView();
+        }
+      }
+    } else if (currentIndex > 0) {
+      // Find previous element that is a comment (skip buttons)
+      let prevIndex = currentIndex - 1;
+      while (prevIndex >= 0) {
+        const el = visibleElements[prevIndex];
+        if (!el.classList.contains('load-more-btn')) {
+          const id = this.getCommentId(el);
+          if (id !== null) {
+            this.selectedCommentId.set(id);
+            this.scrollSelectedIntoView();
+            return;
+          }
+        }
+        prevIndex--;
+      }
     }
   }
 

@@ -120,6 +120,7 @@ import {
                       <app-button
                         variant="secondary"
                         size="sm"
+                        class="load-more-btn"
                         [ariaLabel]="'Load more comments'"
                         (clicked)="loadMoreTopLevelComments()"
                       >
