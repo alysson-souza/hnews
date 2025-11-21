@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNUser, HNItem, isStory, isComment } from '../../models/hn';
@@ -25,7 +25,6 @@ import {
   selector: 'app-user',
   standalone: true,
   imports: [
-    CommonModule,
     PageContainerComponent,
     CardComponent,
     UserTagComponent,
@@ -54,7 +53,7 @@ import {
         <!-- User Profile -->
         <app-card class="block mb-2 sm:mb-3" id="user-profile">
           <h1 class="user-title">
-            <app-user-tag [username]="user()!.id"></app-user-tag>
+            <app-user-tag [username]="user()!.id" />
           </h1>
 
           <!-- User Stats -->
@@ -105,10 +104,10 @@ import {
                 [options]="filterOptions"
                 [value]="submissionFilter()"
                 (valueChange)="onFilterChange($event)"
-              ></app-segmented-control>
+              />
             </div>
             @for (item of filteredSubmissions(); track item.id) {
-              <app-search-result [item]="item" [isSearchResult]="false"></app-search-result>
+              <app-search-result [item]="item" [isSearchResult]="false" />
             }
           </app-result-list>
         } @else {

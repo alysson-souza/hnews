@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-stat-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="stat-card">
-      <div class="stat-label">{{ label }}</div>
-      <div class="stat-value">{{ value }}</div>
+      <div class="stat-label">{{ label() }}</div>
+      <div class="stat-value">{{ value() }}</div>
     </div>
   `,
   styles: [
@@ -32,6 +31,6 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class StatCardComponent {
-  @Input() label = '';
-  @Input() value = '';
+  readonly label = input('');
+  readonly value = input('');
 }

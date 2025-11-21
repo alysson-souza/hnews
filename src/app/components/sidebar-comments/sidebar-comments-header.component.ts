@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-sidebar-comments-header',
@@ -8,7 +8,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   template: `
     <div class="header">
       <div class="back-btn-container">
-        @if (canGoBack) {
+        @if (canGoBack()) {
           <button
             type="button"
             (click)="back.emit()"
@@ -70,7 +70,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   ],
 })
 export class SidebarCommentsHeaderComponent {
-  @Input() canGoBack = false;
-  @Output() dismiss = new EventEmitter<void>();
-  @Output() back = new EventEmitter<void>();
+  readonly canGoBack = input(false);
+  readonly dismiss = output<void>();
+  readonly back = output<void>();
 }

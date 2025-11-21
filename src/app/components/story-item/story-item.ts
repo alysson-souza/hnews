@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject, signal, computed, ViewChild } from '@angular/core';
-import { CommonModule, LocationStrategy } from '@angular/common';
+import { Component, Input, inject, signal, computed, input, viewChild } from '@angular/core';
+import { LocationStrategy } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { VisitedService } from '../../services/visited.service';
@@ -20,7 +20,6 @@ import { StoryActionsMenuComponent } from './story-actions-menu.component';
   selector: 'app-story-item',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
     StoryThumbnailComponent,
     UserTagComponent,
@@ -39,8 +38,8 @@ export class StoryItem {
     return this._story;
   }
   private _story?: HNItem;
-  @Input() index = 0;
-  @Input() isSelected = false;
+  readonly index = input(0);
+  readonly isSelected = input(false);
   @Input() loading = false;
 
   private votedItems = signal<Set<number>>(new Set());
@@ -127,7 +126,7 @@ export class StoryItem {
     }
   }
 
-  @ViewChild(StoryActionsMenuComponent) actionsMenu?: StoryActionsMenuComponent;
+  readonly actionsMenu = viewChild(StoryActionsMenuComponent);
 
   openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
 
@@ -156,13 +155,13 @@ export class StoryItem {
   async shareStory(): Promise<void> {
     if (!this.story) return;
     await this.shareService.shareStory(this.story);
-    this.actionsMenu?.closeMenu();
+    this.actionsMenu()?.closeMenu();
   }
 
   async shareComments(): Promise<void> {
     if (!this.story) return;
     await this.shareService.shareComments(this.story);
-    this.actionsMenu?.closeMenu();
+    this.actionsMenu()?.closeMenu();
   }
 
   openCommentsInNewTab(): void {
@@ -171,7 +170,7 @@ export class StoryItem {
     const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story.id}`);
     const url = `${window.location.origin}${path}`;
     window.open(url, '_blank');
-    this.actionsMenu?.closeMenu();
+    this.actionsMenu()?.closeMenu();
   }
 
   getItemLink(): string {

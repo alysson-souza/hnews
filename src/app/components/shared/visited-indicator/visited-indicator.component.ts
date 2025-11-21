@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, computed, input } from '@angular/core';
+
 import { VisitedService } from '../../../services/visited.service';
 
 @Component({
   selector: 'app-visited-indicator',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     @if (isVisited()) {
       <div class="visited-indicator" [title]="getTooltip()"></div>
@@ -24,12 +24,12 @@ import { VisitedService } from '../../../services/visited.service';
   ],
 })
 export class VisitedIndicatorComponent {
-  @Input({ required: true }) storyId!: number;
+  readonly storyId = input.required<number>();
 
   private visitedService = inject(VisitedService);
 
   isVisited = computed(() => {
-    return this.visitedService.isVisited(this.storyId);
+    return this.visitedService.isVisited(this.storyId());
   });
 
   getTooltip(): string {

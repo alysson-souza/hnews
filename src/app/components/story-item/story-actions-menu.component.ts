@@ -1,23 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  ElementRef,
-  ViewChild,
-  signal,
-  OnInit,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, signal, OnInit, output, input, viewChild } from '@angular/core';
+
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-story-actions-menu',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule],
+  imports: [FontAwesomeModule],
   template: `
     <div class="story-actions-container">
       <button
@@ -33,7 +24,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
         [attr.id]="buttonId()"
         [title]="'More Actions'"
       >
-        <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]"></fa-icon>
+        <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]" />
       </button>
 
       @if (isOpen()) {
@@ -53,7 +44,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
             (keyup.enter)="shareStory.emit()"
             (keyup.space)="shareStory.emit()"
           >
-            {{ shareStoryText }}
+            {{ shareStoryText() }}
           </button>
           <button
             class="story-actions-item"
@@ -62,7 +53,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
             (keyup.enter)="shareComments.emit()"
             (keyup.space)="shareComments.emit()"
           >
-            {{ shareCommentsText }}
+            {{ shareCommentsText() }}
           </button>
           <div class="story-actions-divider"></div>
           <button
@@ -116,16 +107,16 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
   ],
 })
 export class StoryActionsMenuComponent implements OnInit {
-  @Input() storyId = 0;
-  @Input() shareStoryText = 'Copy Story Link';
-  @Input() shareCommentsText = 'Copy Comments Link';
+  readonly storyId = input(0);
+  readonly shareStoryText = input('Copy Story Link');
+  readonly shareCommentsText = input('Copy Comments Link');
 
-  @Output() shareStory = new EventEmitter<void>();
-  @Output() shareComments = new EventEmitter<void>();
-  @Output() openInNewTab = new EventEmitter<void>();
+  readonly shareStory = output<void>();
+  readonly shareComments = output<void>();
+  readonly openInNewTab = output<void>();
 
-  @ViewChild('actionsBtn') actionsBtn?: ElementRef<HTMLButtonElement>;
-  @ViewChild('actionsMenu') actionsMenu?: ElementRef<HTMLDivElement>;
+  readonly actionsBtn = viewChild<ElementRef<HTMLButtonElement>>('actionsBtn');
+  readonly actionsMenu = viewChild<ElementRef<HTMLDivElement>>('actionsMenu');
 
   isOpen = signal(false);
   menuTop = signal(0);
@@ -141,8 +132,9 @@ export class StoryActionsMenuComponent implements OnInit {
   }
 
   private updateIds(): void {
-    this.buttonId.set(`actions-btn-${this.storyId}`);
-    this.menuId.set(`actions-menu-${this.storyId}`);
+    const storyId = this.storyId();
+    this.buttonId.set(`actions-btn-${storyId}`);
+    this.menuId.set(`actions-menu-${storyId}`);
   }
 
   toggleMenu(event: Event): void {
@@ -165,8 +157,8 @@ export class StoryActionsMenuComponent implements OnInit {
     }
 
     window.setTimeout(() => {
-      const btn = this.actionsBtn?.nativeElement;
-      const menu = this.actionsMenu?.nativeElement;
+      const btn = this.actionsBtn()?.nativeElement;
+      const menu = this.actionsMenu()?.nativeElement;
       if (!btn) return;
 
       const rect = btn.getBoundingClientRect();

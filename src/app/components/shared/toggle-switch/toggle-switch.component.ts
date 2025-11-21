@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-toggle-switch',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <button
       type="button"
       role="switch"
       [attr.aria-checked]="checked"
-      [attr.aria-label]="ariaLabel"
-      [attr.aria-describedby]="descriptionId"
-      [disabled]="disabled"
+      [attr.aria-label]="ariaLabel()"
+      [attr.aria-describedby]="descriptionId()"
+      [disabled]="disabled()"
       [class]="containerClasses"
       (click)="toggle()"
     >
@@ -61,21 +60,21 @@ import { CommonModule } from '@angular/common';
 })
 export class ToggleSwitchComponent {
   @Input() checked = false;
-  @Input() ariaLabel = '';
-  @Input() descriptionId = '';
-  @Input() disabled = false;
-  @Output() checkedChange = new EventEmitter<boolean>();
+  readonly ariaLabel = input('');
+  readonly descriptionId = input('');
+  readonly disabled = input(false);
+  readonly checkedChange = output<boolean>();
 
   get containerClasses(): string {
     return this.checked ? 'enabled' : '';
   }
 
   get sliderClasses(): string {
-    return `slider ${this.checked ? 'translate-x-5' : 'translate-x-0'} ${this.disabled ? 'disabled' : ''}`;
+    return `slider ${this.checked ? 'translate-x-5' : 'translate-x-0'} ${this.disabled() ? 'disabled' : ''}`;
   }
 
   toggle(): void {
-    if (!this.disabled) {
+    if (!this.disabled()) {
       this.checked = !this.checked;
       this.checkedChange.emit(this.checked);
     }

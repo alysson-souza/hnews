@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-section-title',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <h1 [class]="getTitleClass()">
-      <ng-content></ng-content>
+      <ng-content />
     </h1>
   `,
   styles: [
@@ -27,9 +26,9 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class SectionTitleComponent {
-  @Input() variant: 'title' | 'subtitle' = 'title';
+  readonly variant = input<'title' | 'subtitle'>('title');
 
   getTitleClass(): string {
-    return this.variant === 'title' ? 'section-title' : 'section-subtitle';
+    return this.variant() === 'title' ? 'section-title' : 'section-subtitle';
   }
 }

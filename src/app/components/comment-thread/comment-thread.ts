@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  inject,
+  signal,
+  computed,
+  DestroyRef,
+  input,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
 import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
-import { CommonModule } from '@angular/common';
+
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
 import { ThreadGutterComponent } from '../thread-gutter/thread-gutter.component';
@@ -24,7 +33,6 @@ import { Router } from '@angular/router';
   selector: 'app-comment-thread',
   standalone: true,
   imports: [
-    CommonModule,
     CommentThread,
     ThreadGutterComponent,
     CommentHeaderComponent,
@@ -57,8 +65,8 @@ import { Router } from '@angular/router';
             [loadingReplies]="loadingReplies()"
             [commentId]="commentId"
             [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
-            [storyAuthor]="storyAuthor"
-            [isStandalonePage]="isStandalonePage"
+            [storyAuthor]="storyAuthor()"
+            [isStandalonePage]="isStandalonePage()"
             (upvote)="upvoteComment()"
             (expand)="expandReplies()"
           />
@@ -80,9 +88,9 @@ import { Router } from '@angular/router';
                     [depth]="depth + 1"
                     [lazyLoad]="true"
                     [initialComment]="reply"
-                    [storyAuthor]="storyAuthor"
-                    [isStandalonePage]="isStandalonePage"
-                  ></app-comment-thread>
+                    [storyAuthor]="storyAuthor()"
+                    [isStandalonePage]="isStandalonePage()"
+                  />
                 } @else {
                   <app-thread-gutter
                     [depth]="depth + 1"
@@ -100,8 +108,8 @@ import { Router } from '@angular/router';
                         [loadingReplies]="false"
                         [commentId]="reply.id"
                         [hasChildren]="false"
-                        [storyAuthor]="storyAuthor"
-                        [isStandalonePage]="isStandalonePage"
+                        [storyAuthor]="storyAuthor()"
+                        [isStandalonePage]="isStandalonePage()"
                         (upvote)="upvoteById(reply.id)"
                       />
                     </div>
@@ -217,8 +225,8 @@ export class CommentThread implements OnInit {
   @Input() lazyLoad = false;
   // Optional: when a parent already fetched this comment, pass it to avoid refetching
   @Input() initialComment?: HNItem;
-  @Input() storyAuthor?: string;
-  @Input() isStandalonePage = false;
+  readonly storyAuthor = input<string>();
+  readonly isStandalonePage = input(false);
 
   private hnService = inject(HackernewsService);
   private commentStateService = inject(CommentStateService);

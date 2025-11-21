@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, input } from '@angular/core';
 
 export interface SegmentOption {
   value: string;
@@ -11,22 +10,23 @@ export interface SegmentOption {
 @Component({
   selector: 'app-segmented-control',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="segmented-control-container" role="tablist">
-      <button
-        *ngFor="let option of options"
-        type="button"
-        [class.active]="value === option.value"
-        [attr.role]="'tab'"
-        [attr.aria-selected]="value === option.value"
-        [attr.aria-label]="option.label"
-        (click)="selectOption(option.value)"
-        (keydown)="handleKeydown($event)"
-        class="segment-button"
-      >
-        {{ option.label }}
-      </button>
+      @for (option of options(); track option) {
+        <button
+          type="button"
+          [class.active]="value() === option.value"
+          [attr.role]="'tab'"
+          [attr.aria-selected]="value() === option.value"
+          [attr.aria-label]="option.label"
+          (click)="selectOption(option.value)"
+          (keydown)="handleKeydown($event)"
+          class="segment-button"
+        >
+          {{ option.label }}
+        </button>
+      }
     </div>
   `,
   styles: [
@@ -72,17 +72,17 @@ export interface SegmentOption {
   ],
 })
 export class SegmentedControlComponent {
-  @Input() options: SegmentOption[] = [];
-  @Input() value: string = '';
-  @Output() valueChange = new EventEmitter<string>();
+  readonly options = input<SegmentOption[]>([]);
+  readonly value = input<string>('');
+  readonly valueChange = output<string>();
 
   selectOption(value: string): void {
     this.valueChange.emit(value);
   }
 
   handleKeydown(event: KeyboardEvent): void {
-    const optionValues = this.options.map((o) => o.value);
-    const currentIndex = optionValues.indexOf(this.value);
+    const optionValues = this.options().map((o) => o.value);
+    const currentIndex = optionValues.indexOf(this.value());
 
     switch (event.key) {
       case 'ArrowRight':

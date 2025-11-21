@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div [class]="getCardClasses()">
-      <ng-content></ng-content>
+      <ng-content />
     </div>
   `,
   styles: [
@@ -43,22 +42,22 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class CardComponent {
-  @Input() noPadding = false;
-  @Input() hoverable = false;
-  @Input() clickable = false;
+  readonly noPadding = input(false);
+  readonly hoverable = input(false);
+  readonly clickable = input(false);
 
   getCardClasses(): string {
     const classes = ['card-base'];
 
-    if (!this.noPadding) {
+    if (!this.noPadding()) {
       classes.push('card-padding');
     }
 
-    if (this.hoverable) {
+    if (this.hoverable()) {
       classes.push('card-hoverable');
     }
 
-    if (this.clickable) {
+    if (this.clickable()) {
       classes.push('card-clickable');
     }
 

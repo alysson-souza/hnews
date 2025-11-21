@@ -1,37 +1,37 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, OnInit, output, input } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-api-key-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
-    @if (!hideLabel) {
+    @if (!hideLabel()) {
       <label
         class="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1"
         [attr.for]="inputId"
       >
-        {{ label }}
+        {{ label() }}
       </label>
     }
     <div class="relative">
       <input
         [id]="inputId"
-        [type]="secret && !show ? 'password' : 'text'"
+        [type]="secret() && !show ? 'password' : 'text'"
         [class]="inputClasses"
-        [placeholder]="placeholder"
+        [placeholder]="placeholder()"
         [(ngModel)]="model"
         (ngModelChange)="onChange()"
-        [attr.aria-label]="label"
+        [attr.aria-label]="label()"
         [attr.aria-describedby]="hint ? hintId : null"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
       />
-      @if (secret) {
+      @if (secret()) {
         <button
           type="button"
           class="absolute right-2 top-1/2 -translate-y-1/2 text-sm p-1 text-gray-500 dark:text-blue-300 hover:text-gray-700 dark:hover:text-blue-200 cursor-pointer"
@@ -50,14 +50,14 @@ import { FormsModule } from '@angular/forms';
   `,
 })
 export class ApiKeyInputComponent implements OnInit {
-  @Input() label = 'API Key';
-  @Input() placeholder = '';
+  readonly label = input('API Key');
+  readonly placeholder = input('');
   @Input() hint?: string;
-  @Input() secret = true;
-  @Input() hideLabel = false;
-  @Input() value?: string;
-  @Input() size: 'sm' | 'md' | 'lg' = 'md';
-  @Output() valueChange = new EventEmitter<string | undefined>();
+  readonly secret = input(true);
+  readonly hideLabel = input(false);
+  readonly value = input<string>();
+  readonly size = input<'sm' | 'md' | 'lg'>('md');
+  readonly valueChange = output<string | undefined>();
 
   show = false;
   model?: string;
@@ -68,14 +68,15 @@ export class ApiKeyInputComponent implements OnInit {
 
   get inputClasses(): string {
     let classes = 'app-input w-full';
-    if (this.size === 'sm') classes += ' app-input-sm';
-    if (this.size === 'lg') classes += ' app-input-lg';
-    if (this.secret) classes += ' pr-12';
+    const size = this.size();
+    if (size === 'sm') classes += ' app-input-sm';
+    if (size === 'lg') classes += ' app-input-lg';
+    if (this.secret()) classes += ' pr-12';
     return classes;
   }
 
   ngOnInit() {
-    this.model = this.value;
+    this.model = this.value();
   }
 
   onChange() {

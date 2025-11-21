@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, output } from '@angular/core';
+
 import { HeaderBrandComponent } from './brand/header-brand.component';
 import { HeaderDesktopNavComponent } from './desktop-nav/header-desktop-nav.component';
 import { HeaderDesktopSearchComponent } from './desktop-search/header-desktop-search.component';
@@ -13,7 +13,6 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
   selector: 'app-header',
   standalone: true,
   imports: [
-    CommonModule,
     HeaderBrandComponent,
     HeaderDesktopNavComponent,
     HeaderDesktopSearchComponent,
@@ -27,49 +26,47 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
         <div class="flex items-center h-16">
           <!-- Brand: always visible, left-aligned -->
           <div class="flex-shrink-0">
-            <app-header-brand [offline]="offline"></app-header-brand>
+            <app-header-brand [offline]="offline()" />
           </div>
 
           <!-- Desktop spacer 1: creates left padding for centered nav -->
           <div class="hidden lg:block lg:flex-1"></div>
 
           <!-- Desktop nav: centered between two spacers -->
-          <app-header-desktop-nav [routerUrl]="routerUrl"></app-header-desktop-nav>
+          <app-header-desktop-nav [routerUrl]="routerUrl()" />
 
           <!-- Desktop spacer 2: creates right padding for centered nav -->
           <div class="hidden lg:block lg:flex-1"></div>
 
           <!-- Desktop search: right-aligned -->
           <app-header-desktop-search
-            [searchQuery]="searchQuery"
+            [searchQuery]="searchQuery()"
             (searchQueryChange)="searchQueryChange.emit($event)"
             (searchSubmit)="searchSubmit.emit()"
             (desktopSearchKeydown)="desktopSearchKeydown.emit($event)"
-          ></app-header-desktop-search>
+          />
 
           <!-- Mobile controls: pushed to right on mobile -->
           <div class="flex-1 lg:hidden flex justify-end">
             <app-header-mobile-controls
-              [mobileMenuOpen]="mobileMenuOpen"
-              [showMobileSearch]="showMobileSearch"
+              [mobileMenuOpen]="mobileMenuOpen()"
+              [showMobileSearch]="showMobileSearch()"
               (menuToggleRequested)="menuToggleRequested.emit()"
               (searchToggleRequested)="searchToggleRequested.emit()"
-            ></app-header-mobile-controls>
+            />
           </div>
         </div>
 
-        @if (showMobileSearch) {
+        @if (showMobileSearch()) {
           <app-header-mobile-search
-            [searchQuery]="searchQuery"
+            [searchQuery]="searchQuery()"
             (searchQueryChange)="searchQueryChange.emit($event)"
             (searchSubmit)="searchSubmit.emit()"
-          ></app-header-mobile-search>
+          />
         }
 
-        @if (mobileMenuOpen) {
-          <app-header-mobile-nav
-            (closeMenuRequested)="closeMenuRequested.emit()"
-          ></app-header-mobile-nav>
+        @if (mobileMenuOpen()) {
+          <app-header-mobile-nav (closeMenuRequested)="closeMenuRequested.emit()" />
         }
       </div>
     </header>
@@ -92,16 +89,16 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
   ],
 })
 export class AppHeaderComponent {
-  @Input() offline = false;
-  @Input() routerUrl = '';
-  @Input() searchQuery = '';
-  @Input() mobileMenuOpen = false;
-  @Input() showMobileSearch = false;
+  readonly offline = input(false);
+  readonly routerUrl = input('');
+  readonly searchQuery = input('');
+  readonly mobileMenuOpen = input(false);
+  readonly showMobileSearch = input(false);
 
-  @Output() searchQueryChange = new EventEmitter<string>();
-  @Output() searchSubmit = new EventEmitter<void>();
-  @Output() desktopSearchKeydown = new EventEmitter<KeyboardEvent>();
-  @Output() menuToggleRequested = new EventEmitter<void>();
-  @Output() searchToggleRequested = new EventEmitter<void>();
-  @Output() closeMenuRequested = new EventEmitter<void>();
+  readonly searchQueryChange = output<string>();
+  readonly searchSubmit = output<void>();
+  readonly desktopSearchKeydown = output<KeyboardEvent>();
+  readonly menuToggleRequested = output<void>();
+  readonly searchToggleRequested = output<void>();
+  readonly closeMenuRequested = output<void>();
 }

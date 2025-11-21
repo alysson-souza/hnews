@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ScrollService } from '../../../services/scroll.service';
 
 @Component({
   selector: 'app-nav-link',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive],
   template: `
     <a
       [routerLink]="route"
@@ -17,7 +17,7 @@ import { ScrollService } from '../../../services/scroll.service';
       [attr.aria-current]="isActive ? 'page' : null"
       (click)="handleClick()"
     >
-      <ng-content></ng-content>
+      <ng-content />
     </a>
   `,
   styles: [

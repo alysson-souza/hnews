@@ -6,16 +6,16 @@
     <!-- Theme Settings Section -->
     <app-card class="block setting-section" role="region" aria-label="Theme Settings">
       <div class="section-header">
-        <fa-icon [icon]="faPalette" class="section-icon"></fa-icon>
+        <fa-icon [icon]="faPalette" class="section-icon" />
         <app-section-title>Appearance</app-section-title>
       </div>
-      <app-theme-selector></app-theme-selector>
+      <app-theme-selector />
     </app-card>
 
     <!-- Reading Preferences -->
     <app-card class="block setting-section" role="region" aria-label="Reading Preferences">
       <div class="section-header">
-        <fa-icon [icon]="faBook" class="section-icon"></fa-icon>
+        <fa-icon [icon]="faBook" class="section-icon" />
         <app-section-title>Reading Preferences</app-section-title>
       </div>
       <div class="space-y-6">
@@ -46,7 +46,7 @@
               (checkedChange)="toggleSidebarPreference()"
               ariaLabel="Toggle sidebar preference"
               descriptionId="sidebar-toggle-description"
-            ></app-toggle-switch>
+            />
           </div>
         </div>
       </div>
@@ -55,7 +55,7 @@
     <!-- User Tags Section -->
     <app-card class="block setting-section" role="region" aria-label="User Tags Management">
       <div class="section-header">
-        <fa-icon [icon]="faTag" class="section-icon"></fa-icon>
+        <fa-icon [icon]="faTag" class="section-icon" />
         <app-section-title>User Tags</app-section-title>
       </div>
 
@@ -76,10 +76,10 @@
               class="search-input"
               data-lpignore="true"
             />
-            <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
+            <fa-icon [icon]="faSearch" class="search-icon" />
             @if (searchQuery()) {
               <button (click)="clearSearch()" class="clear-search" aria-label="Clear search">
-                <fa-icon [icon]="faTimes"></fa-icon>
+                <fa-icon [icon]="faTimes" />
               </button>
             }
           </div>
@@ -103,7 +103,7 @@
               <div class="tag-item-modern">
                 <div class="tag-content">
                   <div class="tag-user-info">
-                    <fa-icon [icon]="faUser" class="user-icon"></fa-icon>
+                    <fa-icon [icon]="faUser" class="user-icon" />
                     <a
                       class="tag-username"
                       [routerLink]="['/user', tag.username]"
@@ -126,7 +126,7 @@
                   (keydown.enter)="removeTag(tag.username)"
                   (keydown.space)="removeTag(tag.username)"
                 >
-                  <fa-icon [icon]="faTimes"></fa-icon>
+                  <fa-icon [icon]="faTimes" />
                 </button>
               </div>
             }
@@ -141,11 +141,11 @@
               [itemsPerPage]="itemsPerPage()"
               (pageChange)="onPageChange($event)"
               (itemsPerPageChange)="onItemsPerPageChange($event)"
-            ></app-pagination>
+            />
           }
         } @else if (searchQuery()) {
           <div class="empty-state">
-            <fa-icon [icon]="faSearch" class="empty-icon"></fa-icon>
+            <fa-icon [icon]="faSearch" class="empty-icon" />
             <h4 class="empty-title">No tags found</h4>
             <p class="empty-description">
               No tags match "{{ searchQuery() }}". Try a different search term or clear the search
@@ -157,13 +157,13 @@
               size="sm"
               ariaLabel="Clear search"
             >
-              <fa-icon [icon]="faTimes" class="mr-2"></fa-icon>
+              <fa-icon [icon]="faTimes" class="mr-2" />
               Clear Search
             </app-button>
           </div>
         } @else {
           <div class="empty-state">
-            <fa-icon [icon]="faTag" class="empty-icon"></fa-icon>
+            <fa-icon [icon]="faTag" class="empty-icon" />
             <h4 class="empty-title">No tags yet</h4>
             <p class="empty-description">
               Start tagging users while browsing stories and comments. Your tags will help you
@@ -181,7 +181,7 @@
             ariaLabel="Export user tags"
             [disabled]="tags().length === 0"
           >
-            <fa-icon [icon]="faFileExport" class="hidden sm:inline mr-2"></fa-icon>
+            <fa-icon [icon]="faFileExport" class="hidden sm:inline mr-2" />
             Export
           </app-button>
           <app-button
@@ -190,7 +190,7 @@
             size="sm"
             ariaLabel="Import user tags"
           >
-            <fa-icon [icon]="faFileImport" class="hidden sm:inline mr-2"></fa-icon>
+            <fa-icon [icon]="faFileImport" class="hidden sm:inline mr-2" />
             Import
           </app-button>
           <input
@@ -208,7 +208,7 @@
               size="sm"
               ariaLabel="Clear all user tags"
             >
-              <fa-icon [icon]="faTrash" class="hidden sm:inline mr-2"></fa-icon>
+              <fa-icon [icon]="faTrash" class="hidden sm:inline mr-2" />
               Clear All Tags
             </app-button>
           }
@@ -219,7 +219,7 @@
     <!-- Cache Management Section -->
     <app-card class="block setting-section" role="region" aria-label="Cache Management">
       <div class="section-header">
-        <fa-icon [icon]="faDatabase" class="section-icon"></fa-icon>
+        <fa-icon [icon]="faDatabase" class="section-icon" />
         <app-section-title>Cache Management</app-section-title>
       </div>
 
@@ -228,7 +228,7 @@
         <div class="cache-stats-section">
           <div class="stats-header">
             <h3 class="stats-title">
-              <fa-icon [icon]="faChartBar" class="mr-2"></fa-icon>
+              <fa-icon [icon]="faChartBar" class="mr-2" />
               Storage Statistics
             </h3>
             <app-button
@@ -237,7 +237,7 @@
               size="sm"
               ariaLabel="Refresh cache statistics"
             >
-              <fa-icon [icon]="faRefresh" class="mr-2"></fa-icon>
+              <fa-icon [icon]="faRefresh" class="mr-2" />
               Refresh
             </app-button>
           </div>
@@ -245,7 +245,7 @@
           <div class="stats-grid">
             <div class="stat-card-modern">
               <div class="stat-icon indexeddb">
-                <fa-icon [icon]="faHardDrive"></fa-icon>
+                <fa-icon [icon]="faHardDrive" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">IndexedDB Storage</div>
@@ -255,7 +255,7 @@
 
             <div class="stat-card-modern">
               <div class="stat-icon sw-cache">
-                <fa-icon [icon]="faImages"></fa-icon>
+                <fa-icon [icon]="faImages" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">Service Worker Cache</div>
@@ -265,7 +265,7 @@
 
             <div class="stat-card-modern">
               <div class="stat-icon items">
-                <fa-icon [icon]="faDatabase"></fa-icon>
+                <fa-icon [icon]="faDatabase" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">Cached Items</div>
@@ -275,7 +275,7 @@
 
             <div class="stat-card-modern">
               <div class="stat-icon memory">
-                <fa-icon [icon]="faMemory"></fa-icon>
+                <fa-icon [icon]="faMemory" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">Memory Cache</div>
@@ -289,7 +289,7 @@
         <div class="cache-actions-section">
           <div class="cache-actions-header">
             <h3 class="actions-title">
-              <fa-icon [icon]="faTrash" class="mr-2"></fa-icon>
+              <fa-icon [icon]="faTrash" class="mr-2" />
               Clear Cache Data
             </h3>
           </div>

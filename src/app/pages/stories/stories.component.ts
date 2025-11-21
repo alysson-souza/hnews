@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, ViewChild, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, viewChild } from '@angular/core';
+
 import { ActivatedRoute } from '@angular/router';
 import { StoryList } from '../../components/story-list/story-list';
 
 @Component({
   selector: 'app-stories',
   standalone: true,
-  imports: [CommonModule, StoryList],
-  template: ` <app-story-list [storyType]="storyType"></app-story-list> `,
+  imports: [StoryList],
+  template: ` <app-story-list [storyType]="storyType" /> `,
 })
 export class StoriesComponent implements OnInit {
-  @ViewChild(StoryList) storyList!: StoryList;
+  readonly storyList = viewChild.required(StoryList);
   private route = inject(ActivatedRoute);
   storyType: 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' = 'top';
 
@@ -27,8 +27,9 @@ export class StoriesComponent implements OnInit {
   }
 
   refresh(): void {
-    if (this.storyList) {
-      this.storyList.refresh();
+    const storyList = this.storyList();
+    if (storyList) {
+      storyList.refresh();
     }
   }
 

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, model } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-header-desktop-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, ThemeToggleComponent],
+  imports: [FormsModule, ThemeToggleComponent],
   template: `
     <div class="hidden lg:flex items-center gap-4">
-      <app-theme-toggle></app-theme-toggle>
+      <app-theme-toggle />
       <form (ngSubmit)="onSubmit()" class="relative" role="search">
         <input
           type="search"
@@ -58,20 +58,9 @@ import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.
   ],
 })
 export class HeaderDesktopSearchComponent {
-  private _searchQuery = '';
-
-  @Input()
-  set searchQuery(value: string) {
-    this._searchQuery = value ?? '';
-  }
-
-  get searchQuery(): string {
-    return this._searchQuery;
-  }
-
-  @Output() searchQueryChange = new EventEmitter<string>();
-  @Output() searchSubmit = new EventEmitter<void>();
-  @Output() desktopSearchKeydown = new EventEmitter<KeyboardEvent>();
+  readonly searchQuery = model('');
+  readonly searchSubmit = output<void>();
+  readonly desktopSearchKeydown = output<KeyboardEvent>();
 
   onSubmit(): void {
     this.searchSubmit.emit();
@@ -82,7 +71,6 @@ export class HeaderDesktopSearchComponent {
   }
 
   onQueryChange(value: string): void {
-    this._searchQuery = value;
-    this.searchQueryChange.emit(value);
+    this.searchQuery.set(value);
   }
 }

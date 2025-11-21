@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, signal, effect, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { SidebarService } from '../../services/sidebar.service';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
@@ -20,7 +20,6 @@ import {
   selector: 'app-sidebar-comments',
   standalone: true,
   imports: [
-    CommonModule,
     CommentThread,
     SidebarCommentsHeaderComponent,
     SidebarStorySummaryComponent,
@@ -111,7 +110,7 @@ import {
                         [commentId]="commentId"
                         [depth]="0"
                         [storyAuthor]="item()?.by"
-                      ></app-comment-thread>
+                      />
                     }
                   </div>
 

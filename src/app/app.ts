@@ -8,9 +8,10 @@ import {
   OnInit,
   HostListener,
   ViewChild,
+  viewChild,
 } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
-import { CommonModule, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { SidebarCommentsComponent } from './components/sidebar-comments/sidebar-comments.component';
@@ -37,7 +38,6 @@ import { ItemKeyboardNavigationService } from './services/item-keyboard-navigati
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule,
     RouterOutlet,
     SidebarCommentsComponent,
     ScrollToTopComponent,
@@ -49,7 +49,7 @@ import { ItemKeyboardNavigationService } from './services/item-keyboard-navigati
 })
 export class App implements OnInit {
   @ViewChild(KeyboardShortcutsComponent) keyboardShortcuts!: KeyboardShortcutsComponent;
-  @ViewChild(RouterOutlet) outlet!: RouterOutlet;
+  readonly outlet = viewChild.required(RouterOutlet);
 
   title = 'HNews';
   searchQuery = '';
@@ -290,8 +290,9 @@ export class App implements OnInit {
     this.keyboardNavService.clearSelection();
     this.scrollService.scrollToTop();
 
-    if (this.outlet && this.outlet.component) {
-      const activatedComponent = this.outlet.component as { refresh?: () => void };
+    const outlet = this.outlet();
+    if (outlet && outlet.component) {
+      const activatedComponent = outlet.component as { refresh?: () => void };
       if (activatedComponent && typeof activatedComponent.refresh === 'function') {
         activatedComponent.refresh();
       }

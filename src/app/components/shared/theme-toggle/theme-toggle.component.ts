@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ThemeService } from '../../../services/theme.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-icons';
@@ -9,7 +9,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule],
+  imports: [FontAwesomeModule],
   template: `
     <button
       (click)="themeService.toggleTheme()"
@@ -18,11 +18,11 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
       [title]="getTooltip()"
     >
       @if (themeService.theme() === 'auto') {
-        <fa-icon [icon]="faCircleHalfStroke"></fa-icon>
+        <fa-icon [icon]="faCircleHalfStroke" />
       } @else if (themeService.effectiveTheme() === 'dark') {
-        <fa-icon [icon]="faMoon"></fa-icon>
+        <fa-icon [icon]="faMoon" />
       } @else {
-        <fa-icon [icon]="faSun"></fa-icon>
+        <fa-icon [icon]="faSun" />
       }
     </button>
   `,

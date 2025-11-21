@@ -1,7 +1,7 @@
-<article class="story-card" [class.story-card-selected]="isSelected" role="article">
+<article class="story-card" [class.story-card-selected]="isSelected()" role="article">
   <!-- Visited indicator -->
   @if (!isLoading() && story) {
-    <app-visited-indicator [storyId]="story!.id"></app-visited-indicator>
+    <app-visited-indicator [storyId]="story!.id" />
   }
 
   <!-- Vote Section -->
@@ -44,8 +44,7 @@
         [storyTitle]="story!.title || ''"
         [isTextPost]="isTextPost()"
         (linkClicked)="markAsVisited()"
-      >
-      </app-story-thumbnail>
+      />
     }
   </div>
 
@@ -113,7 +112,7 @@
             @if (story!.by) {
               <span class="inline-flex items-center gap-1">
                 by
-                <app-user-tag [username]="story!.by!"></app-user-tag>
+                <app-user-tag [username]="story!.by!" />
               </span>
             }
             <span class="hidden sm:inline" aria-hidden="true">•</span>
@@ -170,8 +169,7 @@
             (shareStory)="shareStory()"
             (shareComments)="shareComments()"
             (openInNewTab)="openCommentsInNewTab()"
-          >
-          </app-story-actions-menu>
+          />
         }
       </div>
     </div>

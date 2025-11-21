@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, signal, HostListener, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { KeyboardShortcutConfigService } from '../../services/keyboard-shortcut-config.service';
 import { KeyboardContextService } from '../../services/keyboard-context.service';
 
 @Component({
   selector: 'app-keyboard-shortcuts',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     @if (isOpen()) {
       <!-- Backdrop with fade-in -->

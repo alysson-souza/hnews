@@ -12,7 +12,7 @@ import {
   computed,
 } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { CommonModule } from '@angular/common';
+
 import { StoryItem } from '../story-item/story-item';
 import { interval, filter, takeUntil, Subject } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
@@ -25,7 +25,7 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
 @Component({
   selector: 'app-story-list',
   standalone: true,
-  imports: [CommonModule, StoryItem, PageContainerComponent],
+  imports: [StoryItem, PageContainerComponent],
   templateUrl: './story-list.html',
   styleUrl: './story-list.css',
   styles: [

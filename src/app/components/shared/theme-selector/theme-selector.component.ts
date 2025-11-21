@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../../services/theme.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -10,7 +10,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
 @Component({
   selector: 'app-theme-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule],
+  imports: [FormsModule, FontAwesomeModule],
   template: `
     <div class="theme-selector">
       <h2 class="section-subtitle">Theme</h2>
@@ -26,7 +26,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
             aria-label="Auto theme"
           />
           <span class="theme-label">
-            <fa-icon [icon]="faCircleHalfStroke"></fa-icon>
+            <fa-icon [icon]="faCircleHalfStroke" />
             <span class="ml-2">Auto (system)</span>
           </span>
         </label>
@@ -41,7 +41,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
             aria-label="Light theme"
           />
           <span class="theme-label">
-            <fa-icon [icon]="faSun"></fa-icon>
+            <fa-icon [icon]="faSun" />
             <span class="ml-2">Light</span>
           </span>
         </label>
@@ -56,7 +56,7 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
             aria-label="Dark theme"
           />
           <span class="theme-label">
-            <fa-icon [icon]="faMoon"></fa-icon>
+            <fa-icon [icon]="faMoon" />
             <span class="ml-2">Dark</span>
           </span>
         </label>

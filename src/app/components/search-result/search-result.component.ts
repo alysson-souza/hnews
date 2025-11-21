@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import {
   formatRelativeTime,
@@ -29,7 +29,7 @@ interface SearchHit {
 @Component({
   selector: 'app-search-result',
   standalone: true,
-  imports: [CommonModule, RouterLink, ResultMetaComponent],
+  imports: [RouterLink, ResultMetaComponent],
   template: `
     <div class="result-row">
       @if (isStory()) {
@@ -81,7 +81,7 @@ interface SearchHit {
         [itemId]="getItemId()"
         [parentId]="getParentId()"
         [isComment]="isComment()"
-      ></app-result-meta>
+      />
     </div>
   `,
   styles: [

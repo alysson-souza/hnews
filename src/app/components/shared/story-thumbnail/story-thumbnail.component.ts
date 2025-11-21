@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { Component, output, input } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-story-thumbnail',
   standalone: true,
-  imports: [CommonModule, NgOptimizedImage],
+  imports: [NgOptimizedImage],
   template: `
     <div class="thumb">
-      @if (isTextPost) {
+      @if (isTextPost()) {
         <!-- Text post placeholder -->
         <div class="thumb-placeholder">
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,17 +24,17 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
       } @else {
         <!-- Favicon thumbnail -->
         <a
-          [href]="storyUrl"
+          [href]="storyUrl()"
           target="_blank"
           rel="noopener noreferrer nofollow"
           (click)="handleLinkClick()"
           class="thumb-link"
         >
           <img
-            [ngSrc]="getFaviconUrl(storyUrl)"
+            [ngSrc]="getFaviconUrl(storyUrl())"
             width="64"
             height="64"
-            [alt]="'Favicon for ' + storyTitle"
+            [alt]="'Favicon for ' + storyTitle()"
             class="thumb-img-contain"
             decoding="async"
             (error)="handleImageError($event)"
@@ -66,10 +66,10 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
   ],
 })
 export class StoryThumbnailComponent {
-  @Input() storyUrl?: string;
-  @Input({ required: true }) storyTitle = '';
-  @Input() isTextPost = false;
-  @Output() linkClicked = new EventEmitter<void>();
+  readonly storyUrl = input<string>();
+  readonly storyTitle = input.required<string>();
+  readonly isTextPost = input(false);
+  readonly linkClicked = output<void>();
 
   handleLinkClick(): void {
     // Don't prevent default - let the link work normally

@@ -1,34 +1,34 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, input } from '@angular/core';
+
 import { AppHeaderComponent } from '../header/header.component';
 import { AppFooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, AppHeaderComponent, AppFooterComponent],
+  imports: [AppHeaderComponent, AppFooterComponent],
   template: `
     <app-header
-      [offline]="offline"
-      [routerUrl]="routerUrl"
-      [searchQuery]="searchQuery"
-      [mobileMenuOpen]="mobileMenuOpen"
-      [showMobileSearch]="showMobileSearch"
+      [offline]="offline()"
+      [routerUrl]="routerUrl()"
+      [searchQuery]="searchQuery()"
+      [mobileMenuOpen]="mobileMenuOpen()"
+      [showMobileSearch]="showMobileSearch()"
       (searchQueryChange)="searchQueryChange.emit($event)"
       (searchSubmit)="searchSubmit.emit()"
       (desktopSearchKeydown)="desktopSearchKeydown.emit($event)"
       (menuToggleRequested)="menuToggleRequested.emit()"
       (searchToggleRequested)="searchToggleRequested.emit()"
       (closeMenuRequested)="closeMenuRequested.emit()"
-    ></app-header>
+    />
 
     <main class="main-content" role="main" id="main-content">
-      <ng-content select="[shellMain]"></ng-content>
+      <ng-content select="[shellMain]" />
     </main>
 
-    <app-footer [commitShaShort]="commitShaShort" [commitUrl]="commitUrl"></app-footer>
+    <app-footer [commitShaShort]="commitShaShort()" [commitUrl]="commitUrl()" />
   `,
   styles: [
     `
@@ -43,18 +43,18 @@ import { AppFooterComponent } from '../footer/footer.component';
   ],
 })
 export class AppShellComponent {
-  @Input() offline = false;
-  @Input() routerUrl = '';
-  @Input() searchQuery = '';
-  @Input() mobileMenuOpen = false;
-  @Input() showMobileSearch = false;
-  @Input() commitShaShort = '';
-  @Input() commitUrl: string | null = null;
+  readonly offline = input(false);
+  readonly routerUrl = input('');
+  readonly searchQuery = input('');
+  readonly mobileMenuOpen = input(false);
+  readonly showMobileSearch = input(false);
+  readonly commitShaShort = input('');
+  readonly commitUrl = input<string | null>(null);
 
-  @Output() searchQueryChange = new EventEmitter<string>();
-  @Output() searchSubmit = new EventEmitter<void>();
-  @Output() desktopSearchKeydown = new EventEmitter<KeyboardEvent>();
-  @Output() menuToggleRequested = new EventEmitter<void>();
-  @Output() searchToggleRequested = new EventEmitter<void>();
-  @Output() closeMenuRequested = new EventEmitter<void>();
+  readonly searchQueryChange = output<string>();
+  readonly searchSubmit = output<void>();
+  readonly desktopSearchKeydown = output<KeyboardEvent>();
+  readonly menuToggleRequested = output<void>();
+  readonly searchToggleRequested = output<void>();
+  readonly closeMenuRequested = output<void>();
 }

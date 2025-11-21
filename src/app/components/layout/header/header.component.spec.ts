@@ -16,7 +16,7 @@ describe('AppHeaderComponent', () => {
 
     fixture = TestBed.createComponent(AppHeaderComponent);
     component = fixture.componentInstance;
-    component.routerUrl = '/top';
+    fixture.componentRef.setInput('routerUrl', '/top');
   });
 
   it('re-emits search submit from the desktop form', () => {
@@ -32,7 +32,7 @@ describe('AppHeaderComponent', () => {
   });
 
   it('shows the mobile search when requested', () => {
-    component.showMobileSearch = true;
+    fixture.componentRef.setInput('showMobileSearch', true);
     fixture.detectChanges();
 
     const mobileSearch = fixture.nativeElement.querySelector('app-header-mobile-search');
@@ -41,7 +41,7 @@ describe('AppHeaderComponent', () => {
 
   it('shows the mobile menu and emits close events from menu links', () => {
     const closeSpy = jasmine.createSpy('close');
-    component.mobileMenuOpen = true;
+    fixture.componentRef.setInput('mobileMenuOpen', true);
     component.closeMenuRequested.subscribe(closeSpy);
 
     fixture.detectChanges();

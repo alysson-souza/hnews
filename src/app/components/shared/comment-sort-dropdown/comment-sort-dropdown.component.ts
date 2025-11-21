@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, output } from '@angular/core';
 
 export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
 
 @Component({
   selector: 'app-comment-sort-dropdown',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="relative">
       <select
@@ -70,7 +69,7 @@ export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
 export class CommentSortDropdownComponent {
   @Input() sortOrder: CommentSortOrder = 'default';
   @Input() loading = false;
-  @Output() sortChange = new EventEmitter<CommentSortOrder>();
+  readonly sortChange = output<CommentSortOrder>();
 
   onSortChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value as CommentSortOrder;

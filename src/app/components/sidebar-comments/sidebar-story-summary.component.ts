@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
@@ -11,7 +11,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 @Component({
   selector: 'app-sidebar-story-summary',
   standalone: true,
-  imports: [CommonModule, RouterLink, RelativeTimePipe, CommentTextComponent, UserTagComponent],
+  imports: [RouterLink, RelativeTimePipe, CommentTextComponent, UserTagComponent],
   template: `
     <section class="story">
       <h3 class="story-title">
@@ -48,14 +48,14 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         <span>{{ item.score || 0 }} points</span>
         @if (item.by) {
           <span>•</span>
-          <span>by <app-user-tag [username]="item.by"></app-user-tag></span>
+          <span>by <app-user-tag [username]="item.by" /></span>
         }
         <span>•</span>
         <span class="time-text">{{ item.time | relativeTime }}</span>
       </div>
 
       @if (item.text) {
-        <app-comment-text [html]="item.text!"></app-comment-text>
+        <app-comment-text [html]="item.text!" />
       }
 
       @if (showActions) {

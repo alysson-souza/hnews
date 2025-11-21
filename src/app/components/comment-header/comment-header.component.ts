@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
+import { Component, Input, inject, computed, output, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { UpvoteButtonComponent } from '../upvote-button/upvote-button.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
@@ -29,7 +29,7 @@ import { DeviceService } from '../../services/device.service';
       />
 
       @if (by) {
-        <app-user-tag [username]="by!"></app-user-tag>
+        <app-user-tag [username]="by!" />
         @if (isOP()) {
           <app-op-badge />
         }
@@ -40,12 +40,12 @@ import { DeviceService } from '../../services/device.service';
       @if (showExpand) {
         <app-replies-counter
           [count]="repliesCount"
-          [loading]="loadingReplies"
+          [loading]="loadingReplies()"
           (expand)="expand.emit()"
         />
       }
 
-      @if (hasChildren && commentId) {
+      @if (hasChildren() && commentId) {
         <button
           type="button"
           (click)="onViewThread($event)"
@@ -95,22 +95,25 @@ export class CommentHeaderComponent {
   @Input() voted = false;
   @Input() repliesCount = 0;
   @Input() showExpand = false;
-  @Input() loadingReplies = false;
+  readonly loadingReplies = input(false);
   @Input() commentId?: number;
-  @Input() hasChildren = false;
-  @Input() storyAuthor?: string;
-  @Input() isStandalonePage = false;
+  readonly hasChildren = input(false);
+  readonly storyAuthor = input<string>();
+  readonly isStandalonePage = input(false);
 
-  @Output() upvote = new EventEmitter<void>();
-  @Output() expand = new EventEmitter<void>();
+  readonly upvote = output<void>();
+  readonly expand = output<void>();
 
-  isOP = computed(() => this.by && this.storyAuthor && this.by === this.storyAuthor);
+  isOP = computed(() => {
+    const storyAuthor = this.storyAuthor();
+    return this.by && storyAuthor && this.by === storyAuthor;
+  });
 
   onViewThread(event: Event): void {
     event.stopPropagation();
     if (!this.commentId) return;
 
-    if (this.isStandalonePage || this.deviceService.isMobile()) {
+    if (this.isStandalonePage() || this.deviceService.isMobile()) {
       this.router.navigate(['/item', this.commentId]);
     } else {
       this.sidebarService.openSidebarWithSlideAnimation(this.commentId);

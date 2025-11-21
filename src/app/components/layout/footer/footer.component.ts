@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, input } from '@angular/core';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <footer class="app-footer" role="contentinfo">
       <div class="container mx-auto px-4">
@@ -66,10 +65,10 @@ import { CommonModule } from '@angular/common';
                 class="footer-link"
                 aria-label="View current commit on GitHub"
               >
-                {{ commitShaShort }}
+                {{ commitShaShort() }}
               </a>
             } @else {
-              <span>{{ commitShaShort }}</span>
+              <span>{{ commitShaShort() }}</span>
             }
           </p>
         </div>
@@ -118,6 +117,6 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class AppFooterComponent {
-  @Input() commitShaShort = '';
+  readonly commitShaShort = input('');
   @Input() commitUrl: string | null = null;
 }

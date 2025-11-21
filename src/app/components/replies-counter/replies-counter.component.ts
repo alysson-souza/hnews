@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-replies-counter',
@@ -11,10 +11,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       type="button"
       class="expand-btn"
       (click)="onExpandClick($event)"
-      [disabled]="loading || count <= 0"
+      [disabled]="loading() || count <= 0"
       [attr.aria-label]="'Expand ' + count + ' Replies'"
     >
-      @if (loading) {
+      @if (loading()) {
         <span class="flex items-center gap-1">
           <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
@@ -57,8 +57,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class RepliesCounterComponent {
   @Input() count = 0;
-  @Input() loading = false;
-  @Output() expand = new EventEmitter<void>();
+  readonly loading = input(false);
+  readonly expand = output<void>();
 
   onExpandClick(event: Event): void {
     event.stopPropagation();

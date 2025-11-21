@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTime } from '../../services/relative-time.util';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -40,7 +40,6 @@ interface SearchHit {
   selector: 'app-search',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     PageContainerComponent,
     CardComponent,
@@ -186,7 +185,7 @@ interface SearchHit {
               Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
             </ng-container>
             @for (hit of results(); track hit.objectID) {
-              <app-search-result [item]="hit" [isSearchResult]="true"></app-search-result>
+              <app-search-result [item]="hit" [isSearchResult]="true" />
             }
           </app-result-list>
         } @else if (searchQuery && !loading()) {

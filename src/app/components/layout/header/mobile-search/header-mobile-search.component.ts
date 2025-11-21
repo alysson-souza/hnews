@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, model } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-header-mobile-search',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="lg:hidden py-3 px-4 border-t border-gray-200 dark:border-slate-700">
       <form (ngSubmit)="onSubmit()" class="relative" role="search">
@@ -40,26 +40,14 @@ import { FormsModule } from '@angular/forms';
   `,
 })
 export class HeaderMobileSearchComponent {
-  private _searchQuery = '';
-
-  @Input()
-  set searchQuery(value: string) {
-    this._searchQuery = value ?? '';
-  }
-
-  get searchQuery(): string {
-    return this._searchQuery;
-  }
-
-  @Output() searchQueryChange = new EventEmitter<string>();
-  @Output() searchSubmit = new EventEmitter<void>();
+  readonly searchQuery = model('');
+  readonly searchSubmit = output<void>();
 
   onSubmit(): void {
     this.searchSubmit.emit();
   }
 
   onQueryChange(value: string): void {
-    this._searchQuery = value;
-    this.searchQueryChange.emit(value);
+    this.searchQuery.set(value);
   }
 }

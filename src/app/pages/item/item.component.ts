@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
@@ -24,7 +24,6 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
   selector: 'app-item',
   standalone: true,
   imports: [
-    CommonModule,
     CommentThread,
     PageContainerComponent,
     CardComponent,

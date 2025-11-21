@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, input } from '@angular/core';
+
 import { RouterLink } from '@angular/router';
 import { ScrollService } from '../../../../services/scroll.service';
 
 @Component({
   selector: 'app-header-brand',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   template: `
     <div class="flex items-center">
       <a routerLink="/" (click)="scrollToTop()" class="flex items-center gap-2 sm:gap-3 p-2 lg:p-0">
@@ -22,7 +22,7 @@ import { ScrollService } from '../../../../services/scroll.service';
           >HNews</span
         >
       </a>
-      @if (offline) {
+      @if (offline()) {
         <span class="ml-2 sm:ml-3 px-2 py-1 bg-yellow-500 text-white text-xs rounded">Offline</span>
       }
     </div>
@@ -43,7 +43,7 @@ import { ScrollService } from '../../../../services/scroll.service';
   ],
 })
 export class HeaderBrandComponent {
-  @Input() offline = false;
+  readonly offline = input(false);
 
   private scrollService = inject(ScrollService);
 

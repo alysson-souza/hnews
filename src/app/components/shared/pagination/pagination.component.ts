@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, output } from '@angular/core';
+
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-pagination',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule],
+  imports: [FontAwesomeModule],
   template: `
     <nav class="pagination-container" role="navigation" aria-label="Pagination navigation">
       <div class="pagination-info" role="status" aria-live="polite">
@@ -26,7 +26,7 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
           class="pagination-button"
           aria-label="Previous page"
         >
-          <fa-icon [icon]="faChevronLeft" aria-hidden="true"></fa-icon>
+          <fa-icon [icon]="faChevronLeft" aria-hidden="true" />
           Previous
         </button>
 
@@ -54,7 +54,7 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
           aria-label="Next page"
         >
           Next
-          <fa-icon [icon]="faChevronRight" aria-hidden="true"></fa-icon>
+          <fa-icon [icon]="faChevronRight" aria-hidden="true" />
         </button>
       </div>
 
@@ -159,8 +159,8 @@ export class PaginationComponent {
   @Input() itemsPerPage = 5;
   @Input() maxVisiblePages = 5;
 
-  @Output() pageChange = new EventEmitter<number>();
-  @Output() itemsPerPageChange = new EventEmitter<number>();
+  readonly pageChange = output<number>();
+  readonly itemsPerPageChange = output<number>();
 
   faChevronLeft = faChevronLeft;
   faChevronRight = faChevronRight;

@@ -30,7 +30,7 @@
   @if ((loading() && stories().length === 0) || refreshing()) {
     <div role="status" aria-live="polite" aria-label="Loading Stories">
       @for (i of skeletonArray; track i) {
-        <app-story-item [loading]="true"></app-story-item>
+        <app-story-item [loading]="true" />
       }
     </div>
   }
@@ -53,8 +53,7 @@
         [isSelected]="keyboardNavService.selectedIndex() === i"
         [attr.data-story-index]="i"
         [attr.data-story-id]="story.id"
-      >
-      </app-story-item>
+      />
     }
   </div>
 

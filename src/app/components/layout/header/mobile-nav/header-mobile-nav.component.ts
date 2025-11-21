@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output } from '@angular/core';
+
 import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
 
 @Component({
   selector: 'app-header-mobile-nav',
   standalone: true,
-  imports: [CommonModule, NavLinkComponent],
+  imports: [NavLinkComponent],
   template: `
     <nav
       class="lg:hidden py-2 border-t border-gray-200 dark:border-slate-700"
@@ -25,7 +25,7 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
   `,
 })
 export class HeaderMobileNavComponent {
-  @Output() closeMenuRequested = new EventEmitter<void>();
+  readonly closeMenuRequested = output<void>();
 
   onClose(): void {
     this.closeMenuRequested.emit();

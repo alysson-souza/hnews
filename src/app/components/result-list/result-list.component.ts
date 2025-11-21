@@ -1,43 +1,43 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, input } from '@angular/core';
+
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
 @Component({
   selector: 'app-result-list',
   standalone: true,
-  imports: [CommonModule, AppButtonComponent],
+  imports: [AppButtonComponent],
   template: `
     <div class="result-list-container">
       <!-- Header -->
-      @if (showHeader) {
+      @if (showHeader()) {
         <div class="results-header">
           <p class="results-summary">
-            <ng-content select="[header]"></ng-content>
+            <ng-content select="[header]" />
           </p>
         </div>
       }
 
       <!-- Filter -->
-      <ng-content select="[filter]"></ng-content>
+      <ng-content select="[filter]" />
 
       <!-- Results List -->
       <div class="results-list">
-        <ng-content></ng-content>
+        <ng-content />
       </div>
 
       <!-- Load More -->
-      @if (showLoadMore) {
+      @if (showLoadMore()) {
         <div class="pagination-bar">
           <app-button
             (clicked)="loadMore.emit()"
-            [disabled]="loadingMore"
+            [disabled]="loadingMore()"
             variant="primary"
             size="sm"
             [fullWidth]="true"
           >
-            {{ loadingMore ? 'Loading...' : 'Load More' }}
+            {{ loadingMore() ? 'Loading...' : 'Load More' }}
           </app-button>
         </div>
       }
@@ -90,11 +90,11 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
   ],
 })
 export class ResultListComponent {
-  @Input() showHeader = true;
-  @Input() showLoadMore = false;
-  @Input() loadingMore = false;
-  @Input() empty = false;
-  @Input() loading = false;
+  readonly showHeader = input(true);
+  readonly showLoadMore = input(false);
+  readonly loadingMore = input(false);
+  readonly empty = input(false);
+  readonly loading = input(false);
 
-  @Output() loadMore = new EventEmitter<void>();
+  readonly loadMore = output<void>();
 }

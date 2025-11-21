@@ -371,14 +371,14 @@ describe('StoryItem comments link behaviour', () => {
       component.story = story;
       fixture.detectChanges();
 
-      expect(component.actionsMenu).toBeDefined();
+      expect(component.actionsMenu()).toBeDefined();
     });
 
     it('should pass story id to actions menu component', () => {
       component.story = story;
       fixture.detectChanges();
 
-      expect(component.actionsMenu?.storyId).toBe(story.id);
+      expect(component.actionsMenu()?.storyId()).toBe(story.id);
     });
   });
 

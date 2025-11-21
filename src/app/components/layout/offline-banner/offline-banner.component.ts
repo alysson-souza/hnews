@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-offline-banner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     @if (visible) {
       <div

@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-page-container',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div [class]="getContainerClasses()">
-      <ng-content></ng-content>
+      <ng-content />
     </div>
   `,
 })
 export class PageContainerComponent {
-  @Input() variant: 'default' | 'narrow' | 'wide' = 'default';
-  @Input() noPadding = false;
+  readonly variant = input<'default' | 'narrow' | 'wide'>('default');
+  readonly noPadding = input(false);
 
   getContainerClasses(): string {
     const baseClasses = 'mx-auto';
@@ -26,8 +25,8 @@ export class PageContainerComponent {
       wide: 'max-w-7xl px-4',
     };
 
-    const paddingClasses = this.noPadding ? '' : 'py-6 sm:py-8';
+    const paddingClasses = this.noPadding() ? '' : 'py-6 sm:py-8';
 
-    return `${baseClasses} ${variantClasses[this.variant]} ${paddingClasses}`.trim();
+    return `${baseClasses} ${variantClasses[this.variant()]} ${paddingClasses}`.trim();
   }
 }

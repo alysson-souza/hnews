@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-header-mobile-controls',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="flex items-center gap-2 lg:hidden">
       <button
         (click)="onToggleSearch()"
         class="mobile-menu-button"
-        [attr.aria-expanded]="showMobileSearch"
+        [attr.aria-expanded]="showMobileSearch()"
         aria-label="Toggle Search"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,10 +27,10 @@ import { CommonModule } from '@angular/common';
       <button
         (click)="onToggleMenu()"
         class="mobile-menu-button"
-        [attr.aria-expanded]="mobileMenuOpen"
+        [attr.aria-expanded]="mobileMenuOpen()"
         aria-label="Toggle Menu"
       >
-        @if (mobileMenuOpen) {
+        @if (mobileMenuOpen()) {
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -65,10 +64,10 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class HeaderMobileControlsComponent {
-  @Input() mobileMenuOpen = false;
-  @Input() showMobileSearch = false;
-  @Output() menuToggleRequested = new EventEmitter<void>();
-  @Output() searchToggleRequested = new EventEmitter<void>();
+  readonly mobileMenuOpen = input(false);
+  readonly showMobileSearch = input(false);
+  readonly menuToggleRequested = output<void>();
+  readonly searchToggleRequested = output<void>();
 
   onToggleMenu(): void {
     this.menuToggleRequested.emit();

@@ -5,12 +5,12 @@ import {
   Input,
   inject,
   signal,
-  ViewChild,
   ElementRef,
   ChangeDetectionStrategy,
   effect,
+  viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
@@ -20,7 +20,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
 @Component({
   selector: 'app-user-tag',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, FontAwesomeModule],
+  imports: [FormsModule, RouterLink, FontAwesomeModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="user-tag">
@@ -61,7 +61,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
           (keydown.enter)="startEdit($event)"
           (keydown.space)="startEdit($event)"
         >
-          <fa-icon [icon]="faUserTag" class="icon"></fa-icon>
+          <fa-icon [icon]="faUserTag" class="icon" />
         </button>
       }
 
@@ -176,7 +176,7 @@ export class UserTagComponent {
   editValue = '';
   protected faUserTag = faUserTag;
 
-  @ViewChild('tagInput') private tagInput?: ElementRef<HTMLInputElement>;
+  private readonly tagInput = viewChild<ElementRef<HTMLInputElement>>('tagInput');
 
   constructor() {
     // Focus input when editing becomes true
@@ -184,7 +184,7 @@ export class UserTagComponent {
       if (this.editing()) {
         // Use queueMicrotask for more reliable timing after view update
         queueMicrotask(() => {
-          const input = this.tagInput?.nativeElement;
+          const input = this.tagInput()?.nativeElement;
           if (input) {
             input.focus();
             input.select();

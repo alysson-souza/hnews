@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <button
-      [type]="type"
-      [disabled]="disabled"
+      [type]="type()"
+      [disabled]="disabled()"
       (click)="clicked.emit($event)"
       [class]="getButtonClasses()"
-      [attr.aria-label]="ariaLabel"
-      [attr.aria-pressed]="pressed"
+      [attr.aria-label]="ariaLabel()"
+      [attr.aria-pressed]="pressed()"
     >
-      <ng-content></ng-content>
+      <ng-content />
     </button>
   `,
   styles: [
@@ -73,23 +72,23 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class AppButtonComponent {
-  @Input() variant: 'primary' | 'secondary' | 'danger' = 'primary';
-  @Input() size: 'sm' | 'md' | 'lg' = 'md';
-  @Input() disabled = false;
-  @Input() fullWidth = false;
-  @Input() type: 'button' | 'submit' | 'reset' = 'button';
-  @Input() ariaLabel?: string;
-  @Input() pressed?: boolean;
-  @Output() clicked = new EventEmitter<Event>();
+  readonly variant = input<'primary' | 'secondary' | 'danger'>('primary');
+  readonly size = input<'sm' | 'md' | 'lg'>('md');
+  readonly disabled = input(false);
+  readonly fullWidth = input(false);
+  readonly type = input<'button' | 'submit' | 'reset'>('button');
+  readonly ariaLabel = input<string>();
+  readonly pressed = input<boolean>();
+  readonly clicked = output<Event>();
 
   getButtonClasses(): string {
-    const classes = ['btn-base', `btn-${this.variant}`, `btn-${this.size}`];
+    const classes = ['btn-base', `btn-${this.variant()}`, `btn-${this.size()}`];
 
-    if (this.disabled) {
+    if (this.disabled()) {
       classes.push('btn-disabled');
     }
 
-    if (this.fullWidth) {
+    if (this.fullWidth()) {
       classes.push('btn-full');
     }
 

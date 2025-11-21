@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import DOMPurify from 'dompurify';
 import { transformQuotesHtml } from './quote.transform';
@@ -11,7 +11,7 @@ import { highlightCodeBlocks } from './code-highlight.transform';
 @Component({
   selector: 'app-comment-text',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: ` <div class="comment-body" [innerHTML]="processedHtml"></div> `,
   styles: [
     `

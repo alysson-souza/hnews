@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 
 @Component({
   selector: 'app-result-meta',
   standalone: true,
-  imports: [CommonModule, RouterLink, UserTagComponent],
+  imports: [RouterLink, UserTagComponent],
   template: `
     <div class="result-meta">
       @if (author) {
         <span class="flex items-center gap-1">
           <span>by</span>
-          <app-user-tag [username]="author" class="hidden sm:inline-flex"></app-user-tag>
+          <app-user-tag [username]="author" class="hidden sm:inline-flex" />
           <span class="username sm:hidden">{{ author }}</span>
         </span>
         <span>•</span>

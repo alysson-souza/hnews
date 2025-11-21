@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
+import { Component, inject, computed, output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboard-navigation.service';
 import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
@@ -13,13 +13,13 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
     <div
       class="thread-container group"
       [ngClass]="{
-        'thread-indent': depth > 0,
-        collapsed: collapsed,
+        'thread-indent': depth() > 0,
+        collapsed: collapsed(),
       }"
-      [attr.data-comment-id]="commentId"
+      [attr.data-comment-id]="commentId()"
       role="treeitem"
-      [attr.aria-level]="depth + 1"
-      [attr.aria-expanded]="clickable ? !collapsed : null"
+      [attr.aria-level]="depth() + 1"
+      [attr.aria-expanded]="clickable() ? !collapsed() : null"
       [attr.aria-selected]="isKeyboardFocused()"
       tabindex="-1"
     >
@@ -27,28 +27,30 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
       <div class="comment-node" [class.keyboard-focused]="isKeyboardFocused()">
         <div
           class="header"
-          [class.clickable-header]="clickable"
-          [attr.role]="clickable ? 'button' : null"
-          [attr.tabindex]="clickable ? '0' : null"
-          [attr.aria-label]="clickable ? (collapsed ? 'Expand comment' : 'Collapse comment') : null"
-          (click)="clickable ? toggleThread.emit() : null"
-          (keydown.enter)="clickable ? toggleThread.emit() : null"
+          [class.clickable-header]="clickable()"
+          [attr.role]="clickable() ? 'button' : null"
+          [attr.tabindex]="clickable() ? '0' : null"
+          [attr.aria-label]="
+            clickable() ? (collapsed() ? 'Expand comment' : 'Collapse comment') : null
+          "
+          (click)="clickable() ? toggleThread.emit() : null"
+          (keydown.enter)="clickable() ? toggleThread.emit() : null"
           (keydown.space)="
-            clickable ? toggleThread.emit() : null; clickable ? $event.preventDefault() : null
+            clickable() ? toggleThread.emit() : null; clickable() ? $event.preventDefault() : null
           "
         >
-          <ng-content select="[header]"></ng-content>
+          <ng-content select="[header]" />
         </div>
         <div class="content relative">
           <div role="group">
-            <ng-content select="[body]"></ng-content>
+            <ng-content select="[body]" />
           </div>
         </div>
       </div>
 
       <!-- Children/Replies -->
       <div class="children-wrapper">
-        <ng-content select="[children]"></ng-content>
+        <ng-content select="[children]" />
       </div>
     </div>
   `,
@@ -145,21 +147,22 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
   ],
 })
 export class ThreadGutterComponent {
-  @Input() depth = 0;
-  @Input() clickable = true;
-  @Input() collapsed = false;
-  @Input() commentId?: number;
-  @Output() toggleThread = new EventEmitter<void>();
+  readonly depth = input(0);
+  readonly clickable = input(true);
+  readonly collapsed = input(false);
+  readonly commentId = input<number>();
+  readonly toggleThread = output<void>();
 
   private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
 
   // Check if this comment is keyboard-focused
   isKeyboardFocused = computed(() => {
-    if (!this.commentId) return false;
+    const commentId = this.commentId();
+    if (!commentId) return false;
     return (
-      this.sidebarKeyboardNav.isSelected()(this.commentId) ||
-      this.itemKeyboardNav.isSelected()(this.commentId)
+      this.sidebarKeyboardNav.isSelected()(commentId) ||
+      this.itemKeyboardNav.isSelected()(commentId)
     );
   });
 }

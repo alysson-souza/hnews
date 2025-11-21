@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-upvote-button',
@@ -9,13 +9,13 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     <button
       type="button"
       (click)="vote.emit()"
-      [disabled]="disabled || voted"
-      [class.text-blue-600]="!voted"
-      [class.text-gray-400]="voted"
-      [class.opacity-50]="voted"
+      [disabled]="disabled() || voted()"
+      [class.text-blue-600]="!voted()"
+      [class.text-gray-400]="voted()"
+      [class.opacity-50]="voted()"
       class="vote-btn"
-      [attr.aria-label]="ariaLabel || (voted ? 'Already Upvoted' : 'Upvote')"
-      [attr.aria-pressed]="voted"
+      [attr.aria-label]="ariaLabel() || (voted() ? 'Already Upvoted' : 'Upvote')"
+      [attr.aria-pressed]="voted()"
     >
       <svg class="icon" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
         <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
@@ -36,8 +36,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   ],
 })
 export class UpvoteButtonComponent {
-  @Input() voted = false;
-  @Input() disabled = false;
-  @Input() ariaLabel = '';
-  @Output() vote = new EventEmitter<void>();
+  readonly voted = input(false);
+  readonly disabled = input(false);
+  readonly ariaLabel = input('');
+  readonly vote = output<void>();
 }

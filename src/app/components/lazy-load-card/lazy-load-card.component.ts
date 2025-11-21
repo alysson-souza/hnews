@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
@@ -11,16 +11,16 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
   template: `
     <div
       class="comment-load-box"
-      [ngClass]="depth > 0 ? 'thread-indent thread-container group' : ''"
+      [ngClass]="depth() > 0 ? 'thread-indent thread-container group' : ''"
     >
       <app-button
         variant="secondary"
         size="sm"
-        [disabled]="loading"
+        [disabled]="loading()"
         ariaLabel="Load comment"
         (clicked)="loadMore.emit()"
       >
-        @if (loading) {
+        @if (loading()) {
           <span class="flex items-center gap-2">
             <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle
@@ -62,7 +62,7 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
   ],
 })
 export class LazyLoadCardComponent {
-  @Input() loading = false;
-  @Input() depth = 0;
-  @Output() loadMore = new EventEmitter<void>();
+  readonly loading = input(false);
+  readonly depth = input(0);
+  readonly loadMore = output<void>();
 }
