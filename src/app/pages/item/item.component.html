@@ -12,9 +12,6 @@
   } @else if (item()) {
     <!-- Story Details -->
     <app-card class="block mb-6" id="submission-title">
-      <!-- Visited indicator -->
-      <app-visited-indicator [storyId]="item()!.id" />
-
       @if (item()!.type === 'comment') {
         <!-- Discussion title for comment threads -->
         <h1 class="story-title mb-4">Discussion</h1>
