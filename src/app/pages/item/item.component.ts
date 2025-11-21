@@ -11,7 +11,6 @@ import { ScrollService } from '../../services/scroll.service';
 import { CommentSortService } from '../../services/comment-sort.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
-import { VisitedIndicatorComponent } from '../../components/shared/visited-indicator/visited-indicator.component';
 import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/sidebar-story-summary.component';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import {
@@ -27,7 +26,6 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
     CommentThread,
     PageContainerComponent,
     CardComponent,
-    VisitedIndicatorComponent,
     SidebarStorySummaryComponent,
     AppButtonComponent,
     CommentSortDropdownComponent,

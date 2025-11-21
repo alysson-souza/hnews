@@ -10,7 +10,6 @@ import { StoryThumbnailComponent } from '../shared/story-thumbnail/story-thumbna
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { UserTagComponent } from '../user-tag/user-tag.component';
-import { VisitedIndicatorComponent } from '../shared/visited-indicator/visited-indicator.component';
 import { UserSettingsService } from '../../services/user-settings.service';
 import { StoryShareService } from '../../services/story-share.service';
 import { getDomain } from '../../services/domain.utils';
@@ -19,13 +18,7 @@ import { StoryActionsMenuComponent } from './story-actions-menu.component';
 @Component({
   selector: 'app-story-item',
   standalone: true,
-  imports: [
-    RouterLink,
-    StoryThumbnailComponent,
-    UserTagComponent,
-    VisitedIndicatorComponent,
-    StoryActionsMenuComponent,
-  ],
+  imports: [RouterLink, StoryThumbnailComponent, UserTagComponent, StoryActionsMenuComponent],
   templateUrl: './story-item.html',
   styleUrls: ['./story-item.css'],
 })

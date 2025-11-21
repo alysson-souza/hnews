@@ -1,9 +1,4 @@
 <article class="story-card" [class.story-card-selected]="isSelected()" role="article">
-  <!-- Visited indicator -->
-  @if (!isLoading() && story) {
-    <app-visited-indicator [storyId]="story!.id" />
-  }
-
   <!-- Vote Section -->
   <div class="vote-section">
     @if (isLoading()) {
