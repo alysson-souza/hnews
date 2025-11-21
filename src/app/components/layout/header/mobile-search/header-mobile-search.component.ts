@@ -14,8 +14,7 @@ import { FormsModule } from '@angular/forms';
         <input
           type="search"
           name="mobileSearchQuery"
-          [ngModel]="searchQuery"
-          (ngModelChange)="onQueryChange($event)"
+          [(ngModel)]="searchQuery"
           placeholder="Search stories..."
           aria-label="Search Hacker News stories"
           aria-describedby="search-hint"
@@ -45,9 +44,5 @@ export class HeaderMobileSearchComponent {
 
   onSubmit(): void {
     this.searchSubmit.emit();
-  }
-
-  onQueryChange(value: string): void {
-    this.searchQuery.set(value);
   }
 }

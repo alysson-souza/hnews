@@ -16,8 +16,7 @@ import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.
         <input
           type="search"
           name="searchQuery"
-          [ngModel]="searchQuery"
-          (ngModelChange)="onQueryChange($event)"
+          [(ngModel)]="searchQuery"
           (keydown)="onKeydown($event)"
           placeholder="Search stories..."
           aria-label="Search Hacker News stories"
@@ -68,9 +67,5 @@ export class HeaderDesktopSearchComponent {
 
   onKeydown(event: KeyboardEvent): void {
     this.desktopSearchKeydown.emit(event);
-  }
-
-  onQueryChange(value: string): void {
-    this.searchQuery.set(value);
   }
 }
