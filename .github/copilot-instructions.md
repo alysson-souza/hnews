@@ -4,46 +4,73 @@ Concise rules and context to help AI agents work effectively in this Angular 20 
 
 ## Architecture and entry points
 
-- Standalone Angular app (no NgModules). UI components live in `src/app/components`; route-level features in `src/app/pages`. Routes are defined in `src/app/app.routes.ts` and provided in `src/app/app.config.ts` alongside `provideServiceWorker` (prod-only, `registerWhenStable:30000`).
-- State uses Angular Signals in stores under `src/app/stores/`. Example: `StoryListStore` manages paging, refresh, and “new stories” badge via signals and calls into services.
-- Data/services are in `src/app/services/` with API clients in `src/app/data/`. `HackernewsService` orchestrates HN Firebase + Algolia search and composes cache + network flows.
-- PWA assets are in `public/`; Service Worker config is in `ngsw-config.json`.
+- **Framework:** Angular 20 (standalone components, no NgModules).
+- **Structure:**
+  - `src/app/components`: Reusable UI components (kebab-case).
+  - `src/app/pages`: Route-level features (top/best/newest, item, user, search, settings).
+  - `src/app/services`: Data, caching, and logic services.
+  - `src/app/stores`: State management using **Angular Signals** in Injectable services (not NgRx).
+  - `src/app/config`: Configuration providers.
+- **Routing:** Defined in `src/app/app.routes.ts`, provided in `src/app/app.config.ts`.
+- **PWA:** Assets in `public/`; Service Worker config in `ngsw-config.json`.
 
-## Data flow and caching (project-specific)
+## State Management (Signals)
 
-- Use `CacheManagerService` for all cached data. It implements stale‑while‑revalidate and multi‑layer storage: Memory → IndexedDB (primary) → localStorage (fallback) + SW cache for assets. It also emits per‑key updates via `getUpdates(type,key)`.
-- Cache scopes and TTLs are centralized: see `src/app/config/cache.config.ts` and `cache-manager.service.ts` (`story`, `storyList`, `user`, `search`). IndexedDB schema is in `IndexedDBService` with stores `stories`, `storyLists`, `users`, `apiCache` and TTL enforcement/cleanup.
-- Example pattern: `HackernewsService.getTopStories()` calls a private `getStoryIds()` that merges `cache.getWithSWR()` with `cache.getUpdates()` and `shareReplay({bufferSize:1,refCount:true})` for live updates.
-- Key normalization/migration: `IndexedDBService` normalizes list keys (e.g., `newest` → `new`) and migrates legacy keys; `CacheManagerService` performs one‑time migrations and list resets when needed. When adding new cache types, extend `cacheConfigs` and, if persisted, add a store or reuse `apiCache`.
+- Use `signal()`, `computed()`, and `effect()` within Injectable "Store" services (e.g., `StoryListStore`).
+- Stores manage their own state (loading, data, error) and expose read-only signals to components.
+- Components inject stores and bind signals directly to the template.
+
+## Data flow and caching
+
+- **Service:** `HackernewsService` orchestrates API calls.
+- **Caching:** `CacheManagerService` implements stale-while-revalidate.
+  - **Layers:** Memory → IndexedDB (primary) → localStorage (fallback).
+  - **Pattern:** `getWithSWR()` returns cached data immediately, then updates from network.
+- **Persistence:** `IndexedDBService` manages schema (`stories`, `users`, `apiCache`).
+
+## Keyboard Navigation (Core Feature)
+
+- **Architecture:** Centralized command registry pattern.
+  - `CommandRegistryService`: Maps string commands (e.g., 'story.next') to callbacks.
+  - `KeyboardNavigationService`: Handles global shortcuts (j/k for stories).
+  - `BaseCommentNavigationService`: Abstract base for comment threads.
+- **Conventions:**
+  - Use `[role="treeitem"]` for navigable comment threads.
+  - Use class `.load-more-btn` for "Load More" buttons to enable J/K triggering.
+  - Implement `registerCommands()` in navigation services.
 
 ## UI patterns
 
-- Components use Tailwind CSS v4 (global in `src/styles.css`) and selectors prefixed with `app-`. Keep files kebab‑case; classes in PascalCase with suffixes (`FooComponent`, `BarService`).
-- Feed and comments follow a two‑phase loading UX: render cached data immediately, then refresh details in background (see `StoryListStore.refresh()` → `refreshStoryDetails`).
-- Keyboard navigation: see `components/keyboard-shortcuts/` and `services/keyboard-navigation.service.ts` for Vim‑style shortcuts and help dialog.
-- Comment rendering and lazy loading: `components/comment-thread/`, `comment-text/`, `comment-header/`.
+- **Styling:** Tailwind CSS v4 (global in `src/styles.css`).
+  - Use `@apply` in component styles for complex composites.
+  - Dark mode via `.dark` class (handled by `ThemeService`).
+- **Components:**
+  - Prefix selectors with `app-`.
+  - Use `changeDetection: ChangeDetectionStrategy.OnPush` (default in Angular 19+).
+- **Comments:**
+  - Recursive `CommentThread` component.
+  - Lazy loading via `CommentRepliesLoaderService`.
+  - "Two-phase loading": Render cached -> fetch fresh.
 
 ## Developer workflows
 
-- Start: `npm start` (http://localhost:4200)
-- Build: `npm run build` (dev) | `npm run build:prod` (prod; pass `--base-href` for subpaths, e.g., Pages)
-- Test: `npm test` (single‑run, Karma + Jasmine) | `npm run test:watch`
-- E2E: `npm run e2e` (single‑run, Playwright; list reporter locally, dot on CI) | `npm run e2e:ui` (interactive watch mode) | `npm run e2e:chromium` (single browser)
-- Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
-- Lint/Format: `npm run lint` | `npm run format`
-- Deploy: `npm run deploy` (GitHub Pages via `angular-cli-ghpages`)
+- **Start:** `npm start` (http://localhost:4200)
+- **Test:**
+  - Unit: `npm test` (Karma/Jasmine). Use `npm run test:watch` for TDD.
+  - E2E: `npm run e2e` (Playwright).
+- **Lint/Format:** `npm run lint` (ESLint), `npm run format` (Prettier).
+- **Build:** `npm run build` (dev), `npm run build:prod` (production).
 
 ## Conventions and edit rules
 
-- Comments: no narration/change‑logs. Only add comments that clarify intent, constraints, non‑obvious logic, or public contracts.
-- Tests: place `*.spec.ts` next to code; prefer shallow component tests and mock network calls.
-- Node 22.x (`.nvmrc`) and npm 9+ recommended. TypeScript single quotes; ~100 char width (Prettier).
+- **Comments:** No narration. Explain _why_, not _what_.
+- **Tests:** Place `*.spec.ts` next to code. Mock network calls.
+- **Imports:** Use absolute paths or relative for siblings.
+- **File Naming:** `kebab-case` files, `PascalCase` classes.
 
-## Code pointers (start here)
+## Code pointers
 
-- Stores: `src/app/stores/story-list.store.ts` (signals, paging, auto‑refresh), `user.store.ts`.
-- Data: `src/app/services/hackernews.service.ts` (SWR + updates), `src/app/data/hn-api.client.ts`, `algolia-api.client.ts`.
-- Cache: `src/app/services/cache-manager.service.ts`, `indexed-db.service.ts`, `config/cache.config.ts`.
-- UX: `components/story-list/`, `comment-thread/`, `keyboard-shortcuts/`, theme in `services/theme.service.ts`.
-
-For more, see `AGENTS.md` and `README.md`. If any section is unclear or missing, ask and we’ll refine this file.
+- **Store:** `src/app/stores/story-list.store.ts` (Signal-based state).
+- **Nav:** `src/app/services/base-comment-navigation.service.ts` (J/K logic).
+- **Data:** `src/app/services/hackernews.service.ts` (API + Cache).
+- **UI:** `src/app/components/story-list/story-list.ts`, `src/app/components/comment-thread/comment-thread.ts`.
