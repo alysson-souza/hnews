@@ -16,7 +16,7 @@ import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.
         <input
           type="search"
           name="searchQuery"
-          [ngModel]="searchQuery"
+          [ngModel]="searchQuery()"
           (ngModelChange)="onQueryChange($event)"
           (keydown)="onKeydown($event)"
           placeholder="Search stories..."

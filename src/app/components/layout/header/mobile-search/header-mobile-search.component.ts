@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
         <input
           type="search"
           name="mobileSearchQuery"
-          [ngModel]="searchQuery"
+          [ngModel]="searchQuery()"
           (ngModelChange)="onQueryChange($event)"
           placeholder="Search stories..."
           aria-label="Search Hacker News stories"
