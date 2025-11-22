@@ -12,7 +12,7 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
   viewProviders: [provideIcons({ solarAltArrowLeftLinear, solarAltArrowRightLinear })],
   template: `
     <nav class="pagination-container" role="navigation" aria-label="Pagination navigation">
-      <div class="pagination-info" role="status" aria-live="polite">
+      <div class="pagination-info hidden sm:block" role="status" aria-live="polite">
         <span class="text-sm text-gray-600 dark:text-gray-400">
           Showing {{ startItem }}-{{ endItem }} of {{ totalCount }} items
         </span>
@@ -59,7 +59,7 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
         </button>
       </div>
 
-      <div class="items-per-page">
+      <div class="items-per-page hidden sm:flex">
         <label for="items-per-page" class="text-sm text-gray-600 dark:text-gray-400">
           Items per page
         </label>
@@ -144,7 +144,7 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
       }
 
       .items-per-page {
-        @apply flex items-center order-3 mx-2 gap-2;
+        @apply items-center order-3 mx-2 gap-2;
       }
 
       .items-select {
