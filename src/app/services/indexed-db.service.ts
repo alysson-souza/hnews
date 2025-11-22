@@ -167,7 +167,6 @@ export class IndexedDBService {
       });
     } catch (error) {
       console.error('IndexedDB set error:', error);
-      return Promise.reject(error);
     }
   }
 
@@ -188,7 +187,6 @@ export class IndexedDBService {
       });
     } catch (error) {
       console.error('IndexedDB delete error:', error);
-      return Promise.reject(error);
     }
   }
 
