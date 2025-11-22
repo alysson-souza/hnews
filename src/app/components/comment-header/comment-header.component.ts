@@ -64,11 +64,11 @@ import { DeviceService } from '../../services/device.service';
       @reference '../../../styles.css';
 
       .comment-header {
-        @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
+        @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-slate-400;
         @apply w-full min-h-8;
       }
       .time-text {
-        @apply text-gray-500 dark:text-gray-500;
+        @apply text-gray-500 dark:text-slate-500;
       }
       .view-thread-inline {
         @apply inline-flex items-center justify-center;

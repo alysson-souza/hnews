@@ -18,7 +18,7 @@ import { highlightCodeBlocks } from './code-highlight.transform';
       @reference '../../../styles.css';
 
       .comment-body {
-        @apply prose prose-sm max-w-none text-gray-700 dark:text-gray-300 text-[15px] leading-7 tracking-normal;
+        @apply prose prose-sm max-w-none text-gray-700 dark:text-slate-300 text-[15px] leading-7 tracking-normal;
         text-wrap: pretty;
       }
       .comment-body.dark {
@@ -41,7 +41,7 @@ import { highlightCodeBlocks } from './code-highlight.transform';
         @apply bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700/60 overflow-x-auto my-4 shadow-sm;
       }
       .comment-body code {
-        @apply font-mono text-xs sm:text-sm text-gray-800 dark:text-gray-200;
+        @apply font-mono text-xs sm:text-sm text-gray-800 dark:text-slate-200;
       }
       .comment-body pre code {
         @apply p-4 block;

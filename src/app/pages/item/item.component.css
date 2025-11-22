@@ -2,7 +2,7 @@
 
 /* Skeleton */
 .skeleton-card {
-  @apply bg-white dark:bg-slate-800/80 border border-gray-100 dark:border-slate-700/50 rounded-2xl shadow-sm p-6 mb-6 backdrop-blur-sm;
+  @apply bg-white dark:bg-slate-900/80 border border-gray-100 dark:border-slate-700/50 rounded-2xl shadow-sm p-6 mb-6 backdrop-blur-sm;
 }
 .skel-title {
   @apply h-8 bg-gray-100 dark:bg-slate-700/50 rounded-lg w-3/4 animate-pulse;

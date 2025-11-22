@@ -46,8 +46,8 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
       .search-button {
         @apply absolute right-2 top-1/2 -translate-y-1/2;
         @apply flex items-center justify-center;
-        @apply text-gray-500 dark:text-blue-300;
-        @apply hover:text-gray-700 dark:hover:text-blue-200;
+        @apply text-gray-500 dark:text-slate-400;
+        @apply hover:text-gray-700 dark:hover:text-blue-400;
         @apply cursor-pointer;
       }
     `,

@@ -90,7 +90,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         @apply flex gap-3 mt-3;
       }
       .open-link {
-        @apply text-blue-600 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+        @apply text-blue-600 dark:text-blue-400 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
       }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;

@@ -35,7 +35,7 @@ html {
 }
 
 html.dark {
-  background-color: #172554; /* blue-950 */
+  background-color: #020617; /* slate-950 */
 }
 
 /* Skeleton loader utility with gentle pulse */
@@ -165,11 +165,11 @@ html.dark {
   background-color: #94a3b8; /* slate-400 */
 }
 
-/* Dark mode scrollbar (blue-tinted) */
+/* Dark mode scrollbar (slate-tinted) */
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar {
     width: 12px;
-    background-color: #0b1120; /* deep blue */
+    background-color: #020617; /* slate-950 */
   }
   ::-webkit-scrollbar-thumb {
     background-color: #334155; /* slate-600 */
@@ -182,7 +182,7 @@ html.dark {
 
 .dark ::-webkit-scrollbar {
   width: 12px;
-  background-color: #0b1120;
+  background-color: #020617;
 }
 .dark ::-webkit-scrollbar-thumb {
   background-color: #334155;

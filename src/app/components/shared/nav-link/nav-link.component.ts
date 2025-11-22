@@ -25,7 +25,7 @@ import { ScrollService } from '../../../services/scroll.service';
       @reference '../../../../styles.css';
 
       .nav-link {
-        @apply text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-full font-medium text-sm;
+        @apply text-gray-500 dark:text-slate-400 px-3 py-1.5 rounded-full font-medium text-sm;
         @apply hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400;
         @apply transition-all duration-200 cursor-pointer;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
@@ -36,7 +36,7 @@ import { ScrollService } from '../../../services/scroll.service';
       }
 
       .nav-link-mobile {
-        @apply block text-gray-600 dark:text-gray-300 px-4 py-3 transition-colors font-medium border-l-4 border-transparent;
+        @apply block text-gray-600 dark:text-slate-300 px-4 py-3 transition-colors font-medium border-l-4 border-transparent;
         @apply hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400;
       }
 
