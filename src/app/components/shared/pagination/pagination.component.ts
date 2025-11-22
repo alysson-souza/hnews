@@ -2,13 +2,14 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, output } from '@angular/core';
 
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-pagination',
   standalone: true,
-  imports: [FontAwesomeModule],
+  imports: [NgIconComponent],
+  viewProviders: [provideIcons({ solarAltArrowLeftLinear, solarAltArrowRightLinear })],
   template: `
     <nav class="pagination-container" role="navigation" aria-label="Pagination navigation">
       <div class="pagination-info" role="status" aria-live="polite">
@@ -26,7 +27,7 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
           class="pagination-button"
           aria-label="Previous page"
         >
-          <fa-icon [icon]="faChevronLeft" aria-hidden="true" />
+          <ng-icon name="solarAltArrowLeftLinear" aria-hidden="true" />
           Previous
         </button>
 
@@ -54,7 +55,7 @@ import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons
           aria-label="Next page"
         >
           Next
-          <fa-icon [icon]="faChevronRight" aria-hidden="true" />
+          <ng-icon name="solarAltArrowRightLinear" aria-hidden="true" />
         </button>
       </div>
 
@@ -161,9 +162,6 @@ export class PaginationComponent {
 
   readonly pageChange = output<number>();
   readonly itemsPerPageChange = output<number>();
-
-  faChevronLeft = faChevronLeft;
-  faChevronRight = faChevronRight;
 
   get startItem(): number {
     return this.totalCount === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;

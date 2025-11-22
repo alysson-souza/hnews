@@ -40,7 +40,7 @@ describe('PaginationComponent', () => {
   });
 
   it('should emit page change when going to next page', () => {
-    spyOn(component.pageChange, 'emit');
+    vi.spyOn(component.pageChange, 'emit');
     component.currentPage = 1;
     component.totalPages = 3;
 
@@ -50,7 +50,7 @@ describe('PaginationComponent', () => {
   });
 
   it('should emit page change when going to previous page', () => {
-    spyOn(component.pageChange, 'emit');
+    vi.spyOn(component.pageChange, 'emit');
     component.currentPage = 3;
 
     component.previousPage();
@@ -59,7 +59,7 @@ describe('PaginationComponent', () => {
   });
 
   it('should emit items per page change when selection changes', () => {
-    spyOn(component.itemsPerPageChange, 'emit');
+    vi.spyOn(component.itemsPerPageChange, 'emit');
     const event = { target: { value: '25' } } as unknown as Event;
 
     component.onItemsPerPageChange(event);

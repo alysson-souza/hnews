@@ -2,13 +2,14 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, ElementRef, signal, OnInit, output, input, viewChild } from '@angular/core';
 
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-story-actions-menu',
   standalone: true,
-  imports: [FontAwesomeModule],
+  imports: [NgIconComponent],
+  viewProviders: [provideIcons({ solarMenuDotsLinear })],
   template: `
     <div class="story-actions-container">
       <button
@@ -24,7 +25,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
         [attr.id]="buttonId()"
         [title]="'More Actions'"
       >
-        <fa-icon [icon]="faEllipsisVertical" class="text-[16px] sm:text-[20px]" />
+        <ng-icon name="solarMenuDotsLinear" class="text-[16px] sm:text-[20px]" />
       </button>
 
       @if (isOpen()) {
@@ -124,8 +125,6 @@ export class StoryActionsMenuComponent implements OnInit {
 
   buttonId = signal('');
   menuId = signal('');
-
-  faEllipsisVertical = faEllipsisVertical;
 
   ngOnInit(): void {
     this.updateIds();

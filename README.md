@@ -1,6 +1,6 @@
 # HNews — Hacker News Reader
 
-Alternative frontend for Hacker News built with Angular 20.
+Alternative frontend for Hacker News built with Angular 21.
 
 Live demo: https://alysson-souza.github.io/hnews/
 
@@ -37,14 +37,14 @@ Live demo: https://alysson-souza.github.io/hnews/
 
 ## Tech Stack
 
-- Angular 20 (standalone components, signals)
+- Angular 21 (standalone components, signals)
 - Tailwind CSS v4 (with @tailwind/postcss)
 - TypeScript 5.8, RxJS 7.8
 - highlight.js (syntax highlighting with auto-detection)
 - Angular Service Worker (PWA)
 - ESLint (angular-eslint), Prettier, Husky + lint-staged
 - APIs: Hacker News Firebase, Algolia HN Search
-- Testing: Jasmine + Karma (unit), Playwright (e2e)
+- Testing: Vitest (unit), Playwright (e2e)
 
 ## Getting Started
 

@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -13,7 +14,12 @@ describe('ScrollService', () => {
     service = TestBed.inject(ScrollService);
 
     // Mock window.scrollTo
-    spyOn(window, 'scrollTo');
+    vi.spyOn(window, 'scrollTo');
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should be created', () => {
@@ -55,7 +61,7 @@ describe('ScrollService', () => {
 
     beforeEach(() => {
       mockElement = {
-        getBoundingClientRect: jasmine.createSpy('getBoundingClientRect').and.returnValue({
+        getBoundingClientRect: vi.fn().mockReturnValue({
           top: 100,
           height: 50,
           width: 300,
@@ -65,13 +71,11 @@ describe('ScrollService', () => {
           x: 0,
           y: 100,
         }),
-      } as jasmine.SpyObj<HTMLElement>;
+      } as MockedObject<HTMLElement>;
 
-      spyOn(document, 'getElementById').and.returnValue(mockElement);
-      spyOn(document, 'querySelector').and.returnValue({
-        getBoundingClientRect: jasmine
-          .createSpy('getBoundingClientRect')
-          .and.returnValue({ height: 80 }),
+      vi.spyOn(document, 'getElementById').mockReturnValue(mockElement);
+      vi.spyOn(document, 'querySelector').mockReturnValue({
+        getBoundingClientRect: vi.fn().mockReturnValue({ height: 80 }),
       } as unknown as HTMLElement);
     });
 
@@ -83,7 +87,7 @@ describe('ScrollService', () => {
     });
 
     it('should handle element not found', async () => {
-      (document.getElementById as jasmine.Spy).and.returnValue(null);
+      (document.getElementById as Mock).mockReturnValue(null);
 
       await service.scrollToElement('non-existent');
 
@@ -91,7 +95,7 @@ describe('ScrollService', () => {
     });
 
     it('should handle missing header gracefully', async () => {
-      (document.querySelector as jasmine.Spy).and.returnValue(null);
+      (document.querySelector as Mock).mockReturnValue(null);
 
       await service.scrollToElement('test-element');
 
@@ -102,8 +106,8 @@ describe('ScrollService', () => {
   describe('scrollElementIntoView', () => {
     it('should scroll element into view with default options', async () => {
       const element = {
-        scrollIntoView: jasmine.createSpy('scrollIntoView'),
-      } as jasmine.SpyObj<HTMLElement>;
+        scrollIntoView: vi.fn(),
+      } as MockedObject<HTMLElement>;
 
       await service.scrollElementIntoView(element);
 
@@ -116,8 +120,8 @@ describe('ScrollService', () => {
 
     it('should accept custom scroll into view options', async () => {
       const element = {
-        scrollIntoView: jasmine.createSpy('scrollIntoView'),
-      } as jasmine.SpyObj<HTMLElement>;
+        scrollIntoView: vi.fn(),
+      } as MockedObject<HTMLElement>;
       const options = {
         behavior: 'auto' as ScrollBehavior,
         block: 'start' as ScrollLogicalPosition,
@@ -134,8 +138,8 @@ describe('ScrollService', () => {
     it('should return header height when header exists', () => {
       const mockHeader = {
         getBoundingClientRect: () => ({ height: 100 }),
-      } as jasmine.SpyObj<HTMLElement>;
-      spyOn(document, 'querySelector').and.returnValue(mockHeader);
+      } as MockedObject<HTMLElement>;
+      vi.spyOn(document, 'querySelector').mockReturnValue(mockHeader);
 
       const height = service.getHeaderHeight();
 
@@ -144,7 +148,7 @@ describe('ScrollService', () => {
     });
 
     it('should return fallback height when header does not exist', () => {
-      spyOn(document, 'querySelector').and.returnValue(null);
+      vi.spyOn(document, 'querySelector').mockReturnValue(null);
 
       const height = service.getHeaderHeight();
 

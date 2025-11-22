@@ -8,12 +8,14 @@ describe('NetworkStateService', () => {
   let originalNavigatorOnLine: boolean;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     TestBed.configureTestingModule({});
     // Save original navigator.onLine value
     originalNavigatorOnLine = navigator.onLine;
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     // Restore navigator.onLine
     Object.defineProperty(navigator, 'onLine', {
       writable: true,
@@ -178,22 +180,18 @@ describe('NetworkStateService', () => {
       expect(service.offlineDuration()).toBe(0);
     });
 
-    it('should return positive duration when offline', (done) => {
+    it('should return positive duration when offline', () => {
       window.dispatchEvent(new Event('offline'));
-      setTimeout(() => {
-        expect(service.offlineDuration()).toBeGreaterThan(0);
-        done();
-      }, 50);
+      vi.advanceTimersByTime(50);
+      expect(service.offlineDuration()).toBeGreaterThan(0);
     });
 
-    it('should reset to 0 when going back online', (done) => {
+    it('should reset to 0 when going back online', () => {
       window.dispatchEvent(new Event('offline'));
-      setTimeout(() => {
-        expect(service.offlineDuration()).toBeGreaterThan(0);
-        window.dispatchEvent(new Event('online'));
-        expect(service.offlineDuration()).toBe(0);
-        done();
-      }, 50);
+      vi.advanceTimersByTime(50);
+      expect(service.offlineDuration()).toBeGreaterThan(0);
+      window.dispatchEvent(new Event('online'));
+      expect(service.offlineDuration()).toBe(0);
     });
   });
 
@@ -211,15 +209,13 @@ describe('NetworkStateService', () => {
       expect(service.getOfflineDurationFormatted()).toBe('');
     });
 
-    it('should return seconds for short durations', (done) => {
+    it('should return seconds for short durations', () => {
       // Mock offlineSince to be 2 seconds ago
       const twoSecondsAgo = new Date(Date.now() - 2000);
       service.offlineSince.set(twoSecondsAgo);
-      setTimeout(() => {
-        const formatted = service.getOfflineDurationFormatted();
-        expect(formatted).toContain('second');
-        done();
-      }, 10);
+      vi.advanceTimersByTime(10);
+      const formatted = service.getOfflineDurationFormatted();
+      expect(formatted).toContain('second');
     });
 
     it('should format singular second correctly', () => {
@@ -274,10 +270,10 @@ describe('NetworkStateService', () => {
   describe('cleanup', () => {
     it('should remove event listeners on destroy', () => {
       service = TestBed.inject(NetworkStateService);
-      const removeEventListenerSpy = spyOn(window, 'removeEventListener');
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
       service.ngOnDestroy();
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('online', jasmine.any(Function));
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('offline', jasmine.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('online', expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('offline', expect.any(Function));
     });
 
     it('should not throw error when destroyed without window', () => {

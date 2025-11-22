@@ -23,7 +23,7 @@ describe('SidebarCommentsHeaderComponent', () => {
   });
 
   it('should emit dismiss event when close button is clicked', () => {
-    spyOn(component.dismiss, 'emit');
+    vi.spyOn(component.dismiss, 'emit');
 
     const closeBtn = fixture.debugElement.query(By.css('.close-btn'));
     closeBtn.nativeElement.click();

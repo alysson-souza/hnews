@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -18,22 +19,26 @@ class TestNavigationService extends BaseCommentNavigationService {
 
 describe('BaseCommentNavigationService', () => {
   let service: TestNavigationService;
-  let interactionServiceSpy: jasmine.SpyObj<SidebarCommentsInteractionService>;
+  let interactionServiceSpy: MockedObject<SidebarCommentsInteractionService>;
   beforeEach(() => {
-    const interactionSpy = jasmine.createSpyObj('SidebarCommentsInteractionService', [
-      'dispatchAction',
-    ]);
+    const interactionSpy = {
+      dispatchAction: vi.fn(),
+    };
     TestBed.configureTestingModule({
       providers: [
         TestNavigationService,
         { provide: SidebarCommentsInteractionService, useValue: interactionSpy },
         {
           provide: CommandRegistryService,
-          useValue: jasmine.createSpyObj('CommandRegistryService', ['register']),
+          useValue: {
+            register: vi.fn(),
+          },
         },
         {
           provide: ScrollService,
-          useValue: jasmine.createSpyObj('ScrollService', ['scrollToHTMLElement']),
+          useValue: {
+            scrollToHTMLElement: vi.fn(),
+          },
         },
       ],
     });
@@ -41,7 +46,7 @@ describe('BaseCommentNavigationService', () => {
     service = TestBed.inject(TestNavigationService);
     interactionServiceSpy = TestBed.inject(
       SidebarCommentsInteractionService,
-    ) as jasmine.SpyObj<SidebarCommentsInteractionService>;
+    ) as MockedObject<SidebarCommentsInteractionService>;
   });
 
   it('should be created', () => {
@@ -60,8 +65,8 @@ describe('BaseCommentNavigationService', () => {
 
   it('should check if a comment is selected', () => {
     service.selectedCommentId.set(123);
-    expect(service.isSelected()(123)).toBeTrue();
-    expect(service.isSelected()(456)).toBeFalse();
+    expect(service.isSelected()(123)).toBe(true);
+    expect(service.isSelected()(456)).toBe(false);
   });
 
   describe('Interaction Methods', () => {

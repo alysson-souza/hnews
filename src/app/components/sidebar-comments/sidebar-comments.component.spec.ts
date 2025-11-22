@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -14,10 +15,10 @@ import { HNItem } from '../../models/hn';
 describe('SidebarCommentsComponent', () => {
   let component: SidebarCommentsComponent;
   let fixture: ComponentFixture<SidebarCommentsComponent>;
-  let mockHnService: jasmine.SpyObj<HackernewsService>;
-  let mockSidebarService: jasmine.SpyObj<SidebarService>;
-  let mockVisitedService: jasmine.SpyObj<VisitedService>;
-  let mockCommentSortService: jasmine.SpyObj<CommentSortService>;
+  let mockHnService: MockedObject<HackernewsService>;
+  let mockSidebarService: MockedObject<SidebarService>;
+  let mockVisitedService: MockedObject<VisitedService>;
+  let mockCommentSortService: MockedObject<CommentSortService>;
 
   const mockItem: HNItem = {
     id: 123,
@@ -60,35 +61,33 @@ describe('SidebarCommentsComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockHnService = jasmine.createSpyObj('HackernewsService', [
-      'getItem',
-      'getStoryTopLevelComments',
-    ]);
-    mockSidebarService = jasmine.createSpyObj(
-      'SidebarService',
-      [
-        'closeSidebar',
-        'goBack',
-        'canGoBack',
-        'isTransitioning',
-        'animatingOut',
-        'animationDirection',
-      ],
-      {
-        isOpen: jasmine.createSpy().and.returnValue(true),
-        currentItemId: jasmine.createSpy().and.returnValue(123),
-      },
-    );
+    mockHnService = {
+      getItem: vi.fn(),
+      getStoryTopLevelComments: vi.fn(),
+    } as unknown as MockedObject<HackernewsService>;
+    mockSidebarService = {
+      closeSidebar: vi.fn(),
+      goBack: vi.fn(),
+      canGoBack: vi.fn(),
+      isTransitioning: vi.fn(),
+      animatingOut: vi.fn(),
+      animationDirection: vi.fn(),
+      isOpen: vi.fn().mockReturnValue(true),
+      currentItemId: vi.fn().mockReturnValue(123),
+    } as unknown as MockedObject<SidebarService>;
     // Set default return values for methods used in template
-    (mockSidebarService.canGoBack as jasmine.Spy).and.returnValue(false);
-    (mockSidebarService.isTransitioning as jasmine.Spy).and.returnValue(false);
-    (mockSidebarService.animatingOut as jasmine.Spy).and.returnValue(false);
-    (mockSidebarService.animationDirection as jasmine.Spy).and.returnValue('right');
+    (mockSidebarService.canGoBack as Mock).mockReturnValue(false);
+    (mockSidebarService.isTransitioning as Mock).mockReturnValue(false);
+    (mockSidebarService.animatingOut as Mock).mockReturnValue(false);
+    (mockSidebarService.animationDirection as Mock).mockReturnValue('right');
 
-    mockVisitedService = jasmine.createSpyObj('VisitedService', ['markAsVisited']);
-    mockCommentSortService = jasmine.createSpyObj('CommentSortService', ['setSortOrder'], {
+    mockVisitedService = {
+      markAsVisited: vi.fn(),
+    } as unknown as MockedObject<VisitedService>;
+    mockCommentSortService = {
+      setSortOrder: vi.fn(),
       sortOrder: signal('default'),
-    });
+    } as unknown as MockedObject<CommentSortService>;
 
     await TestBed.configureTestingModule({
       imports: [SidebarCommentsComponent],
@@ -101,8 +100,8 @@ describe('SidebarCommentsComponent', () => {
       ],
     }).compileComponents();
 
-    mockHnService.getItem.and.returnValue(of(mockItem));
-    mockHnService.getStoryTopLevelComments.and.returnValue(of(mockComments));
+    mockHnService.getItem.mockReturnValue(of(mockItem));
+    mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
 
     fixture = TestBed.createComponent(SidebarCommentsComponent);
     component = fixture.componentInstance;
@@ -222,7 +221,7 @@ describe('SidebarCommentsComponent', () => {
     });
 
     it('should fallback to default order on error', () => {
-      mockHnService.getStoryTopLevelComments.and.returnValue(
+      mockHnService.getStoryTopLevelComments.mockReturnValue(
         throwError(() => new Error('Test error')),
       );
 
@@ -248,8 +247,8 @@ describe('SidebarCommentsComponent', () => {
       };
 
       // Mock the service to return this item
-      mockHnService.getItem.and.returnValue(of(storyWithKids));
-      (mockSidebarService.currentItemId as jasmine.Spy).and.returnValue(456);
+      mockHnService.getItem.mockReturnValue(of(storyWithKids));
+      (mockSidebarService.currentItemId as Mock).mockReturnValue(456);
 
       // Trigger the effect by setting the item
       component.item.set(storyWithKids);
@@ -272,8 +271,8 @@ describe('SidebarCommentsComponent', () => {
       };
 
       // Mock the service to return this item
-      mockHnService.getItem.and.returnValue(of(commentWithKids));
-      (mockSidebarService.currentItemId as jasmine.Spy).and.returnValue(789);
+      mockHnService.getItem.mockReturnValue(of(commentWithKids));
+      (mockSidebarService.currentItemId as Mock).mockReturnValue(789);
 
       // Trigger the effect by setting the item
       component.item.set(commentWithKids);
@@ -295,8 +294,8 @@ describe('SidebarCommentsComponent', () => {
       };
 
       // Mock the service to return this item
-      mockHnService.getItem.and.returnValue(of(itemWithoutKids));
-      (mockSidebarService.currentItemId as jasmine.Spy).and.returnValue(999);
+      mockHnService.getItem.mockReturnValue(of(itemWithoutKids));
+      (mockSidebarService.currentItemId as Mock).mockReturnValue(999);
 
       // Trigger the effect by setting the item
       component.item.set(itemWithoutKids);

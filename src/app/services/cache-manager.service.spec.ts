@@ -351,8 +351,12 @@ describe('CacheManagerService', () => {
       const values1: number[] = [];
       const values2: number[] = [];
 
-      const updates1$ = service.getUpdates<{ id: number }>('story', '1');
-      const updates2$ = service.getUpdates<{ id: number }>('story', '1');
+      const updates1$ = service.getUpdates<{
+        id: number;
+      }>('story', '1');
+      const updates2$ = service.getUpdates<{
+        id: number;
+      }>('story', '1');
 
       const sub1 = updates1$.subscribe((v) => values1.push(v.id));
       const sub2 = updates2$.subscribe((v) => values2.push(v.id));
@@ -401,11 +405,10 @@ describe('CacheManagerService', () => {
       const result = await service.getOfflineData();
 
       // Verify results with better error messages
-      expect(result.stories.length)
-        .withContext(
-          `Expected 2 stories but got ${result.stories.length}. Stories: ${JSON.stringify(result.stories)}`,
-        )
-        .toBe(2);
+      expect(
+        result.stories.length,
+        `Expected 2 stories but got ${result.stories.length}. Stories: ${JSON.stringify(result.stories)}`,
+      ).toBe(2);
       expect(result.hasMore).toBe(false);
     });
   });
@@ -489,10 +492,13 @@ describe('CacheManagerService', () => {
       cacheService.set('story_999', { id: 999, title: 'Fallback Story' });
 
       // Spy on IndexedDB to return null (simulating failure)
-      spyOn(indexedDBService, 'getStory').and.returnValue(Promise.resolve(null));
+      vi.spyOn(indexedDBService, 'getStory').mockReturnValue(Promise.resolve(null));
 
       // This should fall back to localStorage
-      const result = await service.get<{ id: number; title: string }>('story', '999');
+      const result = await service.get<{
+        id: number;
+        title: string;
+      }>('story', '999');
 
       // Should have tried IndexedDB first
       expect(indexedDBService.getStory).toHaveBeenCalledWith(999);

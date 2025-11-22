@@ -2,6 +2,9 @@
 // Copyright (C) 2025 Alysson Souza
 // Global test setup for Karma + Jasmine
 // - Polyfill window.matchMedia used by ThemeService
+// - Mock IndexedDB
+
+import 'fake-indexeddb/auto';
 
 // In some environments, `matchMedia` may exist but not be a function.
 if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {

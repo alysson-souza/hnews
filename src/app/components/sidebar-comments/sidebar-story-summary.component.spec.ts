@@ -27,7 +27,7 @@ describe('SidebarStorySummaryComponent', () => {
     fixture = TestBed.createComponent(SidebarStorySummaryComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
-    spyOn(router, 'navigate');
+    vi.spyOn(router, 'navigate');
 
     component.item = {
       id: 123,
@@ -62,8 +62,8 @@ describe('SidebarStorySummaryComponent', () => {
   describe('searchByDomain', () => {
     it('should navigate to search with domain query', () => {
       const event = new Event('click');
-      spyOn(event, 'preventDefault');
-      spyOn(event, 'stopPropagation');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
 
       component.searchByDomain(event);
 

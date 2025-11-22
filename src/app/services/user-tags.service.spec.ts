@@ -16,9 +16,11 @@ describe('UserTagsService', () => {
     window.localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(UserTagsService);
+    service.clearAllTags(); // Ensure service state is cleared
   });
 
   afterEach(() => {
+    service.clearAllTags();
     window.localStorage.clear();
   });
 
@@ -137,7 +139,7 @@ describe('UserTagsService', () => {
 
     // But a search with actual text that doesn't match should return ZERO
     const noMatchResult = service.getPaginatedTags('adjnasd', 1, 10);
-    expect(noMatchResult.totalCount).withContext('adjnasd should match zero tags').toBe(0);
+    expect(noMatchResult.totalCount, 'adjnasd should match zero tags').toBe(0);
     expect(noMatchResult.tags.length).toBe(0);
   });
 

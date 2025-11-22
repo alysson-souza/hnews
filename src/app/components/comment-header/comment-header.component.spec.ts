@@ -46,12 +46,12 @@ describe('CommentHeaderComponent', () => {
 
   it('always renders relative time with timestamp', () => {
     // Stabilize now to make output deterministic
-    const fixedNow = 2_000_000_000_000; // ms
-    spyOn(Date, 'now').and.returnValue(fixedNow);
+    const fixedNow = 2000000000000; // ms
+    vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
     component.timestamp = Math.floor(fixedNow / 1000) - 60; // 1 minute ago
     fixture.detectChanges();
     const timeEl = fixture.debugElement.query(By.css('.time-text'));
-    expect(timeEl).withContext('relative time span not found').toBeDefined();
+    expect(timeEl, 'relative time span not found').toBeDefined();
     expect(fixture.nativeElement.textContent).toContain('1 minute ago');
   });
 
@@ -92,9 +92,10 @@ describe('CommentHeaderComponent', () => {
     const repliesEl = fixture.debugElement.query(By.css('app-replies-counter'));
     expect(repliesEl).toBeDefined();
     // Button text is rendered inside child; ensure the button exists
-    expect(fixture.debugElement.query(By.css('app-replies-counter button')))
-      .withContext('expand button not found')
-      .toBeDefined();
+    expect(
+      fixture.debugElement.query(By.css('app-replies-counter button')),
+      'expand button not found',
+    ).toBeDefined();
   });
 
   it('forwards expand click via (expand) to parent output', () => {

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed, ComponentFixture } from '@angular/core/testing';
@@ -12,7 +13,7 @@ import { PwaUpdateService } from './services/pwa-update.service';
 import { KeyboardContextService } from './services/keyboard-context.service';
 
 describe('App', () => {
-  let mockPwaUpdateService: jasmine.SpyObj<PwaUpdateService>;
+  let mockPwaUpdateService: MockedObject<PwaUpdateService>;
   let versionUpdatesSubject: Subject<VersionEvent>;
   let mockKeyboardContextService: {
     currentContext: WritableSignal<string>;
@@ -33,14 +34,13 @@ describe('App', () => {
 
     // Create mock PwaUpdateService with signal-like behavior
     class MockPwaUpdateService {
-      updateAvailable = jasmine.createSpy('updateAvailable').and.returnValue(false);
-      updateVersionInfo = jasmine.createSpy('updateVersionInfo').and.returnValue(null);
-      applyUpdate = jasmine.createSpy('applyUpdate').and.returnValue(Promise.resolve());
-      dismissUpdate = jasmine.createSpy('dismissUpdate');
+      updateAvailable = vi.fn().mockReturnValue(false);
+      updateVersionInfo = vi.fn().mockReturnValue(null);
+      applyUpdate = vi.fn().mockReturnValue(Promise.resolve());
+      dismissUpdate = vi.fn();
     }
 
-    mockPwaUpdateService =
-      new MockPwaUpdateService() as unknown as jasmine.SpyObj<PwaUpdateService>;
+    mockPwaUpdateService = new MockPwaUpdateService() as unknown as MockedObject<PwaUpdateService>;
 
     // Override template to avoid deep rendering of child components (e.g., fontawesome)
     TestBed.overrideComponent(App, {
@@ -99,7 +99,7 @@ describe('App', () => {
     });
 
     it('should expose updateAvailable signal from PwaUpdateService', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(true);
+      mockPwaUpdateService.updateAvailable.mockReturnValue(true);
 
       expect(app.updateAvailable()).toBe(true);
       expect(mockPwaUpdateService.updateAvailable).toHaveBeenCalled();
@@ -107,7 +107,7 @@ describe('App', () => {
 
     it('should expose updateVersionInfo signal from PwaUpdateService', () => {
       const mockVersionInfo = { current: 'abc123', available: 'def456' };
-      mockPwaUpdateService.updateVersionInfo.and.returnValue(mockVersionInfo);
+      mockPwaUpdateService.updateVersionInfo.mockReturnValue(mockVersionInfo);
 
       expect(app.updateVersionInfo()).toBe(mockVersionInfo);
       expect(mockPwaUpdateService.updateVersionInfo).toHaveBeenCalled();
@@ -137,8 +137,8 @@ describe('App', () => {
     });
 
     it('should trigger PWA update when R key is pressed and update is available', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(true);
-      mockPwaUpdateService.applyUpdate.and.returnValue(Promise.resolve());
+      mockPwaUpdateService.updateAvailable.mockReturnValue(true);
+      mockPwaUpdateService.applyUpdate.mockReturnValue(Promise.resolve());
 
       const event = new KeyboardEvent('keydown', {
         key: 'R',
@@ -148,10 +148,10 @@ describe('App', () => {
 
       // Create a mock target element (body - not an input)
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
-      spyOn(event, 'preventDefault');
-      spyOn(app, 'applyPwaUpdate').and.returnValue(Promise.resolve());
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(app, 'applyPwaUpdate').mockReturnValue(Promise.resolve());
 
       // Trigger the keyboard event
       app.handleKeyboardEvent(event);
@@ -161,7 +161,7 @@ describe('App', () => {
     });
 
     it('should not trigger PWA update when R key is pressed and no update is available', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(false);
+      mockPwaUpdateService.updateAvailable.mockReturnValue(false);
 
       const event = new KeyboardEvent('keydown', {
         key: 'R',
@@ -171,10 +171,10 @@ describe('App', () => {
 
       // Create a mock target element (body - not an input)
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
-      spyOn(event, 'preventDefault');
-      spyOn(app, 'applyPwaUpdate');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(app, 'applyPwaUpdate');
 
       // Trigger the keyboard event
       app.handleKeyboardEvent(event);
@@ -184,7 +184,7 @@ describe('App', () => {
     });
 
     it('should ignore R key when modifier keys are pressed', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(true);
+      mockPwaUpdateService.updateAvailable.mockReturnValue(true);
 
       const event = new KeyboardEvent('keydown', {
         key: 'R',
@@ -195,10 +195,10 @@ describe('App', () => {
 
       // Create a mock target element (body - not an input)
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
-      spyOn(event, 'preventDefault');
-      spyOn(app, 'applyPwaUpdate');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(app, 'applyPwaUpdate');
 
       // Trigger the keyboard event
       app.handleKeyboardEvent(event);
@@ -208,7 +208,7 @@ describe('App', () => {
     });
 
     it('should ignore R key when typing in input fields', () => {
-      mockPwaUpdateService.updateAvailable.and.returnValue(true);
+      mockPwaUpdateService.updateAvailable.mockReturnValue(true);
 
       const event = new KeyboardEvent('keydown', {
         key: 'R',
@@ -218,10 +218,10 @@ describe('App', () => {
 
       // Create a mock input element
       const mockInput = document.createElement('input');
-      spyOnProperty(event, 'target').and.returnValue(mockInput);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockInput);
 
-      spyOn(event, 'preventDefault');
-      spyOn(app, 'applyPwaUpdate');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(app, 'applyPwaUpdate');
 
       // Trigger the keyboard event
       app.handleKeyboardEvent(event);
@@ -241,16 +241,16 @@ describe('App', () => {
     });
 
     it('should log version on ngOnInit', () => {
-      spyOn(console, 'log');
-      spyOn(app, 'loadBuildInfo' as never);
+      vi.spyOn(console, 'log');
+      vi.spyOn(app, 'loadBuildInfo' as never);
 
       app.ngOnInit();
 
-      expect(console.log).toHaveBeenCalledWith(jasmine.stringContaining('HNews version:'));
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('HNews version:'));
     });
 
     it('should call loadBuildInfo on ngOnInit', () => {
-      spyOn(app, 'loadBuildInfo' as never);
+      vi.spyOn(app, 'loadBuildInfo' as never);
 
       app.ngOnInit();
 
@@ -326,7 +326,7 @@ describe('App', () => {
     });
 
     it('should navigate to search page with query parameter on search()', () => {
-      spyOn(app.router, 'navigate');
+      vi.spyOn(app.router, 'navigate');
       app.searchQuery = 'angular';
 
       app.search();
@@ -340,7 +340,7 @@ describe('App', () => {
     });
 
     it('should not navigate when search query is empty', () => {
-      spyOn(app.router, 'navigate');
+      vi.spyOn(app.router, 'navigate');
       app.searchQuery = '   ';
 
       app.search();
@@ -349,7 +349,7 @@ describe('App', () => {
     });
 
     it('should not navigate when search query is empty string', () => {
-      spyOn(app.router, 'navigate');
+      vi.spyOn(app.router, 'navigate');
       app.searchQuery = '';
 
       app.search();
@@ -372,8 +372,8 @@ describe('App', () => {
       app.searchQuery = 'test';
       const input = document.createElement('input');
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
-      spyOn(event, 'preventDefault');
-      spyOnProperty(event, 'target').and.returnValue(input);
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(input);
 
       app.handleDesktopSearchKeydown(event);
 
@@ -384,10 +384,10 @@ describe('App', () => {
     it('should blur input on Escape when query is empty', () => {
       app.searchQuery = '';
       const input = document.createElement('input');
-      spyOn(input, 'blur');
+      vi.spyOn(input, 'blur');
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
-      spyOn(event, 'preventDefault');
-      spyOnProperty(event, 'target').and.returnValue(input);
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(input);
 
       app.handleDesktopSearchKeydown(event);
 
@@ -407,11 +407,11 @@ describe('App', () => {
     });
 
     it('should toggle theme when t key is pressed', () => {
-      spyOn(app.themeService, 'toggleTheme');
+      vi.spyOn(app.themeService, 'toggleTheme');
       const event = new KeyboardEvent('keydown', { key: 't' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
-      spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
+      vi.spyOn(event, 'preventDefault');
 
       app.handleKeyboardEvent(event);
 
@@ -432,15 +432,15 @@ describe('App', () => {
 
     it('should show keyboard shortcuts when ? key is pressed', () => {
       const mockKeyboardShortcuts = {
-        open: jasmine.createSpy('open'),
-        isOpen: jasmine.createSpy('isOpen').and.returnValue(false),
+        open: vi.fn(),
+        isOpen: vi.fn().mockReturnValue(false),
       };
       app.keyboardShortcuts = mockKeyboardShortcuts as never;
 
       const event = new KeyboardEvent('keydown', { key: '?' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
-      spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
+      vi.spyOn(event, 'preventDefault');
 
       app.handleKeyboardEvent(event);
 
@@ -462,8 +462,8 @@ describe('App', () => {
     it('should prevent default when / key is pressed', () => {
       const event = new KeyboardEvent('keydown', { key: '/' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
-      spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
+      vi.spyOn(event, 'preventDefault');
 
       app.handleKeyboardEvent(event);
 
@@ -488,7 +488,7 @@ describe('App', () => {
       const searchInput = document.createElement('input');
       searchInput.type = 'search';
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
-      spyOnProperty(event, 'target').and.returnValue(searchInput);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(searchInput);
 
       app.handleKeyboardEvent(event);
 
@@ -502,9 +502,9 @@ describe('App', () => {
 
       const searchInput = document.createElement('input');
       searchInput.type = 'search';
-      spyOn(searchInput, 'blur');
+      vi.spyOn(searchInput, 'blur');
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
-      spyOnProperty(event, 'target').and.returnValue(searchInput);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(searchInput);
 
       app.handleKeyboardEvent(event);
 
@@ -514,12 +514,12 @@ describe('App', () => {
 
     it('should close sidebar on Escape when sidebar is open', () => {
       mockKeyboardContextService.currentContext.set('sidebar');
-      spyOn(app.sidebarService, 'isOpen').and.returnValue(true);
-      spyOn(app.sidebarService, 'closeSidebar');
+      vi.spyOn(app.sidebarService, 'isOpen').mockReturnValue(true);
+      vi.spyOn(app.sidebarService, 'closeSidebar');
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -528,11 +528,11 @@ describe('App', () => {
 
     it('should close mobile search on Escape', () => {
       app.showMobileSearch.set(true);
-      spyOn(app.sidebarService, 'isOpen').and.returnValue(false);
+      vi.spyOn(app.sidebarService, 'isOpen').mockReturnValue(false);
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -541,11 +541,11 @@ describe('App', () => {
 
     it('should close mobile menu on Escape', () => {
       app.mobileMenuOpen.set(true);
-      spyOn(app.sidebarService, 'isOpen').and.returnValue(false);
+      vi.spyOn(app.sidebarService, 'isOpen').mockReturnValue(false);
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -556,11 +556,11 @@ describe('App', () => {
       app.mobileMenuOpen.set(false);
       app.showMobileSearch.set(false);
       app.keyboardNavService.setSelectedIndex(3);
-      spyOn(app.sidebarService, 'isOpen').and.returnValue(false);
+      vi.spyOn(app.sidebarService, 'isOpen').mockReturnValue(false);
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -569,13 +569,13 @@ describe('App', () => {
     });
 
     it('should scroll to top on Escape when nothing else is active', () => {
-      spyOn(app.sidebarService, 'isOpen').and.returnValue(false);
-      spyOn(app['scrollService'], 'scrollToTop');
+      vi.spyOn(app.sidebarService, 'isOpen').mockReturnValue(false);
+      vi.spyOn(app['scrollService'], 'scrollToTop');
       app.keyboardNavService.clearSelection();
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -595,11 +595,11 @@ describe('App', () => {
 
     it('should not process story shortcuts when not on story list page', () => {
       mockKeyboardContextService.isOnStoryList.set(false);
-      spyOn(app.keyboardNavService, 'selectNext');
+      vi.spyOn(app.keyboardNavService, 'selectNext');
 
       const event = new KeyboardEvent('keydown', { key: 'j' });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -607,14 +607,14 @@ describe('App', () => {
     });
 
     it('should ignore keyboard shortcuts when modifier keys are pressed', () => {
-      spyOn(app.keyboardNavService, 'selectNext');
+      vi.spyOn(app.keyboardNavService, 'selectNext');
 
       const event = new KeyboardEvent('keydown', {
         key: 'j',
         metaKey: true,
       });
       const mockTarget = document.createElement('div');
-      spyOnProperty(event, 'target').and.returnValue(mockTarget);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
 
       app.handleKeyboardEvent(event);
 
@@ -622,11 +622,11 @@ describe('App', () => {
     });
 
     it('should ignore keyboard shortcuts when in input field', () => {
-      spyOn(app.keyboardNavService, 'selectNext');
+      vi.spyOn(app.keyboardNavService, 'selectNext');
 
       const event = new KeyboardEvent('keydown', { key: 'j' });
       const mockInput = document.createElement('input');
-      spyOnProperty(event, 'target').and.returnValue(mockInput);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockInput);
 
       app.handleKeyboardEvent(event);
 
@@ -634,11 +634,11 @@ describe('App', () => {
     });
 
     it('should ignore keyboard shortcuts when in textarea', () => {
-      spyOn(app.keyboardNavService, 'selectNext');
+      vi.spyOn(app.keyboardNavService, 'selectNext');
 
       const event = new KeyboardEvent('keydown', { key: 'j' });
       const mockTextarea = document.createElement('textarea');
-      spyOnProperty(event, 'target').and.returnValue(mockTextarea);
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTextarea);
 
       app.handleKeyboardEvent(event);
 

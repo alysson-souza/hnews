@@ -12,7 +12,7 @@ describe('RelativeTimePipe', () => {
   });
 
   it('formats minutes', () => {
-    const fiveMinAgoSeconds = Math.floor((baseMs - 5 * 60_000) / 1000);
+    const fiveMinAgoSeconds = Math.floor((baseMs - 5 * 60000) / 1000);
     expect(pipe.transform(fiveMinAgoSeconds, baseMs)).toBe('5 minutes ago');
   });
 
@@ -32,7 +32,7 @@ describe('RelativeTimePipe', () => {
   });
 
   it('handles Date objects', () => {
-    const oneHourAgoDate = new Date(baseMs - 3600_000);
+    const oneHourAgoDate = new Date(baseMs - 3600000);
     expect(pipe.transform(oneHourAgoDate, baseMs)).toBe('1 hour ago');
   });
 

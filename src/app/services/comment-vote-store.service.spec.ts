@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -7,29 +8,32 @@ import { CommentVoteStoreService, COMMENT_VOTE_STORAGE } from './comment-vote-st
 describe('CommentVoteStoreService', () => {
   const storageKey = 'votedComments';
   let storageMap: Map<string, string>;
-  let mockStorage: jasmine.SpyObj<Storage>;
+  let mockStorage: MockedObject<Storage>;
 
   beforeEach(() => {
     storageMap = new Map();
-    mockStorage = jasmine.createSpyObj<Storage>('Storage', [
-      'clear',
-      'getItem',
-      'key',
-      'removeItem',
-      'setItem',
-    ]);
+    mockStorage = {
+      clear: vi.fn(),
+      getItem: vi.fn(),
+      key: vi.fn(),
+      removeItem: vi.fn(),
+      setItem: vi.fn(),
+      length: 0,
+    } as unknown as MockedObject<Storage>;
 
     Object.defineProperty(mockStorage, 'length', {
       get: () => storageMap.size,
     });
 
-    mockStorage.clear.and.callFake(() => storageMap.clear());
-    mockStorage.getItem.and.callFake((key: string) => storageMap.get(key) ?? null);
-    mockStorage.key.and.callFake((index: number) => Array.from(storageMap.keys())[index] ?? null);
-    mockStorage.removeItem.and.callFake((key: string) => {
+    (mockStorage.clear as Mock).mockImplementation(() => storageMap.clear());
+    (mockStorage.getItem as Mock).mockImplementation((key: string) => storageMap.get(key) ?? null);
+    (mockStorage.key as Mock).mockImplementation(
+      (index: number) => Array.from(storageMap.keys())[index] ?? null,
+    );
+    (mockStorage.removeItem as Mock).mockImplementation((key: string) => {
       storageMap.delete(key);
     });
-    mockStorage.setItem.and.callFake((key: string, value: string) => {
+    (mockStorage.setItem as Mock).mockImplementation((key: string, value: string) => {
       storageMap.set(key, value);
     });
 

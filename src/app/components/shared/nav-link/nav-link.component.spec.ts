@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -9,10 +10,12 @@ import { By } from '@angular/platform-browser';
 describe('NavLinkComponent', () => {
   let component: NavLinkComponent;
   let fixture: ComponentFixture<NavLinkComponent>;
-  let scrollService: jasmine.SpyObj<ScrollService>;
+  let scrollService: MockedObject<ScrollService>;
 
   beforeEach(async () => {
-    const scrollServiceSpy = jasmine.createSpyObj('ScrollService', ['scrollToTop']);
+    const scrollServiceSpy = {
+      scrollToTop: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [NavLinkComponent],
@@ -27,7 +30,7 @@ describe('NavLinkComponent', () => {
 
     fixture = TestBed.createComponent(NavLinkComponent);
     component = fixture.componentInstance;
-    scrollService = TestBed.inject(ScrollService) as jasmine.SpyObj<ScrollService>;
+    scrollService = TestBed.inject(ScrollService) as MockedObject<ScrollService>;
   });
 
   it('should create', () => {
@@ -93,7 +96,7 @@ describe('NavLinkComponent', () => {
       const linkElement = fixture.debugElement.query(By.css('a'));
 
       // Assert
-      expect(linkElement.classes['nav-link-mobile']).toBeTrue();
+      expect(linkElement.classes['nav-link-mobile']).toBe(true);
     });
 
     it('should set aria-current attribute when active', () => {
@@ -124,7 +127,7 @@ describe('NavLinkComponent', () => {
   describe('click event binding', () => {
     it('should call handleClick when anchor is clicked', () => {
       // Arrange
-      spyOn(component, 'handleClick');
+      vi.spyOn(component, 'handleClick');
       component.route = '/test';
       fixture.detectChanges();
 

@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Subject } from 'rxjs';
@@ -8,21 +9,22 @@ import { SidebarService } from './sidebar.service';
 
 describe('KeyboardContextService', () => {
   let service: KeyboardContextService;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockRouter: MockedObject<Router>;
   let mockSidebarService: {
-    isOpen: jasmine.Spy;
+    isOpen: Mock;
   };
 
   beforeEach(() => {
     // Create mock router with url property
-    mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
+    mockRouter = {
+      navigate: vi.fn(),
       url: '/',
       events: new Subject(),
-    });
+    } as unknown as MockedObject<Router>;
 
     // Create mock sidebar service with signal
     mockSidebarService = {
-      isOpen: jasmine.createSpy().and.returnValue(false),
+      isOpen: vi.fn().mockReturnValue(false),
     };
 
     TestBed.configureTestingModule({
@@ -41,7 +43,7 @@ describe('KeyboardContextService', () => {
     });
 
     it('should initialize with default context when sidebar is closed', () => {
-      mockSidebarService.isOpen.and.returnValue(false);
+      mockSidebarService.isOpen.mockReturnValue(false);
       service = TestBed.inject(KeyboardContextService);
       expect(service.currentContext()).toBe('default');
     });
@@ -49,7 +51,7 @@ describe('KeyboardContextService', () => {
 
   describe('currentContext', () => {
     it('should return "sidebar" when sidebar is open', () => {
-      mockSidebarService.isOpen.and.returnValue(true);
+      mockSidebarService.isOpen.mockReturnValue(true);
 
       // Re-create service to get updated context
       service = TestBed.inject(KeyboardContextService);
@@ -58,7 +60,7 @@ describe('KeyboardContextService', () => {
     });
 
     it('should return "default" when sidebar is closed', () => {
-      mockSidebarService.isOpen.and.returnValue(false);
+      mockSidebarService.isOpen.mockReturnValue(false);
 
       service = TestBed.inject(KeyboardContextService);
 
@@ -68,7 +70,7 @@ describe('KeyboardContextService', () => {
     it('should prioritize sidebar context over route-based context', () => {
       // Even on story list, if sidebar is open, context should be 'sidebar'
       Object.defineProperty(mockRouter, 'url', { value: '/', writable: true });
-      mockSidebarService.isOpen.and.returnValue(true);
+      mockSidebarService.isOpen.mockReturnValue(true);
 
       service = TestBed.inject(KeyboardContextService);
 
@@ -80,73 +82,73 @@ describe('KeyboardContextService', () => {
     it('should return true for root path', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for /top', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for /best', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/best', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for /newest', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/newest', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for /ask', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/ask', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for /show', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/show', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for /jobs', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/jobs', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return true for story list paths with query parameters', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top?page=2', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should return false for item page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/item/123', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
 
     it('should return false for user page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/user/john', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
 
     it('should return false for search page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/search', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
 
     it('should return false for settings page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/settings', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
   });
 
@@ -154,25 +156,25 @@ describe('KeyboardContextService', () => {
     it('should return true for item page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/item/123', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnItemPage()).toBeTrue();
+      expect(service.isOnItemPage()).toBe(true);
     });
 
     it('should return true for item page with query params', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/item/456?comment=789', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnItemPage()).toBeTrue();
+      expect(service.isOnItemPage()).toBe(true);
     });
 
     it('should return false for story list', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnItemPage()).toBeFalse();
+      expect(service.isOnItemPage()).toBe(false);
     });
 
     it('should return false for user page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/user/john', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnItemPage()).toBeFalse();
+      expect(service.isOnItemPage()).toBe(false);
     });
   });
 
@@ -180,31 +182,31 @@ describe('KeyboardContextService', () => {
     it('should return true for /user path', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/user', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnUserPage()).toBeTrue();
+      expect(service.isOnUserPage()).toBe(true);
     });
 
     it('should return true for user profile page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/user/john', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnUserPage()).toBeTrue();
+      expect(service.isOnUserPage()).toBe(true);
     });
 
     it('should return true for user page with query params', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/user?id=john', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnUserPage()).toBeTrue();
+      expect(service.isOnUserPage()).toBe(true);
     });
 
     it('should return false for story list', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnUserPage()).toBeFalse();
+      expect(service.isOnUserPage()).toBe(false);
     });
 
     it('should return false for item page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/item/123', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnUserPage()).toBeFalse();
+      expect(service.isOnUserPage()).toBe(false);
     });
   });
 
@@ -212,7 +214,7 @@ describe('KeyboardContextService', () => {
     it('should return true for settings page', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/settings', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnSettingsPage()).toBeTrue();
+      expect(service.isOnSettingsPage()).toBe(true);
     });
 
     it('should return true for settings page with query params', () => {
@@ -221,13 +223,13 @@ describe('KeyboardContextService', () => {
         writable: true,
       });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnSettingsPage()).toBeTrue();
+      expect(service.isOnSettingsPage()).toBe(true);
     });
 
     it('should return false for story list', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top', writable: true });
       service = TestBed.inject(KeyboardContextService);
-      expect(service.isOnSettingsPage()).toBeFalse();
+      expect(service.isOnSettingsPage()).toBe(false);
     });
   });
 
@@ -244,7 +246,7 @@ describe('KeyboardContextService', () => {
     });
 
     it('should compute current context based on sidebar state', () => {
-      mockSidebarService.isOpen.and.returnValue(false);
+      mockSidebarService.isOpen.mockReturnValue(false);
       Object.defineProperty(mockRouter, 'url', { value: '/', writable: true });
       service = TestBed.inject(KeyboardContextService);
 
@@ -261,16 +263,16 @@ describe('KeyboardContextService', () => {
       Object.defineProperty(mockRouter, 'url', { value: '', writable: true });
       service = TestBed.inject(KeyboardContextService);
 
-      expect(service.isOnStoryList()).toBeFalse();
-      expect(service.isOnItemPage()).toBeFalse();
-      expect(service.isOnUserPage()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
+      expect(service.isOnItemPage()).toBe(false);
+      expect(service.isOnUserPage()).toBe(false);
     });
 
     it('should handle malformed URLs', () => {
       Object.defineProperty(mockRouter, 'url', { value: '////', writable: true });
       service = TestBed.inject(KeyboardContextService);
 
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
 
     it('should handle URLs with fragments', () => {
@@ -278,7 +280,7 @@ describe('KeyboardContextService', () => {
       service = TestBed.inject(KeyboardContextService);
 
       // Fragment should not affect story list detection
-      expect(service.isOnStoryList()).toBeTrue();
+      expect(service.isOnStoryList()).toBe(true);
     });
 
     it('should be case-sensitive for route matching', () => {
@@ -286,7 +288,7 @@ describe('KeyboardContextService', () => {
       service = TestBed.inject(KeyboardContextService);
 
       // Should not match because routes are case-sensitive
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
 
     it('should not match partial route names', () => {
@@ -294,7 +296,7 @@ describe('KeyboardContextService', () => {
       service = TestBed.inject(KeyboardContextService);
 
       // Should not match '/top' because it's '/topics'
-      expect(service.isOnStoryList()).toBeFalse();
+      expect(service.isOnStoryList()).toBe(false);
     });
   });
 });

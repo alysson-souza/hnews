@@ -28,7 +28,7 @@ npm start            # Run dev server (http://localhost:4200)
 npm run watch        # Watch mode build
 npm run build        # Build (development)
 npm run build:prod   # Build (production)
-npm test             # Unit tests (Karma + Jasmine)
+npm test             # Unit tests (Vitest)
 npm run lint         # ESLint (fails on warnings)
 npm run lint:fix     # ESLint with autofix (fails on warnings)
 npm run format       # Prettier write

@@ -3,13 +3,18 @@
 import { Component, inject } from '@angular/core';
 
 import { ThemeService } from '../../../services/theme.service';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  solarSunLinear,
+  solarMoonLinear,
+  solarMonitorSmartphoneLinear,
+} from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
-  imports: [FontAwesomeModule],
+  imports: [NgIconComponent],
+  viewProviders: [provideIcons({ solarSunLinear, solarMoonLinear, solarMonitorSmartphoneLinear })],
   template: `
     <button
       (click)="themeService.toggleTheme()"
@@ -18,11 +23,11 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
       [title]="getTooltip()"
     >
       @if (themeService.theme() === 'auto') {
-        <fa-icon [icon]="faCircleHalfStroke" />
+        <ng-icon name="solarMonitorSmartphoneLinear" />
       } @else if (themeService.effectiveTheme() === 'dark') {
-        <fa-icon [icon]="faMoon" />
+        <ng-icon name="solarMoonLinear" />
       } @else {
-        <fa-icon [icon]="faSun" />
+        <ng-icon name="solarSunLinear" />
       }
     </button>
   `,
@@ -41,10 +46,6 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
 })
 export class ThemeToggleComponent {
   themeService = inject(ThemeService);
-  // Use public fields to ensure AOT/templates always see defined icon inputs in tests
-  faSun = faSun;
-  faMoon = faMoon;
-  faCircleHalfStroke = faCircleHalfStroke;
 
   getTooltip(): string {
     const current = this.themeService.theme();

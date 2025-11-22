@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -6,13 +7,13 @@ import { PwaUpdateService } from './pwa-update.service';
 
 describe('KeyboardShortcutConfigService', () => {
   let service: KeyboardShortcutConfigService;
-  let mockPwaUpdateService: jasmine.SpyObj<PwaUpdateService>;
+  let mockPwaUpdateService: MockedObject<PwaUpdateService>;
 
   beforeEach(() => {
     // Create mock PWA update service
-    mockPwaUpdateService = jasmine.createSpyObj('PwaUpdateService', [], {
-      updateAvailable: jasmine.createSpy().and.returnValue(false),
-    });
+    mockPwaUpdateService = {
+      updateAvailable: vi.fn().mockReturnValue(false),
+    } as unknown as MockedObject<PwaUpdateService>;
 
     TestBed.configureTestingModule({
       providers: [
@@ -61,19 +62,19 @@ describe('KeyboardShortcutConfigService', () => {
     it('should filter out conditional shortcuts when condition is false', () => {
       // Set updateAvailable to false
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
-        value: jasmine.createSpy().and.returnValue(false),
+        value: vi.fn().mockReturnValue(false),
       });
 
       const shortcuts = service.getShortcutsForContext('global');
       const hasUpdateShortcut = shortcuts.some((s) => s.key === 'R');
 
-      expect(hasUpdateShortcut).toBeFalse();
+      expect(hasUpdateShortcut).toBe(false);
     });
 
     it('should include conditional shortcuts when condition is true', () => {
       // Set updateAvailable to true
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
-        value: jasmine.createSpy().and.returnValue(true),
+        value: vi.fn().mockReturnValue(true),
       });
 
       const shortcuts = service.getShortcutsForContext('global');
@@ -137,7 +138,7 @@ describe('KeyboardShortcutConfigService', () => {
     it('should respect conditional shortcuts', () => {
       // When update not available
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
-        value: jasmine.createSpy().and.returnValue(false),
+        value: vi.fn().mockReturnValue(false),
       });
 
       let updateShortcut = service.getShortcut('R', 'global');
@@ -145,7 +146,7 @@ describe('KeyboardShortcutConfigService', () => {
 
       // When update available
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
-        value: jasmine.createSpy().and.returnValue(true),
+        value: vi.fn().mockReturnValue(true),
       });
 
       updateShortcut = service.getShortcut('R', 'global');
@@ -162,9 +163,9 @@ describe('KeyboardShortcutConfigService', () => {
     it('should group shortcuts by category', () => {
       const grouped = service.getShortcutsByCategory('default');
 
-      expect(grouped.has('Navigation')).toBeTrue();
-      expect(grouped.has('Story Actions')).toBeTrue();
-      expect(grouped.has('General')).toBeTrue();
+      expect(grouped.has('Navigation')).toBe(true);
+      expect(grouped.has('Story Actions')).toBe(true);
+      expect(grouped.has('General')).toBe(true);
     });
 
     it('should include global shortcuts in all contexts', () => {
@@ -173,19 +174,19 @@ describe('KeyboardShortcutConfigService', () => {
 
       const hasGeneralCategory = (map: Map<string, unknown>) => map.has('General');
 
-      expect(hasGeneralCategory(defaultGrouped)).toBeTrue();
-      expect(hasGeneralCategory(sidebarGrouped)).toBeTrue();
+      expect(hasGeneralCategory(defaultGrouped)).toBe(true);
+      expect(hasGeneralCategory(sidebarGrouped)).toBe(true);
     });
 
     it('should have different categories for different contexts', () => {
       const defaultGrouped = service.getShortcutsByCategory('default');
       const sidebarGrouped = service.getShortcutsByCategory('sidebar');
 
-      expect(defaultGrouped.has('Story Actions')).toBeTrue();
-      expect(sidebarGrouped.has('Story Actions')).toBeTrue();
+      expect(defaultGrouped.has('Story Actions')).toBe(true);
+      expect(sidebarGrouped.has('Story Actions')).toBe(true);
 
-      expect(sidebarGrouped.has('Comment Actions')).toBeTrue();
-      expect(defaultGrouped.has('Comment Actions')).toBeFalse();
+      expect(sidebarGrouped.has('Comment Actions')).toBe(true);
+      expect(defaultGrouped.has('Comment Actions')).toBe(false);
     });
 
     it('should return shortcuts within each category', () => {
@@ -202,7 +203,7 @@ describe('KeyboardShortcutConfigService', () => {
 
     it('should not include conditional shortcuts when condition is false', () => {
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
-        value: jasmine.createSpy().and.returnValue(false),
+        value: vi.fn().mockReturnValue(false),
       });
 
       const grouped = service.getShortcutsByCategory('global');

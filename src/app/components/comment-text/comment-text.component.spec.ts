@@ -51,7 +51,7 @@ describe('CommentTextComponent', () => {
 
     // Blockquote grouping: two quoted <p> elements should be wrapped inside one <blockquote>
     const bq = bodyEl.querySelector('blockquote');
-    expect(bq).withContext('blockquote should exist').not.toBeNull();
+    expect(bq, 'blockquote should exist').not.toBeNull();
     if (bq) {
       const bqParas = bq.querySelectorAll('p');
       expect(bqParas.length).toBe(2);
@@ -61,7 +61,7 @@ describe('CommentTextComponent', () => {
 
     // External link transformation: anchor should be converted to domain-only text and have attrs
     const a = bodyEl.querySelector('a.ext-link') as HTMLAnchorElement | null;
-    expect(a).withContext('transformed anchor should exist').not.toBeNull();
+    expect(a, 'transformed anchor should exist').not.toBeNull();
     if (a) {
       expect(a.textContent?.trim()).toBe('example.com/…/some/path');
       expect(a.getAttribute('href')).toBe('https://example.com/some/path?q=1');
@@ -81,7 +81,7 @@ describe('CommentTextComponent', () => {
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
     const codeBlock = bodyEl.querySelector('pre code');
-    expect(codeBlock).withContext('code block should exist').not.toBeNull();
+    expect(codeBlock, 'code block should exist').not.toBeNull();
   });
 
   it('should sanitize HTML while preserving safe formatting tags', () => {

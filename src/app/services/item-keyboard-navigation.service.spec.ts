@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -9,16 +10,22 @@ import { Router } from '@angular/router';
 
 describe('ItemKeyboardNavigationService', () => {
   let service: ItemKeyboardNavigationService;
-  let commandRegistrySpy: jasmine.SpyObj<CommandRegistryService>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let commandRegistrySpy: MockedObject<CommandRegistryService>;
+  let routerSpy: MockedObject<Router>;
 
   beforeEach(() => {
-    const interactionSpy = jasmine.createSpyObj('SidebarCommentsInteractionService', [
-      'dispatchAction',
-    ]);
-    const registrySpy = jasmine.createSpyObj('CommandRegistryService', ['register']);
-    const scrollSpy = jasmine.createSpyObj('ScrollService', ['scrollElementIntoView']);
-    const routerSpyObj = jasmine.createSpyObj('Router', ['navigate']);
+    const interactionSpy = {
+      dispatchAction: vi.fn(),
+    };
+    const registrySpy = {
+      register: vi.fn(),
+    };
+    const scrollSpy = {
+      scrollElementIntoView: vi.fn(),
+    };
+    const routerSpyObj = {
+      navigate: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
       providers: [
@@ -33,8 +40,8 @@ describe('ItemKeyboardNavigationService', () => {
     service = TestBed.inject(ItemKeyboardNavigationService);
     commandRegistrySpy = TestBed.inject(
       CommandRegistryService,
-    ) as jasmine.SpyObj<CommandRegistryService>;
-    routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    ) as MockedObject<CommandRegistryService>;
+    routerSpy = TestBed.inject(Router) as MockedObject<Router>;
   });
 
   it('should be created', () => {
@@ -44,24 +51,24 @@ describe('ItemKeyboardNavigationService', () => {
   it('should register item commands', () => {
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.nextComment',
-      jasmine.any(Function),
+      expect.any(Function),
     );
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.previousComment',
-      jasmine.any(Function),
+      expect.any(Function),
     );
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.toggleExpand',
-      jasmine.any(Function),
+      expect.any(Function),
     );
-    expect(commandRegistrySpy.register).toHaveBeenCalledWith('item.upvote', jasmine.any(Function));
+    expect(commandRegistrySpy.register).toHaveBeenCalledWith('item.upvote', expect.any(Function));
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.expandReplies',
-      jasmine.any(Function),
+      expect.any(Function),
     );
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.viewThread',
-      jasmine.any(Function),
+      expect.any(Function),
     );
   });
 

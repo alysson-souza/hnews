@@ -23,7 +23,7 @@ describe('OfflineBannerComponent', () => {
 
     const banner = fixture.nativeElement.querySelector('.offline-banner') as HTMLElement;
     expect(banner).toBeTruthy();
-    expect(banner.classList.contains('offline-banner-yellow')).toBeTrue();
+    expect(banner.classList.contains('offline-banner-yellow')).toBe(true);
     expect(banner.textContent).toContain('You are offline');
   });
 
@@ -36,7 +36,7 @@ describe('OfflineBannerComponent', () => {
 
     const banner = fixture.nativeElement.querySelector('.offline-banner') as HTMLElement;
     expect(banner).toBeTruthy();
-    expect(banner.classList.contains('offline-banner-green')).toBeTrue();
+    expect(banner.classList.contains('offline-banner-green')).toBe(true);
     expect(banner.textContent).toContain('Back online');
   });
 

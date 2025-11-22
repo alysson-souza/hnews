@@ -20,7 +20,7 @@ describe('AppHeaderComponent', () => {
   });
 
   it('re-emits search submit from the desktop form', () => {
-    const searchSpy = jasmine.createSpy('search');
+    const searchSpy = vi.fn();
     component.searchSubmit.subscribe(searchSpy);
 
     fixture.detectChanges();
@@ -40,7 +40,7 @@ describe('AppHeaderComponent', () => {
   });
 
   it('shows the mobile menu and emits close events from menu links', () => {
-    const closeSpy = jasmine.createSpy('close');
+    const closeSpy = vi.fn();
     fixture.componentRef.setInput('mobileMenuOpen', true);
     component.closeMenuRequested.subscribe(closeSpy);
 
@@ -56,8 +56,8 @@ describe('AppHeaderComponent', () => {
   });
 
   it('emits toggle events from mobile controls', () => {
-    const menuToggleSpy = jasmine.createSpy('menuToggle');
-    const searchToggleSpy = jasmine.createSpy('searchToggle');
+    const menuToggleSpy = vi.fn();
+    const searchToggleSpy = vi.fn();
     component.menuToggleRequested.subscribe(menuToggleSpy);
     component.searchToggleRequested.subscribe(searchToggleSpy);
 

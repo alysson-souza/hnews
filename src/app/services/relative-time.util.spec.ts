@@ -14,7 +14,7 @@ describe('formatRelativeTime', () => {
   });
 
   it('handles future timestamps as just now', () => {
-    expect(formatRelativeTime(now + 10_000, now)).toBe('just now');
+    expect(formatRelativeTime(now + 10000, now)).toBe('just now');
   });
 
   it('formats minutes', () => {
@@ -53,7 +53,7 @@ describe('formatRelativeTime', () => {
   });
 
   it('accepts Date instances', () => {
-    expect(formatRelativeTime(new Date(now - 3600_000), now)).toBe('1 hour ago');
+    expect(formatRelativeTime(new Date(now - 3600000), now)).toBe('1 hour ago');
   });
 
   it('accepts date strings', () => {

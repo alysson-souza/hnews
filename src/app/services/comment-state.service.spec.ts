@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -5,16 +6,18 @@ import { CommentStateService, CommentStateEntry } from './comment-state.service'
 
 describe('CommentStateService', () => {
   let service: CommentStateService;
-  let localStorageMock: { [key: string]: string };
+  let localStorageMock: {
+    [key: string]: string;
+  };
 
   beforeEach(() => {
     localStorageMock = {};
 
-    spyOn(window.localStorage, 'getItem').and.callFake((key: string) => {
+    vi.spyOn(window.localStorage, 'getItem').mockImplementation((key: string) => {
       return localStorageMock[key] || null;
     });
 
-    spyOn(window.localStorage, 'setItem').and.callFake((key: string, value: string) => {
+    vi.spyOn(window.localStorage, 'setItem').mockImplementation((key: string, value: string) => {
       localStorageMock[key] = value;
     });
 
@@ -51,7 +54,7 @@ describe('CommentStateService', () => {
         collapsed: true,
         repliesExpanded: false,
         loadedPages: 0,
-        lastAccessed: jasmine.any(Number),
+        lastAccessed: expect.any(Number),
       });
     });
 
@@ -65,7 +68,7 @@ describe('CommentStateService', () => {
       expect(state!.loadedPages).toBe(2);
     });
 
-    it('should update lastAccessed timestamp', (done) => {
+    it('should update lastAccessed timestamp', async () => {
       service.setState(12345, { collapsed: true });
       const firstTimestamp = service.getState(12345)!.lastAccessed;
 
@@ -75,7 +78,6 @@ describe('CommentStateService', () => {
         const secondTimestamp = service.getState(12345)!.lastAccessed;
 
         expect(secondTimestamp).toBeGreaterThanOrEqual(firstTimestamp);
-        done();
       }, 10);
     });
 
@@ -250,7 +252,9 @@ describe('CommentStateService', () => {
     });
 
     it('should handle localStorage errors gracefully', () => {
-      (window.localStorage.setItem as jasmine.Spy).and.throwError('QuotaExceededError');
+      (window.localStorage.setItem as Mock).mockImplementation(() => {
+        throw new Error('QuotaExceededError');
+      });
 
       expect(() => service.setState(12345, { collapsed: true })).not.toThrow();
     });

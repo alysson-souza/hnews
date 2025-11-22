@@ -1,6 +1,7 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserTagComponent } from './user-tag.component';
 import { UserTagsService } from '../../services/user-tags.service';
 import { provideRouter } from '@angular/router';
@@ -14,14 +15,14 @@ class DummyComponent {}
 describe('UserTagComponent', () => {
   let component: UserTagComponent;
   let fixture: ComponentFixture<UserTagComponent>;
-  let tagsService: jasmine.SpyObj<UserTagsService>;
+  let tagsService: MockedObject<UserTagsService>;
 
   beforeEach(async () => {
-    const tagsServiceSpy = jasmine.createSpyObj('UserTagsService', [
-      'getTag',
-      'setTag',
-      'removeTag',
-    ]);
+    const tagsServiceSpy = {
+      getTag: vi.fn(),
+      setTag: vi.fn(),
+      removeTag: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [UserTagComponent],
@@ -32,7 +33,7 @@ describe('UserTagComponent', () => {
       ],
     }).compileComponents();
 
-    tagsService = TestBed.inject(UserTagsService) as jasmine.SpyObj<UserTagsService>;
+    tagsService = TestBed.inject(UserTagsService) as MockedObject<UserTagsService>;
     fixture = TestBed.createComponent(UserTagComponent);
     component = fixture.componentInstance;
   });
@@ -50,7 +51,7 @@ describe('UserTagComponent', () => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      tagsService.getTag.and.returnValue(mockTag);
+      tagsService.getTag.mockReturnValue(mockTag);
 
       component.username = 'testuser';
       fixture.detectChanges();
@@ -76,11 +77,11 @@ describe('UserTagComponent', () => {
         updatedAt: Date.now(),
       };
 
-      tagsService.getTag.and.returnValue(mockTag1);
+      tagsService.getTag.mockReturnValue(mockTag1);
       component.username = 'user1';
       fixture.detectChanges();
 
-      tagsService.getTag.and.returnValue(mockTag2);
+      tagsService.getTag.mockReturnValue(mockTag2);
       component.username = 'user2';
       fixture.detectChanges();
 
@@ -89,7 +90,7 @@ describe('UserTagComponent', () => {
     });
 
     it('should handle username without tag', () => {
-      tagsService.getTag.and.returnValue(undefined);
+      tagsService.getTag.mockReturnValue(undefined);
 
       component.username = 'newuser';
       fixture.detectChanges();
@@ -106,8 +107,8 @@ describe('UserTagComponent', () => {
 
     it('should start editing mode', () => {
       const event = new Event('click');
-      spyOn(event, 'preventDefault');
-      spyOn(event, 'stopPropagation');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
 
       component.startEdit(event);
 
@@ -145,7 +146,7 @@ describe('UserTagComponent', () => {
   describe('saveTag', () => {
     beforeEach(() => {
       component.username = 'testuser';
-      tagsService.getTag.and.returnValue(undefined);
+      tagsService.getTag.mockReturnValue(undefined);
       fixture.detectChanges();
     });
 
@@ -157,7 +158,7 @@ describe('UserTagComponent', () => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      tagsService.getTag.and.returnValue(newTag);
+      tagsService.getTag.mockReturnValue(newTag);
       component.editValue = 'colleague';
       component.editing.set(true);
 
@@ -247,7 +248,15 @@ describe('UserTagComponent', () => {
   });
 
   describe('onInputBlur', () => {
-    it('should cancel edit after delay', fakeAsync(() => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should cancel edit after delay', () => {
       component.editing.set(true);
       component.editValue = 'test';
 
@@ -255,25 +264,25 @@ describe('UserTagComponent', () => {
 
       expect(component.editing()).toBe(true);
 
-      tick(100);
+      vi.advanceTimersByTime(100);
 
       expect(component.editing()).toBe(false);
-    }));
+    });
 
-    it('should not cancel if already not editing', fakeAsync(() => {
+    it('should not cancel if already not editing', () => {
       component.editing.set(false);
-      spyOn(component, 'cancelEdit');
+      vi.spyOn(component, 'cancelEdit');
 
       component.onInputBlur();
-      tick(100);
+      vi.advanceTimersByTime(100);
 
       expect(component.cancelEdit).not.toHaveBeenCalled();
-    }));
+    });
   });
 
   describe('template rendering', () => {
     beforeEach(() => {
-      tagsService.getTag.and.returnValue(undefined);
+      tagsService.getTag.mockReturnValue(undefined);
       component.username = 'testuser';
       fixture.detectChanges();
     });
@@ -306,7 +315,8 @@ describe('UserTagComponent', () => {
       const tagChip = fixture.debugElement.query(By.css('.tag-chip'));
       expect(tagChip).toBeTruthy();
       expect(tagChip.nativeElement.textContent.trim()).toBe('friend');
-      expect(tagChip.nativeElement.style.backgroundColor).toBe('rgb(0, 255, 0)');
+      const bgColor = tagChip.nativeElement.style.backgroundColor;
+      expect(bgColor === 'rgb(0, 255, 0)' || bgColor === '#00ff00').toBe(true);
     });
 
     it('should show editor when editing', () => {
@@ -349,7 +359,7 @@ describe('UserTagComponent', () => {
 
   describe('interaction', () => {
     beforeEach(() => {
-      tagsService.getTag.and.returnValue(undefined);
+      tagsService.getTag.mockReturnValue(undefined);
       component.username = 'testuser';
       fixture.detectChanges();
     });

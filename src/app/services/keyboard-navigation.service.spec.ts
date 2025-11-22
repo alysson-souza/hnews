@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -9,18 +10,25 @@ import { NavigationHistoryService } from './navigation-history.service';
 
 describe('KeyboardNavigationService', () => {
   let service: KeyboardNavigationService;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockCommandRegistry: jasmine.SpyObj<CommandRegistryService>;
-  let mockScrollService: jasmine.SpyObj<ScrollService>;
-  let mockNavigationHistory: jasmine.SpyObj<NavigationHistoryService>;
+  let mockRouter: MockedObject<Router>;
+  let mockCommandRegistry: MockedObject<CommandRegistryService>;
+  let mockScrollService: MockedObject<ScrollService>;
+  let mockNavigationHistory: MockedObject<NavigationHistoryService>;
 
   beforeEach(() => {
-    mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
+    mockRouter = {
+      navigate: vi.fn(),
       url: '/top',
-    });
-    mockCommandRegistry = jasmine.createSpyObj('CommandRegistryService', ['register']);
-    mockScrollService = jasmine.createSpyObj('ScrollService', ['scrollElementIntoView']);
-    mockNavigationHistory = jasmine.createSpyObj('NavigationHistoryService', ['pushCurrentState']);
+    } as unknown as MockedObject<Router>;
+    mockCommandRegistry = {
+      register: vi.fn(),
+    } as unknown as MockedObject<CommandRegistryService>;
+    mockScrollService = {
+      scrollElementIntoView: vi.fn(),
+    } as unknown as MockedObject<ScrollService>;
+    mockNavigationHistory = {
+      pushCurrentState: vi.fn(),
+    } as unknown as MockedObject<NavigationHistoryService>;
 
     TestBed.configureTestingModule({
       providers: [

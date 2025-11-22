@@ -4,11 +4,14 @@ import { Component, output, model } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.component';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-header-desktop-search',
   standalone: true,
-  imports: [FormsModule, ThemeToggleComponent],
+  imports: [FormsModule, ThemeToggleComponent, NgIconComponent],
+  viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
     <div class="hidden lg:flex items-center gap-4">
       <app-theme-toggle />
@@ -24,21 +27,14 @@ import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.
           [title]="'Search For Stories (Press / to focus)'"
           class="app-input app-input-sm search-input w-64 pr-10"
         />
-        <button type="submit" class="search-button" aria-label="Submit Search" [title]="'Search'">
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
+        <button
+          type="submit"
+          role="button"
+          class="search-button"
+          aria-label="Submit Search"
+          [title]="'Search'"
+        >
+          <ng-icon name="solarMagniferLinear" class="text-xl" />
         </button>
       </form>
     </div>
@@ -48,7 +44,8 @@ import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.
       @reference '../../../../../styles.css';
 
       .search-button {
-        @apply absolute right-2 top-2.5;
+        @apply absolute right-2 top-1/2 -translate-y-1/2;
+        @apply flex items-center justify-center;
         @apply text-gray-500 dark:text-blue-300;
         @apply hover:text-gray-700 dark:hover:text-blue-200;
         @apply cursor-pointer;

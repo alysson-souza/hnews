@@ -19,27 +19,27 @@ import { ThemeSelectorComponent } from '../../components/shared/theme-selector/t
 import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
 import { ToggleSwitchComponent } from '../../components/shared/toggle-switch/toggle-switch.component';
 import { PaginationComponent } from '../../components/shared/pagination/pagination.component';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  faPalette,
-  faBook,
-  faTag,
-  faFileExport,
-  faFileImport,
-  faTrash,
-  faTimes,
-  faDatabase,
-  faChartBar,
-  faRefresh,
-  faUser,
-  faHardDrive,
-  faMemory,
-  faImages,
-  faSearch,
-} from '@fortawesome/free-solid-svg-icons';
+  solarPaletteLinear,
+  solarBookLinear,
+  solarTagLinear,
+  solarExportLinear,
+  solarImportLinear,
+  solarTrashBinTrashLinear,
+  solarCloseCircleLinear,
+  solarDatabaseLinear,
+  solarChartLinear,
+  solarRefreshLinear,
+  solarUserLinear,
+  solarSSDRoundLinear,
+  solarCPULinear,
+  solarGalleryLinear,
+  solarMagniferLinear,
+} from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-settings',
@@ -54,7 +54,26 @@ import {
     SectionTitleComponent,
     ToggleSwitchComponent,
     PaginationComponent,
-    FontAwesomeModule,
+    NgIconComponent,
+  ],
+  viewProviders: [
+    provideIcons({
+      solarPaletteLinear,
+      solarBookLinear,
+      solarTagLinear,
+      solarExportLinear,
+      solarImportLinear,
+      solarTrashBinTrashLinear,
+      solarCloseCircleLinear,
+      solarDatabaseLinear,
+      solarChartLinear,
+      solarRefreshLinear,
+      solarUserLinear,
+      solarSSDRoundLinear,
+      solarCPULinear,
+      solarGalleryLinear,
+      solarMagniferLinear,
+    }),
   ],
   templateUrl: './settings.component.html',
   styles: [
@@ -75,7 +94,7 @@ import {
       }
 
       .section-icon {
-        @apply text-lg text-gray-500 dark:text-gray-400 flex-shrink-0;
+        @apply text-lg text-gray-500 dark:text-gray-400 flex-shrink-0 inline-flex items-center justify-center;
       }
 
       /* Alert Messages */
@@ -159,18 +178,18 @@ import {
       }
 
       .user-icon {
-        @apply text-gray-500 dark:text-gray-400 flex-shrink-0;
+        @apply text-gray-500 dark:text-gray-400 flex-shrink-0 inline-flex items-center justify-center;
       }
 
       .tag-username {
         @apply font-semibold text-gray-900 dark:text-gray-100 no-underline;
         @apply hover:underline focus-visible:underline;
-        @apply max-w-40 truncate inline-block;
+        @apply max-w-40 truncate inline-flex items-center;
       }
 
       .tag-badge {
         @apply px-3 py-1 text-xs font-medium text-white text-center rounded-full shadow-sm;
-        @apply max-w-32 truncate inline-block;
+        @apply max-w-32 truncate inline-flex items-center justify-center;
       }
 
       .tag-remove-modern {
@@ -298,23 +317,6 @@ export class SettingsComponent implements OnInit {
   deviceService = inject(DeviceService);
   private commandRegistry = inject(CommandRegistryService);
   private scrollService = inject(ScrollService);
-
-  // FontAwesome icons
-  faPalette = faPalette;
-  faBook = faBook;
-  faTag = faTag;
-  faFileExport = faFileExport;
-  faFileImport = faFileImport;
-  faTrash = faTrash;
-  faTimes = faTimes;
-  faDatabase = faDatabase;
-  faChartBar = faChartBar;
-  faRefresh = faRefresh;
-  faUser = faUser;
-  faHardDrive = faHardDrive;
-  faMemory = faMemory;
-  faImages = faImages;
-  faSearch = faSearch;
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');

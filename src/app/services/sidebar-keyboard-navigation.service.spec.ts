@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -9,22 +10,26 @@ import { SidebarService } from './sidebar.service';
 
 describe('SidebarKeyboardNavigationService', () => {
   let service: SidebarKeyboardNavigationService;
-  let mockInteractionService: jasmine.SpyObj<SidebarCommentsInteractionService>;
-  let mockCommandRegistry: jasmine.SpyObj<CommandRegistryService>;
-  let mockScrollService: jasmine.SpyObj<ScrollService>;
-  let mockSidebarService: jasmine.SpyObj<SidebarService>;
+  let mockInteractionService: MockedObject<SidebarCommentsInteractionService>;
+  let mockCommandRegistry: MockedObject<CommandRegistryService>;
+  let mockScrollService: MockedObject<ScrollService>;
+  let mockSidebarService: MockedObject<SidebarService>;
 
   beforeEach(() => {
-    mockInteractionService = jasmine.createSpyObj('SidebarCommentsInteractionService', [
-      'dispatchAction',
-    ]);
-    mockCommandRegistry = jasmine.createSpyObj('CommandRegistryService', ['register']);
-    mockScrollService = jasmine.createSpyObj('ScrollService', ['scrollElementIntoView']);
-    mockSidebarService = jasmine.createSpyObj('SidebarService', [
-      'closeSidebar',
-      'goBack',
-      'canGoBack',
-    ]);
+    mockInteractionService = {
+      dispatchAction: vi.fn(),
+    } as unknown as MockedObject<SidebarCommentsInteractionService>;
+    mockCommandRegistry = {
+      register: vi.fn(),
+    } as unknown as MockedObject<CommandRegistryService>;
+    mockScrollService = {
+      scrollElementIntoView: vi.fn(),
+    } as unknown as MockedObject<ScrollService>;
+    mockSidebarService = {
+      closeSidebar: vi.fn(),
+      goBack: vi.fn(),
+      canGoBack: vi.fn(),
+    } as unknown as MockedObject<SidebarService>;
 
     TestBed.configureTestingModule({
       providers: [
@@ -58,35 +63,35 @@ describe('SidebarKeyboardNavigationService', () => {
     it('should register commands', () => {
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.nextComment',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.previousComment',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.toggleExpand',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.upvote',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.expandReplies',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.viewThread',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.back',
-        jasmine.any(Function),
+        expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.close',
-        jasmine.any(Function),
+        expect.any(Function),
       );
     });
   });
@@ -97,7 +102,7 @@ describe('SidebarKeyboardNavigationService', () => {
       service.selectedCommentId.set(1);
 
       const nextElement = document.querySelector('[data-comment-id="2"]') as HTMLElement;
-      const scrollSpy = spyOn(nextElement, 'scrollIntoView');
+      const scrollSpy = vi.spyOn(nextElement, 'scrollIntoView');
 
       service.selectNext();
 
@@ -110,7 +115,7 @@ describe('SidebarKeyboardNavigationService', () => {
       service.selectedCommentId.set(2);
 
       const prevElement = document.querySelector('[data-comment-id="1"]') as HTMLElement;
-      const scrollSpy = spyOn(prevElement, 'scrollIntoView');
+      const scrollSpy = vi.spyOn(prevElement, 'scrollIntoView');
 
       service.selectPrevious();
 
@@ -161,20 +166,20 @@ describe('SidebarKeyboardNavigationService', () => {
     });
 
     it('should go back', () => {
-      mockSidebarService.canGoBack.and.returnValue(true);
+      mockSidebarService.canGoBack.mockReturnValue(true);
       service.goBack();
       expect(mockSidebarService.goBack).toHaveBeenCalled();
     });
 
     it('should handle back or close - go back', () => {
-      mockSidebarService.canGoBack.and.returnValue(true);
+      mockSidebarService.canGoBack.mockReturnValue(true);
       service.handleBackOrClose();
       expect(mockSidebarService.goBack).toHaveBeenCalled();
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
     });
 
     it('should handle back or close - close', () => {
-      mockSidebarService.canGoBack.and.returnValue(false);
+      mockSidebarService.canGoBack.mockReturnValue(false);
       service.handleBackOrClose();
       expect(mockSidebarService.goBack).not.toHaveBeenCalled();
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();

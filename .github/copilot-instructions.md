@@ -1,10 +1,10 @@
 # Copilot Instructions for hnews
 
-Concise rules and context to help AI agents work effectively in this Angular 20 app.
+Concise rules and context to help AI agents work effectively in this Angular 21 app.
 
 ## Architecture and entry points
 
-- **Framework:** Angular 20 (standalone components, no NgModules).
+- **Framework:** Angular 21 (standalone components, no NgModules).
 - **Structure:**
   - `src/app/components`: Reusable UI components (kebab-case).
   - `src/app/pages`: Route-level features (top/best/newest, item, user, search, settings).
@@ -56,7 +56,7 @@ Concise rules and context to help AI agents work effectively in this Angular 20 
 
 - **Start:** `npm start` (http://localhost:4200)
 - **Test:**
-  - Unit: `npm test` (Karma/Jasmine). Use `npm run test:watch` for TDD.
+  - Unit: `npm test` (Vitest). Use `npm run test:watch` for TDD.
   - E2E: `npm run e2e` (Playwright).
 - **Lint/Format:** `npm run lint` (ESLint), `npm run format` (Prettier).
 - **Build:** `npm run build` (dev), `npm run build:prod` (production).

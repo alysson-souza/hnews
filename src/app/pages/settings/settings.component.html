@@ -6,7 +6,7 @@
     <!-- Theme Settings Section -->
     <app-card class="block setting-section" role="region" aria-label="Theme Settings">
       <div class="section-header">
-        <fa-icon [icon]="faPalette" class="section-icon" />
+        <ng-icon name="solarPaletteLinear" class="section-icon" />
         <app-section-title>Appearance</app-section-title>
       </div>
       <app-theme-selector />
@@ -15,7 +15,7 @@
     <!-- Reading Preferences -->
     <app-card class="block setting-section" role="region" aria-label="Reading Preferences">
       <div class="section-header">
-        <fa-icon [icon]="faBook" class="section-icon" />
+        <ng-icon name="solarBookLinear" class="section-icon" />
         <app-section-title>Reading Preferences</app-section-title>
       </div>
       <div class="space-y-6">
@@ -55,7 +55,7 @@
     <!-- User Tags Section -->
     <app-card class="block setting-section" role="region" aria-label="User Tags Management">
       <div class="section-header">
-        <fa-icon [icon]="faTag" class="section-icon" />
+        <ng-icon name="solarTagLinear" class="section-icon" />
         <app-section-title>User Tags</app-section-title>
       </div>
 
@@ -76,10 +76,10 @@
               class="search-input"
               data-lpignore="true"
             />
-            <fa-icon [icon]="faSearch" class="search-icon" />
+            <ng-icon name="solarMagniferLinear" class="search-icon" />
             @if (searchQuery()) {
               <button (click)="clearSearch()" class="clear-search" aria-label="Clear search">
-                <fa-icon [icon]="faTimes" />
+                <ng-icon name="solarCloseCircleLinear" />
               </button>
             }
           </div>
@@ -103,7 +103,7 @@
               <div class="tag-item-modern">
                 <div class="tag-content">
                   <div class="tag-user-info">
-                    <fa-icon [icon]="faUser" class="user-icon" />
+                    <ng-icon name="solarUserLinear" class="user-icon" />
                     <a
                       class="tag-username"
                       [routerLink]="['/user', tag.username]"
@@ -126,7 +126,7 @@
                   (keydown.enter)="removeTag(tag.username)"
                   (keydown.space)="removeTag(tag.username)"
                 >
-                  <fa-icon [icon]="faTimes" />
+                  <ng-icon name="solarCloseCircleLinear" />
                 </button>
               </div>
             }
@@ -145,7 +145,7 @@
           }
         } @else if (searchQuery()) {
           <div class="empty-state">
-            <fa-icon [icon]="faSearch" class="empty-icon" />
+            <ng-icon name="solarMagniferLinear" class="empty-icon" />
             <h4 class="empty-title">No tags found</h4>
             <p class="empty-description">
               No tags match "{{ searchQuery() }}". Try a different search term or clear the search
@@ -157,13 +157,13 @@
               size="sm"
               ariaLabel="Clear search"
             >
-              <fa-icon [icon]="faTimes" class="mr-2" />
+              <ng-icon name="solarCloseCircleLinear" class="mr-2" />
               Clear Search
             </app-button>
           </div>
         } @else {
           <div class="empty-state">
-            <fa-icon [icon]="faTag" class="empty-icon" />
+            <ng-icon name="solarTagLinear" class="empty-icon" />
             <h4 class="empty-title">No tags yet</h4>
             <p class="empty-description">
               Start tagging users while browsing stories and comments. Your tags will help you
@@ -181,7 +181,7 @@
             ariaLabel="Export user tags"
             [disabled]="tags().length === 0"
           >
-            <fa-icon [icon]="faFileExport" class="hidden sm:inline mr-2" />
+            <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
             Export
           </app-button>
           <app-button
@@ -190,7 +190,7 @@
             size="sm"
             ariaLabel="Import user tags"
           >
-            <fa-icon [icon]="faFileImport" class="hidden sm:inline mr-2" />
+            <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
             Import
           </app-button>
           <input
@@ -208,8 +208,8 @@
               size="sm"
               ariaLabel="Clear all user tags"
             >
-              <fa-icon [icon]="faTrash" class="hidden sm:inline mr-2" />
-              Clear All Tags
+              <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
+              Clear Tags
             </app-button>
           }
         </div>
@@ -219,7 +219,7 @@
     <!-- Cache Management Section -->
     <app-card class="block setting-section" role="region" aria-label="Cache Management">
       <div class="section-header">
-        <fa-icon [icon]="faDatabase" class="section-icon" />
+        <ng-icon name="solarDatabaseLinear" class="section-icon" />
         <app-section-title>Cache Management</app-section-title>
       </div>
 
@@ -228,7 +228,7 @@
         <div class="cache-stats-section">
           <div class="stats-header">
             <h3 class="stats-title">
-              <fa-icon [icon]="faChartBar" class="mr-2" />
+              <ng-icon name="solarChartLinear" class="mr-2" />
               Storage Statistics
             </h3>
             <app-button
@@ -237,7 +237,7 @@
               size="sm"
               ariaLabel="Refresh cache statistics"
             >
-              <fa-icon [icon]="faRefresh" class="mr-2" />
+              <ng-icon name="solarRefreshLinear" class="mr-2" />
               Refresh
             </app-button>
           </div>
@@ -245,7 +245,7 @@
           <div class="stats-grid">
             <div class="stat-card-modern">
               <div class="stat-icon indexeddb">
-                <fa-icon [icon]="faHardDrive" />
+                <ng-icon name="solarSSDRoundLinear" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">IndexedDB Storage</div>
@@ -255,7 +255,7 @@
 
             <div class="stat-card-modern">
               <div class="stat-icon sw-cache">
-                <fa-icon [icon]="faImages" />
+                <ng-icon name="solarGalleryLinear" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">Service Worker Cache</div>
@@ -265,7 +265,7 @@
 
             <div class="stat-card-modern">
               <div class="stat-icon items">
-                <fa-icon [icon]="faDatabase" />
+                <ng-icon name="solarDatabaseLinear" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">Cached Items</div>
@@ -275,7 +275,7 @@
 
             <div class="stat-card-modern">
               <div class="stat-icon memory">
-                <fa-icon [icon]="faMemory" />
+                <ng-icon name="solarCPULinear" />
               </div>
               <div class="stat-content">
                 <div class="stat-label">Memory Cache</div>
@@ -289,7 +289,7 @@
         <div class="cache-actions-section">
           <div class="cache-actions-header">
             <h3 class="actions-title">
-              <fa-icon [icon]="faTrash" class="mr-2" />
+              <ng-icon name="solarTrashBinTrashLinear" class="mr-2" />
               Clear Cache Data
             </h3>
           </div>

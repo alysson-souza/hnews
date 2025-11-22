@@ -16,6 +16,8 @@ import { SearchResultComponent } from '../../components/search-result/search-res
 import { ResultListComponent } from '../../components/result-list/result-list.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 
 interface HighlightField {
   value: string;
@@ -45,7 +47,9 @@ interface SearchHit {
     CardComponent,
     SearchResultComponent,
     ResultListComponent,
+    NgIconComponent,
   ],
+  viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
     <app-page-container
       [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
@@ -87,20 +91,7 @@ interface SearchHit {
               [class.opacity-50]="isOffline()"
               [class.cursor-not-allowed]="isOffline()"
             >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
+              <ng-icon name="solarMagniferLinear" class="text-2xl" />
             </button>
           </form>
           @if (!isOffline()) {
@@ -194,19 +185,7 @@ interface SearchHit {
               No results for <strong>"{{ searchQuery }}"</strong>
             </ng-container>
             <div class="p-6 text-center">
-              <svg
-                class="w-16 h-16 text-gray-400 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01M12 12h.01"
-                ></path>
-              </svg>
+              <ng-icon name="solarMagniferLinear" class="text-6xl text-gray-400 mx-auto mb-4" />
               <p class="empty-main">Try adjusting your search terms or filters</p>
             </div>
           </app-result-list>
@@ -214,19 +193,7 @@ interface SearchHit {
           <app-result-list [showHeader]="true" [showLoadMore]="false">
             <ng-container header> Search Hacker News </ng-container>
             <div class="p-6 text-center">
-              <svg
-                class="w-16 h-16 text-gray-400 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
+              <ng-icon name="solarMagniferLinear" class="text-6xl text-gray-400 mx-auto mb-4" />
               <p class="empty-main">Enter a search term to get started</p>
               <p class="empty-sub mt-2">Search across all Hacker News stories and comments</p>
             </div>
@@ -247,6 +214,7 @@ interface SearchHit {
       }
       .search-button {
         @apply absolute right-3 top-1/2 transform -translate-y-1/2;
+        @apply flex items-center justify-center;
         @apply text-gray-500 dark:text-gray-400;
         @apply hover:text-gray-700 dark:hover:text-gray-200;
         @apply cursor-pointer p-1;

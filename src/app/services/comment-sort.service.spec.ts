@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -5,20 +6,22 @@ import { CommentSortService } from './comment-sort.service';
 
 describe('CommentSortService', () => {
   let service: CommentSortService;
-  let localStorageSpy: jasmine.SpyObj<Storage>;
+  let localStorageSpy: MockedObject<Storage>;
   let originalLocalStorage: Storage;
 
   beforeEach(() => {
     // Save original localStorage
     originalLocalStorage = window.localStorage;
 
-    localStorageSpy = jasmine.createSpyObj('localStorage', [
-      'getItem',
-      'setItem',
-      'clear',
-      'removeItem',
-    ]);
-    localStorageSpy.getItem.and.returnValue(null);
+    localStorageSpy = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      clear: vi.fn(),
+      removeItem: vi.fn(),
+      key: vi.fn(),
+      length: 0,
+    } as unknown as MockedObject<Storage>;
+    (localStorageSpy.getItem as Mock).mockReturnValue(null);
     Object.defineProperty(window, 'localStorage', {
       value: localStorageSpy,
       writable: true,
@@ -43,13 +46,13 @@ describe('CommentSortService', () => {
   });
 
   it('should default to "default" sort order', () => {
-    localStorageSpy.getItem.and.returnValue(null);
+    (localStorageSpy.getItem as Mock).mockReturnValue(null);
     service = TestBed.inject(CommentSortService);
     expect(service.sortOrder()).toBe('default');
   });
 
   it('should load sort order from localStorage', () => {
-    localStorageSpy.getItem.and.returnValue('best');
+    (localStorageSpy.getItem as Mock).mockReturnValue('best');
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
     service = TestBed.inject(CommentSortService);
@@ -57,7 +60,7 @@ describe('CommentSortService', () => {
   });
 
   it('should fallback to default for invalid stored values', () => {
-    localStorageSpy.getItem.and.returnValue('invalid');
+    (localStorageSpy.getItem as Mock).mockReturnValue('invalid');
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
     service = TestBed.inject(CommentSortService);
@@ -66,7 +69,7 @@ describe('CommentSortService', () => {
 
   it('should accept all valid sort orders', () => {
     ['default', 'best', 'newest', 'oldest'].forEach((order) => {
-      localStorageSpy.getItem.and.returnValue(order);
+      (localStorageSpy.getItem as Mock).mockReturnValue(order);
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({});
       const newService = TestBed.inject(CommentSortService);

@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -8,18 +9,20 @@ import { PwaUpdateService } from './pwa-update.service';
 
 describe('PwaUpdateService', () => {
   let service: PwaUpdateService;
-  let mockSwUpdate: jasmine.SpyObj<SwUpdate>;
-  let mockApplicationRef: Pick<ApplicationRef, 'isStable'> & { afterTick: Observable<unknown> };
+  let mockSwUpdate: MockedObject<SwUpdate>;
+  let mockApplicationRef: Pick<ApplicationRef, 'isStable'> & {
+    afterTick: Observable<unknown>;
+  };
   let versionUpdatesSubject: Subject<VersionEvent>;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     versionUpdatesSubject = new Subject<VersionEvent>();
 
-    mockSwUpdate = jasmine.createSpyObj(
-      'SwUpdate',
-      ['checkForUpdate', 'activateUpdate'],
-      ['versionUpdates'],
-    );
+    mockSwUpdate = {
+      checkForUpdate: vi.fn(),
+      activateUpdate: vi.fn(),
+    } as unknown as MockedObject<SwUpdate>;
 
     mockApplicationRef = {
       isStable: of(true),
@@ -37,8 +40,8 @@ describe('PwaUpdateService', () => {
     });
 
     // Configure spies with proper return values
-    mockSwUpdate.checkForUpdate.and.returnValue(Promise.resolve(false));
-    mockSwUpdate.activateUpdate.and.returnValue(Promise.resolve(true));
+    mockSwUpdate.checkForUpdate.mockReturnValue(Promise.resolve(false));
+    mockSwUpdate.activateUpdate.mockReturnValue(Promise.resolve(true));
 
     // Set up versionUpdates Observable
     Object.defineProperty(mockSwUpdate, 'isEnabled', {
@@ -52,6 +55,10 @@ describe('PwaUpdateService', () => {
     });
 
     service = TestBed.inject(PwaUpdateService);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should be created', () => {
@@ -84,24 +91,22 @@ describe('PwaUpdateService', () => {
         versionUpdatesSubject.next(mockVersionEvent);
       });
 
-      it('should set updateAvailable to true', (done) => {
+      it('should set updateAvailable to true', async () => {
         // Use setTimeout to allow async validation to complete
-        setTimeout(() => {
-          expect(service.updateAvailable()).toBe(true);
-          done();
-        }, 0);
+        vi.advanceTimersByTime(0);
+        await Promise.resolve();
+        expect(service.updateAvailable()).toBe(true);
       });
 
-      it('should store version information correctly', (done) => {
+      it('should store version information correctly', async () => {
         // Use setTimeout to allow async validation to complete
-        setTimeout(() => {
-          const versionInfo = service.updateVersionInfo();
-          expect(versionInfo).toEqual({
-            current: 'abc123',
-            available: 'def456',
-          });
-          done();
-        }, 0);
+        vi.advanceTimersByTime(0);
+        await Promise.resolve();
+        const versionInfo = service.updateVersionInfo();
+        expect(versionInfo).toEqual({
+          current: 'abc123',
+          available: 'def456',
+        });
       });
     });
 
@@ -122,27 +127,25 @@ describe('PwaUpdateService', () => {
         versionUpdatesSubject.next(mockVersionEvent);
       });
 
-      it('should NOT set updateAvailable to true', (done) => {
+      it('should NOT set updateAvailable to true', async () => {
         // Use setTimeout to allow async validation to complete
-        setTimeout(() => {
-          expect(service.updateAvailable()).toBe(false);
-          done();
-        }, 0);
+        vi.advanceTimersByTime(0);
+        await Promise.resolve();
+        expect(service.updateAvailable()).toBe(false);
       });
 
-      it('should NOT store version information', (done) => {
+      it('should NOT store version information', async () => {
         // Use setTimeout to allow async validation to complete
-        setTimeout(() => {
-          const versionInfo = service.updateVersionInfo();
-          expect(versionInfo).toBeNull();
-          done();
-        }, 0);
+        vi.advanceTimersByTime(0);
+        await Promise.resolve();
+        const versionInfo = service.updateVersionInfo();
+        expect(versionInfo).toBeNull();
       });
     });
   });
 
   describe('applyUpdate()', () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       // Set up an available update first with meaningful version change
       const versionEvent: VersionEvent = {
         type: 'VERSION_READY',
@@ -158,12 +161,15 @@ describe('PwaUpdateService', () => {
       versionUpdatesSubject.next(versionEvent);
 
       // Wait for async validation to complete
-      setTimeout(done, 0);
+      vi.advanceTimersByTime(0);
+      await Promise.resolve();
     });
 
     it('should activate update and reload page when update is available', async () => {
-      const serviceWithReload = service as unknown as { reloadPage: () => void };
-      const reloadSpy = spyOn(serviceWithReload, 'reloadPage');
+      const serviceWithReload = service as unknown as {
+        reloadPage: () => void;
+      };
+      const reloadSpy = vi.spyOn(serviceWithReload, 'reloadPage');
 
       await service.applyUpdate();
 
@@ -176,8 +182,10 @@ describe('PwaUpdateService', () => {
     it('should do nothing when no update is available', async () => {
       // Reset to no update available
       service['updateAvailable'].set(false);
-      const serviceWithReload = service as unknown as { reloadPage: () => void };
-      const reloadSpy = spyOn(serviceWithReload, 'reloadPage');
+      const serviceWithReload = service as unknown as {
+        reloadPage: () => void;
+      };
+      const reloadSpy = vi.spyOn(serviceWithReload, 'reloadPage');
 
       await service.applyUpdate();
 
@@ -187,10 +195,12 @@ describe('PwaUpdateService', () => {
 
     it('should handle activation errors gracefully', async () => {
       const error = new Error('Activation failed');
-      mockSwUpdate.activateUpdate.and.returnValue(Promise.reject(error));
-      const consoleSpy = spyOn(console, 'error');
-      const serviceWithReload = service as unknown as { reloadPage: () => void };
-      const reloadSpy = spyOn(serviceWithReload, 'reloadPage');
+      mockSwUpdate.activateUpdate.mockReturnValue(Promise.reject(error));
+      const consoleSpy = vi.spyOn(console, 'error');
+      const serviceWithReload = service as unknown as {
+        reloadPage: () => void;
+      };
+      const reloadSpy = vi.spyOn(serviceWithReload, 'reloadPage');
 
       await service.applyUpdate();
 
@@ -207,7 +217,7 @@ describe('PwaUpdateService', () => {
   });
 
   describe('dismissUpdate()', () => {
-    beforeEach((done) => {
+    beforeEach(async () => {
       // Set up an available update first with meaningful version change
       const versionEvent: VersionEvent = {
         type: 'VERSION_READY',
@@ -223,7 +233,8 @@ describe('PwaUpdateService', () => {
       versionUpdatesSubject.next(versionEvent);
 
       // Wait for async validation to complete
-      setTimeout(done, 0);
+      vi.advanceTimersByTime(0);
+      await Promise.resolve();
     });
 
     it('should clear updateAvailable signal', () => {
@@ -255,16 +266,28 @@ describe('PwaUpdateService', () => {
   describe('isMeaningfulUpdate method', () => {
     let serviceWithAccess: PwaUpdateService & {
       isMeaningfulUpdate: (
-        current: { hash: string; appData?: Record<string, unknown> },
-        latest: { hash: string; appData?: Record<string, unknown> },
+        current: {
+          hash: string;
+          appData?: Record<string, unknown>;
+        },
+        latest: {
+          hash: string;
+          appData?: Record<string, unknown>;
+        },
       ) => Promise<boolean>;
     };
 
     beforeEach(() => {
       serviceWithAccess = service as PwaUpdateService & {
         isMeaningfulUpdate: (
-          current: { hash: string; appData?: Record<string, unknown> },
-          latest: { hash: string; appData?: Record<string, unknown> },
+          current: {
+            hash: string;
+            appData?: Record<string, unknown>;
+          },
+          latest: {
+            hash: string;
+            appData?: Record<string, unknown>;
+          },
         ) => Promise<boolean>;
       };
     });
@@ -423,13 +446,13 @@ describe('PwaUpdateService', () => {
   });
 
   describe('integrated update detection with validation', () => {
-    let consoleSpy: jasmine.Spy;
+    let consoleSpy: Mock;
 
     beforeEach(() => {
-      consoleSpy = spyOn(console, 'log');
+      consoleSpy = vi.spyOn(console, 'log');
     });
 
-    it('should log detailed update information when VERSION_READY is received', (done) => {
+    it('should log detailed update information when VERSION_READY is received', async () => {
       const mockVersionEvent: VersionEvent = {
         type: 'VERSION_READY',
         currentVersion: {
@@ -445,21 +468,17 @@ describe('PwaUpdateService', () => {
       versionUpdatesSubject.next(mockVersionEvent);
 
       // Use setTimeout to allow async validation to complete
-      setTimeout(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'PWA Update: VERSION_READY detected',
-          jasmine.any(Object),
-        );
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'PWA Update: Version comparison',
-          jasmine.any(Object),
-        );
-        expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', true);
-        done();
-      }, 0);
+      vi.advanceTimersByTime(0);
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: VERSION_READY detected',
+        expect.any(Object),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Version comparison', expect.any(Object));
+      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', true);
     });
 
-    it('should ignore non-meaningful updates and log accordingly', (done) => {
+    it('should ignore non-meaningful updates and log accordingly', async () => {
       const mockVersionEvent: VersionEvent = {
         type: 'VERSION_READY',
         currentVersion: {
@@ -475,25 +494,21 @@ describe('PwaUpdateService', () => {
       versionUpdatesSubject.next(mockVersionEvent);
 
       // Use setTimeout to allow async validation to complete
-      setTimeout(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'PWA Update: VERSION_READY detected',
-          jasmine.any(Object),
-        );
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'PWA Update: Version comparison',
-          jasmine.any(Object),
-        );
-        expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', false);
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'PWA Update: Ignoring non-meaningful update (same version/commit)',
-        );
-        expect(service.updateAvailable()).toBe(false);
-        done();
-      }, 0);
+      vi.advanceTimersByTime(0);
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: VERSION_READY detected',
+        expect.any(Object),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Version comparison', expect.any(Object));
+      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', false);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'PWA Update: Ignoring non-meaningful update (same version/commit)',
+      );
+      expect(service.updateAvailable()).toBe(false);
     });
 
-    it('should show update indicator for meaningful updates', (done) => {
+    it('should show update indicator for meaningful updates', async () => {
       const mockVersionEvent: VersionEvent = {
         type: 'VERSION_READY',
         currentVersion: {
@@ -509,14 +524,13 @@ describe('PwaUpdateService', () => {
       versionUpdatesSubject.next(mockVersionEvent);
 
       // Use setTimeout to allow async validation to complete
-      setTimeout(() => {
-        expect(service.updateAvailable()).toBe(true);
-        expect(service.updateVersionInfo()).toEqual({
-          current: 'abc123',
-          available: 'def456',
-        });
-        done();
-      }, 0);
+      vi.advanceTimersByTime(0);
+      await Promise.resolve();
+      expect(service.updateAvailable()).toBe(true);
+      expect(service.updateVersionInfo()).toEqual({
+        current: 'abc123',
+        available: 'def456',
+      });
     });
   });
 
@@ -524,10 +538,10 @@ describe('PwaUpdateService', () => {
     beforeEach(() => {
       TestBed.resetTestingModule();
 
-      const disabledSwUpdate = jasmine.createSpyObj('SwUpdate', [
-        'checkForUpdate',
-        'activateUpdate',
-      ]);
+      const disabledSwUpdate = {
+        checkForUpdate: vi.fn(),
+        activateUpdate: vi.fn(),
+      };
 
       Object.defineProperty(disabledSwUpdate, 'isEnabled', {
         get: () => false,
@@ -548,8 +562,8 @@ describe('PwaUpdateService', () => {
         ],
       });
 
-      disabledSwUpdate.checkForUpdate.and.returnValue(Promise.resolve(false));
-      disabledSwUpdate.activateUpdate.and.returnValue(Promise.resolve(true));
+      disabledSwUpdate.checkForUpdate.mockReturnValue(Promise.resolve(false));
+      disabledSwUpdate.activateUpdate.mockReturnValue(Promise.resolve(true));
 
       service = TestBed.inject(PwaUpdateService);
     });

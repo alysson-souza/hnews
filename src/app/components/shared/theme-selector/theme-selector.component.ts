@@ -4,60 +4,83 @@ import { Component, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../../services/theme.service';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  solarSunLinear,
+  solarMoonLinear,
+  solarMonitorSmartphoneLinear,
+} from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-theme-selector',
   standalone: true,
-  imports: [FormsModule, FontAwesomeModule],
+  imports: [FormsModule, NgIconComponent],
+  viewProviders: [provideIcons({ solarSunLinear, solarMoonLinear, solarMonitorSmartphoneLinear })],
   template: `
     <div class="theme-selector">
       <h2 class="section-subtitle">Theme</h2>
 
       <div class="theme-options" role="radiogroup" aria-label="Theme selection">
-        <label class="theme-option">
+        <label
+          class="theme-option"
+          [class.selected]="themeService.theme() === 'auto'"
+          tabindex="0"
+          (keydown.enter)="themeService.setTheme('auto')"
+          (keydown.space)="themeService.setTheme('auto')"
+        >
           <input
             type="radio"
             name="theme"
             [checked]="themeService.theme() === 'auto'"
             (change)="themeService.setTheme('auto')"
-            class="app-radio"
+            class="sr-only"
             aria-label="Auto theme"
           />
           <span class="theme-label">
-            <fa-icon [icon]="faCircleHalfStroke" />
-            <span class="ml-2">Auto (system)</span>
+            <ng-icon name="solarMonitorSmartphoneLinear" class="text-xl" />
+            <span class="ml-2 font-medium">Auto</span>
           </span>
         </label>
 
-        <label class="theme-option">
+        <label
+          class="theme-option"
+          [class.selected]="themeService.theme() === 'light'"
+          tabindex="0"
+          (keydown.enter)="themeService.setTheme('light')"
+          (keydown.space)="themeService.setTheme('light')"
+        >
           <input
             type="radio"
             name="theme"
             [checked]="themeService.theme() === 'light'"
             (change)="themeService.setTheme('light')"
-            class="app-radio"
+            class="sr-only"
             aria-label="Light theme"
           />
           <span class="theme-label">
-            <fa-icon [icon]="faSun" />
-            <span class="ml-2">Light</span>
+            <ng-icon name="solarSunLinear" class="text-xl" />
+            <span class="ml-2 font-medium">Light</span>
           </span>
         </label>
 
-        <label class="theme-option">
+        <label
+          class="theme-option"
+          [class.selected]="themeService.theme() === 'dark'"
+          tabindex="0"
+          (keydown.enter)="themeService.setTheme('dark')"
+          (keydown.space)="themeService.setTheme('dark')"
+        >
           <input
             type="radio"
             name="theme"
             [checked]="themeService.theme() === 'dark'"
             (change)="themeService.setTheme('dark')"
-            class="app-radio"
+            class="sr-only"
             aria-label="Dark theme"
           />
           <span class="theme-label">
-            <fa-icon [icon]="faMoon" />
-            <span class="ml-2">Dark</span>
+            <ng-icon name="solarMoonLinear" class="text-xl" />
+            <span class="ml-2 font-medium">Dark</span>
           </span>
         </label>
       </div>
@@ -76,32 +99,29 @@ import { faSun, faMoon, faCircleHalfStroke } from '@fortawesome/free-solid-svg-i
       }
 
       .theme-options {
-        @apply space-y-2;
+        @apply grid grid-cols-1 sm:grid-cols-3 gap-3;
       }
 
       .theme-option {
-        @apply flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200;
+        @apply flex items-center justify-center p-4 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200;
         @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900;
       }
 
-      .app-radio {
-        @apply w-4 h-4 text-blue-600 focus:ring-blue-500 focus:ring-2 dark:focus:ring-blue-400;
-        @apply dark:text-blue-500 dark:accent-blue-500;
+      .theme-option.selected {
+        @apply border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400;
+      }
+
+      .theme-option.selected .theme-label {
+        @apply text-blue-700 dark:text-blue-300;
       }
 
       .theme-label {
         @apply text-gray-700 dark:text-gray-300 flex items-center gap-2;
-      }
-
-      .theme-label fa-icon {
-        @apply text-gray-500 dark:text-gray-400;
       }
     `,
   ],
 })
 export class ThemeSelectorComponent {
   themeService = inject(ThemeService);
-  protected faSun = faSun;
-  protected faMoon = faMoon;
-  protected faCircleHalfStroke = faCircleHalfStroke;
 }

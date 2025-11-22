@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -8,26 +9,26 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
 
 describe('KeyboardShortcutsComponent', () => {
   let component: KeyboardShortcutsComponent;
-  let mockShortcutConfig: jasmine.SpyObj<KeyboardShortcutConfigService>;
+  let mockShortcutConfig: MockedObject<KeyboardShortcutConfigService>;
   let mockKeyboardContext: {
-    currentContext: jasmine.Spy;
+    currentContext: Mock;
   };
 
   beforeEach(() => {
     // Create mock services
-    mockShortcutConfig = jasmine.createSpyObj('KeyboardShortcutConfigService', [
-      'getShortcutsByCategory',
-      'getCategories',
-    ]);
+    mockShortcutConfig = {
+      getShortcutsByCategory: vi.fn(),
+      getCategories: vi.fn(),
+    } as unknown as MockedObject<KeyboardShortcutConfigService>;
 
     // Mock currentContext as a signal
     const currentContextSignal = signal<'default' | 'sidebar'>('default');
     mockKeyboardContext = {
-      currentContext: jasmine.createSpy().and.callFake(() => currentContextSignal()),
+      currentContext: vi.fn().mockImplementation(() => currentContextSignal()),
     };
 
     // Setup default return values
-    mockShortcutConfig.getShortcutsByCategory.and.returnValue(
+    mockShortcutConfig.getShortcutsByCategory.mockReturnValue(
       new Map([
         [
           'General',
@@ -56,7 +57,7 @@ describe('KeyboardShortcutsComponent', () => {
       ]),
     );
 
-    mockShortcutConfig.getCategories.and.returnValue(['Navigation', 'General']);
+    mockShortcutConfig.getCategories.mockReturnValue(['Navigation', 'General']);
 
     TestBed.configureTestingModule({
       imports: [KeyboardShortcutsComponent],
@@ -130,7 +131,7 @@ describe('KeyboardShortcutsComponent', () => {
     });
 
     it('should return null for default context', () => {
-      mockKeyboardContext.currentContext.and.returnValue('default');
+      mockKeyboardContext.currentContext.mockReturnValue('default');
       // Re-evaluate computed signal
       const label = component.contextLabel();
       expect(label).toBeNull();
@@ -138,7 +139,7 @@ describe('KeyboardShortcutsComponent', () => {
 
     it('should return "Comments Sidebar" for sidebar context', () => {
       const sidebarSignal = signal<'default' | 'sidebar'>('sidebar');
-      mockKeyboardContext.currentContext.and.callFake(() => sidebarSignal());
+      mockKeyboardContext.currentContext.mockImplementation(() => sidebarSignal());
 
       // Re-create component to get updated signal
       component = TestBed.createComponent(KeyboardShortcutsComponent).componentInstance;
@@ -160,9 +161,9 @@ describe('KeyboardShortcutsComponent', () => {
         cancelable: true,
       });
 
-      spyOn(event, 'stopPropagation');
-      spyOn(event, 'preventDefault');
-      spyOn(component, 'close');
+      vi.spyOn(event, 'stopPropagation');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(component, 'close');
 
       component.onKeyDown(event);
 
@@ -179,9 +180,9 @@ describe('KeyboardShortcutsComponent', () => {
         cancelable: true,
       });
 
-      spyOn(event, 'stopPropagation');
-      spyOn(event, 'preventDefault');
-      spyOn(component, 'close');
+      vi.spyOn(event, 'stopPropagation');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(component, 'close');
 
       component.onKeyDown(event);
 
@@ -197,9 +198,9 @@ describe('KeyboardShortcutsComponent', () => {
         cancelable: true,
       });
 
-      spyOn(event, 'stopPropagation');
-      spyOn(event, 'preventDefault');
-      spyOn(component, 'close');
+      vi.spyOn(event, 'stopPropagation');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(component, 'close');
 
       component.onKeyDown(event);
 
@@ -226,8 +227,8 @@ describe('KeyboardShortcutsComponent', () => {
         cancelable: true,
       });
 
-      spyOn(event, 'stopPropagation');
-      spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
+      vi.spyOn(event, 'preventDefault');
 
       component.open();
       component.onKeyDown(event);
@@ -267,14 +268,14 @@ describe('KeyboardShortcutsComponent', () => {
 
   describe('Integration with services', () => {
     it('should call getShortcutsByCategory with current context', () => {
-      mockKeyboardContext.currentContext.and.returnValue('default');
+      mockKeyboardContext.currentContext.mockReturnValue('default');
       component.shortcutsByCategory();
 
       expect(mockShortcutConfig.getShortcutsByCategory).toHaveBeenCalledWith('default');
     });
 
     it('should call getCategories with current context', () => {
-      mockKeyboardContext.currentContext.and.returnValue('default');
+      mockKeyboardContext.currentContext.mockReturnValue('default');
       component.categories();
 
       expect(mockShortcutConfig.getCategories).toHaveBeenCalledWith('default');

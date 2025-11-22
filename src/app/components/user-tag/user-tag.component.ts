@@ -14,13 +14,14 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faUserTag } from '@fortawesome/free-solid-svg-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarTagLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-user-tag',
   standalone: true,
-  imports: [FormsModule, RouterLink, FontAwesomeModule],
+  imports: [FormsModule, RouterLink, NgIconComponent],
+  viewProviders: [provideIcons({ solarTagLinear })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="user-tag">
@@ -61,7 +62,7 @@ import { faUserTag } from '@fortawesome/free-solid-svg-icons';
           (keydown.enter)="startEdit($event)"
           (keydown.space)="startEdit($event)"
         >
-          <fa-icon [icon]="faUserTag" class="icon" />
+          <ng-icon name="solarTagLinear" class="icon" />
         </button>
       }
 
@@ -174,7 +175,6 @@ export class UserTagComponent {
   tag = signal<UserTag | undefined>(undefined);
   editing = signal(false);
   editValue = '';
-  protected faUserTag = faUserTag;
 
   private readonly tagInput = viewChild<ElementRef<HTMLInputElement>>('tagInput');
 

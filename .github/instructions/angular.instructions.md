@@ -8,7 +8,7 @@ Instructions for generating high-quality Angular applications with TypeScript, u
 
 ## Project Context
 
-- Use latest Angular version (Angular 20+) with standalone components.
+- Use latest Angular version (Angular 21+) with standalone components.
 - Use TypeScript for type safety.
 - Use Angular CLI for project setup and scaffolding.
 - Follow [Angular Style Guide](https://angular.dev/style-guide).
@@ -61,7 +61,7 @@ Instructions for generating high-quality Angular applications with TypeScript, u
 
 ### Testing & Quality
 
-- Write unit tests for all new features and bug fixes using Jasmine and Karma.
+- Write unit tests for all new features and bug fixes using Vitest.
 - Use `TestBed` with mocked dependencies and mock HTTP requests.
 - Test signal-based state updates.
 - Write E2E tests with Playwright.

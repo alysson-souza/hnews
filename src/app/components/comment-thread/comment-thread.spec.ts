@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -34,7 +35,7 @@ class MockCommentVoteStoreService {
   private readonly state = signal<Set<number>>(new Set());
   readonly votedCommentIds = this.state.asReadonly();
 
-  vote = jasmine.createSpy('vote').and.callFake((id: number) => {
+  vote = vi.fn().mockImplementation((id: number) => {
     this.state.update((current) => {
       if (current.has(id)) {
         return current;
@@ -60,53 +61,45 @@ class MockCommentRepliesLoaderService {
   currentPage = signal(0);
   pageSize = 10;
 
-  configureKids = jasmine.createSpy('configureKids');
-  loadFirstPage = jasmine.createSpy('loadFirstPage');
-  loadNextPage = jasmine.createSpy('loadNextPage');
-  loadUpToPage = jasmine.createSpy('loadUpToPage');
-  remainingCount = jasmine.createSpy('remainingCount').and.returnValue(0);
+  configureKids = vi.fn();
+  loadFirstPage = vi.fn();
+  loadNextPage = vi.fn();
+  loadUpToPage = vi.fn();
+  remainingCount = vi.fn().mockReturnValue(0);
 }
 
 class MockCommentStateService {
   private states = new Map<number, CommentStateEntry>();
 
-  getState = jasmine.createSpy('getState').and.callFake((commentId: number) => {
+  getState = vi.fn().mockImplementation((commentId: number) => {
     return this.states.get(commentId);
   });
 
-  setState = jasmine
-    .createSpy('setState')
-    .and.callFake((commentId: number, state: Partial<CommentStateEntry>) => {
-      const current = this.states.get(commentId);
-      const newState: CommentStateEntry = {
-        collapsed: current?.collapsed ?? false,
-        repliesExpanded: current?.repliesExpanded ?? false,
-        loadedPages: current?.loadedPages ?? 0,
-        lastAccessed: Date.now(),
-        ...state,
-      };
-      this.states.set(commentId, newState);
-    });
+  setState = vi.fn().mockImplementation((commentId: number, state: Partial<CommentStateEntry>) => {
+    const current = this.states.get(commentId);
+    const newState: CommentStateEntry = {
+      collapsed: current?.collapsed ?? false,
+      repliesExpanded: current?.repliesExpanded ?? false,
+      loadedPages: current?.loadedPages ?? 0,
+      lastAccessed: Date.now(),
+      ...state,
+    };
+    this.states.set(commentId, newState);
+  });
 
-  setCollapsed = jasmine
-    .createSpy('setCollapsed')
-    .and.callFake((commentId: number, collapsed: boolean) => {
-      this.setState(commentId, { collapsed });
-    });
+  setCollapsed = vi.fn().mockImplementation((commentId: number, collapsed: boolean) => {
+    this.setState(commentId, { collapsed });
+  });
 
-  setRepliesExpanded = jasmine
-    .createSpy('setRepliesExpanded')
-    .and.callFake((commentId: number, expanded: boolean) => {
-      this.setState(commentId, { repliesExpanded: expanded });
-    });
+  setRepliesExpanded = vi.fn().mockImplementation((commentId: number, expanded: boolean) => {
+    this.setState(commentId, { repliesExpanded: expanded });
+  });
 
-  setLoadedPages = jasmine
-    .createSpy('setLoadedPages')
-    .and.callFake((commentId: number, pages: number) => {
-      this.setState(commentId, { loadedPages: pages });
-    });
+  setLoadedPages = vi.fn().mockImplementation((commentId: number, pages: number) => {
+    this.setState(commentId, { loadedPages: pages });
+  });
 
-  clearAll = jasmine.createSpy('clearAll').and.callFake(() => {
+  clearAll = vi.fn().mockImplementation(() => {
     this.states.clear();
   });
 
@@ -126,7 +119,7 @@ class MockCommentStateService {
 describe('CommentThread', () => {
   let component: CommentThread;
   let fixture: ComponentFixture<CommentThread>;
-  let mockHnService: jasmine.SpyObj<HackernewsService>;
+  let mockHnService: MockedObject<HackernewsService>;
   let mockVoteStore: MockCommentVoteStoreService;
   let mockRepliesLoader: MockCommentRepliesLoaderService;
   let mockCommentStateService: MockCommentStateService;
@@ -144,7 +137,9 @@ describe('CommentThread', () => {
 
   beforeEach(async () => {
     // Create spy object for HackernewsService
-    mockHnService = jasmine.createSpyObj<HackernewsService>('HackernewsService', ['getItem']);
+    mockHnService = {
+      getItem: vi.fn(),
+    } as unknown as MockedObject<HackernewsService>;
     mockVoteStore = new MockCommentVoteStoreService();
     mockRepliesLoader = new MockCommentRepliesLoaderService();
     mockCommentStateService = new MockCommentStateService();
@@ -169,7 +164,7 @@ describe('CommentThread', () => {
           provide: SidebarCommentsInteractionService,
           useValue: {
             action$: new Subject(),
-            dispatchAction: jasmine.createSpy('dispatchAction'),
+            dispatchAction: vi.fn(),
           },
         },
       ],
@@ -183,8 +178,8 @@ describe('CommentThread', () => {
     component.depth = 0;
 
     // Mock the service methods to prevent actual HTTP calls
-    mockHnService.getItem.and.returnValue(of(null));
-    mockRepliesLoader.remainingCount.and.returnValue(0);
+    mockHnService.getItem.mockReturnValue(of(null));
+    mockRepliesLoader.remainingCount.mockReturnValue(0);
 
     fixture.detectChanges();
   });
@@ -281,12 +276,12 @@ describe('CommentThread', () => {
 
     describe('remainingRepliesCount', () => {
       it('should calculate the remaining replies count correctly', () => {
-        mockRepliesLoader.remainingCount.and.returnValue(2);
+        mockRepliesLoader.remainingCount.mockReturnValue(2);
         expect(component.remainingRepliesCount).toBe(2);
       });
 
       it('should return 0 when no more replies', () => {
-        mockRepliesLoader.remainingCount.and.returnValue(0);
+        mockRepliesLoader.remainingCount.mockReturnValue(0);
         expect(component.remainingRepliesCount).toBe(0);
       });
     });
@@ -295,7 +290,7 @@ describe('CommentThread', () => {
   describe('ngOnInit', () => {
     it('should hydrate from initial comment when provided', () => {
       component.initialComment = mockComment;
-      mockRepliesLoader.configureKids.calls.reset();
+      mockRepliesLoader.configureKids.mockClear();
 
       component.ngOnInit();
 
@@ -309,7 +304,7 @@ describe('CommentThread', () => {
     it('should load comment when not lazy loading and no initial comment', () => {
       component.lazyLoad = false;
       component.initialComment = undefined;
-      spyOn(component, 'loadComment');
+      vi.spyOn(component, 'loadComment');
 
       component.ngOnInit();
 
@@ -328,8 +323,8 @@ describe('CommentThread', () => {
 
   describe('loadComment', () => {
     it('should load comment from service and set loading states', () => {
-      mockHnService.getItem.and.returnValue(of(mockComment));
-      mockRepliesLoader.configureKids.calls.reset();
+      mockHnService.getItem.mockReturnValue(of(mockComment));
+      mockRepliesLoader.configureKids.mockClear();
 
       component.loadComment();
 
@@ -337,8 +332,8 @@ describe('CommentThread', () => {
     });
 
     it('should handle successful comment load', () => {
-      mockHnService.getItem.and.returnValue(of(mockComment));
-      mockRepliesLoader.configureKids.calls.reset();
+      mockHnService.getItem.mockReturnValue(of(mockComment));
+      mockRepliesLoader.configureKids.mockClear();
 
       component.loadComment();
 
@@ -353,8 +348,8 @@ describe('CommentThread', () => {
 
     it('should handle deleted comment', () => {
       const deletedComment = { ...mockComment, deleted: true };
-      mockHnService.getItem.and.returnValue(of(deletedComment));
-      mockRepliesLoader.configureKids.calls.reset();
+      mockHnService.getItem.mockReturnValue(of(deletedComment));
+      mockRepliesLoader.configureKids.mockClear();
 
       component.loadComment();
 
@@ -367,7 +362,7 @@ describe('CommentThread', () => {
     });
 
     it('should handle service error', () => {
-      mockHnService.getItem.and.returnValue(throwError(() => new Error('Failed to load')));
+      mockHnService.getItem.mockReturnValue(throwError(() => new Error('Failed to load')));
 
       component.loadComment();
 
@@ -380,7 +375,7 @@ describe('CommentThread', () => {
 
   describe('loadMoreReplies', () => {
     it('should load next page when there are more replies', () => {
-      mockRepliesLoader.loadNextPage.calls.reset();
+      mockRepliesLoader.loadNextPage.mockClear();
       mockRepliesLoader.hasMore.set(true);
       mockRepliesLoader.loadingMore.set(false);
       mockRepliesLoader.repliesLoaded.set(true);
@@ -391,7 +386,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load next page when already loading', () => {
-      mockRepliesLoader.loadNextPage.calls.reset();
+      mockRepliesLoader.loadNextPage.mockClear();
       mockRepliesLoader.hasMore.set(true);
       mockRepliesLoader.loadingMore.set(true);
       mockRepliesLoader.repliesLoaded.set(true);
@@ -402,7 +397,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load next page when no more replies', () => {
-      mockRepliesLoader.loadNextPage.calls.reset();
+      mockRepliesLoader.loadNextPage.mockClear();
       mockRepliesLoader.hasMore.set(false);
       mockRepliesLoader.repliesLoaded.set(true);
 
@@ -414,7 +409,7 @@ describe('CommentThread', () => {
 
   describe('expandReplies', () => {
     it('should load first page of replies when not loaded and not loading', () => {
-      mockRepliesLoader.loadFirstPage.calls.reset();
+      mockRepliesLoader.loadFirstPage.mockClear();
       mockRepliesLoader.repliesLoaded.set(false);
       mockRepliesLoader.loadingReplies.set(false);
 
@@ -424,7 +419,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load replies when already loaded', () => {
-      mockRepliesLoader.loadFirstPage.calls.reset();
+      mockRepliesLoader.loadFirstPage.mockClear();
       mockRepliesLoader.repliesLoaded.set(true);
 
       component.expandReplies();
@@ -433,7 +428,7 @@ describe('CommentThread', () => {
     });
 
     it('should not load replies when already loading', () => {
-      mockRepliesLoader.loadFirstPage.calls.reset();
+      mockRepliesLoader.loadFirstPage.mockClear();
       mockRepliesLoader.repliesLoaded.set(false);
       mockRepliesLoader.loadingReplies.set(true);
 
@@ -519,8 +514,8 @@ describe('CommentThread', () => {
       mockRepliesLoader.loadingReplies.set(false);
       mockRepliesLoader.hasMore.set(true);
       mockRepliesLoader.loadingMore.set(false);
-      mockRepliesLoader.loadNextPage.calls.reset();
-      mockRepliesLoader.remainingCount.and.returnValue(2);
+      mockRepliesLoader.loadNextPage.mockClear();
+      mockRepliesLoader.remainingCount.mockReturnValue(2);
       fixture.detectChanges();
     });
 
@@ -550,7 +545,7 @@ describe('CommentThread', () => {
 
     it('should show loading state and disable the button while fetching more replies', () => {
       mockRepliesLoader.loadingMore.set(true);
-      mockRepliesLoader.remainingCount.and.returnValue(5);
+      mockRepliesLoader.remainingCount.mockReturnValue(5);
       fixture.detectChanges();
 
       const buttons = fixture.debugElement.queryAll(By.css('app-button button'));
@@ -584,7 +579,7 @@ describe('CommentThread', () => {
   describe('comment state persistence', () => {
     it('should restore saved collapse state when loading comment', () => {
       mockCommentStateService.setSavedState(123, { collapsed: true });
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
 
       component.loadComment();
       fixture.detectChanges();
@@ -595,7 +590,7 @@ describe('CommentThread', () => {
 
     it('should restore saved expanded state when loading comment', () => {
       mockCommentStateService.setSavedState(123, { collapsed: false });
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
 
       component.loadComment();
       fixture.detectChanges();
@@ -609,12 +604,12 @@ describe('CommentThread', () => {
         repliesExpanded: true,
         loadedPages: 3,
       });
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
 
       component.loadComment();
       fixture.detectChanges();
 
-      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalledWith(2, jasmine.any(Function));
+      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalledWith(2, expect.any(Function));
     });
 
     it('should not restore replies if repliesExpanded is false', () => {
@@ -623,7 +618,7 @@ describe('CommentThread', () => {
         repliesExpanded: false,
         loadedPages: 0,
       });
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
 
       component.loadComment();
       fixture.detectChanges();
@@ -650,7 +645,7 @@ describe('CommentThread', () => {
         loadedPages: 2,
       });
 
-      mockHnService.getItem.and.returnValue(of(mockComment));
+      mockHnService.getItem.mockReturnValue(of(mockComment));
       component.loadComment();
       fixture.detectChanges();
 
@@ -695,7 +690,10 @@ describe('CommentThread', () => {
 
   describe('keyboard interaction', () => {
     let interactionService: SidebarCommentsInteractionService;
-    let actionSubject: Subject<{ commentId: number; action: string }>;
+    let actionSubject: Subject<{
+      commentId: number;
+      action: string;
+    }>;
 
     beforeEach(() => {
       interactionService = TestBed.inject(SidebarCommentsInteractionService);
@@ -706,25 +704,25 @@ describe('CommentThread', () => {
     });
 
     it('should toggle collapse when collapse action is received', () => {
-      spyOn(component, 'toggleCollapse');
+      vi.spyOn(component, 'toggleCollapse');
       actionSubject.next({ commentId: 123, action: 'collapse' });
       expect(component.toggleCollapse).toHaveBeenCalled();
     });
 
     it('should not toggle collapse when action is for another comment', () => {
-      spyOn(component, 'toggleCollapse');
+      vi.spyOn(component, 'toggleCollapse');
       actionSubject.next({ commentId: 999, action: 'collapse' });
       expect(component.toggleCollapse).not.toHaveBeenCalled();
     });
 
     it('should upvote when upvote action is received', () => {
-      spyOn(component, 'upvoteComment');
+      vi.spyOn(component, 'upvoteComment');
       actionSubject.next({ commentId: 123, action: 'upvote' });
       expect(component.upvoteComment).toHaveBeenCalled();
     });
 
     it('should expand replies when expandReplies action is received', () => {
-      spyOn(component, 'expandReplies');
+      vi.spyOn(component, 'expandReplies');
       actionSubject.next({ commentId: 123, action: 'expandReplies' });
       expect(component.expandReplies).toHaveBeenCalled();
     });

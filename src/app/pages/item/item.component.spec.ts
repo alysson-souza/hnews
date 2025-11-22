@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -14,10 +15,10 @@ import { HNItem } from '../../models/hn';
 describe('ItemComponent', () => {
   let component: ItemComponent;
   let fixture: ComponentFixture<ItemComponent>;
-  let mockHnService: jasmine.SpyObj<HackernewsService>;
-  let mockVisitedService: jasmine.SpyObj<VisitedService>;
-  let mockScrollService: jasmine.SpyObj<ScrollService>;
-  let mockCommentSortService: jasmine.SpyObj<CommentSortService>;
+  let mockHnService: MockedObject<HackernewsService>;
+  let mockVisitedService: MockedObject<VisitedService>;
+  let mockScrollService: MockedObject<ScrollService>;
+  let mockCommentSortService: MockedObject<CommentSortService>;
   let mockActivatedRoute: Partial<ActivatedRoute>;
 
   const mockItem: HNItem = {
@@ -61,15 +62,20 @@ describe('ItemComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockHnService = jasmine.createSpyObj('HackernewsService', [
-      'getItem',
-      'getStoryTopLevelComments',
-    ]);
-    mockVisitedService = jasmine.createSpyObj('VisitedService', ['markAsVisited']);
-    mockScrollService = jasmine.createSpyObj('ScrollService', ['scrollToElement']);
-    mockCommentSortService = jasmine.createSpyObj('CommentSortService', ['setSortOrder'], {
+    mockHnService = {
+      getItem: vi.fn(),
+      getStoryTopLevelComments: vi.fn(),
+    } as unknown as MockedObject<HackernewsService>;
+    mockVisitedService = {
+      markAsVisited: vi.fn(),
+    } as unknown as MockedObject<VisitedService>;
+    mockScrollService = {
+      scrollToElement: vi.fn(),
+    } as unknown as MockedObject<ScrollService>;
+    mockCommentSortService = {
+      setSortOrder: vi.fn(),
       sortOrder: signal('default'),
-    });
+    } as unknown as MockedObject<CommentSortService>;
 
     mockActivatedRoute = {
       params: new BehaviorSubject<Params>({ id: '123' }),
@@ -90,8 +96,8 @@ describe('ItemComponent', () => {
       ],
     }).compileComponents();
 
-    mockHnService.getItem.and.returnValue(of(mockItem));
-    mockHnService.getStoryTopLevelComments.and.returnValue(of(mockComments));
+    mockHnService.getItem.mockReturnValue(of(mockItem));
+    mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
 
     fixture = TestBed.createComponent(ItemComponent);
     component = fixture.componentInstance;
@@ -181,7 +187,7 @@ describe('ItemComponent', () => {
     });
 
     it('should fallback to default order on error', () => {
-      mockHnService.getStoryTopLevelComments.and.returnValue(
+      mockHnService.getStoryTopLevelComments.mockReturnValue(
         throwError(() => new Error('Test error')),
       );
 
@@ -208,12 +214,11 @@ describe('ItemComponent', () => {
       expect(mockHnService.getItem).toHaveBeenCalledWith(456);
     });
 
-    it('should scroll to submission title after loading', (done) => {
+    it('should scroll to submission title after loading', async () => {
       component.ngOnInit();
 
       setTimeout(() => {
         expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title');
-        done();
       }, 150);
     });
   });

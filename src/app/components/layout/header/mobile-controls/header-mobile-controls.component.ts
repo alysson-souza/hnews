@@ -1,53 +1,45 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, output, input } from '@angular/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  solarMagniferLinear,
+  solarHamburgerMenuLinear,
+  solarCloseCircleLinear,
+} from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-header-mobile-controls',
   standalone: true,
-  imports: [],
+  imports: [NgIconComponent],
+  viewProviders: [
+    provideIcons({ solarMagniferLinear, solarHamburgerMenuLinear, solarCloseCircleLinear }),
+  ],
   template: `
     <div class="flex items-center gap-2 lg:hidden">
       <button
+        type="button"
+        role="button"
         (click)="onToggleSearch()"
         class="mobile-menu-button"
         [attr.aria-expanded]="showMobileSearch()"
         aria-label="Toggle Search"
       >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
-        </svg>
+        <ng-icon name="solarMagniferLinear" class="text-2xl" />
       </button>
 
       <button
+        type="button"
+        role="button"
         (click)="onToggleMenu()"
         class="mobile-menu-button"
         [attr.aria-expanded]="mobileMenuOpen()"
         aria-label="Toggle Menu"
       >
         @if (mobileMenuOpen()) {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            ></path>
-          </svg>
+          <ng-icon name="solarCloseCircleLinear" class="text-2xl" />
         } @else {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            ></path>
-          </svg>
+          <ng-icon name="solarHamburgerMenuLinear" class="text-2xl" />
         }
       </button>
     </div>
@@ -59,6 +51,7 @@ import { Component, output, input } from '@angular/core';
       .mobile-menu-button {
         @apply p-2 text-gray-600 dark:text-gray-300 rounded-lg transition-colors;
         @apply hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-slate-800 dark:hover:text-white;
+        @apply cursor-pointer flex items-center justify-center;
       }
     `,
   ],

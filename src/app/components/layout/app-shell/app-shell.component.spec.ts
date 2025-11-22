@@ -71,6 +71,6 @@ describe('AppShellComponent', () => {
 
     header.searchSubmit.emit();
 
-    expect(host.searchTriggered).toBeTrue();
+    expect(host.searchTriggered).toBe(true);
   });
 });

@@ -45,14 +45,14 @@ describe('DeviceService', () => {
       service = TestBed.inject(DeviceService);
 
       // Create spy to verify event listener is attached
-      const eventSpy = spyOn(window, 'addEventListener').and.callThrough();
+      const eventSpy = vi.spyOn(window, 'addEventListener');
 
       // Create a new service instance to trigger constructor
       const testService = new DeviceService();
 
       // Verify orientationchange listener was registered
-      const calls = eventSpy.calls.all();
-      const orientationCall = calls.find((call) => call.args[0] === 'orientationchange');
+      const calls = vi.mocked(eventSpy).mock.calls;
+      const orientationCall = calls.find((call) => call[0] === 'orientationchange');
       expect(orientationCall).toBeDefined();
 
       // Clean up
@@ -106,7 +106,7 @@ describe('DeviceService', () => {
   describe('Memory Leak Prevention', () => {
     it('should clean up event listeners on destroy', () => {
       // Create spy on removeEventListener
-      const removeEventListenerSpy = spyOn(window, 'removeEventListener').and.callThrough();
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
       // Create a new service instance
       const testService = new DeviceService();
@@ -115,16 +115,16 @@ describe('DeviceService', () => {
       testService.ngOnDestroy();
 
       // Verify event listeners were removed
-      const calls = removeEventListenerSpy.calls.all();
-      const resizeCall = calls.find((call) => call.args[0] === 'resize');
-      const orientationCall = calls.find((call) => call.args[0] === 'orientationchange');
+      const calls = vi.mocked(removeEventListenerSpy).mock.calls;
+      const resizeCall = calls.find((call) => call[0] === 'resize');
+      const orientationCall = calls.find((call) => call[0] === 'orientationchange');
 
       expect(resizeCall).toBeDefined();
       expect(orientationCall).toBeDefined();
     });
 
     it('should clear pending timers on destroy', () => {
-      const clearTimeoutSpy = spyOn(window, 'clearTimeout').and.callThrough();
+      const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
 
       const testService = new DeviceService();
 

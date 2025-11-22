@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -9,7 +10,7 @@ import { CommentRepliesLoaderService } from './comment-replies-loader.service';
 
 describe('CommentRepliesLoaderService', () => {
   let service: CommentRepliesLoaderService;
-  let mockHnService: jasmine.SpyObj<HackernewsService>;
+  let mockHnService: MockedObject<HackernewsService>;
 
   const mockReplies: HNItem[] = [
     {
@@ -29,7 +30,9 @@ describe('CommentRepliesLoaderService', () => {
   ];
 
   beforeEach(() => {
-    mockHnService = jasmine.createSpyObj<HackernewsService>('HackernewsService', ['getItemsPage']);
+    mockHnService = {
+      getItemsPage: vi.fn(),
+    } as unknown as MockedObject<HackernewsService>;
 
     TestBed.configureTestingModule({
       providers: [
@@ -69,7 +72,7 @@ describe('CommentRepliesLoaderService', () => {
   });
 
   it('should load the first page of replies and update state', () => {
-    mockHnService.getItemsPage.and.returnValue(of(mockReplies));
+    mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
     service.configureKids([456, 789]);
 
     service.loadFirstPage();
@@ -84,7 +87,7 @@ describe('CommentRepliesLoaderService', () => {
   });
 
   it('should not reload the first page once replies are loaded', () => {
-    mockHnService.getItemsPage.and.returnValue(of(mockReplies));
+    mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
     service.configureKids([456, 789]);
 
     service.loadFirstPage();
@@ -95,7 +98,7 @@ describe('CommentRepliesLoaderService', () => {
 
   it('should filter out null and deleted replies', () => {
     const deletedReply: HNItem = { id: 999, by: 'ghost', time: 0, type: 'comment', deleted: true };
-    mockHnService.getItemsPage.and.returnValue(of([mockReplies[0], null, deletedReply]));
+    mockHnService.getItemsPage.mockReturnValue(of([mockReplies[0], null, deletedReply]));
     service.configureKids([456, 789, 999]);
 
     service.loadFirstPage();
@@ -106,10 +109,9 @@ describe('CommentRepliesLoaderService', () => {
   it('should append additional pages when loading more replies', () => {
     const kids = Array.from({ length: 12 }, (_, index) => index + 1);
     service.configureKids(kids);
-    mockHnService.getItemsPage.and.returnValues(
-      of(mockReplies),
-      of([{ ...mockReplies[0], id: 1010 }]),
-    );
+    mockHnService.getItemsPage
+      .mockReturnValueOnce(of(mockReplies))
+      .mockReturnValueOnce(of([{ ...mockReplies[0], id: 1010 }]));
 
     service.loadFirstPage();
     service.loadNextPage();
@@ -130,7 +132,10 @@ describe('CommentRepliesLoaderService', () => {
     const secondPage = kids.slice(10, 20).map(buildReply);
     const thirdPage = kids.slice(20).map(buildReply);
 
-    mockHnService.getItemsPage.and.returnValues(of(firstPage), of(secondPage), of(thirdPage));
+    mockHnService.getItemsPage
+      .mockReturnValueOnce(of(firstPage))
+      .mockReturnValueOnce(of(secondPage))
+      .mockReturnValueOnce(of(thirdPage));
 
     expect(service.remainingCount()).toBe(10);
 
@@ -152,7 +157,7 @@ describe('CommentRepliesLoaderService', () => {
 
     expect(mockHnService.getItemsPage).not.toHaveBeenCalled();
 
-    mockHnService.getItemsPage.and.returnValue(of(mockReplies));
+    mockHnService.getItemsPage.mockReturnValue(of(mockReplies));
     service.loadFirstPage();
     service.loadNextPage();
 
@@ -160,7 +165,7 @@ describe('CommentRepliesLoaderService', () => {
   });
 
   it('should handle errors when loading replies', () => {
-    mockHnService.getItemsPage.and.returnValue(throwError(() => new Error('fail')));
+    mockHnService.getItemsPage.mockReturnValue(throwError(() => new Error('fail')));
     service.configureKids([456]);
 
     service.loadFirstPage();

@@ -45,7 +45,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should emit sortChange when selection changes', () => {
-    spyOn(component.sortChange, 'emit');
+    vi.spyOn(component.sortChange, 'emit');
     const select = fixture.nativeElement.querySelector('select');
 
     select.value = 'newest';
@@ -55,7 +55,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should emit correct value for each option', () => {
-    spyOn(component.sortChange, 'emit');
+    vi.spyOn(component.sortChange, 'emit');
     const select = fixture.nativeElement.querySelector('select');
 
     (['default', 'best', 'newest', 'oldest'] as const).forEach((value) => {

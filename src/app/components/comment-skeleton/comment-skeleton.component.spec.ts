@@ -26,7 +26,7 @@ describe('CommentSkeletonComponent', () => {
 
   it('renders base structure with two skeleton lines', () => {
     const container = getContainer();
-    expect(container).withContext('container should exist').not.toBeNull();
+    expect(container, 'container should exist').not.toBeNull();
 
     const children = container!.children;
     expect(children.length).toBe(2);

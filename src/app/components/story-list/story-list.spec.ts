@@ -29,6 +29,26 @@ class MockHNService {
     return of(this.storyIds);
   }
 
+  getBestStories(forceRefresh = false) {
+    return this.getTopStories(forceRefresh);
+  }
+
+  getNewStories(forceRefresh = false) {
+    return this.getTopStories(forceRefresh);
+  }
+
+  getAskStories(forceRefresh = false) {
+    return this.getTopStories(forceRefresh);
+  }
+
+  getShowStories(forceRefresh = false) {
+    return this.getTopStories(forceRefresh);
+  }
+
+  getJobStories(forceRefresh = false) {
+    return this.getTopStories(forceRefresh);
+  }
+
   getItems(ids: number[]) {
     const items: TestItem[] = ids.map((id) => ({ id, type: 'story', title: `Story ${id}` }));
     return of(items);
@@ -52,21 +72,21 @@ class MockStateService {
 /** Test double for KeyboardNavigationService */
 class MockKeyboardNavigationService {
   selectedIndex = {
-    set: jasmine.createSpy('selectedIndex.set'),
-    update: jasmine.createSpy('selectedIndex.update'),
+    set: vi.fn(),
+    update: vi.fn(),
   };
-  clearSelection = jasmine.createSpy('clearSelection');
-  setTotalItems = jasmine.createSpy('setTotalItems');
+  clearSelection = vi.fn();
+  setTotalItems = vi.fn();
 }
 
 /** Test double for SidebarService */
 class MockSidebarService {
-  isOpen = jasmine.createSpy('isOpen').and.returnValue(false);
+  isOpen = vi.fn().mockReturnValue(false);
 }
 
 /** Test double for DeviceService */
 class MockDeviceService {
-  isDesktop = jasmine.createSpy('isDesktop').and.returnValue(false);
+  isDesktop = vi.fn().mockReturnValue(false);
 }
 
 describe('StoryList', () => {
@@ -229,8 +249,8 @@ describe('StoryList', () => {
       store.init('top', 30);
       await Promise.resolve();
 
-      spyOn(store, 'loadMore');
-      spyOn(store, 'hasMore').and.returnValue(true);
+      vi.spyOn(store, 'loadMore');
+      vi.spyOn(store, 'hasMore').mockReturnValue(true);
 
       component.loadMore();
 
@@ -238,8 +258,8 @@ describe('StoryList', () => {
     });
 
     it('should not call store.loadMore when hasMore is false', () => {
-      spyOn(store, 'loadMore');
-      spyOn(store, 'hasMore').and.returnValue(false);
+      vi.spyOn(store, 'loadMore');
+      vi.spyOn(store, 'hasMore').mockReturnValue(false);
 
       component.loadMore();
 
@@ -249,13 +269,13 @@ describe('StoryList', () => {
 
   describe('hasMore', () => {
     it('should return true when more stories are available', () => {
-      spyOn(store, 'hasMore').and.returnValue(true);
+      vi.spyOn(store, 'hasMore').mockReturnValue(true);
 
       expect(component.hasMore()).toBe(true);
     });
 
     it('should return false when no more stories are available', () => {
-      spyOn(store, 'hasMore').and.returnValue(false);
+      vi.spyOn(store, 'hasMore').mockReturnValue(false);
 
       expect(component.hasMore()).toBe(false);
     });
@@ -263,7 +283,7 @@ describe('StoryList', () => {
 
   describe('loadStories', () => {
     it('should call store.loadStories with refresh flag', () => {
-      spyOn(store, 'loadStories');
+      vi.spyOn(store, 'loadStories');
 
       component.loadStories(true);
 
@@ -271,7 +291,7 @@ describe('StoryList', () => {
     });
 
     it('should call store.loadStories with refresh time', () => {
-      spyOn(store, 'loadStories');
+      vi.spyOn(store, 'loadStories');
       const time = Date.now();
 
       component.loadStories(true, time);
@@ -283,7 +303,7 @@ describe('StoryList', () => {
   describe('loadNewStories', () => {
     it('should reset newStoriesAvailable and trigger refresh', () => {
       store.newStoriesAvailable.set(5);
-      spyOn(component, 'refresh');
+      vi.spyOn(component, 'refresh');
 
       component.loadNewStories();
 
@@ -294,7 +314,7 @@ describe('StoryList', () => {
 
   describe('ngOnInit', () => {
     it('should initialize store with storyType and pageSize', () => {
-      spyOn(store, 'init');
+      vi.spyOn(store, 'init');
       component.storyType = 'top';
       component.pageSize = 30;
 
@@ -306,7 +326,7 @@ describe('StoryList', () => {
 
   describe('ngOnChanges', () => {
     it('should re-initialize store when storyType changes', () => {
-      spyOn(store, 'init');
+      vi.spyOn(store, 'init');
       component.storyType = 'best';
 
       const changes = {
@@ -324,7 +344,7 @@ describe('StoryList', () => {
     });
 
     it('should not re-initialize on first change', () => {
-      spyOn(store, 'init');
+      vi.spyOn(store, 'init');
 
       const changes = {
         storyType: {
@@ -343,8 +363,8 @@ describe('StoryList', () => {
 
   describe('ngOnDestroy', () => {
     it('should complete destroy$ subject', () => {
-      const destroySpy = spyOn(component['destroy$'], 'next');
-      const completeSpy = spyOn(component['destroy$'], 'complete');
+      const destroySpy = vi.spyOn(component['destroy$'], 'next');
+      const completeSpy = vi.spyOn(component['destroy$'], 'complete');
 
       component.ngOnDestroy();
 

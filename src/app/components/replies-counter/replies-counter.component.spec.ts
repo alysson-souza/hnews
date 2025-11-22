@@ -29,8 +29,8 @@ describe('RepliesCounterComponent', () => {
     expect(expandButton).toBeTruthy();
 
     const mockEvent = new MouseEvent('click', { bubbles: true });
-    spyOn(mockEvent, 'stopPropagation');
-    spyOn(component.expand, 'emit');
+    vi.spyOn(mockEvent, 'stopPropagation');
+    vi.spyOn(component.expand, 'emit');
 
     component.onExpandClick(mockEvent);
 
@@ -38,11 +38,10 @@ describe('RepliesCounterComponent', () => {
     expect(component.expand.emit).toHaveBeenCalled();
   });
 
-  it('should emit expand event when button is clicked', (done) => {
+  it('should emit expand event when button is clicked', async () => {
     component.count = 5;
     component.expand.subscribe(() => {
       expect(true).toBe(true);
-      done();
     });
 
     const mockEvent = new MouseEvent('click');
