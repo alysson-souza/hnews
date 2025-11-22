@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
@@ -11,6 +11,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 @Component({
   selector: 'app-sidebar-story-summary',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent],
   template: `
     <section class="story">

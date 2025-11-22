@@ -3,7 +3,7 @@
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
+  provideZonelessChangeDetection,
   isDevMode,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -16,7 +16,7 @@ import { NetworkStatusInterceptor } from './services/network-status.interceptor'
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: NetworkStatusInterceptor, multi: true },

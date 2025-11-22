@@ -107,12 +107,12 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should render story title as text when no URL', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1708099200,
         title: 'Text Only Story',
-      };
+      });
       fixture.detectChanges();
 
       const link = fixture.debugElement.query(By.css('.story-link'));
@@ -129,12 +129,12 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should not render domain button when no URL', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1708099200,
         title: 'Test',
-      };
+      });
       fixture.detectChanges();
 
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
@@ -150,10 +150,10 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should render text content when present', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         ...component.item,
         text: 'This is the story text',
-      };
+      });
       fixture.detectChanges();
 
       const commentText = fixture.debugElement.query(By.css('app-comment-text'));
@@ -161,13 +161,13 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should handle item without author', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1708099200,
         title: 'Test',
         score: 50,
-      };
+      });
       fixture.detectChanges();
 
       const meta = fixture.debugElement.query(By.css('.meta'));
@@ -175,12 +175,12 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should display 0 points when score is undefined', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1708099200,
         title: 'Test',
-      };
+      });
       fixture.detectChanges();
 
       const meta = fixture.debugElement.query(By.css('.meta'));

@@ -2,7 +2,7 @@ import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
-import { ApplicationRef, NgZone } from '@angular/core';
+import { ApplicationRef, provideZonelessChangeDetection } from '@angular/core';
 import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { Subject, of, Observable } from 'rxjs';
 import { PwaUpdateService } from './pwa-update.service';
@@ -32,10 +32,9 @@ describe('PwaUpdateService', () => {
     TestBed.configureTestingModule({
       providers: [
         PwaUpdateService,
+        provideZonelessChangeDetection(),
         { provide: SwUpdate, useValue: mockSwUpdate },
         { provide: ApplicationRef, useValue: mockApplicationRef },
-        // Provide a real NgZone so Angular's change detection scheduler can subscribe safely
-        { provide: NgZone, useFactory: () => new NgZone({ enableLongStackTrace: false }) },
       ],
     });
 
@@ -556,9 +555,9 @@ describe('PwaUpdateService', () => {
       TestBed.configureTestingModule({
         providers: [
           PwaUpdateService,
+          provideZonelessChangeDetection(),
           { provide: SwUpdate, useValue: disabledSwUpdate },
           { provide: ApplicationRef, useValue: mockApplicationRef },
-          { provide: NgZone, useFactory: () => new NgZone({ enableLongStackTrace: false }) },
         ],
       });
 

@@ -19,7 +19,7 @@ describe('CommentHeaderComponent', () => {
     fixture = TestBed.createComponent(CommentHeaderComponent);
     component = fixture.componentInstance;
     // Required input
-    component.timestamp = Math.floor(Date.now() / 1000) - 60;
+    fixture.componentRef.setInput('timestamp', Math.floor(Date.now() / 1000) - 60);
     fixture.detectChanges();
   });
 
@@ -28,7 +28,7 @@ describe('CommentHeaderComponent', () => {
   });
 
   it('renders user tag when "by" is provided', () => {
-    component.by = 'alice';
+    fixture.componentRef.setInput('by', 'alice');
     fixture.detectChanges();
 
     const userTag = fixture.debugElement.query(By.css('app-user-tag'));
@@ -37,7 +37,7 @@ describe('CommentHeaderComponent', () => {
   });
 
   it('does not render user tag when "by" is missing', () => {
-    component.by = undefined;
+    fixture.componentRef.setInput('by', undefined);
     fixture.detectChanges();
 
     const userTag = fixture.debugElement.query(By.css('app-user-tag'));
@@ -48,7 +48,7 @@ describe('CommentHeaderComponent', () => {
     // Stabilize now to make output deterministic
     const fixedNow = 2000000000000; // ms
     vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
-    component.timestamp = Math.floor(fixedNow / 1000) - 60; // 1 minute ago
+    fixture.componentRef.setInput('timestamp', Math.floor(fixedNow / 1000) - 60); // 1 minute ago
     fixture.detectChanges();
     const timeEl = fixture.debugElement.query(By.css('.time-text'));
     expect(timeEl, 'relative time span not found').toBeDefined();
@@ -67,26 +67,26 @@ describe('CommentHeaderComponent', () => {
   });
 
   it('sets aria-label on upvote button based on voted state', () => {
-    component.voted = false;
+    fixture.componentRef.setInput('voted', false);
     fixture.detectChanges();
     let upvoteBtn: HTMLButtonElement = fixture.debugElement.query(
       By.css('app-upvote-button button'),
     ).nativeElement;
     expect(upvoteBtn.getAttribute('aria-label')).toBe('Upvote comment');
 
-    component.voted = true;
+    fixture.componentRef.setInput('voted', true);
     fixture.detectChanges();
     upvoteBtn = fixture.debugElement.query(By.css('app-upvote-button button')).nativeElement;
     expect(upvoteBtn.getAttribute('aria-label')).toBe('Already upvoted comment');
   });
 
   it('renders replies counter only when showExpand=true', () => {
-    component.showExpand = false;
+    fixture.componentRef.setInput('showExpand', false);
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.css('app-replies-counter'))).toBeNull();
 
-    component.showExpand = true;
-    component.repliesCount = 3;
+    fixture.componentRef.setInput('showExpand', true);
+    fixture.componentRef.setInput('repliesCount', 3);
     fixture.detectChanges();
 
     const repliesEl = fixture.debugElement.query(By.css('app-replies-counter'));
@@ -99,8 +99,8 @@ describe('CommentHeaderComponent', () => {
   });
 
   it('forwards expand click via (expand) to parent output', () => {
-    component.showExpand = true;
-    component.repliesCount = 2;
+    fixture.componentRef.setInput('showExpand', true);
+    fixture.componentRef.setInput('repliesCount', 2);
     fixture.detectChanges();
 
     let expanded = false;

@@ -29,7 +29,8 @@ describe('CommentTextComponent', () => {
       <p>Visit <a href="https://example.com/some/path">Example</a></p>
     `;
 
-    component.html = raw;
+    fixture.componentRef.setInput('html', raw);
+    fixture.detectChanges();
 
     // Verify the transform pipeline was applied (quotes first, then links, then code highlight)
     // All are applied internally by the component
@@ -44,7 +45,7 @@ describe('CommentTextComponent', () => {
       <p>&gt; quoted B</p>
       <p>See <a href="https://example.com/some/path?q=1">Example link</a></p>
     `;
-    component.html = raw;
+    fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
@@ -76,7 +77,7 @@ describe('CommentTextComponent', () => {
 
   it('should handle code blocks with syntax highlighting', () => {
     const raw = '<pre><code>console.log("hello");</code></pre>';
-    component.html = raw;
+    fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
@@ -86,7 +87,7 @@ describe('CommentTextComponent', () => {
 
   it('should sanitize HTML while preserving safe formatting tags', () => {
     const raw = '<p>Safe <b>bold</b> text</p>';
-    component.html = raw;
+    fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
@@ -95,7 +96,7 @@ describe('CommentTextComponent', () => {
 
   it('should remove dangerous tags during sanitization', () => {
     const raw = '<p>Text <script>alert("xss")</script></p>';
-    component.html = raw;
+    fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
@@ -103,10 +104,12 @@ describe('CommentTextComponent', () => {
   });
 
   it('should handle empty or null input gracefully', () => {
-    component.html = '';
+    fixture.componentRef.setInput('html', '');
+    fixture.detectChanges();
     expect(component.processedHtml).toBeTruthy();
 
-    component.html = null as unknown as string;
+    fixture.componentRef.setInput('html', null as unknown as string);
+    fixture.detectChanges();
     expect(component.processedHtml).toBeTruthy();
   });
 
@@ -117,7 +120,7 @@ describe('CommentTextComponent', () => {
       <p>&gt; This is a quote</p>
       <p>Check <a href="https://github.com">this</a> out</p>
     `;
-    component.html = raw;
+    fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;

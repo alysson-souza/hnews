@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject, computed, output, input } from '@angular/core';
+import {
+  Component,
+  Input,
+  inject,
+  computed,
+  output,
+  input,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { UpvoteButtonComponent } from '../upvote-button/upvote-button.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
@@ -13,6 +21,7 @@ import { DeviceService } from '../../services/device.service';
 @Component({
   selector: 'app-comment-header',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     UpvoteButtonComponent,
     UserTagComponent,

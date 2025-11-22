@@ -1,5 +1,9 @@
 {
   "files.associations": {
     "*.css": "tailwindcss"
+  },
+  "[css,html,json,ts]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
   }
 }

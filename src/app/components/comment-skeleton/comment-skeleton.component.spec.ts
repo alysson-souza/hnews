@@ -49,7 +49,7 @@ describe('CommentSkeletonComponent', () => {
   });
 
   it('does not render indentation/border classes when depth is 0 (default)', () => {
-    component.depth = 0;
+    fixture.componentRef.setInput('depth', 0);
     fixture.detectChanges();
 
     const container = getContainer()!;
@@ -65,7 +65,7 @@ describe('CommentSkeletonComponent', () => {
   });
 
   it('applies indentation/border classes when depth > 0', () => {
-    component.depth = 1;
+    fixture.componentRef.setInput('depth', 1);
     fixture.detectChanges();
 
     const container = getContainer()!;
@@ -81,7 +81,7 @@ describe('CommentSkeletonComponent', () => {
   });
 
   it('updates classes when depth changes at runtime', () => {
-    component.depth = 2;
+    fixture.componentRef.setInput('depth', 2);
     fixture.detectChanges();
 
     let container = getContainer()!;
@@ -91,7 +91,7 @@ describe('CommentSkeletonComponent', () => {
     expect(classList.contains('border-l-2')).toBe(true);
     expect(classList.contains('pl-4')).toBe(true);
 
-    component.depth = 0;
+    fixture.componentRef.setInput('depth', 0);
     fixture.detectChanges();
 
     container = getContainer()!;

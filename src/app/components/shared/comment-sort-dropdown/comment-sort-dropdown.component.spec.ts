@@ -37,7 +37,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should display current sort order as selected', () => {
-    component.sortOrder = 'best';
+    fixture.componentRef.setInput('sortOrder', 'best');
     fixture.detectChanges();
 
     const select = fixture.nativeElement.querySelector('select');
@@ -66,7 +66,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should disable dropdown when loading', () => {
-    component.loading = true;
+    fixture.componentRef.setInput('loading', true);
     fixture.detectChanges();
 
     const select = fixture.nativeElement.querySelector('select');
@@ -74,7 +74,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should enable dropdown when not loading', () => {
-    component.loading = false;
+    fixture.componentRef.setInput('loading', false);
     fixture.detectChanges();
 
     const select = fixture.nativeElement.querySelector('select');
@@ -82,7 +82,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should show loading spinner when loading', () => {
-    component.loading = true;
+    fixture.componentRef.setInput('loading', true);
     fixture.detectChanges();
 
     const spinner = fixture.nativeElement.querySelector('.loading-spinner');
@@ -90,7 +90,7 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should hide loading spinner when not loading', () => {
-    component.loading = false;
+    fixture.componentRef.setInput('loading', false);
     fixture.detectChanges();
 
     const spinner = fixture.nativeElement.querySelector('.loading-spinner');

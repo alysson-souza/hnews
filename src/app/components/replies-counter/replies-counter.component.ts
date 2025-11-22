@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, output, input } from '@angular/core';
+import { Component, Input, output, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-replies-counter',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
   template: `
     <button
