@@ -50,6 +50,7 @@ import {
             <!-- Header -->
             <app-sidebar-comments-header
               [canGoBack]="sidebarService.canGoBack()"
+              [itemId]="sidebarService.currentItemId()!"
               (dismiss)="sidebarService.closeSidebar()"
               (back)="sidebarService.goBack()"
             />

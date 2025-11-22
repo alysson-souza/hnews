@@ -160,26 +160,6 @@ describe('SidebarStorySummaryComponent', () => {
       expect(commentText).toBeTruthy();
     });
 
-    it('should show actions when showActions is true', () => {
-      component.showActions = true;
-      fixture.detectChanges();
-
-      const actions = fixture.debugElement.query(By.css('.actions'));
-      expect(actions).toBeTruthy();
-
-      const link = fixture.debugElement.query(By.css('.open-link'));
-      expect(link).toBeTruthy();
-      expect(link.nativeElement.textContent.trim()).toContain('Open in full view');
-    });
-
-    it('should not show actions when showActions is false', () => {
-      component.showActions = false;
-      fixture.detectChanges();
-
-      const actions = fixture.debugElement.query(By.css('.actions'));
-      expect(actions).toBeFalsy();
-    });
-
     it('should handle item without author', () => {
       component.item = {
         id: 123,

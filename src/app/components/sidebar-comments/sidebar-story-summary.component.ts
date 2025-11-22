@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject } from '@angular/core';
 
-import { RouterLink, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
@@ -11,7 +11,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 @Component({
   selector: 'app-sidebar-story-summary',
   standalone: true,
-  imports: [RouterLink, RelativeTimePipe, CommentTextComponent, UserTagComponent],
+  imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent],
   template: `
     <section class="story">
       <h3 class="story-title">
@@ -57,14 +57,6 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
       @if (item.text) {
         <app-comment-text [html]="item.text!" />
       }
-
-      @if (showActions) {
-        <div class="actions">
-          <a [routerLink]="['/item', item.id]" target="_blank" class="open-link">
-            Open in full view ↗
-          </a>
-        </div>
-      }
     </section>
   `,
   styles: [
@@ -90,7 +82,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         @apply flex gap-3 mt-3;
       }
       .open-link {
-        @apply text-blue-600 dark:text-blue-400 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+        @apply inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
       }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;
@@ -100,7 +92,6 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 })
 export class SidebarStorySummaryComponent {
   @Input({ required: true }) item!: HNItem;
-  @Input() showActions = true;
   private router = inject(Router);
 
   getDomain(url?: string): string {

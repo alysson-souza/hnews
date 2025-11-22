@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, output, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarMaximizeSquare3Linear, solarCloseCircleLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-sidebar-comments-header',
   standalone: true,
+  imports: [RouterLink, NgIconComponent],
+  viewProviders: [provideIcons({ solarMaximizeSquare3Linear, solarCloseCircleLinear })],
   template: `
     <div class="header">
       <div class="back-btn-container">
@@ -27,21 +32,30 @@ import { Component, output, input } from '@angular/core';
         }
       </div>
       <h2 class="title">Comments</h2>
-      <button
-        type="button"
-        (click)="dismiss.emit()"
-        class="close-btn"
-        [attr.aria-label]="'Close Comments Sidebar'"
-      >
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          ></path>
-        </svg>
-      </button>
+      <div class="actions">
+        @if (itemId()) {
+          <a
+            [routerLink]="['/item', itemId()]"
+            target="_blank"
+            rel="noopener noreferrer"
+            role="button"
+            class="action-btn"
+            [attr.aria-label]="'Open in full view'"
+            title="Open in full view"
+          >
+            <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
+          </a>
+        }
+        <button
+          type="button"
+          (click)="dismiss.emit()"
+          class="close-btn"
+          [attr.aria-label]="'Close Comments Sidebar'"
+          title="Close Comments Sidebar"
+        >
+          <ng-icon name="solarCloseCircleLinear" class="icon" />
+        </button>
+      </div>
     </div>
   `,
   styles: [
@@ -57,11 +71,17 @@ import { Component, output, input } from '@angular/core';
       .title {
         @apply text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 flex-1 text-center;
       }
+      .actions {
+        @apply flex items-center;
+      }
       .back-btn {
         @apply p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
       }
+      .action-btn {
+        @apply p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded flex items-center justify-center;
+      }
       .close-btn {
-        @apply p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+        @apply p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded flex items-center justify-center;
       }
       .icon {
         @apply w-5 h-5;
@@ -71,6 +91,7 @@ import { Component, output, input } from '@angular/core';
 })
 export class SidebarCommentsHeaderComponent {
   readonly canGoBack = input(false);
+  readonly itemId = input<number | undefined>(undefined);
   readonly dismiss = output<void>();
   readonly back = output<void>();
 }

@@ -3,6 +3,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SidebarCommentsHeaderComponent } from './sidebar-comments-header.component';
 import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 
 describe('SidebarCommentsHeaderComponent', () => {
   let component: SidebarCommentsHeaderComponent;
@@ -11,6 +12,7 @@ describe('SidebarCommentsHeaderComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SidebarCommentsHeaderComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SidebarCommentsHeaderComponent);
@@ -39,5 +41,19 @@ describe('SidebarCommentsHeaderComponent', () => {
   it('should render close button', () => {
     const closeBtn = fixture.debugElement.query(By.css('.close-btn'));
     expect(closeBtn).toBeTruthy();
+  });
+
+  it('should render open in full view button when itemId is provided', () => {
+    fixture.componentRef.setInput('itemId', 123);
+    fixture.detectChanges();
+
+    const actionBtn = fixture.debugElement.query(By.css('.action-btn'));
+    expect(actionBtn).toBeTruthy();
+    expect(actionBtn.attributes['href']).toContain('/item/123');
+  });
+
+  it('should not render open in full view button when itemId is not provided', () => {
+    const actionBtn = fixture.debugElement.query(By.css('.action-btn'));
+    expect(actionBtn).toBeFalsy();
   });
 });
