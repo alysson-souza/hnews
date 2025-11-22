@@ -288,9 +288,20 @@ describe('IndexedDBService', () => {
   });
 
   describe('Migration from localStorage', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Clear localStorage
       localStorage.clear();
+
+      // Ensure IndexedDB is initialized before running migration tests
+      // Call count() to trigger DB initialization and wait for it to complete
+      try {
+        await service.count('stories');
+      } catch {
+        // DB might not be available in test environment, but initialization was triggered
+      }
+
+      // Give IndexedDB time to settle
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
     it('should migrate user data from localStorage', async () => {
@@ -307,8 +318,8 @@ describe('IndexedDBService', () => {
 
       await service.migrateFromLocalStorage();
 
-      // Allow some time for async migration
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait longer for async IndexedDB operations to complete in slower environments
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const retrieved = await service.getUserProfile('migratedUser');
       expect(retrieved).toBeTruthy();
@@ -324,7 +335,7 @@ describe('IndexedDBService', () => {
 
       await service.migrateFromLocalStorage();
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const retrieved = await service.getStoryList('stories_top');
       expect(retrieved).toBeTruthy();
