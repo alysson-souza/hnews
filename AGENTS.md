@@ -40,6 +40,8 @@
 - Framework: Vitest
 - Place tests as `*.spec.ts` beside the unit under test.
 - Run `npm test` for a single pass; use `npm run test:watch` in watch mode.
+- **Running specific tests:** Use `ng test --include src/path/to/file.spec.ts`.
+- **Do NOT run `vitest` directly** (e.g., `npx vitest`). Always use `ng test` or `npm test` to ensure the Angular environment is correctly initialized by the builder.
 - Coverage: `npm run test:coverage` (single-run) or `npm run test:coverage:watch` (watch mode). Outputs to `coverage/hnews`.
 - Prefer shallow tests for components and focused service specs; mock network calls.
 
