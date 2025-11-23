@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input, inject, signal, computed, input, viewChild } from '@angular/core';
-import { LocationStrategy } from '@angular/common';
+import { LocationStrategy, DecimalPipe } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
 import { VisitedService } from '../../services/visited.service';
@@ -18,7 +18,13 @@ import { StoryActionsMenuComponent } from './story-actions-menu.component';
 @Component({
   selector: 'app-story-item',
   standalone: true,
-  imports: [RouterLink, StoryThumbnailComponent, UserTagComponent, StoryActionsMenuComponent],
+  imports: [
+    RouterLink,
+    StoryThumbnailComponent,
+    UserTagComponent,
+    StoryActionsMenuComponent,
+    DecimalPipe,
+  ],
   templateUrl: './story-item.html',
   styleUrls: ['./story-item.css'],
 })

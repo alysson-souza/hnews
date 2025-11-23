@@ -24,7 +24,7 @@
         [class.vote-count-active]="!hasVoted()"
         [class.vote-count-voted]="hasVoted()"
       >
-        {{ (story!.score || 0) + (hasVoted() ? 1 : 0) }}
+        {{ (story!.score || 0) + (hasVoted() ? 1 : 0) | number }}
       </span>
     }
   </div>
@@ -126,10 +126,10 @@
                 [attr.aria-label]="'View ' + (story!.descendants || 0) + ' Comments'"
                 [title]="getCommentTooltip()"
               >
-                {{ story!.descendants || 0 }}
+                {{ story!.descendants || 0 | number }}
                 {{ story!.descendants === 1 ? 'comment' : 'comments' }}
                 @if (hasNewComments()) {
-                  <span class="new-comments-badge">+{{ getNewCommentCount() }}</span>
+                  <span class="new-comments-badge">+{{ getNewCommentCount() | number }}</span>
                 }
               </a>
             } @else {
@@ -143,10 +143,10 @@
                 [attr.aria-label]="'View ' + (story!.descendants || 0) + ' Comments'"
                 [title]="getCommentTooltip()"
               >
-                {{ story!.descendants || 0 }}
+                {{ story!.descendants || 0 | number }}
                 {{ story!.descendants === 1 ? 'comment' : 'comments' }}
                 @if (hasNewComments()) {
-                  <span class="new-comments-badge">+{{ getNewCommentCount() }}</span>
+                  <span class="new-comments-badge">+{{ getNewCommentCount() | number }}</span>
                 }
               </a>
             }

@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
+import { DecimalPipe } from '@angular/common';
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -32,6 +33,7 @@ import {
     SegmentedControlComponent,
     CommentTextComponent,
     RouterLink,
+    DecimalPipe,
   ],
   template: `
     <app-page-container
@@ -81,11 +83,11 @@ import {
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
               <div class="stat-box">
                 <div class="stat-label">Karma</div>
-                <div class="stat-value">{{ user()!.karma }}</div>
+                <div class="stat-value">{{ user()!.karma | number }}</div>
               </div>
               <div class="stat-box">
                 <div class="stat-label">Submissions</div>
-                <div class="stat-value">{{ user()!.submitted?.length || 0 }}</div>
+                <div class="stat-value">{{ user()!.submitted?.length || 0 | number }}</div>
               </div>
               <div class="stat-box">
                 <div class="stat-label">Member Since</div>
@@ -106,8 +108,8 @@ import {
               <div>
                 <p class="section-label">Recent activity</p>
                 <p class="muted">
-                  Loaded {{ filteredSubmissions().length }} {{ filterLabel() }} •
-                  {{ totalSubmissions() }} total submissions
+                  Loaded {{ filteredSubmissions().length | number }} {{ filterLabel() }} •
+                  {{ totalSubmissions() | number }} total submissions
                 </p>
               </div>
               <app-segmented-control
@@ -173,10 +175,10 @@ import {
                           </span>
                           <span>•</span>
                         }
-                        <span>{{ item.score || 0 }} points</span>
+                        <span>{{ item.score || 0 | number }} points</span>
                         <span>•</span>
                         <a [routerLink]="['/item', item.id]" class="meta-link">
-                          {{ item.descendants || 0 }}
+                          {{ item.descendants || 0 | number }}
                           {{ item.descendants === 1 ? 'comment' : 'comments' }}
                         </a>
                       </div>
@@ -192,7 +194,7 @@ import {
                         }
                         <span>•</span>
                         <span class="muted">
-                          {{ item.kids?.length || 0 }}
+                          {{ item.kids?.length || 0 | number }}
                           {{ (item.kids?.length || 0) === 1 ? 'reply' : 'replies' }}
                         </span>
                       </div>

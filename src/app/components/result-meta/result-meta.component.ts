@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, Input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 
 import { RouterLink } from '@angular/router';
 import { UserTagComponent } from '../user-tag/user-tag.component';
@@ -8,7 +9,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 @Component({
   selector: 'app-result-meta',
   standalone: true,
-  imports: [RouterLink, UserTagComponent],
+  imports: [RouterLink, UserTagComponent, DecimalPipe],
   template: `
     <div class="result-meta">
       @if (author) {
@@ -22,7 +23,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
       <span>{{ timeAgo }}</span>
       <span>•</span>
       @if (!isComment && points !== undefined) {
-        <span>{{ points }} points</span>
+        <span>{{ points | number }} points</span>
         <span>•</span>
       }
       @if (isComment) {
@@ -31,7 +32,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
         <a [routerLink]="['/item', parentId]" class="result-meta-link">View Story</a>
       } @else {
         <a [routerLink]="['/item', itemId]" class="result-meta-link">
-          {{ commentCount }} comments
+          {{ commentCount | number }} comments
         </a>
       }
     </div>
