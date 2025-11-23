@@ -159,18 +159,16 @@ interface SearchHit {
             <ng-container header>
               <div class="skel-line-3 w-1/3"></div>
             </ng-container>
-            <div class="skeleton-list">
-              @for (row of [0, 1, 2, 3, 4, 5]; track row) {
-                <div class="activity-skeleton">
-                  <div class="flex items-center gap-2 mb-2">
-                    <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                    <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                  </div>
-                  <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2"></div>
-                  <div class="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            @for (row of [0, 1, 2, 3, 4, 5]; track row) {
+              <div class="activity-skeleton">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                  <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                 </div>
-              }
-            </div>
+                <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2"></div>
+                <div class="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              </div>
+            }
           </app-result-list>
         } @else if (results().length > 0) {
           <app-result-list
@@ -183,76 +181,74 @@ interface SearchHit {
               Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
             </ng-container>
 
-            <div class="activity-list">
-              @for (hit of results(); track hit.objectID) {
-                <article class="activity-item" [class.comment-item]="isComment(hit)">
-                  <div class="item-top">
-                    <span
-                      class="type-pill"
-                      [class.type-comment]="isComment(hit)"
-                      [class.type-story]="!isComment(hit)"
-                    >
-                      {{ isComment(hit) ? 'Comment' : 'Story' }}
-                    </span>
-                    <span class="muted">{{ getTimeAgo(hit.created_at) }}</span>
-                    @if (!isComment(hit) && hit.url && getDomain(hit.url)) {
-                      <span class="pill-soft" [title]="hit.url">{{ getDomain(hit.url) }}</span>
+            @for (hit of results(); track hit.objectID) {
+              <article class="activity-item" [class.comment-item]="isComment(hit)">
+                <div class="item-top">
+                  <span
+                    class="type-pill"
+                    [class.type-comment]="isComment(hit)"
+                    [class.type-story]="!isComment(hit)"
+                  >
+                    {{ isComment(hit) ? 'Comment' : 'Story' }}
+                  </span>
+                  <span class="muted">{{ getTimeAgo(hit.created_at) }}</span>
+                  @if (!isComment(hit) && hit.url && getDomain(hit.url)) {
+                    <span class="pill-soft" [title]="hit.url">{{ getDomain(hit.url) }}</span>
+                  }
+                </div>
+
+                @if (!isComment(hit)) {
+                  <h3 class="activity-title">
+                    @if (hit.url) {
+                      <a
+                        [href]="hit.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="title-link"
+                        [innerHTML]="getHighlightedText(hit, 'title')"
+                      ></a>
+                    } @else {
+                      <a
+                        [routerLink]="['/item', hit.objectID]"
+                        class="title-link"
+                        [innerHTML]="getHighlightedText(hit, 'title')"
+                      ></a>
+                    }
+                  </h3>
+                  <div class="item-meta">
+                    @if (hit.author) {
+                      <span class="inline-flex items-center gap-1">
+                        by <app-user-tag [username]="hit.author" />
+                      </span>
+                      <span>•</span>
+                    }
+                    <span>{{ hit.points || 0 }} points</span>
+                    <span>•</span>
+                    <a [routerLink]="['/item', hit.objectID]" class="meta-link">
+                      {{ hit.num_comments || 0 }}
+                      {{ hit.num_comments === 1 ? 'comment' : 'comments' }}
+                    </a>
+                  </div>
+                } @else {
+                  <div class="comment-shell">
+                    <app-comment-text [html]="getHighlightedText(hit, 'comment_text')" />
+                  </div>
+                  <div class="item-meta">
+                    <a [routerLink]="['/item', hit.objectID]" class="meta-link">View thread</a>
+                    @if (hit.story_id) {
+                      <span>•</span>
+                      <a [routerLink]="['/item', hit.story_id]" class="meta-link">View Story</a>
+                    }
+                    @if (hit.author) {
+                      <span>•</span>
+                      <span class="inline-flex items-center gap-1">
+                        by <app-user-tag [username]="hit.author" />
+                      </span>
                     }
                   </div>
-
-                  @if (!isComment(hit)) {
-                    <h3 class="activity-title">
-                      @if (hit.url) {
-                        <a
-                          [href]="hit.url"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="title-link"
-                          [innerHTML]="getHighlightedText(hit, 'title')"
-                        ></a>
-                      } @else {
-                        <a
-                          [routerLink]="['/item', hit.objectID]"
-                          class="title-link"
-                          [innerHTML]="getHighlightedText(hit, 'title')"
-                        ></a>
-                      }
-                    </h3>
-                    <div class="item-meta">
-                      @if (hit.author) {
-                        <span class="inline-flex items-center gap-1">
-                          by <app-user-tag [username]="hit.author" />
-                        </span>
-                        <span>•</span>
-                      }
-                      <span>{{ hit.points || 0 }} points</span>
-                      <span>•</span>
-                      <a [routerLink]="['/item', hit.objectID]" class="meta-link">
-                        {{ hit.num_comments || 0 }}
-                        {{ hit.num_comments === 1 ? 'comment' : 'comments' }}
-                      </a>
-                    </div>
-                  } @else {
-                    <div class="comment-shell">
-                      <app-comment-text [html]="getHighlightedText(hit, 'comment_text')" />
-                    </div>
-                    <div class="item-meta">
-                      <a [routerLink]="['/item', hit.objectID]" class="meta-link">View thread</a>
-                      @if (hit.story_id) {
-                        <span>•</span>
-                        <a [routerLink]="['/item', hit.story_id]" class="meta-link">On Story</a>
-                      }
-                      @if (hit.author) {
-                        <span>•</span>
-                        <span class="inline-flex items-center gap-1">
-                          by <app-user-tag [username]="hit.author" />
-                        </span>
-                      }
-                    </div>
-                  }
-                </article>
-              }
-            </div>
+                }
+              </article>
+            }
           </app-result-list>
         } @else if (searchQuery && !loading()) {
           <app-result-list [showHeader]="true" [showLoadMore]="false">
@@ -310,18 +306,8 @@ interface SearchHit {
       }
 
       /* Activity / Results Styles (Copied from UserComponent) */
-      .activity-list {
-        @apply divide-y divide-gray-200 dark:divide-gray-800 !space-y-0;
-      }
       .activity-item {
         @apply py-4 space-y-2;
-      }
-      /* Adjust padding for first and last items to play nicely with container */
-      .activity-item:first-child {
-        @apply pt-2;
-      }
-      .activity-item:last-child {
-        @apply pb-0;
       }
 
       .item-top {
@@ -359,17 +345,8 @@ interface SearchHit {
       }
 
       /* Skeleton Styles */
-      .skeleton-list {
-        @apply !space-y-0 divide-y divide-gray-200 dark:divide-gray-800;
-      }
       .activity-skeleton {
         @apply py-4;
-      }
-      .activity-skeleton:first-child {
-        @apply pt-2;
-      }
-      .activity-skeleton:last-child {
-        @apply pb-0;
       }
 
       .muted {
