@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, signal, effect, computed } from '@angular/core';
+import { Component, inject, signal, effect, computed, ElementRef, viewChild } from '@angular/core';
 
 import { SidebarService } from '../../services/sidebar.service';
 import { HackernewsService } from '../../services/hackernews.service';
@@ -57,7 +57,9 @@ import {
 
             <!-- Content -->
             <div
+              #sidebarContent
               class="sidebar-comments-panel flex-1 overflow-y-auto p-4 sm:p-6"
+              tabindex="-1"
               [class.slide-out-left]="
                 sidebarService.isTransitioning() &&
                 sidebarService.animatingOut() &&
@@ -213,6 +215,7 @@ import {
   ],
 })
 export class SidebarCommentsComponent {
+  private sidebarContentRef = viewChild<ElementRef<HTMLElement>>('sidebarContent');
   sidebarService = inject(SidebarService);
   // Intentionally no device-specific behavior here
   private hnService = inject(HackernewsService);
@@ -284,6 +287,15 @@ export class SidebarCommentsComponent {
       const current = this.item();
       if (id && (!current || current.id !== id)) {
         this.loadItem(id);
+      }
+    });
+
+    // Focus the scroll container so browser arrow keys scroll the sidebar instead of the page
+    effect(() => {
+      if (this.sidebarService.isOpen() && this.sidebarService.currentItemId()) {
+        setTimeout(() => {
+          this.sidebarContentRef()?.nativeElement?.focus({ preventScroll: true });
+        });
       }
     });
   }
