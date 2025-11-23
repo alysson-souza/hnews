@@ -3,7 +3,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTime } from '../../services/relative-time.util';
 
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HackernewsService } from '../../services/hackernews.service';
 import { NetworkStateService } from '../../services/network-state.service';
@@ -12,12 +12,14 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
-import { SearchResultComponent } from '../../components/search-result/search-result.component';
 import { ResultListComponent } from '../../components/result-list/result-list.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
+import { UserTagComponent } from '../../components/user-tag/user-tag.component';
+import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
+import { getDomain } from '../../services/domain.utils';
 
 interface HighlightField {
   value: string;
@@ -45,9 +47,11 @@ interface SearchHit {
     FormsModule,
     PageContainerComponent,
     CardComponent,
-    SearchResultComponent,
     ResultListComponent,
     NgIconComponent,
+    UserTagComponent,
+    CommentTextComponent,
+    RouterLink,
   ],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
@@ -55,9 +59,9 @@ interface SearchHit {
       [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
       class="transition-all duration-300"
     >
-      <div class="space-y-2 sm:space-y-3">
+      <div class="space-y-3 sm:space-y-4">
         <!-- Search Header -->
-        <app-card class="mb-2 sm:mb-3">
+        <app-card class="mb-2 sm:mb-3 search-card">
           <h1 class="search-title">Search Hacker News</h1>
 
           <!-- Offline Warning -->
@@ -155,12 +159,15 @@ interface SearchHit {
             <ng-container header>
               <div class="skel-line-3 w-1/3"></div>
             </ng-container>
-            <div class="skeleton space-y-1 sm:space-y-2">
+            <div class="skeleton-list">
               @for (row of [0, 1, 2, 3, 4, 5]; track row) {
-                <div class="result-row">
-                  <div class="skel-title w-3/4 mb-2"></div>
-                  <div class="skel-snippet w-11/12 mb-3"></div>
-                  <div class="skel-meta w-1/3"></div>
+                <div class="activity-skeleton">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                    <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  </div>
+                  <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2"></div>
+                  <div class="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                 </div>
               }
             </div>
@@ -175,9 +182,77 @@ interface SearchHit {
             <ng-container header>
               Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
             </ng-container>
-            @for (hit of results(); track hit.objectID) {
-              <app-search-result [item]="hit" [isSearchResult]="true" />
-            }
+
+            <div class="activity-list">
+              @for (hit of results(); track hit.objectID) {
+                <article class="activity-item" [class.comment-item]="isComment(hit)">
+                  <div class="item-top">
+                    <span
+                      class="type-pill"
+                      [class.type-comment]="isComment(hit)"
+                      [class.type-story]="!isComment(hit)"
+                    >
+                      {{ isComment(hit) ? 'Comment' : 'Story' }}
+                    </span>
+                    <span class="muted">{{ getTimeAgo(hit.created_at) }}</span>
+                    @if (!isComment(hit) && hit.url && getDomain(hit.url)) {
+                      <span class="pill-soft" [title]="hit.url">{{ getDomain(hit.url) }}</span>
+                    }
+                  </div>
+
+                  @if (!isComment(hit)) {
+                    <h3 class="activity-title">
+                      @if (hit.url) {
+                        <a
+                          [href]="hit.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="title-link"
+                          [innerHTML]="getHighlightedText(hit, 'title')"
+                        ></a>
+                      } @else {
+                        <a
+                          [routerLink]="['/item', hit.objectID]"
+                          class="title-link"
+                          [innerHTML]="getHighlightedText(hit, 'title')"
+                        ></a>
+                      }
+                    </h3>
+                    <div class="item-meta">
+                      @if (hit.author) {
+                        <span class="inline-flex items-center gap-1">
+                          by <app-user-tag [username]="hit.author" />
+                        </span>
+                        <span>•</span>
+                      }
+                      <span>{{ hit.points || 0 }} points</span>
+                      <span>•</span>
+                      <a [routerLink]="['/item', hit.objectID]" class="meta-link">
+                        {{ hit.num_comments || 0 }}
+                        {{ hit.num_comments === 1 ? 'comment' : 'comments' }}
+                      </a>
+                    </div>
+                  } @else {
+                    <div class="comment-shell">
+                      <app-comment-text [html]="getHighlightedText(hit, 'comment_text')" />
+                    </div>
+                    <div class="item-meta">
+                      <a [routerLink]="['/item', hit.objectID]" class="meta-link">View thread</a>
+                      @if (hit.story_id) {
+                        <span>•</span>
+                        <a [routerLink]="['/item', hit.story_id]" class="meta-link">On Story</a>
+                      }
+                      @if (hit.author) {
+                        <span>•</span>
+                        <span class="inline-flex items-center gap-1">
+                          by <app-user-tag [username]="hit.author" />
+                        </span>
+                      }
+                    </div>
+                  }
+                </article>
+              }
+            </div>
           </app-result-list>
         } @else if (searchQuery && !loading()) {
           <app-result-list [showHeader]="true" [showLoadMore]="false">
@@ -206,8 +281,12 @@ interface SearchHit {
     `
       @reference '../../../styles.css';
 
+      .search-card .card-base {
+        @apply bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-950;
+      }
+
       .search-title {
-        @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4;
+        @apply text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4 leading-tight;
       }
       .search-input {
         @apply w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200;
@@ -230,19 +309,74 @@ interface SearchHit {
         @apply px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 cursor-pointer;
       }
 
-      .skel-line-4 {
-        @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-xl;
+      /* Activity / Results Styles (Copied from UserComponent) */
+      .activity-list {
+        @apply divide-y divide-gray-200 dark:divide-gray-800 !space-y-0;
       }
+      .activity-item {
+        @apply py-4 space-y-2;
+      }
+      /* Adjust padding for first and last items to play nicely with container */
+      .activity-item:first-child {
+        @apply pt-2;
+      }
+      .activity-item:last-child {
+        @apply pb-0;
+      }
+
+      .item-top {
+        @apply flex flex-wrap items-center gap-2 text-xs sm:text-sm;
+      }
+      .type-pill {
+        @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold;
+        @apply bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-gray-200;
+      }
+      .type-story {
+        @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200;
+      }
+      .type-comment {
+        @apply bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200;
+      }
+      .pill-soft {
+        @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+        @apply bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-gray-300;
+        @apply max-w-[200px] truncate;
+      }
+      .activity-title {
+        @apply text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight;
+      }
+      .title-link {
+        @apply hover:text-blue-600 dark:hover:text-blue-400 underline-offset-2 decoration-2 hover:underline transition-colors;
+      }
+      .item-meta {
+        @apply flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-gray-600 dark:text-gray-400;
+      }
+      .meta-link {
+        @apply text-blue-600 dark:text-blue-300 hover:underline decoration-2 underline-offset-2;
+      }
+      .comment-shell {
+        @apply rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-800/70 p-3 sm:p-4;
+      }
+
+      /* Skeleton Styles */
+      .skeleton-list {
+        @apply !space-y-0 divide-y divide-gray-200 dark:divide-gray-800;
+      }
+      .activity-skeleton {
+        @apply py-4;
+      }
+      .activity-skeleton:first-child {
+        @apply pt-2;
+      }
+      .activity-skeleton:last-child {
+        @apply pb-0;
+      }
+
+      .muted {
+        @apply text-sm text-gray-500 dark:text-gray-400;
+      }
+
       .skel-line-3 {
-        @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
-      }
-      .skel-title {
-        @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-xl;
-      }
-      .skel-snippet {
-        @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
-      }
-      .skel-meta {
         @apply h-3 bg-gray-200 dark:bg-gray-700 rounded-xl;
       }
 
@@ -376,5 +510,13 @@ export class SearchComponent implements OnInit {
 
   getTimeAgo(dateString: string): string {
     return formatRelativeTime(dateString);
+  }
+
+  getDomain(url: string): string {
+    return getDomain(url);
+  }
+
+  isComment(hit: SearchHit): boolean {
+    return !!hit.comment_text;
   }
 }

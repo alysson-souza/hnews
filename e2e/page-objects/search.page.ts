@@ -17,11 +17,11 @@ export class SearchPage extends BasePage {
     this.searchButton = page.locator(
       'app-page-container button[type="submit"][aria-label="Submit Search"]',
     );
-    this.searchResults = page.locator('app-search-result');
+    this.searchResults = page.locator('article.activity-item');
     this.sortBySelect = page.locator('select[name="sortBy"], [aria-label*="Sort"]');
     this.dateRangeSelect = page.locator('select[name="dateRange"], [aria-label*="Date"]');
     this.typeSelect = page.locator('select[name="type"], [aria-label*="Type"]');
-    this.noResults = page.locator('.no-results, :has-text("No results found")');
+    this.noResults = page.locator(':text("No results for")');
     this.loadMoreButton = page.locator('button:has-text("Load More")');
   }
 
