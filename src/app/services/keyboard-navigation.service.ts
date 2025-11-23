@@ -31,6 +31,10 @@ export class KeyboardNavigationService {
     this.commandRegistry.register('story.openCommentsPage', () => this.navigateToItemPage());
     this.commandRegistry.register('navigation.previousTab', () => this.navigateToPreviousTab());
     this.commandRegistry.register('navigation.nextTab', () => this.navigateToNextTab());
+    // Toggle actions menu for currently selected story
+    this.commandRegistry.register('story.actions.toggle', () =>
+      this.toggleSelectedStoryActionsMenu(),
+    );
   }
 
   isSelected = computed(() => {
@@ -248,5 +252,52 @@ export class KeyboardNavigationService {
     if (activeElement && activeElement.blur) {
       activeElement.blur();
     }
+  }
+
+  /**
+   * Toggle the actions ("More") menu for the selected story. If no story is selected,
+   * selects the first story automatically. When opening, focuses the first menu item
+   * for immediate keyboard navigation. When closing, refocuses the story title link.
+   */
+  private toggleSelectedStoryActionsMenu(): void {
+    // Ensure we have a selected index
+    let selectedIndex = this.selectedIndex();
+    if (selectedIndex === null) {
+      // Select first story if available
+      if (this.totalItems() === 0) return;
+      this.selectedIndex.set(0);
+      selectedIndex = 0;
+      // Scroll into view for visual reference
+      this.scrollSelectedStoryIntoView();
+    }
+
+    const storyElement = document.querySelector(`[data-story-index="${selectedIndex}"]`);
+    if (!storyElement) return;
+
+    const actionsButton = storyElement.querySelector(
+      '.story-actions-btn',
+    ) as HTMLButtonElement | null;
+    if (!actionsButton) return;
+
+    const container = actionsButton.closest('.story-actions-container');
+    const existingMenu = container?.querySelector('.story-actions-menu');
+
+    // If menu exists, toggle (close) via button click to reuse existing logic
+    if (existingMenu) {
+      actionsButton.click();
+      // Refocus story title for continuity
+      const titleLink = storyElement.querySelector('.story-title-link') as HTMLElement | null;
+      titleLink?.focus();
+      return;
+    }
+
+    // Open menu via button click
+    actionsButton.click();
+
+    // After rendering, focus first item
+    setTimeout(() => {
+      const firstItem = container?.querySelector('.story-actions-item') as HTMLElement | null;
+      firstItem?.focus();
+    }, 0);
   }
 }

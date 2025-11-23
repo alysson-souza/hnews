@@ -91,6 +91,13 @@ export class KeyboardShortcutConfigService {
       commandId: 'story.open',
     },
     {
+      key: 'a',
+      contexts: ['default'],
+      description: 'Toggle actions menu',
+      category: 'Story Actions',
+      commandId: 'story.actions.toggle',
+    },
+    {
       key: 'O',
       label: 'Shift+o',
       contexts: ['default'],

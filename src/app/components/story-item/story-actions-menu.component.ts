@@ -33,14 +33,18 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
           #actionsMenu
           class="story-actions-menu story-actions-menu-fixed"
           role="menu"
+          (keydown)="onMenuKeydown($event)"
           [attr.id]="menuId()"
           [attr.aria-labelledby]="buttonId()"
+          [attr.data-testid]="'story-actions-menu'"
+          tabindex="-1"
           [style.top.px]="menuTop()"
           [style.left.px]="menuLeft()"
         >
           <button
             class="story-actions-item story-actions-item-top"
             role="menuitem"
+            [attr.data-index]="0"
             (click)="shareStory.emit()"
             (keyup.enter)="shareStory.emit()"
             (keyup.space)="shareStory.emit()"
@@ -50,6 +54,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
           <button
             class="story-actions-item"
             role="menuitem"
+            [attr.data-index]="1"
             (click)="shareComments.emit()"
             (keyup.enter)="shareComments.emit()"
             (keyup.space)="shareComments.emit()"
@@ -60,6 +65,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
           <button
             class="story-actions-item story-actions-item-bottom"
             role="menuitem"
+            [attr.data-index]="2"
             (click)="openInNewTab.emit()"
             (keyup.enter)="openInNewTab.emit()"
             (keyup.space)="openInNewTab.emit()"
@@ -122,6 +128,7 @@ export class StoryActionsMenuComponent implements OnInit {
   isOpen = signal(false);
   menuTop = signal(0);
   menuLeft = signal(0);
+  activeIndex = signal(0);
 
   buttonId = signal('');
   menuId = signal('');
@@ -147,6 +154,7 @@ export class StoryActionsMenuComponent implements OnInit {
     if (newState) {
       this.positionMenu();
       this.setupClickOutside();
+      this.focusFirstItem();
     }
   }
 
@@ -183,6 +191,8 @@ export class StoryActionsMenuComponent implements OnInit {
           if (typeof window !== 'undefined') {
             window.document.removeEventListener('click', closeMenu);
           }
+          // Restore focus to the actions button for continuity
+          this.actionsBtn()?.nativeElement?.focus();
         }
       };
       if (typeof window !== 'undefined') {
@@ -193,5 +203,96 @@ export class StoryActionsMenuComponent implements OnInit {
 
   closeMenu(): void {
     this.isOpen.set(false);
+    // Restore focus to the toggle button
+    this.actionsBtn()?.nativeElement?.focus();
+  }
+
+  // =============================
+  // Keyboard Navigation
+  // =============================
+
+  private getMenuItems(): HTMLElement[] {
+    const menu = this.actionsMenu()?.nativeElement;
+    if (!menu) return [];
+    return Array.from(menu.querySelectorAll('.story-actions-item')) as HTMLElement[];
+  }
+
+  private focusFirstItem(): void {
+    this.activeIndex.set(0);
+    this.focusActiveItem();
+  }
+
+  private focusActiveItem(): void {
+    const items = this.getMenuItems();
+    const index = this.activeIndex();
+    if (items[index]) {
+      items[index].focus();
+    }
+  }
+
+  private moveFocus(delta: number): void {
+    const items = this.getMenuItems();
+    if (items.length === 0) return;
+    const current = this.activeIndex();
+    const next = (current + delta + items.length) % items.length;
+    this.activeIndex.set(next);
+    this.focusActiveItem();
+  }
+
+  private moveToEdge(edge: 'first' | 'last'): void {
+    const items = this.getMenuItems();
+    if (items.length === 0) return;
+    this.activeIndex.set(edge === 'first' ? 0 : items.length - 1);
+    this.focusActiveItem();
+  }
+
+  onMenuKeydown(event: KeyboardEvent): void {
+    const key = event.key;
+    const navigationKeys = [
+      'ArrowDown',
+      'ArrowUp',
+      'Home',
+      'End',
+      'Escape',
+      'Enter',
+      ' ',
+      'j',
+      'k',
+    ];
+    if (!navigationKeys.includes(key)) return; // Ignore other keys
+
+    // Prevent global handlers
+    event.preventDefault();
+    event.stopPropagation();
+
+    switch (key) {
+      case 'ArrowDown':
+      case 'j':
+        this.moveFocus(1);
+        break;
+      case 'ArrowUp':
+      case 'k':
+        this.moveFocus(-1);
+        break;
+      case 'Home':
+        this.moveToEdge('first');
+        break;
+      case 'End':
+        this.moveToEdge('last');
+        break;
+      case 'Escape':
+        this.closeMenu();
+        break;
+      case 'Enter':
+      case ' ': {
+        const items = this.getMenuItems();
+        const index = this.activeIndex();
+        if (items[index]) {
+          // Trigger click programmatically
+          items[index].click();
+        }
+        break;
+      }
+    }
   }
 }

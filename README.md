@@ -25,15 +25,15 @@ Live demo: https://alysson-souza.github.io/hnews/
 
 ## Keyboard Shortcuts
 
-- `j` / `k` - Navigate through stories
-- `h` / `l` - Switch between tabs (Top, Best, New, etc.)
-- `o` - Open selected story
-- `c` - Open comments sidebar
-- `/` - Focus search
-- `t` - Toggle theme
-- `r` - Refresh stories
-- `?` - Show keyboard shortcuts help
-- `Esc` - Close overlays / go back / scroll to top
+Essential shortcuts (work in primary story list context):
+
+- `j` / `k` – Move selection down / up
+- `o` – Open selected story
+- `c` – Toggle comments sidebar
+- `/` – Focus search input
+- `?` – Show keyboard shortcuts help
+
+Shortcuts are contextual: different sets apply on the story list, comments sidebar, item page, and settings page. Press `?` at any time to see **all** currently available actions for the active view.
 
 ## Tech Stack
 

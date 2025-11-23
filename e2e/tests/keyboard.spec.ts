@@ -41,6 +41,47 @@ test.describe('Keyboard Shortcuts', () => {
       const href = await storyLink.getAttribute('href');
       expect(href).toMatch(/\/item\/\d+/);
     });
+
+    test('should toggle and navigate actions menu via keyboard', async ({ storiesPage, page }) => {
+      await storiesPage.navigateToTop();
+      await page.waitForTimeout(1000);
+
+      // Toggle actions menu (auto-select first story if none selected)
+      await page.keyboard.press('a');
+      await page.waitForTimeout(300);
+
+      const actionsMenu = page.locator('[data-testid="story-actions-menu"]').first();
+      await expect(actionsMenu).toBeVisible();
+
+      // Navigate down (j)
+      await page.keyboard.press('j');
+      await page.waitForTimeout(150);
+      const activeElementText1 = await page.evaluate(() =>
+        document.activeElement?.textContent?.trim(),
+      );
+      expect(activeElementText1 && activeElementText1.length).toBeGreaterThan(0);
+
+      // Navigate up (k)
+      await page.keyboard.press('k');
+      await page.waitForTimeout(150);
+      const activeElementText2 = await page.evaluate(() =>
+        document.activeElement?.textContent?.trim(),
+      );
+      expect(activeElementText2 && activeElementText2.length).toBeGreaterThan(0);
+
+      // Close with Escape
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+      await expect(actionsMenu).not.toBeVisible();
+
+      // Re-open with 'a' and close again with 'a'
+      await page.keyboard.press('a');
+      await page.waitForTimeout(300);
+      await expect(actionsMenu).toBeVisible();
+      await page.keyboard.press('a');
+      await page.waitForTimeout(200);
+      await expect(actionsMenu).not.toBeVisible();
+    });
   });
 
   test.describe('Theme Toggle', () => {
