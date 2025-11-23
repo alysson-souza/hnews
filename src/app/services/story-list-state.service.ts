@@ -9,7 +9,6 @@ interface SerializedStoryListState {
   totalStoryIds: number[];
   storyType: string;
   selectedIndex: number | null;
-  scrollPosition?: number;
   timestamp: number;
 }
 
@@ -19,7 +18,6 @@ export interface StoryListState {
   totalStoryIds: number[];
   storyType: string;
   selectedIndex: number | null;
-  scrollPosition?: number;
   timestamp: number;
 }
 
@@ -46,7 +44,6 @@ export class StoryListStateService {
       totalStoryIds,
       storyType,
       selectedIndex,
-      scrollPosition: window.scrollY,
       timestamp: Date.now(),
     };
 

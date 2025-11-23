@@ -165,8 +165,7 @@ import {
 
       /* About */
       .about-prose {
-        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200;
-        text-wrap: pretty;
+        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200 text-pretty;
       }
 
       /* Empty */

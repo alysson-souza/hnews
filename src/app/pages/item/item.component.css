@@ -41,8 +41,7 @@
 
 /* Body */
 .item-prose {
-  @apply prose prose-lg max-w-none text-gray-700 dark:text-gray-300 mb-6 leading-relaxed;
-  text-wrap: pretty;
+  @apply prose prose-lg max-w-none text-gray-700 dark:text-gray-300 mb-6 leading-relaxed text-pretty;
 }
 
 /* Empty */

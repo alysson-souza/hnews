@@ -2,8 +2,7 @@
 
 /* PWA Update Indicator Styles */
 .update-indicator {
-  @apply fixed left-1/2 -translate-x-1/2 z-50 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg dark:shadow-gray-800/50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 font-medium text-sm animate-bounce;
-  top: 5rem; /* 80px - top-20 */
+  @apply fixed left-1/2 -translate-x-1/2 z-50 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg dark:shadow-gray-800/50 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 font-medium text-sm animate-bounce top-20;
 }
 
 /* Adjust positioning for PWA mode to account for safe area */

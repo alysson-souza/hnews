@@ -3,13 +3,7 @@
 /* Story Item Card */
 .story-card {
   @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md mb-2 overflow-hidden;
-  @apply bg-white dark:bg-slate-900 dark:shadow-black/20;
-  top: 0;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s,
-    background-color 0.2s,
-    top 0.2s;
+  @apply bg-white dark:bg-slate-900 dark:shadow-black/20 top-0 transition-[border-color,box-shadow,background-color,top] duration-200 ease-out;
 }
 
 @media (display-mode: standalone) {

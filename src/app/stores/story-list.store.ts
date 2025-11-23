@@ -66,14 +66,13 @@ export class StoryListStore {
       this.currentPage.set(cachedState.currentPage);
       this.totalStoryIds.set(cachedState.totalStoryIds);
       this.loading.set(false);
-      if (cachedState.scrollPosition !== undefined) {
-        setTimeout(() => {
-          window.scrollTo({ top: cachedState.scrollPosition, behavior: 'instant' });
-        }, 50);
-      }
     } else {
       this.loadStories();
     }
+
+    // Always reset scroll to top when (re)initializing the list so tab switches
+    // don't jump down to a cached scroll position.
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   /**

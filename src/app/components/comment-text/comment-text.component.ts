@@ -19,8 +19,7 @@ import { highlightCodeBlocks } from './code-highlight.transform';
       @reference '../../../styles.css';
 
       .comment-body {
-        @apply prose prose-sm max-w-none text-gray-700 dark:text-slate-300 text-[15px] leading-7 tracking-normal;
-        text-wrap: pretty;
+        @apply prose prose-sm max-w-none text-gray-700 dark:text-slate-300 text-[15px] leading-7 tracking-normal text-pretty;
       }
       .comment-body.dark {
         @apply prose-invert;

@@ -7,6 +7,7 @@
 
 /* Load legacy JavaScript config for theme values */
 @config '../tailwind.config.js';
+@plugin '@tailwindcss/typography';
 
 /* Override highlight.js theme for dark mode compatibility */
 @layer base {
@@ -40,117 +41,17 @@ html.dark {
 
 /* Skeleton loader utility with gentle pulse */
 .skeleton {
-  animation: skeletonPulse 1.6s ease-in-out infinite;
+  @apply animate-pulse motion-reduce:animate-none dark:opacity-90;
 }
 
-.dark .skeleton {
-  opacity: 0.92;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: none;
-  }
-}
-
-@keyframes skeletonPulse {
-  0%,
-  100% {
-    opacity: 0.88;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-/* Define custom prose utilities for v4 compatibility */
+/* Glassmorphism utility */
 @utility glass {
   @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 dark:border-slate-700/30 shadow-lg;
   @apply transition-all duration-300;
 }
 
-@utility prose {
-  color: var(--tw-prose-body);
-  max-width: 65ch;
-
-  --tw-prose-body: #374151;
-  --tw-prose-headings: #111827;
-  --tw-prose-lead: #4b5563;
-  --tw-prose-links: #111827;
-  --tw-prose-bold: #111827;
-  --tw-prose-counters: #6b7280;
-  --tw-prose-bullets: #d1d5db;
-  --tw-prose-hr: #e5e7eb;
-  --tw-prose-quotes: #111827;
-  --tw-prose-quote-borders: #e5e7eb;
-  --tw-prose-captions: #6b7280;
-  --tw-prose-code: #111827;
-  --tw-prose-pre-code: #e5e7eb;
-  --tw-prose-pre-bg: #1f2937;
-  --tw-prose-th-borders: #d1d5db;
-  --tw-prose-td-borders: #e5e7eb;
-}
-
-@utility prose-sm {
-  font-size: 0.875rem;
-  line-height: 1.7142857;
-}
-
-@utility prose-lg {
-  font-size: 1.125rem;
-  line-height: 1.7777778;
-}
-
-@utility prose-invert {
-  --tw-prose-body: #d1d5db;
-  --tw-prose-headings: #fff;
-  --tw-prose-lead: #9ca3af;
-  --tw-prose-links: #fff;
-  --tw-prose-bold: #fff;
-  --tw-prose-counters: #9ca3af;
-  --tw-prose-bullets: #4b5563;
-  --tw-prose-hr: #374151;
-  --tw-prose-quotes: #f3f4f6;
-  --tw-prose-quote-borders: #374151;
-  --tw-prose-captions: #9ca3af;
-  --tw-prose-code: #fff;
-  --tw-prose-pre-code: #d1d5db;
-  --tw-prose-pre-bg: #111827;
-  --tw-prose-th-borders: #4b5563;
-  --tw-prose-td-borders: #374151;
-}
-
 /* Override the dark variant to use class selector */
 @variant dark (&:where(.dark, .dark *));
-
-/* Animations */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fade-in-scale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-
-.animate-fade-in-scale {
-  animation: fade-in-scale 0.2s ease-out;
-}
 
 /* Light mode scrollbar */
 ::-webkit-scrollbar {
@@ -202,8 +103,7 @@ h6,
 p,
 span,
 a {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  @apply break-words;
 }
 
 /* Unified form controls */
@@ -306,7 +206,7 @@ code {
   margin-bottom: 0;
   color: var(--tw-prose-quotes, #111827);
   font-style: italic;
-  text-wrap: pretty;
+  @apply text-pretty;
 }
 .comment-body blockquote:first-child {
   margin-top: 0;
