@@ -63,6 +63,7 @@
                 rel="noopener noreferrer nofollow"
                 (click)="markAsVisited()"
                 class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                [attr.title]="story!.title || ''"
               >
                 {{ story!.title }}
               </a>
@@ -71,6 +72,7 @@
                 [routerLink]="['/item', story!.id]"
                 (click)="markAsVisited()"
                 class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                [attr.title]="story!.title || ''"
               >
                 {{ story!.title }}
               </a>

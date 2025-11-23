@@ -22,6 +22,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
             target="_blank"
             rel="noopener noreferrer nofollow"
             class="story-link"
+            [attr.title]="item.title || ''"
           >
             {{ item.title }}
           </a>

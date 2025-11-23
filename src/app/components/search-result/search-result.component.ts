@@ -36,13 +36,20 @@ interface SearchHit {
         <!-- Story Result -->
         <h3 class="result-title">
           @if (isDead()) {
-            <a [routerLink]="['/item', getItemId()]" class="title-link dead-item"> [flagged] </a>
+            <a
+              [routerLink]="['/item', getItemId()]"
+              class="title-link dead-item"
+              [attr.title]="getPlainTitle()"
+            >
+              [flagged]
+            </a>
           } @else if (getExternalUrl()) {
             <a
               [href]="getExternalUrl()"
               target="_blank"
               rel="noopener noreferrer"
               class="title-link"
+              [attr.title]="getPlainTitle()"
               [innerHTML]="getHighlightedTitle()"
             >
             </a>
@@ -50,6 +57,7 @@ interface SearchHit {
             <a
               [routerLink]="['/item', getItemId()]"
               class="title-link"
+              [attr.title]="getPlainTitle()"
               [innerHTML]="getHighlightedTitle()"
             >
             </a>
@@ -93,11 +101,11 @@ interface SearchHit {
       }
 
       .result-title {
-        @apply font-medium text-gray-900 dark:text-gray-100 mb-1;
+        @apply font-medium text-gray-900 dark:text-gray-100 mb-1 line-clamp-2;
       }
 
       .title-link {
-        @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200;
+        @apply hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 sm:w-full sm:max-w-full sm:line-clamp-1;
       }
 
       /* Search highlighting styles */
@@ -161,6 +169,16 @@ export class SearchResultComponent {
     if (this.isSearchResult) {
       const searchHit = this.item as SearchHit;
       return searchHit._highlightResult?.['title']?.value || searchHit.title || '';
+    }
+
+    return (this.item as HNItem).title || '[untitled]';
+  }
+
+  getPlainTitle(): string {
+    if (!this.item) return '';
+
+    if (this.isSearchResult) {
+      return (this.item as SearchHit).title || '';
     }
 
     return (this.item as HNItem).title || '[untitled]';
