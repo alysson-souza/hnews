@@ -48,11 +48,11 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
       @reference '../../../styles.css';
 
       .result-list-container {
-        @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden;
+        @apply bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden;
       }
 
       .results-header {
-        @apply px-6 py-2 border-b border-gray-200 dark:border-gray-700;
+        @apply px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700;
       }
 
       .results-summary {
@@ -61,16 +61,16 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
       /* Filter section - optional content projection */
       ::ng-deep [filter] {
-        @apply px-4 sm:px-6 py-3 flex justify-center;
+        @apply px-4 sm:px-6 py-3 flex justify-center border-b border-gray-200 dark:border-gray-800;
       }
 
       .results-list {
-        @apply px-4 pb-4 space-y-1 sm:space-y-2;
+        @apply px-6 pb-6 divide-y divide-gray-200 dark:divide-gray-800;
       }
 
       /* Add top padding when there's no filter */
       .results-list:first-child {
-        @apply pt-4;
+        @apply pt-6;
       }
 
       /* Remove top padding from results list when there's a filter */
@@ -84,7 +84,7 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
       }
 
       .pagination-bar {
-        @apply p-4 border-t border-gray-200 dark:border-gray-700;
+        @apply p-4 border-t border-gray-200 dark:border-gray-800;
       }
     `,
   ],
