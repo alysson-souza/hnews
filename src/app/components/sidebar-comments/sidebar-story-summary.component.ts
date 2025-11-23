@@ -42,7 +42,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
           [attr.aria-label]="'Search For More Stories From ' + getDomain(item.url)"
           [title]="'Search For More Stories From ' + getDomain(item.url)"
         >
-          ({{ getDomain(item.url) }})
+          {{ getDomain(item.url) }}
         </button>
       }
 

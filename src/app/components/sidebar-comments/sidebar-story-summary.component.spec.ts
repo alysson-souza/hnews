@@ -125,7 +125,7 @@ describe('SidebarStorySummaryComponent', () => {
     it('should render domain button when URL exists', () => {
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
       expect(domainBtn).toBeTruthy();
-      expect(domainBtn.nativeElement.textContent.trim()).toBe('(example.com)');
+      expect(domainBtn.nativeElement.textContent.trim()).toBe('example.com');
     });
 
     it('should not render domain button when no URL', () => {
