@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTime } from '../../services/relative-time.util';
+import { DecimalPipe } from '@angular/common';
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -52,6 +53,7 @@ interface SearchHit {
     UserTagComponent,
     CommentTextComponent,
     RouterLink,
+    DecimalPipe,
   ],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
@@ -178,7 +180,7 @@ interface SearchHit {
             (loadMore)="loadMore()"
           >
             <ng-container header>
-              Found {{ totalResults() }} results for <strong>"{{ searchQuery }}"</strong>
+              Found {{ totalResults() | number }} results for <strong>"{{ searchQuery }}"</strong>
             </ng-container>
 
             @for (hit of results(); track hit.objectID) {
