@@ -34,39 +34,28 @@ export interface SegmentOption {
       @reference '../../../../styles.css';
 
       .segmented-control-container {
-        @apply inline-flex items-center gap-0 p-1 rounded-full;
-        @apply bg-gray-200 dark:bg-gray-700;
-        @apply transition-colors duration-200;
-        @apply w-full sm:w-auto;
+        @apply inline-flex items-center gap-1 p-1 rounded-xl w-full sm:w-auto;
+        @apply border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/70;
+        @apply shadow-inner dark:shadow-none transition-colors duration-200;
       }
 
       .segment-button {
-        @apply px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium;
-        @apply text-gray-700 dark:text-gray-300;
+        @apply relative px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold;
+        @apply text-gray-600 dark:text-gray-300;
         @apply hover:text-gray-900 dark:hover:text-gray-100;
-        @apply transition-all duration-200 cursor-pointer;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
-        @apply focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400;
-        @apply dark:focus-visible:ring-offset-gray-800;
+        @apply transition-all duration-200 cursor-pointer rounded-lg;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400;
         @apply flex-1 sm:flex-initial;
       }
 
-      .segment-button:first-child {
-        @apply rounded-l-full;
-      }
-
-      .segment-button:last-child {
-        @apply rounded-r-full;
-      }
-
       .segment-button.active {
-        @apply bg-white dark:bg-gray-600;
+        @apply bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600;
         @apply text-gray-900 dark:text-white;
         @apply shadow-sm dark:shadow-md;
       }
 
       .segment-button:hover:not(.active) {
-        @apply bg-gray-300 dark:bg-gray-600;
+        @apply bg-gray-100 dark:bg-slate-800/80;
       }
     `,
   ],

@@ -3,7 +3,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNUser, HNItem, isStory, isComment } from '../../models/hn';
 import { forkJoin } from 'rxjs';
@@ -11,11 +11,11 @@ import { PageContainerComponent } from '../../components/shared/page-container/p
 import { CardComponent } from '../../components/shared/card/card.component';
 import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
-import { SearchResultComponent } from '../../components/search-result/search-result.component';
-import { ResultListComponent } from '../../components/result-list/result-list.component';
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { ScrollService } from '../../services/scroll.service';
+import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
+import { getDomain } from '../../services/domain.utils';
 import {
   SegmentedControlComponent,
   SegmentOption,
@@ -29,143 +29,283 @@ import {
     CardComponent,
     UserTagComponent,
     AppButtonComponent,
-    SearchResultComponent,
-    ResultListComponent,
     SegmentedControlComponent,
+    CommentTextComponent,
+    RouterLink,
   ],
   template: `
     <app-page-container
       [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
       class="transition-all duration-300"
     >
-      @if (loading()) {
-        <!-- Loading skeleton -->
-        <div class="skeleton">
-          <div class="skel-title mb-4"></div>
-          <div class="skel-line mb-2"></div>
-          <div class="skel-line w-3/4 mb-8"></div>
-          <div class="space-y-4">
-            <div class="skel-block"></div>
-            <div class="skel-block"></div>
-          </div>
-        </div>
-      } @else if (user()) {
-        <!-- User Profile -->
-        <app-card class="block mb-2 sm:mb-3" id="user-profile">
-          <h1 class="user-title">
-            <app-user-tag [username]="user()!.id" />
-          </h1>
+      <div class="space-y-3 sm:space-y-4">
+        @if (loading()) {
+          <app-card class="block">
+            <div class="skeleton space-y-5">
+              <div class="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                @for (box of [0, 1, 2]; track box) {
+                  <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                }
+              </div>
+              <div class="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              <div class="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            </div>
+          </app-card>
+          <app-card class="block">
+            <div class="skeleton space-y-4">
+              <div class="flex items-center justify-between gap-3">
+                <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div class="h-10 w-48 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              </div>
+              @for (row of [0, 1, 2]; track row) {
+                <div
+                  class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 p-4 space-y-3"
+                >
+                  <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  <div class="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                </div>
+              }
+            </div>
+          </app-card>
+        } @else if (user()) {
+          <app-card class="block profile-card" id="user-profile">
+            <div class="space-y-1 mb-4">
+              <p class="eyebrow">User</p>
+              <h1 class="page-title">
+                <app-user-tag [username]="user()!.id" />
+              </h1>
+            </div>
 
-          <!-- User Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
-            <div class="stat-box">
-              <div class="stat-label">Karma</div>
-              <div class="stat-value">{{ user()!.karma }}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+              <div class="stat-box">
+                <div class="stat-label">Karma</div>
+                <div class="stat-value">{{ user()!.karma }}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Submissions</div>
+                <div class="stat-value">{{ user()!.submitted?.length || 0 }}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Member Since</div>
+                <div class="stat-value">{{ getDate(user()!.created) }}</div>
+              </div>
             </div>
-            <div class="stat-box">
-              <div class="stat-label">Member Since</div>
-              <div class="stat-value">{{ getDate(user()!.created) }}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-label">Submissions</div>
-              <div class="stat-value">{{ user()!.submitted?.length || 0 }}</div>
-            </div>
-          </div>
 
-          <!-- About Section -->
-          @if (user()!.about) {
-            <div>
-              <h2 class="about-title">About</h2>
-              <div class="about-prose" [innerHTML]="user()!.about"></div>
-            </div>
-          }
-        </app-card>
+            @if (user()!.about) {
+              <div class="space-y-2">
+                <p class="section-label">About</p>
+                <app-comment-text [html]="user()!.about || ''" />
+              </div>
+            }
+          </app-card>
 
-        <!-- Recent Submissions -->
-        @if (loadingSubmissions()) {
-          <app-result-list [showHeader]="true" [showLoadMore]="false">
-            <ng-container header> Recent Submissions </ng-container>
-            <div class="skeleton space-y-1 sm:space-y-2">
-              <div class="skel-item"></div>
-              <div class="skel-item"></div>
-              <div class="skel-item"></div>
-            </div>
-          </app-result-list>
-        } @else if (submissions().length > 0) {
-          <app-result-list
-            [showHeader]="true"
-            [showLoadMore]="hasMore()"
-            [loadingMore]="loadingMore()"
-            (loadMore)="loadMoreSubmissions()"
-          >
-            <ng-container header>Recent Submissions</ng-container>
-            <div filter>
+          <app-card class="block activity-card">
+            <div class="activity-header">
+              <div>
+                <p class="section-label">Recent activity</p>
+                <p class="muted">
+                  Loaded {{ filteredSubmissions().length }} {{ filterLabel() }} •
+                  {{ totalSubmissions() }} total submissions
+                </p>
+              </div>
               <app-segmented-control
+                class="w-full sm:w-auto"
                 [options]="filterOptions"
                 [value]="submissionFilter()"
                 (valueChange)="onFilterChange($event)"
               />
             </div>
-            @for (item of filteredSubmissions(); track item.id) {
-              <app-search-result [item]="item" [isSearchResult]="false" />
+
+            @if (loadingSubmissions()) {
+              <div class="space-y-3">
+                @for (row of [0, 1, 2]; track row) {
+                  <div class="activity-skeleton skeleton">
+                    <div class="flex items-center gap-2 mb-3">
+                      <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                      <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                    </div>
+                    <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg mb-2"></div>
+                    <div class="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  </div>
+                }
+              </div>
+            } @else if (filteredSubmissions().length > 0) {
+              <div class="activity-list">
+                @for (item of filteredSubmissions(); track item.id) {
+                  <article class="activity-item" [class.comment-item]="isComment(item)">
+                    <div class="item-top">
+                      <span
+                        class="type-pill"
+                        [class.type-comment]="isComment(item)"
+                        [class.type-story]="!isComment(item)"
+                      >
+                        {{ isComment(item) ? 'Comment' : item.type === 'job' ? 'Job' : 'Story' }}
+                      </span>
+                      <span class="muted">{{ getTimeAgo(item.time) }}</span>
+                      @if (isStory(item) && item.url && getDomain(item.url)) {
+                        <span class="pill-soft" [title]="item.url">{{ getDomain(item.url) }}</span>
+                      }
+                    </div>
+
+                    @if (isStory(item)) {
+                      <h3 class="activity-title">
+                        @if (item.url) {
+                          <a
+                            [href]="item.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="title-link"
+                          >
+                            {{ item.title || '[untitled]' }}
+                          </a>
+                        } @else {
+                          <a [routerLink]="['/item', item.id]" class="title-link">
+                            {{ item.title || '[untitled]' }}
+                          </a>
+                        }
+                      </h3>
+                      <div class="item-meta">
+                        @if (item.by) {
+                          <span class="inline-flex items-center gap-1">
+                            by <app-user-tag [username]="item.by" />
+                          </span>
+                          <span>•</span>
+                        }
+                        <span>{{ item.score || 0 }} points</span>
+                        <span>•</span>
+                        <a [routerLink]="['/item', item.id]" class="meta-link">
+                          {{ item.descendants || 0 }}
+                          {{ item.descendants === 1 ? 'comment' : 'comments' }}
+                        </a>
+                      </div>
+                    } @else {
+                      <div class="comment-shell">
+                        <app-comment-text [html]="item.text || ''" />
+                      </div>
+                      <div class="item-meta">
+                        <a [routerLink]="['/item', item.id]" class="meta-link">View thread</a>
+                        @if (item.parent) {
+                          <span>•</span>
+                          <a [routerLink]="['/item', item.parent]" class="meta-link">Parent</a>
+                        }
+                        <span>•</span>
+                        <span class="muted">
+                          {{ item.kids?.length || 0 }}
+                          {{ (item.kids?.length || 0) === 1 ? 'reply' : 'replies' }}
+                        </span>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+
+              @if (hasMore()) {
+                <div class="mt-4">
+                  <app-button
+                    (clicked)="loadMoreSubmissions()"
+                    [disabled]="loadingMore()"
+                    variant="primary"
+                    size="sm"
+                    [fullWidth]="deviceService.isMobile()"
+                  >
+                    {{ loadingMore() ? 'Loading...' : 'Load more' }}
+                  </app-button>
+                </div>
+              }
+            } @else {
+              <p class="empty">No submissions yet</p>
             }
-          </app-result-list>
-        } @else {
-          <app-result-list [showHeader]="true" [showLoadMore]="false">
-            <ng-container header> Recent Submissions </ng-container>
-            <p class="empty">No submissions yet</p>
-          </app-result-list>
+          </app-card>
+        } @else if (error()) {
+          <div class="error-card">
+            <p class="error-text">{{ error() }}</p>
+            <app-button (clicked)="loadUser()" variant="danger" size="sm">Try Again</app-button>
+          </div>
         }
-      } @else if (error()) {
-        <!-- Error State -->
-        <div class="error-card">
-          <p class="error-text">{{ error() }}</p>
-          <app-button (clicked)="loadUser()" variant="danger" size="sm">Try Again</app-button>
-        </div>
-      }
+      </div>
     </app-page-container>
   `,
   styles: [
     `
       @reference '../../../styles.css';
 
-      /* Skeleton */
-      .skel-title {
-        @apply h-8 bg-gray-200 dark:bg-gray-700 rounded-xl w-1/4;
+      .profile-card .card-base {
+        @apply bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-950;
       }
-      .skel-line {
-        @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-xl w-1/2;
+      .page-title {
+        @apply text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 leading-tight;
       }
-      .skel-block {
-        @apply h-20 bg-gray-200 dark:bg-gray-700 rounded-xl;
+      .eyebrow {
+        @apply text-xs font-semibold uppercase tracking-[0.08em] text-gray-500 dark:text-gray-400;
       }
-      .skel-item {
-        @apply h-16 bg-gray-200 dark:bg-gray-700 rounded-xl;
+      .section-label {
+        @apply text-sm font-semibold text-gray-800 dark:text-gray-200;
       }
-
-      /* Titles */
-      .user-title {
-        @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4;
-      }
-      .about-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-4;
+      .muted {
+        @apply text-sm text-gray-500 dark:text-gray-400;
       }
 
       /* Stats */
       .stat-box {
-        @apply rounded-xl p-3 sm:p-4 md:p-5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all duration-200;
-        @apply hover:bg-gray-100 dark:hover:bg-gray-600;
+        @apply rounded-xl p-4 sm:p-5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-sm;
       }
       .stat-label {
-        @apply text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 mb-1;
+        @apply text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400;
       }
       .stat-value {
-        @apply text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100;
+        @apply text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100;
       }
 
-      /* About */
-      .about-prose {
-        @apply prose prose-sm max-w-none text-gray-800 dark:text-gray-200 text-pretty;
+      /* Activity */
+      .activity-card .card-base {
+        @apply border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900;
+      }
+      .activity-header {
+        @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-gray-200 dark:border-gray-700;
+      }
+      .activity-list {
+        @apply divide-y divide-gray-200 dark:divide-gray-800;
+      }
+      .activity-item {
+        @apply py-4 space-y-2;
+      }
+      .item-top {
+        @apply flex flex-wrap items-center gap-2 text-xs sm:text-sm;
+      }
+      .type-pill {
+        @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold;
+        @apply bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-gray-200;
+      }
+      .type-story {
+        @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200;
+      }
+      .type-comment {
+        @apply bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200;
+      }
+      .pill-soft {
+        @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+        @apply bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-gray-300;
+        @apply max-w-[200px] truncate;
+      }
+      .activity-title {
+        @apply text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight;
+      }
+      .title-link {
+        @apply hover:text-blue-600 dark:hover:text-blue-400 underline-offset-2 decoration-2 hover:underline transition-colors;
+      }
+      .item-meta {
+        @apply flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-gray-600 dark:text-gray-400;
+      }
+      .meta-link {
+        @apply text-blue-600 dark:text-blue-300 hover:underline decoration-2 underline-offset-2;
+      }
+      .comment-shell {
+        @apply rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-800/70 p-3 sm:p-4;
+      }
+      .activity-skeleton {
+        @apply rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 p-4;
       }
 
       /* Empty */
@@ -200,6 +340,10 @@ export class UserComponent implements OnInit {
   currentPage = signal(0);
   pageSize = 20;
 
+  isStory = isStory;
+  isComment = isComment;
+  getDomain = getDomain;
+
   // Filter for submission type
   submissionFilter = signal<'all' | 'stories' | 'comments'>('all');
   filterOptions: SegmentOption[] = [
@@ -223,6 +367,15 @@ export class UserComponent implements OnInit {
 
     return allSubmissions;
   });
+
+  filterLabel = computed(() => {
+    const filter = this.submissionFilter();
+    if (filter === 'stories') return 'stories';
+    if (filter === 'comments') return 'comments';
+    return 'items';
+  });
+
+  totalSubmissions = computed(() => this.user()?.submitted?.length ?? 0);
 
   ngOnInit() {
     // Check for both path params and query params (HN compatibility)

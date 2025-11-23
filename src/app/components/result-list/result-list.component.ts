@@ -48,7 +48,7 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
       @reference '../../../styles.css';
 
       .result-list-container {
-        @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm;
+        @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden;
       }
 
       .results-header {
