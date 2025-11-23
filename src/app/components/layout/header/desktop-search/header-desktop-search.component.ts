@@ -16,17 +16,6 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
     <div class="hidden lg:flex items-center gap-4">
       <app-theme-toggle />
       <form (ngSubmit)="onSubmit()" class="relative" role="search">
-        <input
-          type="search"
-          name="searchQuery"
-          [(ngModel)]="searchQuery"
-          (keydown)="onKeydown($event)"
-          placeholder="Search stories..."
-          aria-label="Search Hacker News stories"
-          aria-describedby="search-hint"
-          [title]="'Search For Stories (Press / to focus)'"
-          class="app-input app-input-sm search-input w-64 pr-10"
-        />
         <button
           type="submit"
           role="button"
@@ -36,6 +25,17 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
         >
           <ng-icon name="solarMagniferLinear" class="text-xl" />
         </button>
+        <input
+          type="search"
+          name="searchQuery"
+          [(ngModel)]="searchQuery"
+          (keydown)="onKeydown($event)"
+          placeholder="Search stories..."
+          aria-label="Search Hacker News stories"
+          aria-describedby="search-hint"
+          [title]="'Search For Stories (Press / to focus)'"
+          class="app-input app-input-sm search-input w-64 !pl-10"
+        />
       </form>
     </div>
   `,
@@ -44,7 +44,7 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
       @reference '../../../../../styles.css';
 
       .search-button {
-        @apply absolute right-2 top-1/2 -translate-y-1/2;
+        @apply absolute left-2 top-1/2 -translate-y-1/2;
         @apply flex items-center justify-center;
         @apply text-gray-500 dark:text-slate-400;
         @apply hover:text-gray-700 dark:hover:text-blue-400;

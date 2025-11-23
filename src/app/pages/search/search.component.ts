@@ -69,19 +69,6 @@ interface SearchHit {
 
           <!-- Search Input -->
           <form (ngSubmit)="performSearch()" class="relative">
-            <input
-              type="search"
-              [(ngModel)]="searchQuery"
-              name="searchQuery"
-              (ngModelChange)="onSearchChange($event)"
-              placeholder="Search stories, comments, users..."
-              aria-label="Search Hacker News content"
-              aria-describedby="search-hint"
-              [disabled]="isOffline()"
-              [class.opacity-50]="isOffline()"
-              [class.cursor-not-allowed]="isOffline()"
-              class="app-input app-input-lg pr-12"
-            />
             <button
               type="submit"
               class="search-button"
@@ -93,6 +80,19 @@ interface SearchHit {
             >
               <ng-icon name="solarMagniferLinear" class="text-2xl" />
             </button>
+            <input
+              type="search"
+              [(ngModel)]="searchQuery"
+              name="searchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search stories, comments, users..."
+              aria-label="Search Hacker News content"
+              aria-describedby="search-hint"
+              [disabled]="isOffline()"
+              [class.opacity-50]="isOffline()"
+              [class.cursor-not-allowed]="isOffline()"
+              class="app-input app-input-lg !pl-12"
+            />
           </form>
           @if (!isOffline()) {
             <p id="search-hint" class="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -213,7 +213,7 @@ interface SearchHit {
         @apply w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-200;
       }
       .search-button {
-        @apply absolute right-3 top-1/2 transform -translate-y-1/2;
+        @apply absolute left-3 top-1/2 transform -translate-y-1/2;
         @apply flex items-center justify-center;
         @apply text-gray-500 dark:text-gray-400;
         @apply hover:text-gray-700 dark:hover:text-gray-200;
