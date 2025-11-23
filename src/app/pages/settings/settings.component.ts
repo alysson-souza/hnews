@@ -111,8 +111,8 @@ import {
       }
 
       .modern-toggle-container {
-        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all duration-200;
-        @apply bg-gray-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm;
+        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
+        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm;
       }
 
       .setting-info {
