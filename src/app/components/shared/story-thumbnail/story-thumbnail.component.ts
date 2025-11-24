@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, output, input } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
+import { StoryFaviconComponent } from '../story-favicon/story-favicon.component';
 
 @Component({
   selector: 'app-story-thumbnail',
   standalone: true,
-  imports: [NgOptimizedImage],
+  imports: [StoryFaviconComponent],
   template: `
     <div class="thumb">
       @if (isTextPost()) {
@@ -30,15 +30,7 @@ import { NgOptimizedImage } from '@angular/common';
           (click)="handleLinkClick()"
           class="thumb-link"
         >
-          <img
-            [ngSrc]="getFaviconUrl(storyUrl())"
-            width="64"
-            height="64"
-            [alt]="'Favicon for ' + storyTitle()"
-            class="thumb-img-contain"
-            decoding="async"
-            (error)="handleImageError($event)"
-          />
+          <app-story-favicon [url]="storyUrl()" [altText]="'Favicon for ' + storyTitle()" />
         </a>
       }
     </div>
@@ -52,12 +44,6 @@ import { NgOptimizedImage } from '@angular/common';
       }
       .thumb-link {
         @apply block w-full h-full hover:opacity-90 transition-opacity;
-      }
-      .thumb-img-cover {
-        @apply w-full h-full object-cover;
-      }
-      .thumb-img-contain {
-        @apply w-full h-full object-contain;
       }
       .thumb-placeholder {
         @apply w-full h-full flex items-center justify-center;
@@ -75,26 +61,5 @@ export class StoryThumbnailComponent {
     // Don't prevent default - let the link work normally
     // Just emit the event for parent to handle (e.g., mark as visited)
     this.linkClicked.emit();
-  }
-
-  handleImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = '/assets/default-thumb.svg';
-  }
-
-  private getDomain(url?: string): string {
-    if (!url) return '';
-    try {
-      const domain = new URL(url).hostname;
-      return domain.replace('www.', '');
-    } catch {
-      return '';
-    }
-  }
-
-  getFaviconUrl(url?: string): string {
-    const domain = this.getDomain(url);
-    if (!domain) return '/assets/default-thumb.svg';
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
   }
 }
