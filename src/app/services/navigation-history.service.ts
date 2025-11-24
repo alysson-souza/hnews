@@ -2,12 +2,22 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, take, timeout } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
-interface NavigationState {
+export interface NavigationState {
   url: string;
   selectedIndex: number | null;
   storyType?: string; // For story list pages
+}
+
+/**
+ * Callback interface for restoring selection and scroll state after navigation.
+ * Allows the caller to provide custom restoration logic.
+ */
+export interface StateRestorationCallbacks {
+  setSelectedIndex: (index: number) => void;
+  scrollSelectedIntoView: () => Promise<void>;
 }
 
 @Injectable({
@@ -106,5 +116,48 @@ export class NavigationHistoryService {
     return this.navigationStack.length > 0
       ? this.navigationStack[this.navigationStack.length - 1]
       : null;
+  }
+
+  /**
+   * Navigate back and restore selection/scroll state.
+   * Waits for NavigationEnd before restoring state to ensure DOM is ready.
+   * @param callbacks - Functions to call for state restoration
+   * @returns The previous state, or null if no history
+   */
+  async navigateBackWithRestore(
+    callbacks: StateRestorationCallbacks,
+  ): Promise<NavigationState | null> {
+    if (!this.canGoBack()) {
+      return null;
+    }
+
+    const previousState = this.navigationStack.pop()!;
+    this.isProgrammaticNavigation = true;
+
+    // Start navigation
+    this.router.navigateByUrl(previousState.url);
+
+    // Wait for NavigationEnd with a timeout fallback
+    try {
+      await firstValueFrom(
+        this.router.events.pipe(
+          filter((event) => event instanceof NavigationEnd),
+          take(1),
+          timeout(500),
+        ),
+      );
+    } catch {
+      // Timeout reached - proceed anyway, DOM should be ready
+    }
+
+    // Restore state if we have a selected index
+    if (previousState.selectedIndex !== null) {
+      // Small delay to ensure component has rendered
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      callbacks.setSelectedIndex(previousState.selectedIndex);
+      await callbacks.scrollSelectedIntoView();
+    }
+
+    return previousState;
   }
 }

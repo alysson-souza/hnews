@@ -25,15 +25,16 @@ Live demo: https://alysson-souza.github.io/hnews/
 
 ## Keyboard Shortcuts
 
-Essential shortcuts (work in primary story list context):
+Essential shortcuts
 
 - `j` / `k` – Move selection down / up
+- `h` / `l` – Navigate tabs
 - `o` – Open selected story
-- `c` – Toggle comments sidebar
+- `c` – Open comments sidebar
 - `/` – Focus search input
 - `?` – Show keyboard shortcuts help
 
-Shortcuts are contextual: different sets apply on the story list, comments sidebar, item page, and settings page. Press `?` at any time to see **all** currently available actions for the active view.
+Shortcuts are contextual: different sets apply on the story list, comments sidebar, item page, and settings page. Use `Escape` to close the sidebar. Press `?` at any time to see **all** currently available actions for the active view.
 
 ## Tech Stack
 

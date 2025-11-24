@@ -224,18 +224,15 @@ export class App implements OnInit {
   // Keyboard Shortcut Handlers - Story List (Default Context)
   // ============================================================================
 
-  private handleEscapeDefault(): void {
+  private async handleEscapeDefault(): Promise<void> {
     // Check if we're on an item page and can go back
     const isOnItemPage = this.keyboardContext.isOnItemPage();
 
     if (isOnItemPage && this.navigationHistory.canGoBack()) {
-      const previousState = this.navigationHistory.goBack();
-      if (previousState && previousState.selectedIndex !== null) {
-        setTimeout(() => {
-          this.keyboardNavService.setSelectedIndex(previousState.selectedIndex);
-          this.scrollSelectedStoryIntoView();
-        }, 100);
-      }
+      await this.navigationHistory.navigateBackWithRestore({
+        setSelectedIndex: (index) => this.keyboardNavService.setSelectedIndex(index),
+        scrollSelectedIntoView: () => this.scrollSelectedStoryIntoView(),
+      });
     } else if (this.showMobileSearch()) {
       this.showMobileSearch.set(false);
     } else if (this.mobileMenuOpen()) {

@@ -51,12 +51,11 @@ describe('KeyboardShortcutConfigService', () => {
 
       expect(sidebarKeys).toContain('j'); // Next comment
       expect(sidebarKeys).toContain('k'); // Previous comment
-      expect(sidebarKeys).toContain('o'); // Toggle expand
+      expect(sidebarKeys).toContain('c'); // Toggle collapse
       expect(sidebarKeys).toContain('u'); // Upvote
       expect(sidebarKeys).toContain('r'); // Expand replies
-      expect(sidebarKeys).toContain('v'); // View thread
-      expect(sidebarKeys).toContain('b'); // Go back
-      expect(sidebarKeys).toContain('c'); // Toggle sidebar
+      expect(sidebarKeys).toContain('l'); // View thread
+      expect(sidebarKeys).toContain('h'); // Go back
     });
 
     it('should filter out conditional shortcuts when condition is false', () => {
@@ -112,9 +111,9 @@ describe('KeyboardShortcutConfigService', () => {
       const upvoteInDefault = service.getShortcut('u', 'default');
       expect(upvoteInDefault).toBeUndefined();
 
-      // 'h' (previous tab) is default-only
-      const tabInSidebar = service.getShortcut('h', 'sidebar');
-      expect(tabInSidebar).toBeUndefined();
+      // 'a' (toggle actions) is default-only
+      const actionsInSidebar = service.getShortcut('a', 'sidebar');
+      expect(actionsInSidebar).toBeUndefined();
     });
 
     it('should handle same key in different contexts', () => {
@@ -183,7 +182,7 @@ describe('KeyboardShortcutConfigService', () => {
       const sidebarGrouped = service.getShortcutsByCategory('sidebar');
 
       expect(defaultGrouped.has('Story Actions')).toBe(true);
-      expect(sidebarGrouped.has('Story Actions')).toBe(true);
+      expect(sidebarGrouped.has('Story Actions')).toBe(false);
 
       expect(sidebarGrouped.has('Comment Actions')).toBe(true);
       expect(defaultGrouped.has('Comment Actions')).toBe(false);
@@ -228,7 +227,7 @@ describe('KeyboardShortcutConfigService', () => {
       const sidebarCategories = service.getCategories('sidebar');
 
       expect(defaultCategories).toContain('Story Actions');
-      expect(sidebarCategories).toContain('Story Actions');
+      expect(sidebarCategories).not.toContain('Story Actions');
 
       expect(sidebarCategories).toContain('Comment Actions');
       expect(defaultCategories).not.toContain('Comment Actions');

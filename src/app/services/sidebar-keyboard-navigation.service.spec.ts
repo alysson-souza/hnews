@@ -2,6 +2,7 @@ import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { SidebarKeyboardNavigationService } from './sidebar-keyboard-navigation.service';
 import { SidebarCommentsInteractionService } from './sidebar-comments-interaction.service';
 import { CommandRegistryService } from './command-registry.service';
@@ -14,8 +15,11 @@ describe('SidebarKeyboardNavigationService', () => {
   let mockCommandRegistry: MockedObject<CommandRegistryService>;
   let mockScrollService: MockedObject<ScrollService>;
   let mockSidebarService: MockedObject<SidebarService>;
+  let currentItemIdSignal: ReturnType<typeof signal<number | null>>;
 
   beforeEach(() => {
+    currentItemIdSignal = signal<number | null>(100);
+
     mockInteractionService = {
       dispatchAction: vi.fn(),
     } as unknown as MockedObject<SidebarCommentsInteractionService>;
@@ -29,6 +33,8 @@ describe('SidebarKeyboardNavigationService', () => {
       closeSidebar: vi.fn(),
       goBack: vi.fn(),
       canGoBack: vi.fn(),
+      currentItemId: currentItemIdSignal,
+      openSidebarWithSlideAnimation: vi.fn(),
     } as unknown as MockedObject<SidebarService>;
 
     TestBed.configureTestingModule({
@@ -151,10 +157,16 @@ describe('SidebarKeyboardNavigationService', () => {
       expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(123, 'expandReplies');
     });
 
-    it('should dispatch viewThread action', () => {
+    it('should save state and open thread when viewing thread', () => {
       service.selectedCommentId.set(123);
       service.viewThreadSelected();
-      expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(123, 'viewThread');
+      expect(mockSidebarService.openSidebarWithSlideAnimation).toHaveBeenCalledWith(123);
+    });
+
+    it('should not open thread if no comment selected', () => {
+      service.selectedCommentId.set(null);
+      service.viewThreadSelected();
+      expect(mockSidebarService.openSidebarWithSlideAnimation).not.toHaveBeenCalled();
     });
   });
 
