@@ -2,7 +2,38 @@
 description: Commit changes
 name: Committer
 argument-hint: Write what you want to commit
-tools: ['launch/runTask', 'launch/runTests', 'shell', 'agents']
+tools:
+  [
+    'agent',
+    'agents',
+    'changes',
+    'execute/createAndRunTask',
+    'execute/getTaskOutput',
+    'execute/getTerminalOutput',
+    'execute/runInTerminal',
+    'execute/runTask',
+    'execute/runTests',
+    'execute/testFailure',
+    'launch/runTask',
+    'launch/runTests',
+    'memory',
+    'read/readFile',
+    'read/terminalLastCommand',
+    'runCommands',
+    'runSubagent',
+    'runTasks',
+    'search/changes',
+    'search/codebase',
+    'search/fileSearch',
+    'search/listDirectory',
+    'search/readFile',
+    'search/textSearch',
+    'search/usages',
+    'shell',
+    'todo',
+    'todos',
+    'usages',
+  ]
 model: Auto
 handoffs:
   - label: Commit
