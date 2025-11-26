@@ -261,17 +261,18 @@ code {
 .dark .item-prose a {
   @apply border-slate-600 bg-slate-800 text-blue-300 hover:bg-slate-700 hover:border-slate-500;
 }
-.comment-body a::after,
-.item-prose a::after {
-  content: '↗';
-  font-size: 0.75em;
-  line-height: 1;
-  margin-left: 0.25rem;
-  color: #4b5563; /* slate-600 */
+/* Icon styling for link icons (injected by enhance-links directive) */
+.comment-body a .link-icon,
+.item-prose a .link-icon {
+  font-size: 0.875em;
+  vertical-align: baseline;
+  color: #1d4ed8; /* blue-700 - matches link text */
+  display: inline-block;
 }
-.dark .comment-body a::after,
-.dark .item-prose a::after {
-  color: #9ca3af; /* gray-400 */
+
+.dark .comment-body a .link-icon,
+.dark .item-prose a .link-icon {
+  color: #93c5fd; /* blue-300 - matches link text in dark mode */
 }
 
 /* Smaller style for domain-only links (transformed with class ext-link) */

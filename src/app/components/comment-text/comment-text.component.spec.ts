@@ -2,6 +2,8 @@
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideIcons } from '@ng-icons/core';
+import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
 import { CommentTextComponent } from './comment-text.component';
 
 describe('CommentTextComponent', () => {
@@ -11,6 +13,7 @@ describe('CommentTextComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CommentTextComponent],
+      providers: [provideIcons({ solarLinkLinear })],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CommentTextComponent);
@@ -39,7 +42,7 @@ describe('CommentTextComponent', () => {
     expect(component.processedHtml).toBeTruthy();
   });
 
-  it('should render transformed HTML (blockquote and external link) via innerHTML', () => {
+  it('should render transformed HTML (blockquote and external link) via innerHTML', async () => {
     const raw = `
       <p>&gt; quoted A</p>
       <p>&gt; quoted B</p>
@@ -47,6 +50,11 @@ describe('CommentTextComponent', () => {
     `;
     fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
+
+    // Wait for directive to process links (AfterViewInit is async)
+    await fixture.whenStable();
+    // Increase delay for directive processing
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
 
@@ -61,10 +69,15 @@ describe('CommentTextComponent', () => {
     }
 
     // External link transformation: anchor should be converted to domain-only text and have attrs
+    // Note: Link enhancement is now done by the directive, not the transform
+    const allLinks = bodyEl.querySelectorAll('a');
+    expect(allLinks.length, 'should have at least one link').toBeGreaterThan(0);
+
     const a = bodyEl.querySelector('a.ext-link') as HTMLAnchorElement | null;
     expect(a, 'transformed anchor should exist').not.toBeNull();
     if (a) {
-      expect(a.textContent?.trim()).toBe('example.com/…/some/path');
+      expect(a.textContent).toContain('example.com');
+      expect(a.textContent).toContain('some/path');
       expect(a.getAttribute('href')).toBe('https://example.com/some/path?q=1');
       expect(a.getAttribute('title')).toBe('https://example.com/some/path?q=1');
       expect(a.getAttribute('target')).toBe('_blank');
@@ -72,6 +85,10 @@ describe('CommentTextComponent', () => {
       expect(rel).toContain('noopener');
       expect(rel).toContain('noreferrer');
       expect(rel).toContain('nofollow');
+
+      // Verify icon was added by directive
+      const icon = a.querySelector('ng-icon');
+      expect(icon).not.toBeNull();
     }
   });
 
@@ -113,7 +130,7 @@ describe('CommentTextComponent', () => {
     expect(component.processedHtml).toBeTruthy();
   });
 
-  it('should integrate all transformations in a complex example', () => {
+  it('should integrate all transformations in a complex example', async () => {
     const raw = `
       <p>Here's some code:</p>
       <pre><code>function test() { return 42; }</code></pre>
@@ -123,6 +140,10 @@ describe('CommentTextComponent', () => {
     fixture.componentRef.setInput('html', raw);
     fixture.detectChanges();
 
+    // Wait for directive to process links
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
 
     // Verify code block exists
@@ -131,7 +152,8 @@ describe('CommentTextComponent', () => {
     // Verify blockquote exists
     expect(bodyEl.querySelector('blockquote')).not.toBeNull();
 
-    // Verify link was transformed
+    // Verify link was enhanced by directive
     expect(bodyEl.querySelector('a.ext-link')).not.toBeNull();
+    expect(bodyEl.querySelector('a ng-icon')).not.toBeNull();
   });
 });

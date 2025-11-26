@@ -4,16 +4,19 @@ import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core
 
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import DOMPurify from 'dompurify';
+import { provideIcons } from '@ng-icons/core';
+import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
 import { transformQuotesHtml } from './quote.transform';
-import { transformLinksToDomain } from './links.transform';
 import { highlightCodeBlocks } from './code-highlight.transform';
+import { EnhanceLinksDirective } from './enhance-links.directive';
 
 @Component({
   selector: 'app-comment-text',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
-  template: ` <div class="comment-body" [innerHTML]="processedHtml"></div> `,
+  imports: [EnhanceLinksDirective],
+  viewProviders: [provideIcons({ solarLinkLinear })],
+  template: ` <div class="comment-body" [innerHTML]="processedHtml" appEnhanceLinks></div> `,
   styles: [
     `
       @reference '../../../styles.css';
@@ -60,8 +63,7 @@ export class CommentTextComponent {
   set html(value: string) {
     this._html = value || '';
     const withQuotes = transformQuotesHtml(this._html);
-    const withLinks = transformLinksToDomain(withQuotes);
-    const withHighlight = highlightCodeBlocks(withLinks);
+    const withHighlight = highlightCodeBlocks(withQuotes);
 
     // Sanitize HTML to prevent XSS attacks while preserving formatting
     const sanitized = DOMPurify.sanitize(withHighlight, {
