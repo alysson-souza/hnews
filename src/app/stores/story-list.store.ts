@@ -144,8 +144,9 @@ export class StoryListStore {
    */
   private getRequiredPoolSize(mode: StoryFilterMode): number {
     if (mode === 'todayTop20') {
-      // Need at least this many to have a chance of getting 20 from today
-      return this.FILTERED_MIN_POOL_SIZE;
+      // For todayTop20, we need enough stories to likely find 20 from today
+      // Assuming roughly 1/3 of stories might be from today, fetch 3x the target
+      return Math.max(this.FILTERED_MIN_POOL_SIZE, this.TODAY_TOP_20_TARGET * 3);
     } else if (mode === 'topHalf') {
       // Need at least 2x pageSize for meaningful top-half
       return Math.max(this.FILTERED_MIN_POOL_SIZE, this.pageSize() * 2);
