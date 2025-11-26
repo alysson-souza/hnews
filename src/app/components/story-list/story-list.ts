@@ -128,7 +128,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   // Filter options for segmented control
   readonly filterOptions: SegmentOption[] = [
     { value: 'default', label: FILTER_MODE_LABELS.default },
-    { value: 'todayTop20', label: FILTER_MODE_LABELS.todayTop20 },
+    { value: 'top20', label: FILTER_MODE_LABELS.top20 },
     { value: 'topHalf', label: FILTER_MODE_LABELS.topHalf },
   ];
 
@@ -292,10 +292,10 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
    */
   getFilterEmptyMessage(): string {
     const mode = this.filterMode();
-    if (mode === 'todayTop20') {
+    if (mode === 'top20') {
       return 'No stories from today match this filter. Try again later or switch to a different filter.';
     } else if (mode === 'topHalf') {
-      return 'Not enough stories to show top 50%. Try loading more stories or switching to a different filter.';
+      return 'No stories from today to show top 50%. Try again later or switch to a different filter.';
     }
     return 'No stories match the current filter.';
   }

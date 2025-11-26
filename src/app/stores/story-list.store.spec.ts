@@ -6,7 +6,7 @@ import { StoryListStateService } from '../services/story-list-state.service';
 import { StoryFilterPreferencesService } from '../services/story-filter-preferences.service';
 import { of } from 'rxjs';
 import { HNItem } from '../models/hn';
-import { getUtcMidnightTimestamp } from '../models/story-filter';
+import { getFilterCutoffTimestamp } from '../models/story-filter';
 
 /** Test double for HackernewsService */
 class MockHNService {
@@ -17,12 +17,12 @@ class MockHNService {
     return of([1, 2, 3, 4, 5]);
   }
   getItems(ids: number[]) {
-    const midnight = getUtcMidnightTimestamp();
+    const cutoff = getFilterCutoffTimestamp();
     const items: HNItem[] = ids.map((id) => ({
       id,
       type: 'story',
       title: `Story ${id}`,
-      time: midnight + id * 100, // All stories from today
+      time: cutoff + id * 100, // All stories within cutoff
       score: id * 10, // Score based on id
     }));
     return of(items);
@@ -42,7 +42,7 @@ class MockStateService {
 /** Test double for StoryFilterPreferencesService */
 class MockFilterPrefsService {
   private _mode = 'default';
-  filterMode = () => this._mode as 'default' | 'todayTop20' | 'topHalf';
+  filterMode = () => this._mode as 'default' | 'top20' | 'topHalf';
   setFilterMode(mode: string) {
     this._mode = mode;
   }
@@ -110,11 +110,11 @@ describe('StoryListStore', () => {
       expect(filtered.length).toBeLessThanOrEqual(store.visibleStories().length);
     });
 
-    it('applies todayTop20 filter correctly', async () => {
+    it('applies top20 filter correctly', async () => {
       store.init('top', 5);
       await Promise.resolve();
 
-      store.setFilterMode('todayTop20');
+      store.setFilterMode('top20');
       await Promise.resolve();
 
       // All stories are from today, so should show up to 20 (we only have 5)

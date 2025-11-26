@@ -6,18 +6,31 @@ import { HNItem } from './hn';
 /**
  * Filter modes for story lists.
  * - 'default': Show all stories without filtering (unchanged behavior)
- * - 'todayTop20': Top 20 highest-scoring stories since midnight UTC
- * - 'topHalf': Upper half of stories by score
+ * - 'top20': Top 20 highest-scoring stories from the last 24h (capped at yesterday's midnight UTC)
+ * - 'topHalf': Upper half of recent stories by score (last 24h, capped at yesterday's midnight UTC)
  */
-export type StoryFilterMode = 'default' | 'todayTop20' | 'topHalf';
+export type StoryFilterMode = 'default' | 'top20' | 'topHalf';
 
 /**
- * Returns the Unix timestamp (in seconds) for the start of today in UTC.
+ * Returns the Unix timestamp (in seconds) for the filter cutoff time.
+ * This is the maximum of:
+ * - 24 hours ago
+ * - Midnight UTC of the previous day
+ * This ensures there are always stories to show, even early in the morning.
  */
-export function getUtcMidnightTimestamp(): number {
+export function getFilterCutoffTimestamp(): number {
   const now = new Date();
-  const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Math.floor(utcMidnight / 1000);
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+
+  // 24 hours ago
+  const twentyFourHoursAgo = nowSeconds - 24 * 60 * 60;
+
+  // Midnight UTC of yesterday
+  const yesterdayMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1);
+  const yesterdayMidnightSeconds = Math.floor(yesterdayMidnight / 1000);
+
+  // Use the more recent of the two (cap at yesterday's midnight)
+  return Math.max(twentyFourHoursAgo, yesterdayMidnightSeconds);
 }
 
 /**
@@ -36,25 +49,28 @@ export function sortByScoreDesc(stories: HNItem[]): HNItem[] {
 }
 
 /**
- * Filters stories posted today (since midnight UTC) and returns the top 20 by score.
+ * Filters stories from the last 24h (capped at yesterday's midnight UTC) and returns the top 20 by score.
  * @param stories - Array of stories to filter
- * @returns Top 20 stories from today, sorted by score descending
+ * @returns Top 20 recent stories, sorted by score descending
  */
-export function filterTodayTop20(stories: HNItem[]): HNItem[] {
-  const midnightUtc = getUtcMidnightTimestamp();
-  const todayStories = stories.filter((story) => story.time >= midnightUtc);
-  const sorted = sortByScoreDesc(todayStories);
+export function filterTop20(stories: HNItem[]): HNItem[] {
+  const cutoff = getFilterCutoffTimestamp();
+  const recentStories = stories.filter((story) => story.time >= cutoff);
+  const sorted = sortByScoreDesc(recentStories);
   return sorted.slice(0, 20);
 }
 
 /**
- * Returns the top half of stories by score.
+ * Returns the top half of recent stories by score (last 24h, capped at yesterday's midnight UTC).
  * @param stories - Array of stories to filter
- * @returns Top 50% of stories, sorted by score descending
+ * @returns Top 50% of recent stories, sorted by score descending
  */
 export function filterTopHalf(stories: HNItem[]): HNItem[] {
   if (stories.length === 0) return [];
-  const sorted = sortByScoreDesc(stories);
+  const cutoff = getFilterCutoffTimestamp();
+  const recentStories = stories.filter((story) => story.time >= cutoff);
+  if (recentStories.length === 0) return [];
+  const sorted = sortByScoreDesc(recentStories);
   const halfCount = Math.ceil(sorted.length / 2);
   return sorted.slice(0, halfCount);
 }
@@ -67,8 +83,8 @@ export function filterTopHalf(stories: HNItem[]): HNItem[] {
  */
 export function applyStoryFilter(stories: HNItem[], mode: StoryFilterMode): HNItem[] {
   switch (mode) {
-    case 'todayTop20':
-      return filterTodayTop20(stories);
+    case 'top20':
+      return filterTop20(stories);
     case 'topHalf':
       return filterTopHalf(stories);
     case 'default':
@@ -82,6 +98,6 @@ export function applyStoryFilter(stories: HNItem[], mode: StoryFilterMode): HNIt
  */
 export const FILTER_MODE_LABELS: Record<StoryFilterMode, string> = {
   default: 'Default',
-  todayTop20: 'Top 20 Today',
+  top20: 'Top 20',
   topHalf: 'Top 50%',
 };

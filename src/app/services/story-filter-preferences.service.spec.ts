@@ -34,9 +34,9 @@ describe('StoryFilterPreferencesService', () => {
     });
 
     it('should load stored preference on initialization', () => {
-      window.localStorage.setItem(STORAGE_KEY, 'todayTop20');
+      window.localStorage.setItem(STORAGE_KEY, 'top20');
       const service = createService();
-      expect(service.filterMode()).toBe('todayTop20');
+      expect(service.filterMode()).toBe('top20');
     });
 
     it('should load topHalf preference', () => {
@@ -55,8 +55,8 @@ describe('StoryFilterPreferencesService', () => {
   describe('setFilterMode', () => {
     it('should update the filter mode signal', () => {
       const service = createService();
-      service.setFilterMode('todayTop20');
-      expect(service.filterMode()).toBe('todayTop20');
+      service.setFilterMode('top20');
+      expect(service.filterMode()).toBe('top20');
     });
 
     it('should persist the filter mode to localStorage', () => {
@@ -67,8 +67,8 @@ describe('StoryFilterPreferencesService', () => {
 
     it('should remove localStorage item when setting to default', () => {
       const service = createService();
-      service.setFilterMode('todayTop20');
-      expect(window.localStorage.getItem(STORAGE_KEY)).toBe('todayTop20');
+      service.setFilterMode('top20');
+      expect(window.localStorage.getItem(STORAGE_KEY)).toBe('top20');
 
       service.setFilterMode('default');
       expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
@@ -78,17 +78,17 @@ describe('StoryFilterPreferencesService', () => {
       const service = createService();
       const setItemSpy = vi.spyOn(window.localStorage, 'setItem');
 
-      service.setFilterMode('todayTop20');
+      service.setFilterMode('top20');
       expect(setItemSpy).toHaveBeenCalledTimes(1);
 
       // Setting the same mode should not trigger another save
-      service.setFilterMode('todayTop20');
+      service.setFilterMode('top20');
       expect(setItemSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should allow cycling through all modes', () => {
       const service = createService();
-      const modes: StoryFilterMode[] = ['default', 'todayTop20', 'topHalf'];
+      const modes: StoryFilterMode[] = ['default', 'top20', 'topHalf'];
 
       modes.forEach((mode) => {
         service.setFilterMode(mode);
@@ -106,9 +106,9 @@ describe('StoryFilterPreferencesService', () => {
 
       try {
         // Should not throw
-        expect(() => service.setFilterMode('todayTop20')).not.toThrow();
+        expect(() => service.setFilterMode('top20')).not.toThrow();
         // Signal should still update
-        expect(service.filterMode()).toBe('todayTop20');
+        expect(service.filterMode()).toBe('top20');
       } finally {
         setItemSpy.mockRestore();
       }
@@ -116,7 +116,7 @@ describe('StoryFilterPreferencesService', () => {
 
     it('should handle localStorage removeItem errors gracefully', () => {
       const service = createService();
-      service.setFilterMode('todayTop20');
+      service.setFilterMode('top20');
 
       const removeItemSpy = vi.spyOn(window.localStorage, 'removeItem').mockImplementation(() => {
         throw new Error('StorageError');

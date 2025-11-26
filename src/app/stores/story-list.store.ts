@@ -53,7 +53,7 @@ export class StoryListStore {
 
   /** Minimum pool size for filtered modes */
   private readonly FILTERED_MIN_POOL_SIZE = 60;
-  /** Target count for todayTop20 mode */
+  /** Target count for top20 mode */
   private readonly TODAY_TOP_20_TARGET = 20;
   /** Batch size for fetching in filtered modes */
   private readonly FILTERED_BATCH_SIZE = 50;
@@ -143,8 +143,8 @@ export class StoryListStore {
    * Gets the required pool size for a filtered mode.
    */
   private getRequiredPoolSize(mode: StoryFilterMode): number {
-    if (mode === 'todayTop20') {
-      // For todayTop20, we need enough stories to likely find 20 from today
+    if (mode === 'top20') {
+      // For top20, we need enough stories to likely find 20 from today
       // Assuming roughly 1/3 of stories might be from today, fetch 3x the target
       return Math.max(this.FILTERED_MIN_POOL_SIZE, this.TODAY_TOP_20_TARGET * 3);
     } else if (mode === 'topHalf') {
