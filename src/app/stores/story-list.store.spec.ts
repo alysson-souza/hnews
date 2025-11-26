@@ -42,7 +42,7 @@ class MockStateService {
 /** Test double for StoryFilterPreferencesService */
 class MockFilterPrefsService {
   private _mode = 'default';
-  filterMode = () => this._mode as 'default' | 'top20' | 'topHalf';
+  filterMode = () => this._mode as 'default' | 'topHalf';
   setFilterMode(mode: string) {
     this._mode = mode;
   }
@@ -108,22 +108,6 @@ describe('StoryListStore', () => {
       // Note: The filter is applied to the loaded pool
       const filtered = store.stories();
       expect(filtered.length).toBeLessThanOrEqual(store.visibleStories().length);
-    });
-
-    it('applies top20 filter correctly', async () => {
-      store.init('top', 5);
-      await Promise.resolve();
-
-      store.setFilterMode('top20');
-      await Promise.resolve();
-
-      // All stories are from today, so should show up to 20 (we only have 5)
-      const filtered = store.stories();
-      expect(filtered.length).toBeLessThanOrEqual(20);
-      // Sorted by score descending
-      if (filtered.length > 1) {
-        expect(filtered[0].score).toBeGreaterThanOrEqual(filtered[1].score ?? 0);
-      }
     });
 
     it('resets filter mode correctly', async () => {

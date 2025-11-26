@@ -6,7 +6,6 @@ import {
   StoryFilterMode,
   getFilterCutoffTimestamp,
   sortByScoreDesc,
-  filterTop20,
   filterTopHalf,
   applyStoryFilter,
   FILTER_MODE_LABELS,
@@ -83,65 +82,6 @@ describe('story-filter', () => {
     it('should handle empty array', () => {
       const sorted = sortByScoreDesc([]);
       expect(sorted).toEqual([]);
-    });
-  });
-
-  describe('filterTop20', () => {
-    it('should only include stories within the cutoff period', () => {
-      const cutoff = getFilterCutoffTimestamp();
-      const recentStory = createMockStory(1, 100, cutoff + 3600); // 1 hour after cutoff
-      const oldStory = createMockStory(2, 200, cutoff - 3600); // 1 hour before cutoff
-
-      const result = filterTop20([recentStory, oldStory]);
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe(1);
-    });
-
-    it('should include stories exactly at cutoff', () => {
-      const cutoff = getFilterCutoffTimestamp();
-      const atCutoff = createMockStory(1, 100, cutoff);
-      const beforeCutoff = createMockStory(2, 200, cutoff - 1);
-
-      const result = filterTop20([atCutoff, beforeCutoff]);
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe(1);
-    });
-
-    it('should return top 20 by score', () => {
-      const cutoff = getFilterCutoffTimestamp();
-      const stories = Array.from({ length: 30 }, (_, i) =>
-        createMockStory(i + 1, i + 1, cutoff + 3600),
-      );
-
-      const result = filterTop20(stories);
-      expect(result).toHaveLength(20);
-      expect(result[0].score).toBe(30); // Highest score
-      expect(result[19].score).toBe(11); // 20th highest
-    });
-
-    it('should return all if less than 20 recent stories', () => {
-      const cutoff = getFilterCutoffTimestamp();
-      const stories = Array.from({ length: 5 }, (_, i) =>
-        createMockStory(i + 1, i + 1, cutoff + 3600),
-      );
-
-      const result = filterTop20(stories);
-      expect(result).toHaveLength(5);
-    });
-
-    it('should handle missing scores as 0', () => {
-      const cutoff = getFilterCutoffTimestamp();
-      const withScore = createMockStory(1, 10, cutoff + 3600);
-      const withoutScore = createMockStory(2, undefined, cutoff + 3600);
-
-      const result = filterTop20([withoutScore, withScore]);
-      expect(result[0].id).toBe(1); // Higher score first
-      expect(result[1].id).toBe(2);
-    });
-
-    it('should handle empty array', () => {
-      const result = filterTop20([]);
-      expect(result).toEqual([]);
     });
   });
 
@@ -236,18 +176,6 @@ describe('story-filter', () => {
       expect(result).toEqual(stories);
     });
 
-    it('should apply top20 filter', () => {
-      const cutoff = getFilterCutoffTimestamp();
-      const stories = [
-        createMockStory(1, 100, cutoff + 3600),
-        createMockStory(2, 50, cutoff + 3600),
-        createMockStory(3, 200, cutoff - 3600), // Old
-      ];
-      const result = applyStoryFilter(stories, 'top20');
-      expect(result).toHaveLength(2);
-      expect(result.every((s) => s.time >= cutoff)).toBe(true);
-    });
-
     it('should apply topHalf filter to recent stories only', () => {
       const cutoff = getFilterCutoffTimestamp();
       const stories = [
@@ -264,7 +192,7 @@ describe('story-filter', () => {
 
   describe('FILTER_MODE_LABELS', () => {
     it('should have labels for all filter modes', () => {
-      const modes: StoryFilterMode[] = ['default', 'top20', 'topHalf'];
+      const modes: StoryFilterMode[] = ['default', 'topHalf'];
       modes.forEach((mode) => {
         expect(FILTER_MODE_LABELS[mode]).toBeDefined();
         expect(typeof FILTER_MODE_LABELS[mode]).toBe('string');
@@ -273,7 +201,6 @@ describe('story-filter', () => {
 
     it('should have expected label values', () => {
       expect(FILTER_MODE_LABELS.default).toBe('Default');
-      expect(FILTER_MODE_LABELS.top20).toBe('Top 20');
       expect(FILTER_MODE_LABELS.topHalf).toBe('Top 50%');
     });
   });

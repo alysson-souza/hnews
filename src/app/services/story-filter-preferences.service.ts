@@ -74,6 +74,6 @@ export class StoryFilterPreferencesService {
    * Type guard to validate filter mode values.
    */
   private isValidFilterMode(value: string): value is StoryFilterMode {
-    return value === 'default' || value === 'top20' || value === 'topHalf';
+    return value === 'default' || value === 'topHalf';
   }
 }

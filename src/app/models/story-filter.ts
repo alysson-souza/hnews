@@ -6,10 +6,9 @@ import { HNItem } from './hn';
 /**
  * Filter modes for story lists.
  * - 'default': Show all stories without filtering (unchanged behavior)
- * - 'top20': Top 20 highest-scoring stories from the last 24h (capped at yesterday's midnight UTC)
  * - 'topHalf': Upper half of recent stories by score (last 24h, capped at yesterday's midnight UTC)
  */
-export type StoryFilterMode = 'default' | 'top20' | 'topHalf';
+export type StoryFilterMode = 'default' | 'topHalf';
 
 /**
  * Returns the Unix timestamp (in seconds) for the filter cutoff time.
@@ -49,18 +48,6 @@ export function sortByScoreDesc(stories: HNItem[]): HNItem[] {
 }
 
 /**
- * Filters stories from the last 24h (capped at yesterday's midnight UTC) and returns the top 20 by score.
- * @param stories - Array of stories to filter
- * @returns Top 20 recent stories, sorted by score descending
- */
-export function filterTop20(stories: HNItem[]): HNItem[] {
-  const cutoff = getFilterCutoffTimestamp();
-  const recentStories = stories.filter((story) => story.time >= cutoff);
-  const sorted = sortByScoreDesc(recentStories);
-  return sorted.slice(0, 20);
-}
-
-/**
  * Returns the top half of recent stories by score (last 24h, capped at yesterday's midnight UTC).
  * @param stories - Array of stories to filter
  * @returns Top 50% of recent stories, sorted by score descending
@@ -83,8 +70,6 @@ export function filterTopHalf(stories: HNItem[]): HNItem[] {
  */
 export function applyStoryFilter(stories: HNItem[], mode: StoryFilterMode): HNItem[] {
   switch (mode) {
-    case 'top20':
-      return filterTop20(stories);
     case 'topHalf':
       return filterTopHalf(stories);
     case 'default':
@@ -98,6 +83,5 @@ export function applyStoryFilter(stories: HNItem[], mode: StoryFilterMode): HNIt
  */
 export const FILTER_MODE_LABELS: Record<StoryFilterMode, string> = {
   default: 'Default',
-  top20: 'Top 20',
   topHalf: 'Top 50%',
 };
