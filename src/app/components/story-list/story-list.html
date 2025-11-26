@@ -9,6 +9,15 @@
     </div>
   }
 
+  <!-- Filter Bar -->
+  <div class="filter-bar" role="group" aria-label="Story filter options">
+    <app-segmented-control
+      [options]="filterOptions"
+      [value]="filterMode()"
+      (valueChange)="onFilterModeChange($event)"
+    />
+  </div>
+
   <!-- New Stories Indicator -->
   @if (newStoriesAvailable() > 0 && !refreshing()) {
     <button
@@ -43,29 +52,40 @@
     </div>
   }
 
+  <!-- Filter Empty State -->
+  @if (isFilteredEmpty() && !loading()) {
+    <div class="filter-empty" role="status" aria-live="polite">
+      <p class="filter-empty-title">No matching stories</p>
+      <p class="filter-empty-text">{{ getFilterEmptyMessage() }}</p>
+      <button (click)="resetFilter()" class="filter-reset-btn">Reset to Default</button>
+    </div>
+  }
+
   <!-- Stories List -->
-  <div class="stories-space">
-    @for (story of stories(); track story.id; let i = $index) {
-      <app-story-item
-        [story]="story"
-        [loading]="false"
-        [index]="i + 1"
-        [isSelected]="keyboardNavService.selectedIndex() === i"
-        [attr.data-story-index]="i"
-        [attr.data-story-id]="story.id"
-      />
-    }
-  </div>
+  @if (!isFilteredEmpty()) {
+    <div class="stories-space">
+      @for (story of stories(); track story.id; let i = $index) {
+        <app-story-item
+          [story]="story"
+          [loading]="false"
+          [index]="i + 1"
+          [isSelected]="keyboardNavService.selectedIndex() === i"
+          [attr.data-story-index]="i"
+          [attr.data-story-id]="story.id"
+        />
+      }
+    </div>
+  }
 
   <!-- Offline empty state (no cached stories) -->
-  @if (isOffline() && stories().length === 0 && !loading()) {
+  @if (isOffline() && stories().length === 0 && !loading() && !isFilteredEmpty()) {
     <div class="empty">
       <p>No saved results</p>
     </div>
   }
 
   <!-- Load More Button -->
-  @if (hasMore() && !loading()) {
+  @if (hasMore() && !loading() && !isFilteredEmpty()) {
     <div class="text-center mt-8">
       <button (click)="loadMore()" class="load-more-btn" aria-label="Load More Stories">
         Load More Stories
@@ -82,7 +102,7 @@
   }
 
   <!-- No More Stories -->
-  @if (!hasMore() && stories().length > 0) {
+  @if (!hasMore() && stories().length > 0 && !isFilteredEmpty()) {
     <div class="empty">
       <p>No more stories to load</p>
     </div>

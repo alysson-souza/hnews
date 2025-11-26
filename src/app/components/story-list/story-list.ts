@@ -21,11 +21,16 @@ import { KeyboardNavigationService } from '../../services/keyboard-navigation.se
 import { NetworkStateService } from '../../services/network-state.service';
 import { StoryListStore } from '../../stores/story-list.store';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
+import {
+  SegmentedControlComponent,
+  SegmentOption,
+} from '../shared/segmented-control/segmented-control.component';
+import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
 
 @Component({
   selector: 'app-story-list',
   standalone: true,
-  imports: [StoryItem, PageContainerComponent],
+  imports: [StoryItem, PageContainerComponent, SegmentedControlComponent],
   templateUrl: './story-list.html',
   styleUrl: './story-list.css',
   styles: [
@@ -78,6 +83,23 @@ import { PageContainerComponent } from '../shared/page-container/page-container.
           left: calc(50% + (env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) / 2);
         }
       }
+
+      .filter-bar {
+        @apply mb-4 flex justify-center sm:justify-start;
+      }
+
+      .filter-empty {
+        @apply text-center py-8 px-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg;
+      }
+      .filter-empty-title {
+        @apply text-gray-700 dark:text-gray-300 font-medium mb-2;
+      }
+      .filter-empty-text {
+        @apply text-gray-500 dark:text-gray-400 text-sm mb-4;
+      }
+      .filter-reset-btn {
+        @apply text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1;
+      }
     `,
   ],
 })
@@ -98,6 +120,16 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   totalStoryIds = this.store.totalStoryIds;
   refreshing = this.store.refreshing;
   newStoriesAvailable = this.store.newStoriesAvailable;
+
+  // Filter state
+  filterMode = this.store.filterMode;
+  isFilteredEmpty = this.store.isFilteredEmpty;
+
+  // Filter options for segmented control
+  readonly filterOptions: SegmentOption[] = [
+    { value: 'default', label: FILTER_MODE_LABELS.default },
+    { value: 'topHalf', label: FILTER_MODE_LABELS.topHalf },
+  ];
 
   // Offline state
   isOffline = computed(() => this.networkState.isOffline());
@@ -236,5 +268,32 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
     // Trigger a manual refresh to load the new stories
     this.refresh();
+  }
+
+  /**
+   * Handles filter mode changes from the segmented control.
+   */
+  onFilterModeChange(mode: string): void {
+    this.store.setFilterMode(mode as StoryFilterMode);
+    this.keyboardNavService.clearSelection();
+  }
+
+  /**
+   * Resets the filter to default mode.
+   */
+  resetFilter(): void {
+    this.store.resetFilter();
+    this.keyboardNavService.clearSelection();
+  }
+
+  /**
+   * Gets the empty message text based on the current filter mode.
+   */
+  getFilterEmptyMessage(): string {
+    const mode = this.filterMode();
+    if (mode === 'topHalf') {
+      return 'No stories from today to show top 50%. Try again later or switch to a different filter.';
+    }
+    return 'No stories match the current filter.';
   }
 }
