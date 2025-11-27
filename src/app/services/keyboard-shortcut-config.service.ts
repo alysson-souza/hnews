@@ -128,6 +128,13 @@ export class KeyboardShortcutConfigService {
       commandId: 'story.refresh',
     },
     {
+      key: 'f',
+      contexts: ['default'],
+      description: 'Toggle filter between Default and Top 50%',
+      category: 'Story Actions',
+      commandId: 'story.toggleFilter',
+    },
+    {
       key: 'Escape',
       label: 'Esc',
       contexts: ['default'],

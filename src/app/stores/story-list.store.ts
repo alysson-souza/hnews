@@ -179,6 +179,14 @@ export class StoryListStore {
   }
 
   /**
+   * Toggles filter mode between 'default' and 'topHalf'.
+   */
+  toggleFilterMode(): void {
+    const next: StoryFilterMode = this.filterMode() === 'default' ? 'topHalf' : 'default';
+    this.setFilterMode(next);
+  }
+
+  /**
    * Gets the required pool size for a filtered mode.
    */
   private getRequiredPoolSize(mode: StoryFilterMode): number {

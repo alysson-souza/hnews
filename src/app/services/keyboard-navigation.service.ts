@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
 import { NavigationHistoryService } from './navigation-history.service';
+import { StoryListStore } from '../stores/story-list.store';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +18,7 @@ export class KeyboardNavigationService {
   private scrollService = inject(ScrollService);
   private router = inject(Router);
   private navigationHistory = inject(NavigationHistoryService);
+  private storyListStore = inject(StoryListStore);
 
   constructor() {
     this.registerCommands();
@@ -35,6 +37,7 @@ export class KeyboardNavigationService {
     this.commandRegistry.register('story.actions.toggle', () =>
       this.toggleSelectedStoryActionsMenu(),
     );
+    this.commandRegistry.register('story.toggleFilter', () => this.toggleStoryFilter());
   }
 
   isSelected = computed(() => {
@@ -252,6 +255,11 @@ export class KeyboardNavigationService {
     if (activeElement && activeElement.blur) {
       activeElement.blur();
     }
+  }
+
+  private toggleStoryFilter(): void {
+    this.storyListStore.toggleFilterMode();
+    this.clearSelection();
   }
 
   /**
