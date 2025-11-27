@@ -35,12 +35,13 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
       @if (item.url && getDomain(item.url)) {
         <button
           type="button"
+          role="button"
           (click)="searchByDomain($event)"
           (keyup.enter)="searchByDomain($event)"
           (keyup.space)="searchByDomain($event)"
           class="domain-btn"
-          [attr.aria-label]="'Search For More Stories From ' + getDomain(item.url)"
-          [title]="'Search For More Stories From ' + getDomain(item.url)"
+          [attr.aria-label]="'Search for more stories from ' + getDomain(item.url)"
+          [attr.title]="'Search for more stories from ' + getDomain(item.url)"
         >
           {{ getDomain(item.url) }}
         </button>

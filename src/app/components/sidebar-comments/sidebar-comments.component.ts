@@ -34,6 +34,8 @@ import {
         class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
         role="button"
         tabindex="0"
+        aria-label="Close sidebar"
+        title="Close sidebar"
         (click)="sidebarService.closeSidebar()"
         (keydown.enter)="sidebarService.closeSidebar()"
         (keydown.space)="sidebarService.closeSidebar()"

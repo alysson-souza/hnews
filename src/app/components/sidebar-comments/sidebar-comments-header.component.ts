@@ -18,7 +18,8 @@ import { solarMaximizeSquare3Linear, solarCloseCircleLinear } from '@ng-icons/so
             type="button"
             (click)="back.emit()"
             class="back-btn"
-            [attr.aria-label]="'Go back to previous view'"
+            aria-label="Go back to previous view"
+            title="Go back to previous view"
           >
             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -38,9 +39,9 @@ import { solarMaximizeSquare3Linear, solarCloseCircleLinear } from '@ng-icons/so
             [routerLink]="['/item', itemId()]"
             target="_blank"
             rel="noopener noreferrer"
-            role="button"
+            role="link"
             class="action-btn"
-            [attr.aria-label]="'Open in full view'"
+            aria-label="Open in full view"
             title="Open in full view"
           >
             <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
@@ -50,8 +51,8 @@ import { solarMaximizeSquare3Linear, solarCloseCircleLinear } from '@ng-icons/so
           type="button"
           (click)="dismiss.emit()"
           class="close-btn"
-          [attr.aria-label]="'Close Comments Sidebar'"
-          title="Close Comments Sidebar"
+          aria-label="Close sidebar"
+          title="Close sidebar"
         >
           <ng-icon name="solarCloseCircleLinear" class="icon" />
         </button>
