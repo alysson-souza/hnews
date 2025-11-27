@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { HNItem } from '../models/hn';
 
 interface SerializedStoryListState {
-  stories: HNItem[];
+  storyIds: number[];
   currentPage: number;
   totalStoryIds: number[];
   storyType: string;
@@ -13,7 +13,7 @@ interface SerializedStoryListState {
 }
 
 export interface StoryListState {
-  stories: HNItem[];
+  storyIds: number[];
   currentPage: number;
   totalStoryIds: number[];
   storyType: string;
@@ -33,13 +33,13 @@ export class StoryListStateService {
    */
   saveState(
     storyType: string,
-    stories: HNItem[],
+    storyIds: number[],
     currentPage: number,
     totalStoryIds: number[],
     selectedIndex: number | null,
   ): void {
     const serializedState: SerializedStoryListState = {
-      stories,
+      storyIds,
       currentPage,
       totalStoryIds,
       storyType,
@@ -68,7 +68,16 @@ export class StoryListStateService {
         return null;
       }
 
-      const serializedState: SerializedStoryListState = JSON.parse(stored);
+      const parsed = JSON.parse(stored) as Partial<SerializedStoryListState> & {
+        stories?: HNItem[];
+      };
+
+      // Defensive migration: if legacy shape with stories array or missing storyIds, return null
+      if ('stories' in parsed || !parsed.storyIds || !Array.isArray(parsed.storyIds)) {
+        return null;
+      }
+
+      const serializedState = parsed as SerializedStoryListState;
 
       // Check if cache has expired
       if (Date.now() - serializedState.timestamp > this.cacheExpiration) {
@@ -112,6 +121,6 @@ export class StoryListStateService {
    */
   hasValidState(storyType: string): boolean {
     const state = this.getState(storyType);
-    return state !== null && state.stories.length > 0;
+    return state !== null && state.storyIds.length > 0;
   }
 }

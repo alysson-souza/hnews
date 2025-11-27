@@ -2,14 +2,16 @@
 import { TestBed } from '@angular/core/testing';
 import { StoryListStore } from './story-list.store';
 import { HackernewsService } from '../services/hackernews.service';
-import { StoryListStateService } from '../services/story-list-state.service';
+import { StoryListStateService, StoryListState } from '../services/story-list-state.service';
 import { StoryFilterPreferencesService } from '../services/story-filter-preferences.service';
-import { of } from 'rxjs';
+import { of, Subject, Observable } from 'rxjs';
 import { HNItem } from '../models/hn';
 import { getFilterCutoffTimestamp } from '../models/story-filter';
 
 /** Test double for HackernewsService */
 class MockHNService {
+  private itemStreams = new Map<number, Subject<HNItem | null>>();
+
   getTopStories() {
     return of([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   }
@@ -25,18 +27,83 @@ class MockHNService {
       time: cutoff + id * 100, // All stories within cutoff
       score: id * 10, // Score based on id
     }));
-    return of(items);
+    // Return async observable to match real behavior (microtask)
+    return new Observable<HNItem[]>((observer) => {
+      Promise.resolve().then(() => {
+        observer.next(items);
+        observer.complete();
+      });
+    });
+  }
+  private ensureItemStream(id: number): Subject<HNItem | null> {
+    if (!this.itemStreams.has(id)) {
+      const subject = new Subject<HNItem | null>();
+      this.itemStreams.set(id, subject);
+    }
+    return this.itemStreams.get(id)!;
+  }
+
+  getItem(id: number) {
+    const subject = this.ensureItemStream(id);
+    const obs = subject.asObservable();
+
+    // Emit initial value as microtask if this is the first subscription
+    const cutoff = getFilterCutoffTimestamp();
+    Promise.resolve().then(() =>
+      subject.next({
+        id,
+        type: 'story',
+        title: `Story ${id}`,
+        time: cutoff + id * 100,
+        score: id * 10,
+      }),
+    );
+
+    return obs;
+  }
+
+  emitUpdate(id: number, updated: HNItem) {
+    const subject = this.ensureItemStream(id);
+    subject.next(updated);
+  }
+
+  getItemUpdates(id: number) {
+    // For updates-only, return the same subject but don't emit initial value
+    const subject = this.ensureItemStream(id);
+    return subject.asObservable();
   }
 }
 
 /** Test double for StoryListStateService */
 class MockStateService {
+  private cachedState: StoryListState | null = null;
+
   getState() {
-    return null;
+    return this.cachedState;
   }
-  // Intentionally no-op in tests
-  saveState() {}
-  clearState() {}
+  // Store for testing
+  saveState(
+    storyType: string,
+    storyIds: number[],
+    currentPage: number,
+    totalStoryIds: number[],
+    selectedIndex: number | null,
+  ) {
+    this.cachedState = {
+      storyType,
+      storyIds,
+      currentPage,
+      totalStoryIds,
+      selectedIndex,
+      timestamp: Date.now(),
+    };
+  }
+  clearState() {
+    this.cachedState = null;
+  }
+  setCachedState(state: StoryListState | null) {
+    this.cachedState = state;
+  }
 }
 
 /** Test double for StoryFilterPreferencesService */
@@ -50,6 +117,8 @@ class MockFilterPrefsService {
 
 describe('StoryListStore', () => {
   let store: StoryListStore;
+  let mockHN: MockHNService;
+  let mockState: MockStateService;
 
   beforeEach(() => {
     // Clear localStorage before each test
@@ -64,6 +133,8 @@ describe('StoryListStore', () => {
       ],
     });
     store = TestBed.inject(StoryListStore);
+    mockHN = TestBed.inject(HackernewsService) as unknown as MockHNService;
+    mockState = TestBed.inject(StoryListStateService) as unknown as MockStateService;
   });
 
   afterEach(() => {
@@ -124,6 +195,120 @@ describe('StoryListStore', () => {
     it('isFilteredEmpty returns true when filter produces no results', () => {
       // Initially no stories loaded
       expect(store.isFilteredEmpty()).toBe(false);
+    });
+  });
+
+  describe('SWR update propagation', () => {
+    // Helper to wait for a condition with timeout
+    const waitFor = async (
+      condition: () => boolean,
+      timeoutMs = 1000,
+      checkIntervalMs = 10,
+    ): Promise<void> => {
+      const startTime = Date.now();
+      while (!condition()) {
+        if (Date.now() - startTime > timeoutMs) {
+          throw new Error('Timeout waiting for condition');
+        }
+        await new Promise((resolve) => setTimeout(resolve, checkIntervalMs));
+      }
+    };
+
+    it('patches stories in-place when cache emits updates', async () => {
+      store.init('top', 3);
+
+      // Wait for initial load to complete
+      await waitFor(() => !store.loading() && store.stories().length === 3);
+
+      const initialStories = store.stories();
+      expect(initialStories[0].title).toBe('Story 1');
+      expect(initialStories[0].score).toBe(10);
+
+      // Emit an update for story ID 1
+      const updatedStory: HNItem = {
+        id: 1,
+        type: 'story',
+        title: 'Updated Story 1',
+        time: Date.now(),
+        score: 999,
+      };
+      mockHN.emitUpdate(1, updatedStory);
+
+      // Wait for update to propagate through subscription
+      await waitFor(() => store.stories()[0].score === 999);
+
+      const updatedStories = store.stories();
+      expect(updatedStories.length).toBe(3);
+      expect(updatedStories[0].title).toBe('Updated Story 1');
+      expect(updatedStories[0].score).toBe(999);
+      // Other stories should remain unchanged
+      expect(updatedStories[1].title).toBe('Story 2');
+      expect(updatedStories[2].title).toBe('Story 3');
+    });
+  });
+
+  describe('async hydration', () => {
+    it('restores IDs from session and maintains correct signals after hydration', async () => {
+      // Set up cached state with IDs
+      const cachedState: StoryListState = {
+        storyType: 'top',
+        storyIds: [1, 2, 3],
+        currentPage: 1,
+        totalStoryIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        selectedIndex: null,
+        timestamp: Date.now(),
+      };
+      mockState.setCachedState(cachedState);
+
+      store.init('top', 5);
+
+      // Wait for async hydration to complete (multiple microtasks)
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve(); // Extra ticks for getItems observable and effect()
+
+      // After hydration, loading should be false
+      expect(store.loading()).toBe(false);
+      expect(store.currentPage()).toBe(1);
+      expect(store.totalStoryIds()).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      expect(store.stories().length).toBe(3);
+      // hasMore should be false because (currentPage+1)*pageSize = (1+1)*5 = 10, which is not < totalStoryIds.length (10)
+      expect(store.hasMore()).toBe(false);
+    });
+
+    it('falls back to fresh load when all cached IDs resolve to null', async () => {
+      const cachedState: StoryListState = {
+        storyType: 'top',
+        storyIds: [999, 998, 997], // Non-existent IDs
+        currentPage: 0,
+        totalStoryIds: [1, 2, 3],
+        selectedIndex: null,
+        timestamp: Date.now(),
+      };
+      mockState.setCachedState(cachedState);
+
+      // Mock getItems to return all nulls for cached IDs, then valid items for fresh load
+      const originalGetItems = mockHN.getItems.bind(mockHN);
+      const mockGetItems = (ids: number[]): Observable<HNItem[]> => {
+        if (ids.includes(999)) {
+          // Return empty array for non-existent IDs to trigger fallback
+          return of([]);
+        }
+        return originalGetItems(ids);
+      };
+      mockHN.getItems = mockGetItems;
+
+      store.init('top', 2);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve(); // Wait for fallback load and all microtasks
+
+      // Should have fresh stories
+      expect(store.stories().length).toBe(2);
+      expect(store.loading()).toBe(false);
     });
   });
 });

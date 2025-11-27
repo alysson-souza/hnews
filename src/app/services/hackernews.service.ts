@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of, from, merge, firstValueFrom } from 'rxjs';
-import { catchError, switchMap, shareReplay, map } from 'rxjs/operators';
+import { catchError, switchMap, shareReplay, map, take, finalize } from 'rxjs/operators';
 import { CacheManagerService } from './cache-manager.service';
 import { HNItem, HNUser } from '../models/hn';
 import { AlgoliaSearchResponse } from '../models/algolia';
@@ -21,6 +21,7 @@ export class HackernewsService {
   private readonly storyListScope = 'storyList';
   private readonly storyScope = 'story';
   private readonly shareLatestConfig = { bufferSize: 1, refCount: true } as const;
+  private itemStreams = new Map<number, Observable<HNItem | null>>();
 
   private getStoryIds(
     key: string,
@@ -87,13 +88,44 @@ export class HackernewsService {
       );
     }
 
-    return from(
+    // Return cached observable if it exists
+    if (this.itemStreams.has(id)) {
+      return this.itemStreams.get(id)!;
+    }
+
+    // Build new cached observable
+    const initial$ = from(
       this.cache.getWithSWR<HNItem | null>(
         this.storyScope,
         key,
         async () => (await firstValueFrom(this.hn.item(id))) ?? null,
       ),
     );
+
+    // Get updates stream, using guard for test environments
+    const updates$ =
+      this.cache.getUpdates<HNItem | null>(this.storyScope, key) ?? of<HNItem | null>(null);
+
+    // Merge and share with refCount; finalize BEFORE shareReplay deletes Map entry when refCount drops to zero
+    const stream$ = merge(initial$, updates$).pipe(
+      finalize(() => {
+        // When shareReplay's refCount drops to zero, it unsubscribes from the source,
+        // triggering this finalize. This prevents unbounded Map growth in long sessions.
+        this.itemStreams.delete(id);
+      }),
+      shareReplay(this.shareLatestConfig),
+    );
+    this.itemStreams.set(id, stream$);
+    return stream$;
+  }
+
+  /**
+   * Get updates-only stream for an item (no initial fetch).
+   * Used for SWR propagation without triggering duplicate fetches.
+   */
+  getItemUpdates(id: number): Observable<HNItem | null> {
+    const key = id.toString();
+    return this.cache.getUpdates<HNItem | null>(this.storyScope, key) ?? of<HNItem | null>(null);
   }
 
   getItems(ids: number[], forceRefresh = false): Observable<(HNItem | null)[]> {
@@ -101,7 +133,7 @@ export class HackernewsService {
       return of([]);
     }
 
-    const requests = ids.map((id) => this.getItem(id, forceRefresh));
+    const requests = ids.map((id) => this.getItem(id, forceRefresh).pipe(take(1)));
     return forkJoin(requests);
   }
 
@@ -111,6 +143,7 @@ export class HackernewsService {
    */
   getStoryTopLevelComments(storyId: number, forceRefresh = false): Observable<HNItem[]> {
     return this.getItem(storyId, forceRefresh).pipe(
+      take(1),
       switchMap((story) => {
         const kids = story?.kids || [];
         if (!kids.length) return of([]);
@@ -125,6 +158,7 @@ export class HackernewsService {
    */
   getCommentChildren(commentId: number, page?: number, pageSize?: number): Observable<HNItem[]> {
     return this.getItem(commentId).pipe(
+      take(1),
       switchMap((item) => {
         const kids = item?.kids || [];
         if (!kids.length) return of([]);
@@ -150,7 +184,7 @@ export class HackernewsService {
       return of([]);
     }
 
-    const requests = pageIds.map((id) => this.getItem(id));
+    const requests = pageIds.map((id) => this.getItem(id).pipe(take(1)));
     return forkJoin(requests);
   }
 

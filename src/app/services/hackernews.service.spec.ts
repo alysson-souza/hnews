@@ -433,4 +433,96 @@ describe('HackernewsService data orchestration', () => {
     });
     expect(result).toEqual(response);
   });
+
+  it('returns cached observable on repeated getItem calls', async () => {
+    const item = makeItem(100);
+    cacheStore.set('story:100', item);
+
+    const firstCall = service.getItem(100);
+    const secondCall = service.getItem(100);
+
+    // Both calls should return the same observable instance
+    expect(firstCall).toBe(secondCall);
+
+    const result1 = await firstValueFrom(firstCall);
+    const result2 = await firstValueFrom(secondCall);
+
+    expect(result1).toEqual(item);
+    expect(result2).toEqual(item);
+  });
+
+  it('propagates cache updates to getItem subscribers', async () => {
+    const initialItem = makeItem(200, { title: 'Initial Title' });
+    const updatedItem = makeItem(200, { title: 'Updated Title' });
+    cacheStore.set('story:200', initialItem);
+
+    const values: (HNItem | null)[] = [];
+    const subscription = service.getItem(200).subscribe((item) => values.push(item));
+
+    await Promise.resolve();
+    expect(values).toHaveLength(1);
+    expect(values[0]?.title).toBe('Initial Title');
+
+    // Simulate cache update
+    emitCacheUpdate('story', '200', updatedItem);
+    await Promise.resolve();
+
+    expect(values).toHaveLength(2);
+    expect(values[1]?.title).toBe('Updated Title');
+
+    subscription.unsubscribe();
+  });
+
+  it('getItemUpdates returns only cache updates without initial fetch', async () => {
+    const cachedItem = makeItem(300, { title: 'Cached' });
+    cacheStore.set('story:300', cachedItem);
+
+    const values: (HNItem | null)[] = [];
+    const subscription = service.getItemUpdates(300).subscribe((item) => values.push(item));
+
+    // Should not emit initial value
+    await Promise.resolve();
+    expect(values).toHaveLength(0);
+
+    // Should emit when cache updates
+    const updatedItem = makeItem(300, { title: 'Updated' });
+    emitCacheUpdate('story', '300', updatedItem);
+    await Promise.resolve();
+
+    expect(values).toHaveLength(1);
+    expect(values[0]?.title).toBe('Updated');
+
+    subscription.unsubscribe();
+  });
+
+  it('deletes itemStreams Map entries when refCount drops to zero', async () => {
+    const item = makeItem(400);
+    cacheStore.set('story:400', item);
+
+    const sub1 = service.getItem(400).subscribe();
+    await Promise.resolve();
+
+    // Access private property for testing
+    const getItemStreams = () =>
+      (service as unknown as Record<string, Map<number, Observable<unknown>>>)['itemStreams'];
+
+    // Map should have the entry
+    expect(getItemStreams().has(400)).toBe(true);
+
+    const observable1 = getItemStreams().get(400);
+    const sub2 = service.getItem(400).subscribe();
+
+    // Should return the same observable instance
+    const observable2 = getItemStreams().get(400);
+    expect(observable1).toBe(observable2);
+
+    sub1.unsubscribe();
+    // Map entry should still exist (refCount = 1)
+    expect(getItemStreams().has(400)).toBe(true);
+
+    sub2.unsubscribe();
+    // finalize runs synchronously when shareReplay's refCount drops to zero
+    // Map entry should be deleted, preventing unbounded growth
+    expect(getItemStreams().has(400)).toBe(false);
+  });
 });

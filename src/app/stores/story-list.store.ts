@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, Signal, computed, inject, signal } from '@angular/core';
+import { Injectable, Signal, computed, inject, signal, effect, DestroyRef } from '@angular/core';
 import { HNItem } from '../models/hn';
 import { StoryFilterMode, applyStoryFilter } from '../models/story-filter';
 import { HackernewsService } from '../services/hackernews.service';
 import { StoryListStateService } from '../services/story-list-state.service';
 import { StoryFilterPreferencesService } from '../services/story-filter-preferences.service';
 import { map, switchMap, take } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 
 export type StoryType = 'top' | 'best' | 'new' | 'ask' | 'show' | 'job';
 
@@ -16,6 +16,10 @@ export class StoryListStore {
   private hn = inject(HackernewsService);
   private state = inject(StoryListStateService);
   private filterPrefs = inject(StoryFilterPreferencesService);
+  private destroyRef = inject(DestroyRef);
+
+  /** Per-ID update subscriptions for SWR propagation */
+  private updateSubs = new Map<number, Subscription>();
 
   /** Input: current list category */
   readonly storyType = signal<StoryType>('top');
@@ -24,6 +28,11 @@ export class StoryListStore {
 
   /** Raw pool of loaded stories (before filtering) */
   private readonly loadedStories = signal<HNItem[]>([]);
+  /**
+   * Ordering source of truth: IDs of currently loaded stories.
+   * Invariant: loadedStories()[i].id === loadedStoryIds()[i] for all valid indices.
+   */
+  private readonly loadedStoryIds = signal<number[]>([]);
   /** Current filter mode */
   readonly filterMode = signal<StoryFilterMode>(this.filterPrefs.filterMode());
 
@@ -56,6 +65,19 @@ export class StoryListStore {
   /** Batch size for fetching in filtered modes */
   private readonly FILTERED_BATCH_SIZE = 50;
 
+  constructor() {
+    // Sync update subscriptions whenever loadedStoryIds changes
+    effect(() => {
+      this.syncUpdateSubscriptions(this.loadedStoryIds());
+    });
+
+    // Cleanup all subscriptions on destroy
+    this.destroyRef.onDestroy(() => {
+      this.updateSubs.forEach((sub) => sub.unsubscribe());
+      this.updateSubs.clear();
+    });
+  }
+
   /** True when another page is available */
   readonly hasMore: Signal<boolean> = computed(() => {
     const mode = this.filterMode();
@@ -85,7 +107,7 @@ export class StoryListStore {
       this.loading.set(true);
       this.error.set(null);
       this.currentPage.set(0);
-      this.loadedStories.set([]);
+      this.setStories([], []);
       this.totalStoryIds.set([]);
       this.newStoriesAvailable.set(0);
       this.fetchedCount.set(0);
@@ -95,12 +117,31 @@ export class StoryListStore {
     this.filterMode.set(this.filterPrefs.filterMode());
 
     const cachedState = this.state.getState(type);
-    if (cachedState) {
-      this.loadedStories.set(cachedState.stories);
+    if (cachedState && cachedState.storyIds.length > 0) {
+      // ID-based restore: keep loading indicator while fetching items
+      this.loading.set(true);
       this.currentPage.set(cachedState.currentPage);
       this.totalStoryIds.set(cachedState.totalStoryIds);
-      this.fetchedCount.set(cachedState.stories.length);
-      this.loading.set(false);
+
+      this.hn.getItems(cachedState.storyIds).subscribe({
+        next: (items) => {
+          const validItems = items.filter((i): i is HNItem => !!i);
+          const validIds = validItems.map((i) => i.id);
+
+          if (validItems.length === 0) {
+            // All items were null/deleted, trigger fresh load
+            this.loadStories();
+          } else {
+            this.setStories(validIds, validItems);
+            this.fetchedCount.set(validItems.length);
+            this.loading.set(false);
+          }
+        },
+        error: () => {
+          // Hydration failed, fall back to fresh load
+          this.loadStories();
+        },
+      });
     } else {
       this.loadStories();
     }
@@ -171,9 +212,11 @@ export class StoryListStore {
         next: (items) => {
           // Deduplicate and merge with existing pool
           const currentPool = this.loadedStories();
-          const existingIds = new Set(currentPool.map((s) => s.id));
+          const currentIds = this.loadedStoryIds();
+          const existingIds = new Set(currentIds);
           const newItems = items.filter((item) => !existingIds.has(item.id));
-          this.loadedStories.update((pool) => [...pool, ...newItems]);
+          const newIds = newItems.map((i) => i.id);
+          this.setStories([...currentIds, ...newIds], [...currentPool, ...newItems]);
           this.fetchedCount.set(end);
           this.loading.set(false);
           this.saveCurrentState();
@@ -213,7 +256,8 @@ export class StoryListStore {
       )
       .subscribe({
         next: (items) => {
-          this.loadedStories.set(items);
+          const ids = items.map((i) => i.id);
+          this.setStories(ids, items);
           this.fetchedCount.set(items.length);
           this.loading.set(false);
 
@@ -281,7 +325,10 @@ export class StoryListStore {
       .pipe(map((items) => items.filter((i): i is HNItem => !!i)))
       .subscribe({
         next: (items) => {
-          this.loadedStories.update((s) => [...s, ...items]);
+          const currentIds = this.loadedStoryIds();
+          const newIds = items.map((i) => i.id);
+          const currentStories = this.loadedStories();
+          this.setStories([...currentIds, ...newIds], [...currentStories, ...items]);
           this.fetchedCount.update((c) => c + items.length);
           this.loading.set(false);
           this.saveCurrentState();
@@ -354,7 +401,8 @@ export class StoryListStore {
       next: (freshItems) => {
         const validItems = freshItems.filter((i): i is HNItem => !!i);
         if (validItems.length > 0) {
-          this.loadedStories.set(validItems);
+          const ids = validItems.map((i) => i.id);
+          this.setStories(ids, validItems);
           this.saveCurrentState();
         }
       },
@@ -373,12 +421,66 @@ export class StoryListStore {
     if (validNewStories.length === 0) return;
 
     const currentStories = this.loadedStories();
-    const currentIds = currentStories.map((s) => s.id);
-    const trulyNew = validNewStories.filter((s) => !currentIds.includes(s.id));
+    const currentIds = this.loadedStoryIds();
+    const currentIdSet = new Set(currentIds);
+    const trulyNew = validNewStories.filter((s) => !currentIdSet.has(s.id));
     if (trulyNew.length > 0) {
-      const merged = [...trulyNew, ...currentStories];
-      this.loadedStories.set(merged.slice(0, this.pageSize()));
+      const newIds = trulyNew.map((s) => s.id);
+      const mergedIds = [...newIds, ...currentIds].slice(0, this.pageSize());
+      const merged = [...trulyNew, ...currentStories].slice(0, this.pageSize());
+      this.setStories(mergedIds, merged);
       this.saveCurrentState();
+    }
+  }
+
+  /**
+   * Atomically set both IDs and items, ensuring invariant by construction.
+   */
+  private setStories(ids: number[], items: HNItem[]): void {
+    this.loadedStoryIds.set(ids);
+    this.loadedStories.set(items);
+  }
+
+  /**
+   * Update a single story by ID, preserving order.
+   * Ignores null/undefined updates to avoid wiping items.
+   */
+  private patchStoryById(id: number, updated: HNItem | null): void {
+    if (!updated) return;
+
+    const ids = this.loadedStoryIds();
+    const idx = ids.indexOf(id);
+    if (idx === -1) return;
+
+    this.loadedStories.update((arr) => arr.map((s, i) => (i === idx ? updated : s)));
+  }
+
+  /**
+   * Diff IDs and subscribe to updates for new ones, unsubscribe from removed ones.
+   * Uses getItemUpdates() to avoid duplicate fetches (only subscribes to cache updates, not initial fetch).
+   */
+  private syncUpdateSubscriptions(currentIds: number[]): void {
+    const currentSet = new Set(currentIds);
+    const subscribedSet = new Set(this.updateSubs.keys());
+
+    // Unsubscribe from IDs no longer in the list
+    for (const id of subscribedSet) {
+      if (!currentSet.has(id)) {
+        this.updateSubs.get(id)?.unsubscribe();
+        this.updateSubs.delete(id);
+      }
+    }
+
+    // Subscribe to new IDs (updates-only, no initial fetch)
+    for (const id of currentIds) {
+      if (!subscribedSet.has(id)) {
+        const sub = this.hn.getItemUpdates(id).subscribe({
+          next: (updated) => {
+            this.patchStoryById(id, updated);
+          },
+        });
+        this.updateSubs.set(id, sub);
+      }
     }
   }
 
@@ -386,7 +488,7 @@ export class StoryListStore {
   private saveCurrentState(): void {
     this.state.saveState(
       this.storyType(),
-      this.loadedStories(),
+      this.loadedStoryIds(),
       this.currentPage(),
       this.totalStoryIds(),
       null,
