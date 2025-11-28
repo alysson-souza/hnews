@@ -200,12 +200,58 @@ export class HackernewsService {
     return initial$;
   }
 
-  getMaxItem(): Observable<number> {
-    return this.hn.maxItem();
+  getMaxItem(forceRefresh = false): Observable<number> {
+    if (forceRefresh) {
+      return this.hn
+        .maxItem()
+        .pipe(
+          switchMap((maxItem) =>
+            from(this.cache.set('metadata', 'maxItem', maxItem)).pipe(map(() => maxItem)),
+          ),
+        );
+    }
+
+    const initial$ = from(
+      this.cache.getWithSWR<number>('metadata', 'maxItem', async () => {
+        const result = await firstValueFrom(this.hn.maxItem());
+        return result ?? 0;
+      }),
+    ).pipe(map((res) => res ?? 0));
+
+    const updates$ = this.cache.getUpdates<number>('metadata', 'maxItem') ?? of(0);
+
+    return merge(initial$, updates$).pipe(shareReplay(this.shareLatestConfig));
   }
 
-  getUpdates(): Observable<{ items: number[]; profiles: string[] }> {
-    return this.hn.updates();
+  getUpdates(forceRefresh = false): Observable<{ items: number[]; profiles: string[] }> {
+    const emptyUpdates = { items: [], profiles: [] };
+
+    if (forceRefresh) {
+      return this.hn
+        .updates()
+        .pipe(
+          switchMap((updates) =>
+            from(this.cache.set('metadata', 'updates', updates)).pipe(map(() => updates)),
+          ),
+        );
+    }
+
+    const initial$ = from(
+      this.cache.getWithSWR<{ items: number[]; profiles: string[] }>(
+        'metadata',
+        'updates',
+        async () => {
+          const result = await firstValueFrom(this.hn.updates());
+          return result ?? emptyUpdates;
+        },
+      ),
+    ).pipe(map((res) => res ?? emptyUpdates));
+
+    const updates$ =
+      this.cache.getUpdates<{ items: number[]; profiles: string[] }>('metadata', 'updates') ??
+      of(emptyUpdates);
+
+    return merge(initial$, updates$).pipe(shareReplay(this.shareLatestConfig));
   }
 
   searchStories(options: SearchOptions, forceRefresh = false): Observable<AlgoliaSearchResponse> {

@@ -415,12 +415,58 @@ describe('HackernewsService data orchestration', () => {
     expect(result).toBe(9001);
   });
 
+  it('caches maxItem with getWithSWR', async () => {
+    hnClient.maxItem.mockReturnValue(of(12345));
+    cacheGetWithSWRSpy.mockClear();
+
+    await firstValueFrom(service.getMaxItem());
+
+    expect(cacheGetWithSWRSpy).toHaveBeenCalledWith('metadata', 'maxItem', expect.any(Function));
+  });
+
+  it('forces refresh for maxItem and bypasses cache', async () => {
+    hnClient.maxItem.mockReturnValue(of(99999));
+    cacheSetSpy.mockClear();
+    cacheGetWithSWRSpy.mockClear();
+
+    const result = await firstValueFrom(service.getMaxItem(true));
+
+    expect(hnClient.maxItem).toHaveBeenCalled();
+    expect(cacheSetSpy).toHaveBeenCalledWith('metadata', 'maxItem', 99999);
+    expect(cacheGetWithSWRSpy).not.toHaveBeenCalled();
+    expect(result).toBe(99999);
+  });
+
   it('exposes updates from the API client', async () => {
     const payload = { items: [1, 2], profiles: ['foo'] };
     hnClient.updates.mockReturnValue(of(payload));
 
     const result = await firstValueFrom(service.getUpdates());
 
+    expect(result).toEqual(payload);
+  });
+
+  it('caches updates endpoint with getWithSWR', async () => {
+    const payload = { items: [3, 4], profiles: ['bar'] };
+    hnClient.updates.mockReturnValue(of(payload));
+    cacheGetWithSWRSpy.mockClear();
+
+    await firstValueFrom(service.getUpdates());
+
+    expect(cacheGetWithSWRSpy).toHaveBeenCalledWith('metadata', 'updates', expect.any(Function));
+  });
+
+  it('forces refresh for updates and bypasses cache', async () => {
+    const payload = { items: [5, 6], profiles: ['baz'] };
+    hnClient.updates.mockReturnValue(of(payload));
+    cacheSetSpy.mockClear();
+    cacheGetWithSWRSpy.mockClear();
+
+    const result = await firstValueFrom(service.getUpdates(true));
+
+    expect(hnClient.updates).toHaveBeenCalled();
+    expect(cacheSetSpy).toHaveBeenCalledWith('metadata', 'updates', payload);
+    expect(cacheGetWithSWRSpy).not.toHaveBeenCalled();
     expect(result).toEqual(payload);
   });
 
