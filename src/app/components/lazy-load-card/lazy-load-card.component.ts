@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, output, input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
 @Component({
   selector: 'app-lazy-load-card',
   standalone: true,
-  imports: [CommonModule, AppButtonComponent],
+  imports: [AppButtonComponent, NgClass],
   template: `
     <div
       class="comment-load-box"
