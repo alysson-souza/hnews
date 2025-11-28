@@ -108,7 +108,8 @@ export class IndexedDBService {
   async get<T>(storeName: string, key: string | number): Promise<T | null> {
     try {
       const db = await this.ensureDB();
-      const transaction = db.transaction([storeName], 'readonly');
+      // Use readwrite transaction to allow atomic delete of expired items
+      const transaction = db.transaction([storeName], 'readwrite');
       const store = transaction.objectStore(storeName);
       const request = store.get(key);
 
@@ -123,8 +124,13 @@ export class IndexedDBService {
 
           const now = Date.now();
           if (now - result.timestamp > result.ttl) {
-            this.delete(storeName, key);
-            resolve(null);
+            // Delete expired item atomically within same transaction
+            const deleteRequest = store.delete(key);
+            deleteRequest.onsuccess = () => resolve(null);
+            deleteRequest.onerror = () => {
+              console.error('Delete expired item error:', deleteRequest.error);
+              resolve(null); // Still resolve null even if delete fails
+            };
             return;
           }
 

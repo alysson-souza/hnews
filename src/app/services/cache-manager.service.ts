@@ -47,6 +47,9 @@ export class CacheManagerService {
   private readonly MAX_MEMORY_ITEMS = 100;
   private updateStreams = new Map<string, Subject<unknown>>();
 
+  // In-flight fetch deduplication
+  private inflightFetches = new Map<string, Promise<unknown>>();
+
   // Service Worker communication
   private swRegistration: ServiceWorkerRegistration | null = null;
 
@@ -180,23 +183,57 @@ export class CacheManagerService {
    * @returns Promise<T> resolves to cached or fresh data
    */
   async getWithSWR<T>(type: string, key: string, fetcher: () => Promise<T>): Promise<T | null> {
+    const fullKey = `${type}:${key}`;
+
     const cached = await this.get<T | null>(type, key);
     if (cached !== null) {
-      // Kick off background refresh
-      fetcher().then((fresh) => {
-        if (fresh !== null && fresh !== undefined) {
-          this.set(type, key, fresh);
-        }
-      });
+      // Check if background refresh already in progress
+      if (!this.inflightFetches.has(fullKey)) {
+        const fetchPromise = fetcher()
+          .then(async (fresh) => {
+            if (fresh !== null && fresh !== undefined) {
+              await this.set(type, key, fresh);
+            }
+            return fresh;
+          })
+          .catch((error) => {
+            console.error(`Background refresh failed for ${fullKey}:`, error);
+            return null;
+          })
+          .finally(() => {
+            // Clean up completed fetch
+            this.inflightFetches.delete(fullKey);
+          });
+
+        this.inflightFetches.set(fullKey, fetchPromise);
+      }
       return cached;
     }
-    // No cache, fetch and store
-    const fresh = await fetcher();
-    if (fresh !== null && fresh !== undefined) {
-      await this.set(type, key, fresh);
-      return fresh;
+
+    // No cache - check if fetch already in progress
+    if (this.inflightFetches.has(fullKey)) {
+      return (await this.inflightFetches.get(fullKey)) as T | null;
     }
-    return null;
+
+    // Start new fetch
+    const fetchPromise = fetcher()
+      .then(async (fresh) => {
+        if (fresh !== null && fresh !== undefined) {
+          await this.set(type, key, fresh);
+          return fresh;
+        }
+        return null;
+      })
+      .catch((error) => {
+        console.error(`Fetch failed for ${fullKey}:`, error);
+        return null;
+      })
+      .finally(() => {
+        this.inflightFetches.delete(fullKey);
+      });
+
+    this.inflightFetches.set(fullKey, fetchPromise);
+    return fetchPromise as Promise<T | null>;
   }
 
   async get<T>(type: string, key: string): Promise<T | null> {
@@ -235,21 +272,32 @@ export class CacheManagerService {
     };
 
     const finalTTL = ttl || config.ttl;
-
-    // Set in memory cache
     const memoryKey = `${type}:${key}`;
-    this.setInMemory(memoryKey, data, finalTTL);
 
-    // Set in primary storage
-    await this.setInStorage(config.storageType, type, key, data, finalTTL);
+    try {
+      // Set in primary storage first
+      await this.setInStorage(config.storageType, type, key, data, finalTTL);
 
-    // Also set in fallback storage for redundancy
-    if (config.fallback) {
-      await this.setInStorage(config.fallback, type, key, data, finalTTL);
+      // Set in fallback storage (best effort)
+      if (config.fallback) {
+        try {
+          await this.setInStorage(config.fallback, type, key, data, finalTTL);
+        } catch (error) {
+          console.warn(`Failed to set fallback storage for ${memoryKey}:`, error);
+          // Continue - primary storage succeeded
+        }
+      }
+
+      // Only update memory cache after successful storage writes
+      this.setInMemory(memoryKey, data, finalTTL);
+
+      // Notify subscribers of successful update
+      this.emitUpdate<T>(type, key, data);
+    } catch (error) {
+      console.error(`Failed to set cache for ${memoryKey}:`, error);
+      // Don't update memory or notify subscribers if storage failed
+      throw error;
     }
-
-    // Notify subscribers of updates for this key
-    this.emitUpdate<T>(type, key, data);
   }
 
   async delete(type: string, key: string): Promise<void> {

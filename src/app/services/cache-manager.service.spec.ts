@@ -542,4 +542,193 @@ describe('CacheManagerService', () => {
       expect(list).toBeNull();
     });
   });
+
+  describe('Phase 1 Fixes: Race Conditions & Data Integrity', () => {
+    describe('Issue #1 & #2: Request Deduplication and Error Handling', () => {
+      it('should deduplicate concurrent getWithSWR calls', async () => {
+        let fetchCallCount = 0;
+        const fetcher = async () => {
+          fetchCallCount++;
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          return [1, 2, 3];
+        };
+
+        // Make 5 concurrent calls for same key
+        const promises = Array(5)
+          .fill(null)
+          .map(() => service.getWithSWR('storyList', 'test', fetcher));
+
+        const results = await Promise.all(promises);
+
+        // All should get same result
+        results.forEach((r) => expect(r).toEqual([1, 2, 3]));
+
+        // Fetcher should only be called once
+        expect(fetchCallCount).toBe(1);
+      });
+
+      it('should deduplicate concurrent getWithSWR calls with cached data', async () => {
+        let fetchCallCount = 0;
+        const fetcher = async () => {
+          fetchCallCount++;
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          return [4, 5, 6];
+        };
+
+        // Pre-populate cache
+        await service.set('storyList', 'test', [1, 2, 3]);
+
+        // Make 5 concurrent calls
+        const promises = Array(5)
+          .fill(null)
+          .map(() => service.getWithSWR('storyList', 'test', fetcher));
+
+        const results = await Promise.all(promises);
+
+        // All should get cached value
+        results.forEach((r) => expect(r).toEqual([1, 2, 3]));
+
+        // Wait for background refresh to complete
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Background refresh should happen only once
+        expect(fetchCallCount).toBe(1);
+
+        // Verify cache was updated with fresh data
+        const updated = await service.get('storyList', 'test');
+        expect(updated).toEqual([4, 5, 6]);
+      });
+
+      it('should handle background fetch errors gracefully', async () => {
+        const error = new Error('Network error');
+        const fetcher = async () => {
+          throw error;
+        };
+
+        // Pre-populate cache
+        await service.set('storyList', 'test', [1, 2, 3]);
+
+        const result = await service.getWithSWR('storyList', 'test', fetcher);
+
+        // Should still return cached data
+        expect(result).toEqual([1, 2, 3]);
+
+        // Wait for background fetch to complete
+        await new Promise((resolve) => setTimeout(resolve, 20));
+
+        // Cache should still contain old data (error was handled)
+        const stillCached = await service.get('storyList', 'test');
+        expect(stillCached).toEqual([1, 2, 3]);
+      });
+
+      it('should handle fetch errors when no cache exists', async () => {
+        const error = new Error('Network error');
+        const fetcher = async () => {
+          throw error;
+        };
+
+        const result = await service.getWithSWR('storyList', 'test', fetcher);
+
+        // Should return null when fetch fails and no cache
+        expect(result).toBeNull();
+      });
+
+      it('should not start duplicate background refreshes', async () => {
+        let fetchCallCount = 0;
+        const fetcher = async () => {
+          fetchCallCount++;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          return [1, 2, 3];
+        };
+
+        // Pre-populate cache
+        await service.set('storyList', 'test', [1, 2]);
+
+        // Make first call - triggers background refresh
+        const result1 = await service.getWithSWR('storyList', 'test', fetcher);
+        expect(result1).toEqual([1, 2]);
+
+        // Make second call immediately - should not trigger another refresh
+        const result2 = await service.getWithSWR('storyList', 'test', fetcher);
+        expect(result2).toEqual([1, 2]);
+
+        // Wait for background refresh
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Only one background refresh should have happened
+        expect(fetchCallCount).toBe(1);
+      });
+    });
+
+    describe('Issue #4: Memory/Storage Write Synchronization', () => {
+      it('should not update memory cache if storage write fails', async () => {
+        const data = [1, 2, 3];
+
+        // Mock storage failure
+        vi.spyOn(indexedDBService, 'setStoryList').mockRejectedValue(new Error('Storage full'));
+
+        await expect(service.set('storyList', 'test', data)).rejects.toThrow('Storage full');
+
+        // Memory cache should NOT contain the data
+        const cached = await service.get('storyList', 'test');
+        expect(cached).toBeNull();
+      });
+
+      it('should update memory cache if primary storage succeeds despite fallback failure', async () => {
+        const data = [1, 2, 3];
+
+        // Primary succeeds, fallback fails
+        vi.spyOn(indexedDBService, 'setStoryList').mockResolvedValue();
+        vi.spyOn(cacheService, 'set').mockImplementation(() => {
+          throw new Error('LocalStorage quota exceeded');
+        });
+
+        // Should not throw - fallback failure is best-effort
+        await service.set('storyList', 'test', data);
+
+        // Memory cache SHOULD contain the data (primary succeeded)
+        const cached = await service.get('storyList', 'test');
+        expect(cached).toEqual(data);
+      });
+
+      it('should only emit updates after successful write', async () => {
+        const data = [1, 2, 3];
+        let updateEmitted = false;
+
+        service.getUpdates<number[]>('storyList', 'test').subscribe(() => {
+          updateEmitted = true;
+        });
+
+        // Mock storage failure
+        vi.spyOn(indexedDBService, 'setStoryList').mockRejectedValue(new Error('Storage full'));
+
+        await expect(service.set('storyList', 'test', data)).rejects.toThrow();
+
+        // Update should NOT have been emitted
+        expect(updateEmitted).toBe(false);
+      });
+
+      it('should write to storage before updating memory', async () => {
+        const data = [1, 2, 3];
+        const writeOrder: string[] = [];
+
+        vi.spyOn(indexedDBService, 'setStoryList').mockImplementation(async () => {
+          writeOrder.push('storage');
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        });
+
+        const originalSetInMemory = service['setInMemory'].bind(service);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        vi.spyOn(service as any, 'setInMemory').mockImplementation((...args: unknown[]) => {
+          writeOrder.push('memory');
+          return originalSetInMemory(args[0] as string, args[1], args[2] as number);
+        });
+
+        await service.set('storyList', 'test', data);
+
+        // Storage should be written before memory
+        expect(writeOrder).toEqual(['storage', 'memory']);
+      });
+    });
+  });
 });
