@@ -183,6 +183,7 @@ export class IndexedDBService {
       });
     } catch (error) {
       console.error('IndexedDB set error:', error);
+      throw error;
     }
   }
 
@@ -203,6 +204,7 @@ export class IndexedDBService {
       });
     } catch (error) {
       console.error('IndexedDB delete error:', error);
+      throw error;
     }
   }
 
@@ -223,6 +225,7 @@ export class IndexedDBService {
       });
     } catch (error) {
       console.error('IndexedDB clear error:', error);
+      throw error;
     }
   }
 
