@@ -4,12 +4,12 @@ import { InjectionToken } from '@angular/core';
 
 export const CACHE_TTL_STORIES = new InjectionToken<number>('CACHE_TTL_STORIES', {
   providedIn: 'root',
-  factory: () => 30 * 60 * 1000, // 30 minutes
+  factory: () => 5 * 60 * 1000, // 5 minutes (for story lists - top/best/new/etc)
 });
 
 export const CACHE_TTL_ITEM = new InjectionToken<number>('CACHE_TTL_ITEM', {
   providedIn: 'root',
-  factory: () => 5 * 60 * 1000, // 5 minutes
+  factory: () => 30 * 60 * 1000, // 30 minutes (for individual story items)
 });
 
 export const CACHE_TTL_USER = new InjectionToken<number>('CACHE_TTL_USER', {

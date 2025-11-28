@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HNItem, HNUser } from '../models/hn';
+import { CACHE_TTL_STORIES, CACHE_TTL_ITEM, CACHE_TTL_USER } from '../config/cache.config';
 
 export interface CachedItem<T> {
   key: string | number;
@@ -25,6 +26,12 @@ export class IndexedDBService {
   private dbName = 'hnews-cache-db';
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
+  private initPromise: Promise<void> | null = null;
+
+  // Inject TTL values from central config
+  private ttlStoryList = inject(CACHE_TTL_STORIES);
+  private ttlStoryItem = inject(CACHE_TTL_ITEM);
+  private ttlUserProfile = inject(CACHE_TTL_USER);
 
   // Store names
   private stores = {
@@ -34,16 +41,11 @@ export class IndexedDBService {
     API_CACHE: 'apiCache',
   };
 
-  // Default TTLs in milliseconds
-  private ttls = {
-    STORY_LIST: 5 * 60 * 1000, // 5 minutes
-    STORY_ITEM: 30 * 60 * 1000, // 30 minutes
-    USER_PROFILE: 60 * 60 * 1000, // 1 hour
-  };
-
   constructor() {
-    this.initDB().catch((error) => {
+    // Start initialization immediately but don't block construction
+    this.initPromise = this.initDB().catch((error) => {
       console.warn('IndexedDB initialization failed, app will use fallback storage:', error);
+      this.initPromise = null; // Allow retry
     });
   }
 
@@ -95,12 +97,20 @@ export class IndexedDBService {
   }
 
   private async ensureDB(): Promise<IDBDatabase> {
-    if (!this.db) {
-      await this.initDB();
+    if (this.db) {
+      return this.db;
     }
+
+    if (!this.initPromise) {
+      this.initPromise = this.initDB();
+    }
+
+    await this.initPromise;
+
     if (!this.db) {
       throw new Error('IndexedDB not available');
     }
+
     return this.db;
   }
 
@@ -228,7 +238,7 @@ export class IndexedDBService {
   }
 
   async setStory(story: HNItem): Promise<void> {
-    return this.set(this.stores.STORIES, story.id, story, this.ttls.STORY_ITEM);
+    return this.set(this.stores.STORIES, story.id, story, this.ttlStoryItem);
   }
 
   async getStoryList(type: string): Promise<number[] | null> {
@@ -244,7 +254,7 @@ export class IndexedDBService {
       const legacy = await this.get<number[]>(this.stores.STORY_LISTS, legacyKey);
       if (legacy) {
         // Migrate to canonical key and remove legacy key
-        await this.set(this.stores.STORY_LISTS, canonical, legacy, this.ttls.STORY_LIST);
+        await this.set(this.stores.STORY_LISTS, canonical, legacy, this.ttlStoryList);
         await this.delete(this.stores.STORY_LISTS, legacyKey);
         result = legacy;
       }
@@ -256,7 +266,7 @@ export class IndexedDBService {
   async setStoryList(type: string, ids: number[]): Promise<void> {
     const canonical = type === 'newest' ? 'new' : type;
     // Write canonical key
-    await this.set(this.stores.STORY_LISTS, canonical, ids, this.ttls.STORY_LIST);
+    await this.set(this.stores.STORY_LISTS, canonical, ids, this.ttlStoryList);
     // Clean up any legacy-prefixed key to avoid future confusion
     const legacyKey = `storyList_${canonical}`;
     await this.delete(this.stores.STORY_LISTS, legacyKey);
@@ -267,7 +277,7 @@ export class IndexedDBService {
   }
 
   async setUserProfile(username: string, profile: HNUser): Promise<void> {
-    return this.set(this.stores.USERS, username, profile, this.ttls.USER_PROFILE);
+    return this.set(this.stores.USERS, username, profile, this.ttlUserProfile);
   }
 
   // Batch operations
@@ -333,13 +343,13 @@ export class IndexedDBService {
   private getDefaultTTL(storeName: string): number {
     switch (storeName) {
       case this.stores.STORIES:
-        return this.ttls.STORY_ITEM;
+        return this.ttlStoryItem;
       case this.stores.USERS:
-        return this.ttls.USER_PROFILE;
+        return this.ttlUserProfile;
       case this.stores.STORY_LISTS:
-        return this.ttls.STORY_LIST;
+        return this.ttlStoryList;
       default:
-        return this.ttls.STORY_ITEM;
+        return this.ttlStoryItem;
     }
   }
 
