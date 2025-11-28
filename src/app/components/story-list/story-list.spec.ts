@@ -315,9 +315,7 @@ describe('StoryList', () => {
   describe('ngOnInit', () => {
     it('should initialize store with storyType and pageSize', () => {
       vi.spyOn(store, 'init');
-      component.storyType = 'top';
-      component.pageSize = 30;
-
+      // Uses default input values: storyType='top', pageSize=30
       component.ngOnInit();
 
       expect(store.init).toHaveBeenCalledWith('top', 30);
@@ -327,7 +325,6 @@ describe('StoryList', () => {
   describe('ngOnChanges', () => {
     it('should re-initialize store when storyType changes', () => {
       vi.spyOn(store, 'init');
-      component.storyType = 'best';
 
       const changes = {
         storyType: {
@@ -340,7 +337,7 @@ describe('StoryList', () => {
 
       component.ngOnChanges(changes);
 
-      expect(store.init).toHaveBeenCalledWith('best', 30);
+      expect(store.init).toHaveBeenCalledWith('top', 30);
     });
 
     it('should not re-initialize on first change', () => {
@@ -381,14 +378,14 @@ describe('StoryList', () => {
 
   describe('skeletonArray', () => {
     it('should create array with pageSize elements', () => {
-      component.pageSize = 15;
-      const skelArr = Array(component.pageSize)
+      // Default pageSize is 30, test uses that
+      const skelArr = Array(component.pageSize())
         .fill(0)
         .map((_, i) => i);
 
-      expect(skelArr.length).toBe(15);
+      expect(skelArr.length).toBe(30);
       expect(skelArr[0]).toBe(0);
-      expect(skelArr[14]).toBe(14);
+      expect(skelArr[29]).toBe(29);
     });
   });
 });

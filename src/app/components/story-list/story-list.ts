@@ -2,7 +2,6 @@
 // Copyright (C) 2025 Alysson Souza
 import {
   Component,
-  Input,
   OnInit,
   OnDestroy,
   OnChanges,
@@ -10,6 +9,7 @@ import {
   inject,
   effect,
   computed,
+  input,
 } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
@@ -104,8 +104,8 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
   ],
 })
 export class StoryList implements OnInit, OnDestroy, OnChanges {
-  @Input() storyType: 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' = 'top';
-  @Input() pageSize = 30;
+  readonly storyType = input<'top' | 'best' | 'new' | 'ask' | 'show' | 'job'>('top');
+  readonly pageSize = input(30);
 
   private store = inject(StoryListStore);
   sidebarService = inject(SidebarService);
@@ -135,7 +135,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   isOffline = computed(() => this.networkState.isOffline());
 
   // Array for skeleton count based on page size
-  skeletonArray = Array(this.pageSize)
+  skeletonArray = Array(this.pageSize())
     .fill(0)
     .map((_, i) => i);
 
@@ -155,7 +155,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit() {
     // Check cache on initial load
-    this.store.init(this.storyType, this.pageSize);
+    this.store.init(this.storyType(), this.pageSize());
 
     // Start auto-refresh timer
     this.startAutoRefresh();
@@ -166,7 +166,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['storyType'] && !changes['storyType'].firstChange) {
-      this.store.init(this.storyType, this.pageSize);
+      this.store.init(this.storyType(), this.pageSize());
     }
   }
 

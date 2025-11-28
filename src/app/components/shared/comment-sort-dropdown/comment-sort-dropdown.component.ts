@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, output, ChangeDetectionStrategy, input } from '@angular/core';
 
 export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
 
@@ -12,10 +12,10 @@ export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
   template: `
     <div class="relative">
       <select
-        [value]="sortOrder"
+        [value]="sortOrder()"
         (change)="onSortChange($event)"
         class="sort-select"
-        [disabled]="loading"
+        [disabled]="loading()"
         aria-label="Sort comments"
       >
         <option value="default">Default</option>
@@ -23,7 +23,7 @@ export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
         <option value="newest">Newest</option>
         <option value="oldest">Oldest</option>
       </select>
-      @if (loading) {
+      @if (loading()) {
         <div class="loading-spinner">
           <svg
             class="w-4 h-4 animate-spin text-gray-400"
@@ -68,8 +68,8 @@ export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
   ],
 })
 export class CommentSortDropdownComponent {
-  @Input() sortOrder: CommentSortOrder = 'default';
-  @Input() loading = false;
+  readonly sortOrder = input<CommentSortOrder>('default');
+  readonly loading = input(false);
   readonly sortChange = output<CommentSortOrder>();
 
   onSortChange(event: Event): void {

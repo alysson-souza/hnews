@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ScrollService } from '../../../services/scroll.service';
@@ -11,10 +11,10 @@ import { ScrollService } from '../../../services/scroll.service';
   imports: [RouterLink, RouterLinkActive],
   template: `
     <a
-      [routerLink]="route"
+      [routerLink]="route()"
       routerLinkActive="nav-link-active"
       [class]="getLinkClasses()"
-      [attr.aria-current]="isActive ? 'page' : null"
+      [attr.aria-current]="isActive() ? 'page' : null"
       (click)="handleClick()"
     >
       <ng-content />
@@ -47,9 +47,9 @@ import { ScrollService } from '../../../services/scroll.service';
   ],
 })
 export class NavLinkComponent {
-  @Input() route = '';
-  @Input() mobile = false;
-  @Input() isActive = false;
+  readonly route = input('');
+  readonly mobile = input(false);
+  readonly isActive = input(false);
 
   private scrollService = inject(ScrollService);
 
@@ -58,6 +58,6 @@ export class NavLinkComponent {
   }
 
   getLinkClasses(): string {
-    return this.mobile ? 'nav-link-mobile' : 'nav-link';
+    return this.mobile() ? 'nav-link-mobile' : 'nav-link';
   }
 }

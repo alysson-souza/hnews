@@ -25,12 +25,12 @@ describe('ResultMetaComponent', () => {
 
   describe('story result metadata', () => {
     beforeEach(() => {
-      component.isComment = false;
-      component.itemId = '123';
-      component.commentCount = 42;
-      component.points = 100;
-      component.author = 'john_doe';
-      component.timeAgo = '2 hours ago';
+      fixture.componentRef.setInput('isComment', false);
+      fixture.componentRef.setInput('itemId', '123');
+      fixture.componentRef.setInput('commentCount', 42);
+      fixture.componentRef.setInput('points', 100);
+      fixture.componentRef.setInput('author', 'john_doe');
+      fixture.componentRef.setInput('timeAgo', '2 hours ago');
     });
 
     it('should display author username', () => {
@@ -60,11 +60,11 @@ describe('ResultMetaComponent', () => {
 
   describe('comment result metadata', () => {
     beforeEach(() => {
-      component.isComment = true;
-      component.itemId = '456';
-      component.parentId = '789';
-      component.author = 'jane_doe';
-      component.timeAgo = '1 hour ago';
+      fixture.componentRef.setInput('isComment', true);
+      fixture.componentRef.setInput('itemId', '456');
+      fixture.componentRef.setInput('parentId', '789');
+      fixture.componentRef.setInput('author', 'jane_doe');
+      fixture.componentRef.setInput('timeAgo', '1 hour ago');
     });
 
     it('should not display points for comment', () => {
@@ -83,8 +83,8 @@ describe('ResultMetaComponent', () => {
 
   describe('optional fields', () => {
     it('should not display author section when missing', () => {
-      component.author = undefined;
-      component.timeAgo = 'now';
+      fixture.componentRef.setInput('author', undefined);
+      fixture.componentRef.setInput('timeAgo', 'now');
       fixture.detectChanges();
       const bySpan = Array.from(fixture.nativeElement.querySelectorAll('span') as Element[]).find(
         (el) => el.textContent === 'by',
@@ -93,11 +93,11 @@ describe('ResultMetaComponent', () => {
     });
 
     it('should handle missing points gracefully', () => {
-      component.isComment = false;
-      component.points = undefined;
-      component.itemId = '123';
-      component.commentCount = 5;
-      component.timeAgo = 'now';
+      fixture.componentRef.setInput('isComment', false);
+      fixture.componentRef.setInput('points', undefined);
+      fixture.componentRef.setInput('itemId', '123');
+      fixture.componentRef.setInput('commentCount', 5);
+      fixture.componentRef.setInput('timeAgo', 'now');
       fixture.detectChanges();
       const text = fixture.nativeElement.textContent;
       expect(text).not.toContain('undefined');

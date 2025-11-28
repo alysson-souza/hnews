@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-footer',
@@ -57,9 +57,9 @@ import { Component, Input, input } from '@angular/core';
           </p>
           <p class="footer-subtext">
             Version
-            @if (commitUrl) {
+            @if (commitUrl()) {
               <a
-                [href]="commitUrl"
+                [href]="commitUrl()"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="footer-link"
@@ -118,5 +118,5 @@ import { Component, Input, input } from '@angular/core';
 })
 export class AppFooterComponent {
   readonly commitShaShort = input('');
-  @Input() commitUrl: string | null = null;
+  readonly commitUrl = input<string | null>(null);
 }

@@ -99,7 +99,7 @@ describe('StoryItem comments link behaviour', () => {
       title: 'Test Story',
       descendants: 42,
     };
-    component.story = story;
+    fixture.componentRef.setInput('story', story);
 
     deviceService.setDesktop(true);
 
@@ -294,18 +294,22 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should check if post is a text post', () => {
-      component.story = { ...story, title: 'Ask HN: How to test?' };
+      fixture.componentRef.setInput('story', { ...story, title: 'Ask HN: How to test?' });
       expect(component.isTextPost()).toBe(true);
 
-      component.story = { ...story, title: 'Tell HN: My experience' };
+      fixture.componentRef.setInput('story', { ...story, title: 'Tell HN: My experience' });
       expect(component.isTextPost()).toBe(true);
 
-      component.story = { ...story, title: 'Regular post', url: 'https://example.com' };
+      fixture.componentRef.setInput('story', {
+        ...story,
+        title: 'Regular post',
+        url: 'https://example.com',
+      });
       expect(component.isTextPost()).toBe(false);
     });
 
     it('should navigate to search with domain filter', () => {
-      component.story = { ...story, url: 'https://example.com/page' };
+      fixture.componentRef.setInput('story', { ...story, url: 'https://example.com/page' });
       const event = new MouseEvent('click');
       vi.spyOn(event, 'preventDefault');
       vi.spyOn(event, 'stopPropagation');
@@ -326,7 +330,7 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should upvote a story', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
 
       component.upvote();
 
@@ -338,7 +342,7 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should not upvote twice', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
 
       component.upvote();
       component.upvote();
@@ -355,11 +359,11 @@ describe('StoryItem comments link behaviour', () => {
       const newFixture = TestBed.createComponent(StoryItem);
       const newComponent = newFixture.componentInstance;
 
-      newComponent.story = { ...story, id: 123 };
+      newFixture.componentRef.setInput('story', { ...story, id: 123 });
       newFixture.detectChanges();
       expect(newComponent.hasVoted()).toBe(true);
 
-      newComponent.story = { ...story, id: 789 };
+      newFixture.componentRef.setInput('story', { ...story, id: 789 });
       newFixture.detectChanges();
       expect(newComponent.hasVoted()).toBe(false);
 
@@ -373,14 +377,14 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should render actions menu component', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       fixture.detectChanges();
 
       expect(component.actionsMenu()).toBeDefined();
     });
 
     it('should pass story id to actions menu component', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       fixture.detectChanges();
 
       expect(component.actionsMenu()?.storyId()).toBe(story.id);
@@ -391,7 +395,7 @@ describe('StoryItem comments link behaviour', () => {
     let shareService: StoryShareService;
 
     beforeEach(() => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       shareService = TestBed.inject(StoryShareService);
     });
 
@@ -444,7 +448,7 @@ describe('StoryItem comments link behaviour', () => {
 
   describe('Open comments in new tab', () => {
     it('should open comments in new tab', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       fixture.detectChanges();
       vi.spyOn(window, 'open');
 
@@ -456,19 +460,19 @@ describe('StoryItem comments link behaviour', () => {
 
   describe('Helper methods', () => {
     it('should get item link', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       const link = component.getItemLink();
       expect(link).toContain(`/item/${story.id}`);
     });
 
     it('should get item link when no story', () => {
-      component.story = undefined;
+      fixture.componentRef.setInput('story', undefined);
       const link = component.getItemLink();
       expect(link).toContain('/item');
     });
 
     it('should check for new comments', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       visitedService.hasNewComments.mockReturnValue(true);
 
       expect(component.hasNewComments()).toBe(true);
@@ -476,7 +480,7 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should get new comment count', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       visitedService.getNewCommentCount.mockReturnValue(5);
 
       expect(component.getNewCommentCount()).toBe(5);
@@ -484,7 +488,7 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should mark as visited', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
 
       component.markAsVisited();
 
@@ -492,7 +496,7 @@ describe('StoryItem comments link behaviour', () => {
     });
 
     it('should check if visited', () => {
-      component.story = story;
+      fixture.componentRef.setInput('story', story);
       visitedService.isVisited.mockReturnValue(true);
 
       expect(component.isVisited()).toBe(true);
@@ -515,20 +519,20 @@ describe('StoryItem comments link behaviour', () => {
 
   describe('Computed properties', () => {
     it('should detect loading state when loading is true', () => {
-      component.loading = true;
-      component.story = story;
+      fixture.componentRef.setInput('loading', true);
+      fixture.componentRef.setInput('story', story);
       expect(component.isLoading()).toBe(true);
     });
 
     it('should detect loading state when story is undefined', () => {
-      component.loading = false;
-      component.story = undefined;
+      fixture.componentRef.setInput('loading', false);
+      fixture.componentRef.setInput('story', undefined);
       expect(component.isLoading()).toBe(true);
     });
 
     it('should not be loading when story exists and loading is false', () => {
-      component.loading = false;
-      component.story = story;
+      fixture.componentRef.setInput('loading', false);
+      fixture.componentRef.setInput('story', story);
       fixture.detectChanges();
       expect(component.isLoading()).toBe(false);
     });

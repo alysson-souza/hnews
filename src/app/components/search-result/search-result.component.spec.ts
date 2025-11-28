@@ -32,7 +32,7 @@ describe('SearchResultComponent', () => {
 
   describe('getParentId for search results', () => {
     it('should return story_id for comment search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: '',
         url: '',
@@ -43,8 +43,8 @@ describe('SearchResultComponent', () => {
         comment_text: 'This is a test comment',
         story_id: 789,
         parent_id: 456,
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       const parentId = component.getParentId();
 
@@ -52,7 +52,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should return empty string when story_id is missing', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: 'Test Story',
         url: 'https://example.com',
@@ -60,8 +60,8 @@ describe('SearchResultComponent', () => {
         points: 10,
         num_comments: 5,
         created_at: '2025-10-03T00:00:00Z',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       const parentId = component.getParentId();
 
@@ -69,7 +69,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should handle undefined story_id', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: '',
         url: '',
@@ -79,8 +79,8 @@ describe('SearchResultComponent', () => {
         created_at: '2025-10-03T00:00:00Z',
         comment_text: 'This is a test comment',
         story_id: undefined,
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       const parentId = component.getParentId();
 
@@ -90,7 +90,7 @@ describe('SearchResultComponent', () => {
 
   describe('isComment and isStory computed', () => {
     it('should identify comment search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: '',
         url: '',
@@ -100,8 +100,8 @@ describe('SearchResultComponent', () => {
         created_at: '2025-10-03T00:00:00Z',
         comment_text: 'This is a test comment',
         story_id: 789,
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
       fixture.detectChanges();
 
       expect(component.isComment()).toBe(true);
@@ -109,7 +109,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should identify story search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: 'Test Story',
         url: 'https://example.com',
@@ -117,8 +117,8 @@ describe('SearchResultComponent', () => {
         points: 10,
         num_comments: 5,
         created_at: '2025-10-03T00:00:00Z',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
       fixture.detectChanges();
 
       expect(component.isStory()).toBe(true);
@@ -126,7 +126,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should return false for both when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       fixture.detectChanges();
 
       expect(component.isStory()).toBe(false);
@@ -134,15 +134,15 @@ describe('SearchResultComponent', () => {
     });
 
     it('should identify HNItem story types', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         by: 'testuser',
         time: 1234567890,
         title: 'Test Story',
         score: 10,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
       fixture.detectChanges();
 
       expect(component.isStory()).toBe(true);
@@ -150,29 +150,29 @@ describe('SearchResultComponent', () => {
     });
 
     it('should identify HNItem job types as stories', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'job',
         by: 'testuser',
         time: 1234567890,
         title: 'Test Job',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
       fixture.detectChanges();
 
       expect(component.isStory()).toBe(true);
     });
 
     it('should identify HNItem comments', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'comment',
         by: 'testuser',
         time: 1234567890,
         text: 'Test comment',
         parent: 456,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
       fixture.detectChanges();
 
       expect(component.isComment()).toBe(true);
@@ -182,33 +182,33 @@ describe('SearchResultComponent', () => {
 
   describe('isDead', () => {
     it('should return true for dead HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         title: 'Dead Story',
         dead: true,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.isDead()).toBe(true);
     });
 
     it('should return false for alive HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         title: 'Alive Story',
         dead: false,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.isDead()).toBe(false);
     });
 
     it('should return false for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -216,21 +216,21 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.isDead()).toBe(false);
     });
 
     it('should return false when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.isDead()).toBe(false);
     });
   });
 
   describe('getHighlightedTitle', () => {
     it('should return highlighted title for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Original Title',
         url: '',
@@ -241,14 +241,14 @@ describe('SearchResultComponent', () => {
         _highlightResult: {
           title: { value: '<em>Original</em> Title' },
         },
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getHighlightedTitle()).toBe('<em>Original</em> Title');
     });
 
     it('should return plain title when no highlight available', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Original Title',
         url: '',
@@ -256,44 +256,44 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getHighlightedTitle()).toBe('Original Title');
     });
 
     it('should return HNItem title', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         title: 'HN Story Title',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getHighlightedTitle()).toBe('HN Story Title');
     });
 
     it('should return [untitled] for HNItem without title', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getHighlightedTitle()).toBe('[untitled]');
     });
 
     it('should return empty string when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getHighlightedTitle()).toBe('');
     });
   });
 
   describe('getExternalUrl', () => {
     it('should return URL for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: 'https://example.com',
@@ -301,34 +301,34 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getExternalUrl()).toBe('https://example.com');
     });
 
     it('should return URL for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         title: 'Test',
         url: 'https://example.com',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getExternalUrl()).toBe('https://example.com');
     });
 
     it('should return undefined when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getExternalUrl()).toBeUndefined();
     });
   });
 
   describe('getItemId', () => {
     it('should return objectID for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: 'Test',
         url: '',
@@ -336,33 +336,33 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getItemId()).toBe('123456');
     });
 
     it('should return id for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 789,
         type: 'story',
         time: 1234567890,
         title: 'Test',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getItemId()).toBe('789');
     });
 
     it('should return empty string when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getItemId()).toBe('');
     });
   });
 
   describe('getStoryText', () => {
     it('should return story_text for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -371,34 +371,34 @@ describe('SearchResultComponent', () => {
         num_comments: 0,
         created_at: '',
         story_text: 'Story content',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getStoryText()).toBe('Story content');
     });
 
     it('should return text for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         title: 'Test',
         text: 'HN story text',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getStoryText()).toBe('HN story text');
     });
 
     it('should return undefined when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getStoryText()).toBeUndefined();
     });
   });
 
   describe('getHighlightedStoryText', () => {
     it('should return highlighted story text for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -410,14 +410,14 @@ describe('SearchResultComponent', () => {
         _highlightResult: {
           story_text: { value: '<em>Original</em> text' },
         },
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getHighlightedStoryText()).toContain('Original');
     });
 
     it('should return plain story text when no highlight available', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -426,20 +426,20 @@ describe('SearchResultComponent', () => {
         num_comments: 0,
         created_at: '',
         story_text: 'Plain text',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getHighlightedStoryText()).toContain('Plain text');
     });
 
     it('should return text for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         text: 'HN text content',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getHighlightedStoryText()).toBe('HN text content');
     });
@@ -447,7 +447,7 @@ describe('SearchResultComponent', () => {
 
   describe('getHighlightedCommentText', () => {
     it('should return highlighted comment text for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: '',
         url: '',
@@ -459,14 +459,14 @@ describe('SearchResultComponent', () => {
         _highlightResult: {
           comment_text: { value: '<em>Original</em> comment' },
         },
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getHighlightedCommentText()).toContain('Original');
     });
 
     it('should return plain comment text when no highlight available', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: '',
         url: '',
@@ -475,21 +475,21 @@ describe('SearchResultComponent', () => {
         num_comments: 0,
         created_at: '',
         comment_text: 'Plain comment',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getHighlightedCommentText()).toContain('Plain comment');
     });
 
     it('should return text for HNItem comments', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'comment',
         time: 1234567890,
         text: 'HN comment text',
         parent: 456,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getHighlightedCommentText()).toBe('HN comment text');
     });
@@ -497,7 +497,7 @@ describe('SearchResultComponent', () => {
 
   describe('getAuthor', () => {
     it('should return author for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -505,33 +505,33 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getAuthor()).toBe('testuser');
     });
 
     it('should return by for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         by: 'hnuser',
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getAuthor()).toBe('hnuser');
     });
 
     it('should return undefined when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getAuthor()).toBeUndefined();
     });
   });
 
   describe('getPoints', () => {
     it('should return points for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -539,31 +539,31 @@ describe('SearchResultComponent', () => {
         points: 42,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getPoints()).toBe(42);
     });
 
     it('should return score for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         score: 100,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getPoints()).toBe(100);
     });
 
     it('should return 0 when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getPoints()).toBe(0);
     });
 
     it('should return 0 when points is undefined in search result', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -571,8 +571,8 @@ describe('SearchResultComponent', () => {
         points: undefined as unknown as number,
         num_comments: 0,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getPoints()).toBe(0);
     });
@@ -580,7 +580,7 @@ describe('SearchResultComponent', () => {
 
   describe('getCommentCount', () => {
     it('should return num_comments for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -588,52 +588,52 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 15,
         created_at: '',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       expect(component.getCommentCount()).toBe(15);
     });
 
     it('should return descendants for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1234567890,
         descendants: 25,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getCommentCount()).toBe(25);
     });
 
     it('should return 0 when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getCommentCount()).toBe(0);
     });
   });
 
   describe('getParentId for HNItems', () => {
     it('should return parent for HNItem comments', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'comment',
         time: 1234567890,
         parent: 456,
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       expect(component.getParentId()).toBe('456');
     });
 
     it('should return empty string when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getParentId()).toBe('');
     });
   });
 
   describe('getTimeAgo', () => {
     it('should format time for search results', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123',
         title: 'Test',
         url: '',
@@ -641,8 +641,8 @@ describe('SearchResultComponent', () => {
         points: 0,
         num_comments: 0,
         created_at: '2025-10-03T00:00:00Z',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
 
       const timeAgo = component.getTimeAgo();
       expect(timeAgo).toBeTruthy();
@@ -650,12 +650,12 @@ describe('SearchResultComponent', () => {
     });
 
     it('should format time for HNItems', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
-      };
-      component.isSearchResult = false;
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
 
       const timeAgo = component.getTimeAgo();
       expect(timeAgo).toBeTruthy();
@@ -663,14 +663,14 @@ describe('SearchResultComponent', () => {
     });
 
     it('should return empty string when item is undefined', () => {
-      component.item = undefined;
+      fixture.componentRef.setInput('item', undefined);
       expect(component.getTimeAgo()).toBe('');
     });
   });
 
   describe('comment metadata functionality', () => {
     it('should provide all required data for comment metadata display', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: '',
         url: '',
@@ -681,8 +681,8 @@ describe('SearchResultComponent', () => {
         comment_text: 'This is a test comment',
         story_id: 789,
         parent_id: 456,
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
       fixture.detectChanges();
 
       // Verify all methods used in the enhanced comment template work
@@ -697,7 +697,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should handle comment without author gracefully', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: '',
         url: '',
@@ -707,8 +707,8 @@ describe('SearchResultComponent', () => {
         created_at: '2025-10-03T00:00:00Z',
         comment_text: 'This is a test comment',
         story_id: 789,
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
       fixture.detectChanges();
 
       expect(component.getAuthor()).toBe('');
@@ -717,7 +717,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should display points for stories', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: 'Test Story',
         url: 'https://example.com',
@@ -725,8 +725,8 @@ describe('SearchResultComponent', () => {
         points: 42,
         num_comments: 10,
         created_at: '2025-10-03T00:00:00Z',
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
       fixture.detectChanges();
 
       expect(component.isStory()).toBe(true);
@@ -735,7 +735,7 @@ describe('SearchResultComponent', () => {
     });
 
     it('should not display points for comments', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         objectID: '789012',
         title: '',
         url: '',
@@ -745,8 +745,8 @@ describe('SearchResultComponent', () => {
         created_at: '2025-10-03T00:00:00Z',
         comment_text: 'Test comment',
         story_id: 123456,
-      };
-      component.isSearchResult = true;
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
       fixture.detectChanges();
 
       expect(component.isStory()).toBe(false);

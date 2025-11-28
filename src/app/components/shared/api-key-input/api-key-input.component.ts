@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, OnInit, output, input } from '@angular/core';
+import { Component, OnInit, output, input } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 
@@ -26,7 +26,7 @@ import { FormsModule } from '@angular/forms';
         [(ngModel)]="model"
         (ngModelChange)="onChange()"
         [attr.aria-label]="label()"
-        [attr.aria-describedby]="hint ? hintId : null"
+        [attr.aria-describedby]="hint() ? hintId : null"
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
@@ -44,15 +44,15 @@ import { FormsModule } from '@angular/forms';
         </button>
       }
     </div>
-    @if (hint) {
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" [id]="hintId">{{ hint }}</p>
+    @if (hint()) {
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" [id]="hintId">{{ hint() }}</p>
     }
   `,
 })
 export class ApiKeyInputComponent implements OnInit {
   readonly label = input('API Key');
   readonly placeholder = input('');
-  @Input() hint?: string;
+  readonly hint = input<string>();
   readonly secret = input(true);
   readonly hideLabel = input(false);
   readonly value = input<string>();

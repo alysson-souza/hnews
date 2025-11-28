@@ -22,7 +22,7 @@ describe('RepliesCounterComponent', () => {
   });
 
   it('should stop event propagation when expand button is clicked', () => {
-    component.count = 5;
+    fixture.componentRef.setInput('count', 5);
     fixture.detectChanges();
 
     const expandButton = fixture.nativeElement.querySelector('.expand-btn');
@@ -39,7 +39,7 @@ describe('RepliesCounterComponent', () => {
   });
 
   it('should emit expand event when button is clicked', async () => {
-    component.count = 5;
+    fixture.componentRef.setInput('count', 5);
     component.expand.subscribe(() => {
       expect(true).toBe(true);
     });

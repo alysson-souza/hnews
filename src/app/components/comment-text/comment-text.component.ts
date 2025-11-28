@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, computed } from '@angular/core';
 
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import DOMPurify from 'dompurify';
 import { provideIcons } from '@ng-icons/core';
 import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
@@ -16,7 +16,7 @@ import { EnhanceLinksDirective } from './enhance-links.directive';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EnhanceLinksDirective],
   viewProviders: [provideIcons({ solarLinkLinear })],
-  template: ` <div class="comment-body" [innerHTML]="processedHtml" appEnhanceLinks></div> `,
+  template: ` <div class="comment-body" [innerHTML]="processedHtml()" appEnhanceLinks></div> `,
   styles: [
     `
       @reference '../../../styles.css';
@@ -55,14 +55,12 @@ import { EnhanceLinksDirective } from './enhance-links.directive';
   ],
 })
 export class CommentTextComponent {
-  private _html = '';
+  readonly html = input('');
   private sanitizer = inject(DomSanitizer);
-  processedHtml: SafeHtml = '';
 
-  @Input()
-  set html(value: string) {
-    this._html = value || '';
-    const withQuotes = transformQuotesHtml(this._html);
+  readonly processedHtml = computed(() => {
+    const rawHtml = this.html() || '';
+    const withQuotes = transformQuotesHtml(rawHtml);
     const withHighlight = highlightCodeBlocks(withQuotes);
 
     // Sanitize HTML to prevent XSS attacks while preserving formatting
@@ -72,9 +70,6 @@ export class CommentTextComponent {
       KEEP_CONTENT: true,
     });
 
-    this.processedHtml = this.sanitizer.bypassSecurityTrustHtml(sanitized);
-  }
-  get html(): string {
-    return this._html;
-  }
+    return this.sanitizer.bypassSecurityTrustHtml(sanitized);
+  });
 }

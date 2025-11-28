@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import {
-  Component,
-  Input,
-  OnInit,
-  inject,
-  signal,
-  computed,
-  DestroyRef,
-  input,
-} from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
 import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
@@ -44,15 +35,15 @@ import { Router } from '@angular/router';
   providers: [CommentRepliesLoaderService],
   template: `
     @if (showLoadButton()) {
-      <app-lazy-load-card [depth]="depth" [loading]="loading()" (loadMore)="loadComment()" />
+      <app-lazy-load-card [depth]="depth()" [loading]="loading()" (loadMore)="loadComment()" />
     } @else if (loading()) {
-      <app-comment-skeleton [depth]="depth" />
+      <app-comment-skeleton [depth]="depth()" />
     } @else if (comment()) {
       <app-thread-gutter
-        [depth]="depth"
+        [depth]="depth()"
         [clickable]="true"
         [collapsed]="isCollapsed()"
-        [commentId]="commentId"
+        [commentId]="commentId()"
         (toggleThread)="toggleCollapse()"
       >
         <div header>
@@ -63,7 +54,7 @@ import { Router } from '@angular/router';
             [repliesCount]="totalRepliesCount()"
             [showExpand]="showExpandButton()"
             [loadingReplies]="loadingReplies()"
-            [commentId]="commentId"
+            [commentId]="commentId()"
             [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
             [storyAuthor]="storyAuthor()"
             [isStandalonePage]="isStandalonePage()"
@@ -85,7 +76,7 @@ import { Router } from '@angular/router';
                 @if (reply.kids && reply.kids.length > 0) {
                   <app-comment-thread
                     [commentId]="reply.id"
-                    [depth]="depth + 1"
+                    [depth]="depth() + 1"
                     [lazyLoad]="true"
                     [initialComment]="reply"
                     [storyAuthor]="storyAuthor()"
@@ -93,7 +84,7 @@ import { Router } from '@angular/router';
                   />
                 } @else {
                   <app-thread-gutter
-                    [depth]="depth + 1"
+                    [depth]="depth() + 1"
                     [clickable]="true"
                     [collapsed]="false"
                     [commentId]="reply.id"
@@ -220,11 +211,11 @@ import { Router } from '@angular/router';
   ],
 })
 export class CommentThread implements OnInit {
-  @Input({ required: true }) commentId!: number;
-  @Input() depth = 0;
-  @Input() lazyLoad = false;
+  readonly commentId = input.required<number>();
+  readonly depth = input(0);
+  readonly lazyLoad = input(false);
   // Optional: when a parent already fetched this comment, pass it to avoid refetching
-  @Input() initialComment?: HNItem;
+  readonly initialComment = input<HNItem>();
   readonly storyAuthor = input<string>();
   readonly isStandalonePage = input(false);
 
@@ -302,7 +293,7 @@ export class CommentThread implements OnInit {
   });
 
   showLoadButton(): boolean {
-    return this.lazyLoad && !this.commentLoaded();
+    return this.lazyLoad() && !this.commentLoaded();
   }
 
   get currentPageValue() {
@@ -321,9 +312,10 @@ export class CommentThread implements OnInit {
 
   ngOnInit() {
     // If parent provided the comment, hydrate without fetching
-    if (this.initialComment) {
-      this.hydrateFromInitial(this.initialComment);
-    } else if (!this.lazyLoad) {
+    const initialComment = this.initialComment();
+    if (initialComment) {
+      this.hydrateFromInitial(initialComment);
+    } else if (!this.lazyLoad()) {
       this.loadComment();
     } else {
       // Lazy instances render a small loader card until user opts-in
@@ -333,7 +325,7 @@ export class CommentThread implements OnInit {
     // Listen for keyboard actions targeting this comment
     this.interactionService.action$
       .pipe(
-        filter((action) => action.commentId === this.commentId),
+        filter((action) => action.commentId === this.commentId()),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((action) => {
@@ -349,9 +341,9 @@ export class CommentThread implements OnInit {
             break;
           case 'viewThread':
             if (this.deviceService.isMobile()) {
-              this.router.navigate(['/item', this.commentId]);
+              this.router.navigate(['/item', this.commentId()]);
             } else {
-              this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
+              this.sidebarService.openSidebarWithSlideAnimation(this.commentId());
             }
             break;
         }
@@ -374,7 +366,7 @@ export class CommentThread implements OnInit {
   loadComment() {
     this.loading.set(true);
 
-    this.hnService.getItem(this.commentId).subscribe({
+    this.hnService.getItem(this.commentId()).subscribe({
       next: (item) => {
         if (item && !item.deleted) {
           this.repliesLoader.configureKids(item.kids);
@@ -398,34 +390,35 @@ export class CommentThread implements OnInit {
       this.repliesLoader.loadNextPage();
       // Save state after page loads
       const newPageCount = this.currentPageValue + 2; // Current is 0-based, we just loaded next
-      this.commentStateService.setLoadedPages(this.commentId, newPageCount);
+      this.commentStateService.setLoadedPages(this.commentId(), newPageCount);
     }
   }
 
   expandReplies() {
     if (!this.repliesLoaded() && !this.loadingReplies()) {
       // Uncollapse the comment if it's currently collapsed
+      const commentId = this.commentId();
       if (this.isCollapsed()) {
         this.isCollapsed.set(false);
-        this.commentStateService.setCollapsed(this.commentId, false);
+        this.commentStateService.setCollapsed(commentId, false);
       }
 
       this.repliesLoader.loadFirstPage();
-      this.commentStateService.setRepliesExpanded(this.commentId, true);
-      this.commentStateService.setLoadedPages(this.commentId, 1);
+      this.commentStateService.setRepliesExpanded(commentId, true);
+      this.commentStateService.setLoadedPages(commentId, 1);
     }
   }
 
   toggleCollapse() {
     this.isCollapsed.update((v) => {
       const newValue = !v;
-      this.commentStateService.setCollapsed(this.commentId, newValue);
+      this.commentStateService.setCollapsed(this.commentId(), newValue);
       return newValue;
     });
   }
 
   private restoreCommentState() {
-    const state = this.commentStateService.getState(this.commentId);
+    const state = this.commentStateService.getState(this.commentId());
 
     if (state) {
       // Restore collapsed state
@@ -438,7 +431,7 @@ export class CommentThread implements OnInit {
         const targetPage = state.loadedPages - 1; // Convert to 0-based page index
         this.repliesLoader.loadUpToPage(targetPage, () => {
           // Update state after restoration completes to refresh lastAccessed
-          this.commentStateService.setState(this.commentId, state);
+          this.commentStateService.setState(this.commentId(), state);
         });
       }
     }
@@ -463,7 +456,7 @@ export class CommentThread implements OnInit {
 
   getIndentClass(): string {
     // Apply appropriate indentation based on depth
-    const indentLevel = Math.min(this.depth, 8); // Cap at 8 levels
+    const indentLevel = Math.min(this.depth(), 8); // Cap at 8 levels
     return `ml-${indentLevel * 4}`;
   }
 }

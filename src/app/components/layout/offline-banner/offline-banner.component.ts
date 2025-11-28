@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-offline-banner',
   standalone: true,
   imports: [],
   template: `
-    @if (visible) {
+    @if (visible()) {
       <div
         class="offline-banner"
-        [class.offline-banner-yellow]="offline"
-        [class.offline-banner-green]="!offline"
+        [class.offline-banner-yellow]="offline()"
+        [class.offline-banner-green]="!offline()"
         role="status"
-        [attr.aria-live]="offline ? 'polite' : 'assertive'"
+        [attr.aria-live]="offline() ? 'polite' : 'assertive'"
       >
         <div
           class="container mx-auto px-4 py-2 text-center text-white font-medium text-sm sm:text-base"
         >
-          @if (offline) {
+          @if (offline()) {
             <span>You are offline</span>
           } @else {
             <span>Back online</span>
@@ -54,6 +54,6 @@ import { Component, Input } from '@angular/core';
   ],
 })
 export class OfflineBannerComponent {
-  @Input() visible = false;
-  @Input() offline = false;
+  readonly visible = input(false);
+  readonly offline = input(false);
 }

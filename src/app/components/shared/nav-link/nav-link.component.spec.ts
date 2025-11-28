@@ -50,7 +50,7 @@ describe('NavLinkComponent', () => {
   describe('getLinkClasses', () => {
     it('should return nav-link-mobile when mobile is true', () => {
       // Arrange
-      component.mobile = true;
+      fixture.componentRef.setInput('mobile', true);
 
       // Act
       const result = component.getLinkClasses();
@@ -61,7 +61,7 @@ describe('NavLinkComponent', () => {
 
     it('should return nav-link when mobile is false', () => {
       // Arrange
-      component.mobile = false;
+      fixture.componentRef.setInput('mobile', false);
 
       // Act
       const result = component.getLinkClasses();
@@ -74,7 +74,7 @@ describe('NavLinkComponent', () => {
   describe('template rendering', () => {
     it('should render content inside anchor tag', () => {
       // Arrange
-      component.route = '/test';
+      fixture.componentRef.setInput('route', '/test');
       fixture.detectChanges();
 
       // Act
@@ -89,7 +89,7 @@ describe('NavLinkComponent', () => {
 
     it('should apply correct CSS classes', () => {
       // Arrange
-      component.mobile = true;
+      fixture.componentRef.setInput('mobile', true);
       fixture.detectChanges();
 
       // Act
@@ -101,7 +101,7 @@ describe('NavLinkComponent', () => {
 
     it('should set aria-current attribute when active', () => {
       // Arrange
-      component.isActive = true;
+      fixture.componentRef.setInput('isActive', true);
       fixture.detectChanges();
 
       // Act
@@ -113,7 +113,7 @@ describe('NavLinkComponent', () => {
 
     it('should not set aria-current attribute when not active', () => {
       // Arrange
-      component.isActive = false;
+      fixture.componentRef.setInput('isActive', false);
       fixture.detectChanges();
 
       // Act
@@ -128,7 +128,7 @@ describe('NavLinkComponent', () => {
     it('should call handleClick when anchor is clicked', () => {
       // Arrange
       vi.spyOn(component, 'handleClick');
-      component.route = '/test';
+      fixture.componentRef.setInput('route', '/test');
       fixture.detectChanges();
 
       // Act

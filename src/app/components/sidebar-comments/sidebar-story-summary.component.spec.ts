@@ -29,7 +29,7 @@ describe('SidebarStorySummaryComponent', () => {
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate');
 
-    component.item = {
+    fixture.componentRef.setInput('item', {
       id: 123,
       type: 'story',
       by: 'testuser',
@@ -37,7 +37,7 @@ describe('SidebarStorySummaryComponent', () => {
       title: 'Test Story',
       score: 100,
       url: 'https://example.com/article',
-    };
+    });
     fixture.detectChanges();
   });
 
@@ -75,12 +75,12 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should not navigate when item has no URL', () => {
-      component.item = {
+      fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
         time: 1708099200,
         title: 'Test',
-      };
+      });
 
       const event = new Event('click');
       component.searchByDomain(event);
@@ -89,7 +89,7 @@ describe('SidebarStorySummaryComponent', () => {
     });
 
     it('should not navigate when item is not set', () => {
-      component.item = null!;
+      fixture.componentRef.setInput('item', null!);
 
       const event = new Event('click');
       component.searchByDomain(event);

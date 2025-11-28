@@ -2,13 +2,13 @@
 // Copyright (C) 2025 Alysson Souza
 import {
   Component,
-  Input,
   inject,
   signal,
   ElementRef,
   ChangeDetectionStrategy,
   effect,
   viewChild,
+  input,
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
@@ -27,11 +27,11 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
     <span class="user-tag">
       <!-- Username link -->
       <a
-        [routerLink]="['/user', username]"
+        [routerLink]="['/user', username()]"
         class="username-link"
-        [attr.aria-label]="'View Profile Of ' + username"
+        [attr.aria-label]="'View Profile Of ' + username()"
       >
-        {{ username }}
+        {{ username() }}
       </a>
 
       <!-- Tag display -->
@@ -58,7 +58,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
           class="add-btn"
           role="button"
           tabindex="0"
-          [attr.aria-label]="'Add Tag For ' + username"
+          [attr.aria-label]="'Add Tag For ' + username()"
           (keydown.enter)="startEdit($event)"
           (keydown.space)="startEdit($event)"
         >
@@ -78,7 +78,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
             (blur)="onInputBlur()"
             class="tag-input app-input app-input-xs w-20 px-2 py-1"
             placeholder="Tag..."
-            [attr.aria-label]="'Enter Tag For ' + username"
+            [attr.aria-label]="'Enter Tag For ' + username()"
             #tagInput
           />
           <button
@@ -158,17 +158,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
   ],
 })
 export class UserTagComponent {
-  private _username = '';
-
-  @Input({ required: true })
-  set username(value: string) {
-    this._username = value;
-    // Refresh the tag whenever the input username changes
-    this.tag.set(this.tagsService.getTag(value));
-  }
-  get username(): string {
-    return this._username;
-  }
+  readonly username = input.required<string>();
 
   private tagsService = inject(UserTagsService);
 
@@ -179,6 +169,12 @@ export class UserTagComponent {
   private readonly tagInput = viewChild<ElementRef<HTMLInputElement>>('tagInput');
 
   constructor() {
+    // Refresh the tag whenever the input username changes
+    effect(() => {
+      const currentUsername = this.username();
+      this.tag.set(this.tagsService.getTag(currentUsername));
+    });
+
     // Focus input when editing becomes true
     effect(() => {
       if (this.editing()) {
@@ -203,13 +199,14 @@ export class UserTagComponent {
 
   saveTag(): void {
     const trimmedValue = this.editValue.trim();
+    const currentUsername = this.username();
 
     if (trimmedValue) {
-      this.tagsService.setTag(this.username, trimmedValue);
-      this.tag.set(this.tagsService.getTag(this.username));
+      this.tagsService.setTag(currentUsername, trimmedValue);
+      this.tag.set(this.tagsService.getTag(currentUsername));
     } else if (this.tag()) {
       // Empty tag deletes existing tag
-      this.tagsService.removeTag(this.username);
+      this.tagsService.removeTag(currentUsername);
       this.tag.set(undefined);
     }
 
@@ -218,7 +215,7 @@ export class UserTagComponent {
   }
 
   removeTag(): void {
-    this.tagsService.removeTag(this.username);
+    this.tagsService.removeTag(this.username());
     this.tag.set(undefined);
     this.editing.set(false);
     this.editValue = '';

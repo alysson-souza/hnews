@@ -53,10 +53,10 @@ describe('UserTagComponent', () => {
       };
       tagsService.getTag.mockReturnValue(mockTag);
 
-      component.username = 'testuser';
+      fixture.componentRef.setInput('username', 'testuser');
       fixture.detectChanges();
 
-      expect(component.username).toBe('testuser');
+      expect(component.username()).toBe('testuser');
       expect(tagsService.getTag).toHaveBeenCalledWith('testuser');
       expect(component.tag()).toEqual(mockTag);
     });
@@ -78,11 +78,11 @@ describe('UserTagComponent', () => {
       };
 
       tagsService.getTag.mockReturnValue(mockTag1);
-      component.username = 'user1';
+      fixture.componentRef.setInput('username', 'user1');
       fixture.detectChanges();
 
       tagsService.getTag.mockReturnValue(mockTag2);
-      component.username = 'user2';
+      fixture.componentRef.setInput('username', 'user2');
       fixture.detectChanges();
 
       expect(tagsService.getTag).toHaveBeenCalledWith('user2');
@@ -92,7 +92,7 @@ describe('UserTagComponent', () => {
     it('should handle username without tag', () => {
       tagsService.getTag.mockReturnValue(undefined);
 
-      component.username = 'newuser';
+      fixture.componentRef.setInput('username', 'newuser');
       fixture.detectChanges();
 
       expect(component.tag()).toBeUndefined();
@@ -101,7 +101,7 @@ describe('UserTagComponent', () => {
 
   describe('startEdit', () => {
     beforeEach(() => {
-      component.username = 'testuser';
+      fixture.componentRef.setInput('username', 'testuser');
       fixture.detectChanges();
     });
 
@@ -145,7 +145,7 @@ describe('UserTagComponent', () => {
 
   describe('saveTag', () => {
     beforeEach(() => {
-      component.username = 'testuser';
+      fixture.componentRef.setInput('username', 'testuser');
       tagsService.getTag.mockReturnValue(undefined);
       fixture.detectChanges();
     });
@@ -211,7 +211,7 @@ describe('UserTagComponent', () => {
 
   describe('removeTag', () => {
     beforeEach(() => {
-      component.username = 'testuser';
+      fixture.componentRef.setInput('username', 'testuser');
       fixture.detectChanges();
     });
 
@@ -283,7 +283,7 @@ describe('UserTagComponent', () => {
   describe('template rendering', () => {
     beforeEach(() => {
       tagsService.getTag.mockReturnValue(undefined);
-      component.username = 'testuser';
+      fixture.componentRef.setInput('username', 'testuser');
       fixture.detectChanges();
     });
 
@@ -360,7 +360,7 @@ describe('UserTagComponent', () => {
   describe('interaction', () => {
     beforeEach(() => {
       tagsService.getTag.mockReturnValue(undefined);
-      component.username = 'testuser';
+      fixture.componentRef.setInput('username', 'testuser');
       fixture.detectChanges();
     });
 

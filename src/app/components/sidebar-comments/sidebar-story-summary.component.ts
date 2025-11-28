@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { HNItem } from '../../models/hn';
@@ -16,23 +16,23 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
   template: `
     <section class="story">
       <h3 class="story-title">
-        @if (item.url) {
+        @if (item().url) {
           <a
-            [href]="item.url"
+            [href]="item().url"
             target="_blank"
             rel="noopener noreferrer nofollow"
             class="story-link"
-            [attr.title]="item.title || ''"
+            [attr.title]="item().title || ''"
           >
-            {{ item.title }}
+            {{ item().title }}
           </a>
         } @else {
-          {{ item.title }}
+          {{ item().title }}
         }
       </h3>
 
       <!-- Domain - clickable -->
-      @if (item.url && getDomain(item.url)) {
+      @if (item().url && getDomain(item().url)) {
         <button
           type="button"
           role="button"
@@ -40,25 +40,25 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
           (keyup.enter)="searchByDomain($event)"
           (keyup.space)="searchByDomain($event)"
           class="domain-btn"
-          [attr.aria-label]="'Search for more stories from ' + getDomain(item.url)"
-          [attr.title]="'Search for more stories from ' + getDomain(item.url)"
+          [attr.aria-label]="'Search for more stories from ' + getDomain(item().url)"
+          [attr.title]="'Search for more stories from ' + getDomain(item().url)"
         >
-          {{ getDomain(item.url) }}
+          {{ getDomain(item().url) }}
         </button>
       }
 
       <div class="meta">
-        <span>{{ item.score || 0 }} points</span>
-        @if (item.by) {
+        <span>{{ item().score || 0 }} points</span>
+        @if (item().by) {
           <span>•</span>
-          <span>by <app-user-tag [username]="item.by" /></span>
+          <span>by <app-user-tag [username]="item().by!" /></span>
         }
         <span>•</span>
-        <span class="time-text">{{ item.time | relativeTime }}</span>
+        <span class="time-text">{{ item().time | relativeTime }}</span>
       </div>
 
-      @if (item.text) {
-        <app-comment-text [html]="item.text!" />
+      @if (item().text) {
+        <app-comment-text [html]="item().text!" />
       }
     </section>
   `,
@@ -94,7 +94,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
   ],
 })
 export class SidebarStorySummaryComponent {
-  @Input({ required: true }) item!: HNItem;
+  readonly item = input.required<HNItem>();
   private router = inject(Router);
 
   getDomain(url?: string): string {
@@ -110,9 +110,10 @@ export class SidebarStorySummaryComponent {
   searchByDomain(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    if (!this.item) return;
+    const item = this.item();
+    if (!item) return;
 
-    const domain = this.getDomain(this.item.url);
+    const domain = this.getDomain(item.url);
     if (domain) {
       this.router.navigate(['/search'], {
         queryParams: { q: `site:${domain}` },

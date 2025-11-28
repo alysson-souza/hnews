@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import {
-  Component,
-  Input,
-  inject,
-  computed,
-  output,
-  input,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, inject, computed, output, input, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { UpvoteButtonComponent } from '../upvote-button/upvote-button.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
@@ -32,35 +24,35 @@ import { DeviceService } from '../../services/device.service';
   template: `
     <div class="comment-header">
       <app-upvote-button
-        [voted]="voted"
+        [voted]="voted()"
         (vote)="upvote.emit()"
-        [ariaLabel]="voted ? 'Already upvoted comment' : 'Upvote comment'"
+        [ariaLabel]="voted() ? 'Already upvoted comment' : 'Upvote comment'"
       />
 
-      @if (by) {
-        <app-user-tag [username]="by!" />
+      @if (by()) {
+        <app-user-tag [username]="by()!" />
         @if (isOP()) {
           <app-op-badge />
         }
       }
 
-      <span class="time-text">{{ timestamp | relativeTime }}</span>
+      <span class="time-text">{{ timestamp() | relativeTime }}</span>
 
-      @if (showExpand) {
+      @if (showExpand()) {
         <app-replies-counter
-          [count]="repliesCount"
+          [count]="repliesCount()"
           [loading]="loadingReplies()"
           (expand)="expand.emit()"
         />
       }
 
-      @if (hasChildren() && commentId) {
+      @if (hasChildren() && commentId()) {
         <button
           type="button"
           (click)="onViewThread($event)"
           class="view-thread-inline"
           title="View this thread"
-          [attr.aria-label]="'View thread for comment ' + commentId"
+          [attr.aria-label]="'View thread for comment ' + commentId()"
           role="button"
         >
           »
@@ -99,13 +91,13 @@ export class CommentHeaderComponent {
   private router = inject(Router);
   private deviceService = inject(DeviceService);
 
-  @Input() by?: string;
-  @Input({ required: true }) timestamp!: number;
-  @Input() voted = false;
-  @Input() repliesCount = 0;
-  @Input() showExpand = false;
+  readonly by = input<string>();
+  readonly timestamp = input.required<number>();
+  readonly voted = input(false);
+  readonly repliesCount = input(0);
+  readonly showExpand = input(false);
   readonly loadingReplies = input(false);
-  @Input() commentId?: number;
+  readonly commentId = input<number>();
   readonly hasChildren = input(false);
   readonly storyAuthor = input<string>();
   readonly isStandalonePage = input(false);
@@ -115,17 +107,19 @@ export class CommentHeaderComponent {
 
   isOP = computed(() => {
     const storyAuthor = this.storyAuthor();
-    return this.by && storyAuthor && this.by === storyAuthor;
+    const by = this.by();
+    return by && storyAuthor && by === storyAuthor;
   });
 
   onViewThread(event: Event): void {
     event.stopPropagation();
-    if (!this.commentId) return;
+    const commentId = this.commentId();
+    if (!commentId) return;
 
     if (this.isStandalonePage() || this.deviceService.isMobile()) {
-      this.router.navigate(['/item', this.commentId]);
+      this.router.navigate(['/item', commentId]);
     } else {
-      this.sidebarService.openSidebarWithSlideAnimation(this.commentId);
+      this.sidebarService.openSidebarWithSlideAnimation(commentId);
     }
   }
 }

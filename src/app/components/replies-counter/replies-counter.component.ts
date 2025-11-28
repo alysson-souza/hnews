@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, output, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, output, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-replies-counter',
@@ -12,8 +12,8 @@ import { Component, Input, output, input, ChangeDetectionStrategy } from '@angul
       type="button"
       class="expand-btn"
       (click)="onExpandClick($event)"
-      [disabled]="loading() || count <= 0"
-      [attr.aria-label]="'Expand ' + count + ' Replies'"
+      [disabled]="loading() || count() <= 0"
+      [attr.aria-label]="'Expand ' + count() + ' Replies'"
     >
       @if (loading()) {
         <span class="flex items-center gap-1">
@@ -35,7 +35,7 @@ import { Component, Input, output, input, ChangeDetectionStrategy } from '@angul
           Loading...
         </span>
       } @else {
-        [+{{ count }} replies]
+        [+{{ count() }} replies]
       }
     </button>
   `,
@@ -57,7 +57,7 @@ import { Component, Input, output, input, ChangeDetectionStrategy } from '@angul
   ],
 })
 export class RepliesCounterComponent {
-  @Input() count = 0;
+  readonly count = input(0);
   readonly loading = input(false);
   readonly expand = output<void>();
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, computed } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 import {
@@ -136,158 +136,173 @@ interface SearchHit {
   ],
 })
 export class SearchResultComponent {
-  @Input() item?: HNItem | SearchHit;
-  @Input() isSearchResult = false;
+  readonly item = input<HNItem | SearchHit>();
+  readonly isSearchResult = input(false);
 
   // Computed properties to determine item type
   isStory = computed(() => {
-    if (!this.item) return false;
-    if (this.isSearchResult) {
-      return !!(this.item as SearchHit).title;
+    const item = this.item();
+    if (!item) return false;
+    if (this.isSearchResult()) {
+      return !!(item as SearchHit).title;
     }
-    const hnItem = this.item as HNItem;
+    const hnItem = item as HNItem;
     return hnItem.type === 'story' || hnItem.type === 'job';
   });
 
   isComment = computed(() => {
-    if (!this.item) return false;
-    if (this.isSearchResult) {
-      return !!(this.item as SearchHit).comment_text;
+    const item = this.item();
+    if (!item) return false;
+    if (this.isSearchResult()) {
+      return !!(item as SearchHit).comment_text;
     }
-    return (this.item as HNItem).type === 'comment';
+    return (item as HNItem).type === 'comment';
   });
 
   // Getters for different properties
   isDead(): boolean {
-    if (!this.item || this.isSearchResult) return false;
-    return (this.item as HNItem).dead || false;
+    const item = this.item();
+    if (!item || this.isSearchResult()) return false;
+    return (item as HNItem).dead || false;
   }
 
   getHighlightedTitle(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      const searchHit = this.item as SearchHit;
+    if (this.isSearchResult()) {
+      const searchHit = item as SearchHit;
       return searchHit._highlightResult?.['title']?.value || searchHit.title || '';
     }
 
-    return (this.item as HNItem).title || '[untitled]';
+    return (item as HNItem).title || '[untitled]';
   }
 
   getPlainTitle(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).title || '';
+    if (this.isSearchResult()) {
+      return (item as SearchHit).title || '';
     }
 
-    return (this.item as HNItem).title || '[untitled]';
+    return (item as HNItem).title || '[untitled]';
   }
 
   getExternalUrl(): string | undefined {
-    if (!this.item) return undefined;
+    const item = this.item();
+    if (!item) return undefined;
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).url;
+    if (this.isSearchResult()) {
+      return (item as SearchHit).url;
     }
 
-    return (this.item as HNItem).url;
+    return (item as HNItem).url;
   }
 
   getItemId(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).objectID;
+    if (this.isSearchResult()) {
+      return (item as SearchHit).objectID;
     }
 
-    return String((this.item as HNItem).id);
+    return String((item as HNItem).id);
   }
 
   getStoryText(): string | undefined {
-    if (!this.item) return undefined;
+    const item = this.item();
+    if (!item) return undefined;
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).story_text;
+    if (this.isSearchResult()) {
+      return (item as SearchHit).story_text;
     }
 
-    return (this.item as HNItem).text;
+    return (item as HNItem).text;
   }
 
   getHighlightedStoryText(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      const searchHit = this.item as SearchHit;
+    if (this.isSearchResult()) {
+      const searchHit = item as SearchHit;
       const rawHtml =
         searchHit._highlightResult?.['story_text']?.value || searchHit.story_text || '';
       return transformQuotesHtml(rawHtml);
     }
 
-    return (this.item as HNItem).text || '';
+    return (item as HNItem).text || '';
   }
 
   getHighlightedCommentText(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      const searchHit = this.item as SearchHit;
+    if (this.isSearchResult()) {
+      const searchHit = item as SearchHit;
       const rawHtml =
         searchHit._highlightResult?.['comment_text']?.value || searchHit.comment_text || '';
       return transformQuotesHtml(rawHtml);
     }
 
-    return (this.item as HNItem).text || '';
+    return (item as HNItem).text || '';
   }
 
   getAuthor(): string | undefined {
-    if (!this.item) return undefined;
+    const item = this.item();
+    if (!item) return undefined;
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).author;
+    if (this.isSearchResult()) {
+      return (item as SearchHit).author;
     }
 
-    return (this.item as HNItem).by;
+    return (item as HNItem).by;
   }
 
   getPoints(): number {
-    if (!this.item) return 0;
+    const item = this.item();
+    if (!item) return 0;
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).points || 0;
+    if (this.isSearchResult()) {
+      return (item as SearchHit).points || 0;
     }
 
-    return (this.item as HNItem).score || 0;
+    return (item as HNItem).score || 0;
   }
 
   getCommentCount(): number {
-    if (!this.item) return 0;
+    const item = this.item();
+    if (!item) return 0;
 
-    if (this.isSearchResult) {
-      return (this.item as SearchHit).num_comments || 0;
+    if (this.isSearchResult()) {
+      return (item as SearchHit).num_comments || 0;
     }
 
-    return (this.item as HNItem).descendants || 0;
+    return (item as HNItem).descendants || 0;
   }
 
   getParentId(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      const searchHit = this.item as SearchHit;
+    if (this.isSearchResult()) {
+      const searchHit = item as SearchHit;
       return String(searchHit.story_id || '');
     }
 
-    return String((this.item as HNItem).parent || '');
+    return String((item as HNItem).parent || '');
   }
 
   getTimeAgo(): string {
-    if (!this.item) return '';
+    const item = this.item();
+    if (!item) return '';
 
-    if (this.isSearchResult) {
-      return formatRelativeTime((this.item as SearchHit).created_at);
+    if (this.isSearchResult()) {
+      return formatRelativeTime((item as SearchHit).created_at);
     }
 
-    return formatRelativeTimeFromSeconds((this.item as HNItem).time);
+    return formatRelativeTimeFromSeconds((item as HNItem).time);
   }
 }

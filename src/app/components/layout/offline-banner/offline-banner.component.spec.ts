@@ -15,9 +15,8 @@ describe('OfflineBannerComponent', () => {
   });
 
   it('renders the offline state when visible', () => {
-    const component = fixture.componentInstance;
-    component.visible = true;
-    component.offline = true;
+    fixture.componentRef.setInput('visible', true);
+    fixture.componentRef.setInput('offline', true);
 
     fixture.detectChanges();
 
@@ -28,9 +27,8 @@ describe('OfflineBannerComponent', () => {
   });
 
   it('renders the online state when visible and online', () => {
-    const component = fixture.componentInstance;
-    component.visible = true;
-    component.offline = false;
+    fixture.componentRef.setInput('visible', true);
+    fixture.componentRef.setInput('offline', false);
 
     fixture.detectChanges();
 
@@ -41,8 +39,7 @@ describe('OfflineBannerComponent', () => {
   });
 
   it('does not render when not visible', () => {
-    const component = fixture.componentInstance;
-    component.visible = false;
+    fixture.componentRef.setInput('visible', false);
 
     fixture.detectChanges();
 

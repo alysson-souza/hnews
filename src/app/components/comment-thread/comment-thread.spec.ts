@@ -173,9 +173,9 @@ describe('CommentThread', () => {
     fixture = TestBed.createComponent(CommentThread);
     component = fixture.componentInstance;
 
-    // Provide required inputs
-    component.commentId = 123;
-    component.depth = 0;
+    // Provide required inputs using componentRef.setInput for signal inputs
+    fixture.componentRef.setInput('commentId', 123);
+    fixture.componentRef.setInput('depth', 0);
 
     // Mock the service methods to prevent actual HTTP calls
     mockHnService.getItem.mockReturnValue(of(null));
@@ -250,19 +250,19 @@ describe('CommentThread', () => {
 
     describe('showLoadButton', () => {
       it('should return false when not lazy loading', () => {
-        component.lazyLoad = false;
+        fixture.componentRef.setInput('lazyLoad', false);
         component.commentLoaded.set(false);
         expect(component.showLoadButton()).toBe(false);
       });
 
       it('should return true when lazy loading and comment is not loaded', () => {
-        component.lazyLoad = true;
+        fixture.componentRef.setInput('lazyLoad', true);
         component.commentLoaded.set(false);
         expect(component.showLoadButton()).toBe(true);
       });
 
       it('should return false when lazy loading but comment is already loaded', () => {
-        component.lazyLoad = true;
+        fixture.componentRef.setInput('lazyLoad', true);
         component.commentLoaded.set(true);
         expect(component.showLoadButton()).toBe(false);
       });
@@ -289,7 +289,7 @@ describe('CommentThread', () => {
 
   describe('ngOnInit', () => {
     it('should hydrate from initial comment when provided', () => {
-      component.initialComment = mockComment;
+      fixture.componentRef.setInput('initialComment', mockComment);
       mockRepliesLoader.configureKids.mockClear();
 
       component.ngOnInit();
@@ -302,8 +302,8 @@ describe('CommentThread', () => {
     });
 
     it('should load comment when not lazy loading and no initial comment', () => {
-      component.lazyLoad = false;
-      component.initialComment = undefined;
+      fixture.componentRef.setInput('lazyLoad', false);
+      fixture.componentRef.setInput('initialComment', undefined);
       vi.spyOn(component, 'loadComment');
 
       component.ngOnInit();
@@ -312,8 +312,8 @@ describe('CommentThread', () => {
     });
 
     it('should not load comment when lazy loading', () => {
-      component.lazyLoad = true;
-      component.initialComment = undefined;
+      fixture.componentRef.setInput('lazyLoad', true);
+      fixture.componentRef.setInput('initialComment', undefined);
 
       component.ngOnInit();
 
@@ -561,17 +561,17 @@ describe('CommentThread', () => {
 
   describe('getIndentClass', () => {
     it('should return correct margin class for depth 0', () => {
-      component.depth = 0;
+      fixture.componentRef.setInput('depth', 0);
       expect(component.getIndentClass()).toBe('ml-0');
     });
 
     it('should return correct margin class for depth 3', () => {
-      component.depth = 3;
+      fixture.componentRef.setInput('depth', 3);
       expect(component.getIndentClass()).toBe('ml-12');
     });
 
     it('should cap indentation at depth 8', () => {
-      component.depth = 10;
+      fixture.componentRef.setInput('depth', 10);
       expect(component.getIndentClass()).toBe('ml-32');
     });
   });
@@ -628,7 +628,7 @@ describe('CommentThread', () => {
 
     it('should restore state when hydrating from initial comment', () => {
       mockCommentStateService.setSavedState(123, { collapsed: true });
-      component.initialComment = mockComment;
+      fixture.componentRef.setInput('initialComment', mockComment);
 
       component.ngOnInit();
 
@@ -637,7 +637,7 @@ describe('CommentThread', () => {
     });
 
     it('should not restore replies for lazy-loaded comments until explicitly loaded', () => {
-      component.lazyLoad = true;
+      fixture.componentRef.setInput('lazyLoad', true);
       component.commentLoaded.set(false); // Not loaded yet
       mockCommentStateService.setSavedState(123, {
         collapsed: false,
@@ -680,7 +680,7 @@ describe('CommentThread', () => {
     it('should not restore state for deleted comments', () => {
       const deletedComment = { ...mockComment, deleted: true };
       mockCommentStateService.setSavedState(123, { collapsed: true });
-      component.initialComment = deletedComment;
+      fixture.componentRef.setInput('initialComment', deletedComment);
 
       component.ngOnInit();
 

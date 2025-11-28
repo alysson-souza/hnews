@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, Input, output } from '@angular/core';
+import { Component, output, input } from '@angular/core';
 
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/solar-icons/linear';
@@ -14,7 +14,7 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
     <nav class="pagination-container" role="navigation" aria-label="Pagination navigation">
       <div class="pagination-info hidden sm:block" role="status" aria-live="polite">
         <span class="text-sm text-gray-600 dark:text-gray-400">
-          Showing {{ startItem }}-{{ endItem }} of {{ totalCount }} items
+          Showing {{ startItem }}-{{ endItem }} of {{ totalCount() }} items
         </span>
       </div>
 
@@ -22,8 +22,8 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
         <button
           type="button"
           (click)="previousPage()"
-          [disabled]="currentPage <= 1"
-          [attr.aria-disabled]="currentPage <= 1"
+          [disabled]="currentPage() <= 1"
+          [attr.aria-disabled]="currentPage() <= 1"
           class="pagination-button"
           aria-label="Previous page"
         >
@@ -36,10 +36,10 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
             <button
               type="button"
               (click)="goToPage(page)"
-              [class]="page === currentPage ? 'page-button active' : 'page-button'"
+              [class]="page === currentPage() ? 'page-button active' : 'page-button'"
               [attr.aria-label]="'Page ' + page"
-              [attr.aria-current]="page === currentPage ? 'page' : null"
-              [attr.aria-disabled]="page === currentPage"
+              [attr.aria-current]="page === currentPage() ? 'page' : null"
+              [attr.aria-disabled]="page === currentPage()"
             >
               {{ page }}
             </button>
@@ -49,8 +49,8 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
         <button
           type="button"
           (click)="nextPage()"
-          [disabled]="currentPage >= totalPages"
-          [attr.aria-disabled]="currentPage >= totalPages"
+          [disabled]="currentPage() >= totalPages()"
+          [attr.aria-disabled]="currentPage() >= totalPages()"
           class="pagination-button"
           aria-label="Next page"
         >
@@ -65,7 +65,7 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
         </label>
         <select
           id="items-per-page"
-          [value]="itemsPerPage"
+          [value]="itemsPerPage()"
           (change)="onItemsPerPageChange($event)"
           class="items-select"
           aria-label="Select number of items per page"
@@ -154,32 +154,32 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
   ],
 })
 export class PaginationComponent {
-  @Input() currentPage = 1;
-  @Input() totalPages = 1;
-  @Input() totalCount = 0;
-  @Input() itemsPerPage = 5;
-  @Input() maxVisiblePages = 5;
+  readonly currentPage = input(1);
+  readonly totalPages = input(1);
+  readonly totalCount = input(0);
+  readonly itemsPerPage = input(5);
+  readonly maxVisiblePages = input(5);
 
   readonly pageChange = output<number>();
   readonly itemsPerPageChange = output<number>();
 
   get startItem(): number {
-    return this.totalCount === 0 ? 0 : (this.currentPage - 1) * this.itemsPerPage + 1;
+    return this.totalCount() === 0 ? 0 : (this.currentPage() - 1) * this.itemsPerPage() + 1;
   }
 
   get endItem(): number {
-    return Math.min(this.currentPage * this.itemsPerPage, this.totalCount);
+    return Math.min(this.currentPage() * this.itemsPerPage(), this.totalCount());
   }
 
   get visiblePages(): number[] {
     const pages: number[] = [];
-    const halfVisible = Math.floor(this.maxVisiblePages / 2);
+    const halfVisible = Math.floor(this.maxVisiblePages() / 2);
 
-    let start = Math.max(1, this.currentPage - halfVisible);
-    const end = Math.min(this.totalPages, start + this.maxVisiblePages - 1);
+    let start = Math.max(1, this.currentPage() - halfVisible);
+    const end = Math.min(this.totalPages(), start + this.maxVisiblePages() - 1);
 
-    if (end - start + 1 < this.maxVisiblePages) {
-      start = Math.max(1, end - this.maxVisiblePages + 1);
+    if (end - start + 1 < this.maxVisiblePages()) {
+      start = Math.max(1, end - this.maxVisiblePages() + 1);
     }
 
     for (let i = start; i <= end; i++) {
@@ -190,19 +190,19 @@ export class PaginationComponent {
   }
 
   previousPage(): void {
-    if (this.currentPage > 1) {
-      this.pageChange.emit(this.currentPage - 1);
+    if (this.currentPage() > 1) {
+      this.pageChange.emit(this.currentPage() - 1);
     }
   }
 
   nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.pageChange.emit(this.currentPage + 1);
+    if (this.currentPage() < this.totalPages()) {
+      this.pageChange.emit(this.currentPage() + 1);
     }
   }
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+    if (page >= 1 && page <= this.totalPages() && page !== this.currentPage()) {
       this.pageChange.emit(page);
     }
   }
@@ -210,7 +210,7 @@ export class PaginationComponent {
   onItemsPerPageChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     const newItemsPerPage = parseInt(select.value, 10);
-    if (newItemsPerPage !== this.itemsPerPage) {
+    if (newItemsPerPage !== this.itemsPerPage()) {
       this.itemsPerPageChange.emit(newItemsPerPage);
     }
   }
