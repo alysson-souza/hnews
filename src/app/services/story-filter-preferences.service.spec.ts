@@ -21,7 +21,7 @@ describe.sequential('StoryFilterPreferencesService', () => {
   });
 
   function createService(): StoryFilterPreferencesService {
-    // Create a fresh instance directly, bypassing Angular DI cache
+    // Create a fresh instance for each test to ensure isolation
     return new StoryFilterPreferencesService();
   }
 
