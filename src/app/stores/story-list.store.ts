@@ -20,6 +20,12 @@ export class StoryListStore {
 
   /** Per-ID update subscriptions for SWR propagation */
   private updateSubs = new Map<number, Subscription>();
+  /** Current init subscription for cancellation */
+  private currentInitSubscription: Subscription | null = null;
+  /** Monotonic counter to track init operations */
+  private initSequence = 0;
+  /** Queued filter mode change during init loading */
+  private pendingFilterMode: StoryFilterMode | null = null;
 
   /** Input: current list category */
   readonly storyType = signal<StoryType>('top');
@@ -98,6 +104,14 @@ export class StoryListStore {
    * otherwise fetches IDs and first page.
    */
   init(type: StoryType, pageSize = 30): void {
+    // Cancel any in-flight init operation
+    this.currentInitSubscription?.unsubscribe();
+    this.currentInitSubscription = null;
+
+    // Increment sequence to invalidate stale operations
+    this.initSequence++;
+    const thisSequence = this.initSequence;
+
     const typeChanged = this.storyType() !== type;
     this.storyType.set(type);
     this.pageSize.set(pageSize);
@@ -113,8 +127,7 @@ export class StoryListStore {
       this.fetchedCount.set(0);
     }
 
-    // Sync filter mode from preferences
-    this.filterMode.set(this.filterPrefs.filterMode());
+    // DO NOT sync filter mode here - defer until data loads
 
     const cachedState = this.state.getState(type);
     if (cachedState && cachedState.storyIds.length > 0) {
@@ -123,8 +136,13 @@ export class StoryListStore {
       this.currentPage.set(cachedState.currentPage);
       this.totalStoryIds.set(cachedState.totalStoryIds);
 
-      this.hn.getItems(cachedState.storyIds).subscribe({
+      this.currentInitSubscription = this.hn.getItems(cachedState.storyIds).subscribe({
         next: (items) => {
+          // Check if this operation is still current
+          if (thisSequence !== this.initSequence) {
+            return; // Stale operation, ignore
+          }
+
           const validItems = items.filter((i): i is HNItem => !!i);
           const validIds = validItems.map((i) => i.id);
 
@@ -134,12 +152,19 @@ export class StoryListStore {
           } else {
             this.setStories(validIds, validItems);
             this.fetchedCount.set(validItems.length);
+
+            // NOW sync filter mode after data is loaded
+            this.applyFilterMode();
+
             this.loading.set(false);
           }
+          this.currentInitSubscription = null;
         },
         error: () => {
+          if (thisSequence !== this.initSequence) return;
           // Hydration failed, fall back to fresh load
           this.loadStories();
+          this.currentInitSubscription = null;
         },
       });
     } else {
@@ -160,6 +185,14 @@ export class StoryListStore {
       return;
     }
 
+    // Queue filter changes while init is loading
+    if (this.loading() && this.currentInitSubscription !== null) {
+      this.pendingFilterMode = mode;
+      this.filterPrefs.setFilterMode(mode); // Still persist the preference
+      return;
+    }
+
+    // Normal path when not loading
     this.filterMode.set(mode);
     this.filterPrefs.setFilterMode(mode);
 
@@ -169,6 +202,26 @@ export class StoryListStore {
     }
 
     this.saveCurrentState();
+  }
+
+  /**
+   * Applies filter mode after data has loaded.
+   * Checks for pending filter changes first, then falls back to persisted preference.
+   */
+  private applyFilterMode(): void {
+    // Check if there's a pending filter change (user clicked filter during load)
+    const preferredMode = this.pendingFilterMode ?? this.filterPrefs.filterMode();
+    this.pendingFilterMode = null; // Clear the queue
+
+    this.filterMode.set(preferredMode);
+
+    // Check if we need more data for the preferred filter
+    if (
+      preferredMode !== 'default' &&
+      this.loadedStories().length < this.getRequiredPoolSize(preferredMode)
+    ) {
+      this.fetchMoreForFilter();
+    }
   }
 
   /**
@@ -240,6 +293,9 @@ export class StoryListStore {
    * minimum display time and then performs a background details refresh.
    */
   loadStories(isRefresh = false, refreshStartTime?: number): void {
+    // Capture current sequence
+    const thisSequence = this.initSequence;
+
     this.loading.set(true);
     this.error.set(null);
     // Use cached-first by default; on explicit refresh, force fetch IDs
@@ -247,14 +303,16 @@ export class StoryListStore {
       .pipe(take(1))
       .pipe(
         switchMap((ids) => {
+          // Check if still current before proceeding
+          if (thisSequence !== this.initSequence) {
+            throw new Error('Stale operation');
+          }
+
           this.totalStoryIds.set(ids);
 
-          // Determine how many IDs to fetch based on filter mode
-          const mode = this.filterMode();
-          const fetchCount = mode === 'default' ? this.pageSize() : this.getRequiredPoolSize(mode);
-
-          const start = mode === 'default' ? this.currentPage() * this.pageSize() : 0;
-          const end = mode === 'default' ? start + this.pageSize() : fetchCount;
+          // Use 'default' mode for initial fetch, apply filter after
+          const start = this.currentPage() * this.pageSize();
+          const end = start + this.pageSize();
           const pageIds = ids.slice(start, end);
 
           // For manual refresh we force-refresh item details to replace cached immediately
@@ -264,9 +322,18 @@ export class StoryListStore {
       )
       .subscribe({
         next: (items) => {
+          // Check if still current
+          if (thisSequence !== this.initSequence) return;
+
           const ids = items.map((i) => i.id);
           this.setStories(ids, items);
           this.fetchedCount.set(items.length);
+
+          // Apply filter mode after data is loaded
+          if (!isRefresh) {
+            this.applyFilterMode();
+          }
+
           this.loading.set(false);
 
           if (isRefresh && refreshStartTime) {
@@ -284,7 +351,12 @@ export class StoryListStore {
 
           this.saveCurrentState();
         },
-        error: () => {
+        error: (err) => {
+          // Check if this is just a cancelled operation
+          if (err?.message === 'Stale operation') return;
+
+          if (thisSequence !== this.initSequence) return;
+
           // Preserve existing view; only show an error if we had nothing to show
           if (this.visibleStories().length === 0) {
             this.error.set('Failed to load stories. Please try again.');

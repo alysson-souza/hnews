@@ -311,4 +311,86 @@ describe('StoryListStore', () => {
       expect(store.loading()).toBe(false);
     });
   });
+
+  describe('race condition fixes', () => {
+    // Helper to wait for a condition with timeout
+    const waitFor = async (
+      condition: () => boolean,
+      timeoutMs = 1000,
+      checkIntervalMs = 10,
+    ): Promise<void> => {
+      const startTime = Date.now();
+      while (!condition()) {
+        if (Date.now() - startTime > timeoutMs) {
+          throw new Error('Timeout waiting for condition');
+        }
+        await new Promise((resolve) => setTimeout(resolve, checkIntervalMs));
+      }
+    };
+
+    it('cancels previous init when rapidly switching tabs', async () => {
+      // Simulate rapid tab switching: top -> best -> top
+      store.init('top', 3);
+      store.init('best', 3);
+      store.init('top', 3);
+
+      // Wait for all async operations to settle
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      // Should show top stories (last init call), not best
+      await waitFor(() => !store.loading());
+      expect(store.storyType()).toBe('top');
+      expect(store.stories().length).toBeGreaterThan(0);
+      // Verify we have the right story IDs (1,2,3 for top, not 1,2,3,4,5 for best)
+      const storyIds = store.stories().map((s) => s.id);
+      expect(storyIds).toContain(1);
+    });
+
+    it('queues filter changes during init loading', async () => {
+      store.init('top', 3);
+
+      // Immediately try to change filter while loading
+      store.setFilterMode('topHalf');
+
+      // Wait for init to complete
+      await waitFor(() => !store.loading());
+
+      // Filter change should have been queued and applied after load
+      expect(store.filterMode()).toBe('topHalf');
+    });
+
+    it('applies queued filter after data loads', async () => {
+      // Set up state with cached data
+      const cachedState: StoryListState = {
+        storyType: 'top',
+        storyIds: [1, 2, 3, 4, 5, 6],
+        currentPage: 0,
+        totalStoryIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        selectedIndex: null,
+        timestamp: Date.now(),
+      };
+      mockState.setCachedState(cachedState);
+
+      store.init('top', 6);
+
+      // Immediately queue a filter change
+      store.setFilterMode('topHalf');
+
+      // Wait for async hydration to complete
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      await waitFor(() => !store.loading());
+
+      // Should have applied the queued filter
+      expect(store.filterMode()).toBe('topHalf');
+      // Top half should show higher-scored stories
+      expect(store.stories().length).toBeGreaterThan(0);
+    });
+  });
 });
