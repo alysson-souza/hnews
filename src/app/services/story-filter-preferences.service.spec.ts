@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 
-import { TestBed } from '@angular/core/testing';
 import { StoryFilterPreferencesService } from './story-filter-preferences.service';
 import { StoryFilterMode } from '../models/story-filter';
 
-describe('StoryFilterPreferencesService', () => {
+// Use sequential to avoid race conditions with localStorage in parallel test environment
+describe.sequential('StoryFilterPreferencesService', () => {
   const STORAGE_KEY = 'hnews-story-filter-mode';
 
   beforeEach(() => {
@@ -21,10 +21,8 @@ describe('StoryFilterPreferencesService', () => {
   });
 
   function createService(): StoryFilterPreferencesService {
-    TestBed.configureTestingModule({
-      providers: [StoryFilterPreferencesService],
-    });
-    return TestBed.inject(StoryFilterPreferencesService);
+    // Create a fresh instance directly, bypassing Angular DI cache
+    return new StoryFilterPreferencesService();
   }
 
   describe('initialization', () => {
@@ -61,23 +59,28 @@ describe('StoryFilterPreferencesService', () => {
 
     it('should remove localStorage item when setting to default', () => {
       const service = createService();
+
+      // First set to topHalf
       service.setFilterMode('topHalf');
       expect(window.localStorage.getItem(STORAGE_KEY)).toBe('topHalf');
 
+      // Now set to default - this should remove the localStorage item
       service.setFilterMode('default');
       expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
 
     it('should not update if setting the same mode', () => {
       const service = createService();
-      const setItemSpy = vi.spyOn(window.localStorage, 'setItem');
 
+      // First set to a known state (topHalf)
       service.setFilterMode('topHalf');
-      expect(setItemSpy).toHaveBeenCalledTimes(1);
+
+      // Now spy AFTER the initial set
+      const setItemSpy = vi.spyOn(window.localStorage, 'setItem');
 
       // Setting the same mode should not trigger another save
       service.setFilterMode('topHalf');
-      expect(setItemSpy).toHaveBeenCalledTimes(1);
+      expect(setItemSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should allow cycling through all modes', () => {
