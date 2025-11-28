@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, computed, output, input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboard-navigation.service';
 import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-thread-gutter',
   standalone: true,
-  imports: [CommonModule],
   template: `
     <div
       class="thread-container group"
-      [ngClass]="{
+      [class]="{
         'thread-indent': depth() > 0,
         collapsed: collapsed(),
       }"
