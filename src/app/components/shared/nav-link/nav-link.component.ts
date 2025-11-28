@@ -25,14 +25,15 @@ import { ScrollService } from '../../../services/scroll.service';
       @reference '../../../../styles.css';
 
       .nav-link {
+        @apply relative z-10;
         @apply text-gray-500 dark:text-slate-400 px-3 py-1.5 rounded-full font-medium text-sm;
-        @apply hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400;
-        @apply transition-all duration-200 cursor-pointer;
+        @apply hover:text-blue-600 dark:hover:text-blue-400;
+        @apply transition-colors duration-200 cursor-pointer;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
 
       .nav-link-active {
-        @apply bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-semibold shadow-sm ring-1 ring-blue-100 dark:ring-blue-900/50;
+        @apply text-blue-600 dark:text-blue-400;
       }
 
       .nav-link-mobile {

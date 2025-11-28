@@ -431,11 +431,9 @@ describe('App', () => {
     });
 
     it('should show keyboard shortcuts when ? key is pressed', () => {
-      const mockKeyboardShortcuts = {
-        open: vi.fn(),
-        isOpen: vi.fn().mockReturnValue(false),
-      };
-      app.keyboardShortcuts = mockKeyboardShortcuts as never;
+      const keyboardShortcutsComponent = app.keyboardShortcuts();
+      vi.spyOn(keyboardShortcutsComponent, 'open');
+      vi.spyOn(keyboardShortcutsComponent, 'isOpen').mockReturnValue(false);
 
       const event = new KeyboardEvent('keydown', { key: '?' });
       const mockTarget = document.createElement('div');
@@ -445,7 +443,7 @@ describe('App', () => {
       app.handleKeyboardEvent(event);
 
       expect(event.preventDefault).toHaveBeenCalled();
-      expect(mockKeyboardShortcuts.open).toHaveBeenCalled();
+      expect(keyboardShortcutsComponent.open).toHaveBeenCalled();
     });
   });
 
