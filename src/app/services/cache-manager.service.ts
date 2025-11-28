@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
 import { HNItem, HNUser } from '../models/hn';
@@ -10,6 +11,7 @@ import {
   CACHE_TTL_ITEM,
   CACHE_TTL_USER,
   CACHE_TTL_SEARCH,
+  CACHE_TTL_METADATA,
 } from '../config/cache.config';
 
 export enum StorageType {
@@ -41,11 +43,13 @@ export class CacheManagerService {
   private ttlItem = inject(CACHE_TTL_ITEM);
   private ttlUser = inject(CACHE_TTL_USER);
   private ttlSearch = inject(CACHE_TTL_SEARCH);
+  private ttlMetadata = inject(CACHE_TTL_METADATA);
 
   // Memory cache for frequently accessed items
   private memoryCache = new Map<string, MemoryCacheItem<unknown>>();
   private readonly MAX_MEMORY_ITEMS = 100;
   private updateStreams = new Map<string, Subject<unknown>>();
+  private subjectRefCounts = new Map<string, number>();
 
   // In-flight fetch deduplication
   private inflightFetches = new Map<string, Promise<unknown>>();
@@ -84,6 +88,14 @@ export class CacheManagerService {
       {
         storageType: StorageType.INDEXED_DB,
         ttl: this.ttlSearch,
+        fallback: StorageType.LOCAL_STORAGE,
+      },
+    ],
+    [
+      'metadata',
+      {
+        storageType: StorageType.INDEXED_DB,
+        ttl: this.ttlMetadata,
         fallback: StorageType.LOCAL_STORAGE,
       },
     ],
@@ -170,6 +182,9 @@ export class CacheManagerService {
         const toRemove = sortedEntries.slice(0, sortedEntries.length - this.MAX_MEMORY_ITEMS);
         toRemove.forEach(([key]) => this.memoryCache.delete(key));
       }
+
+      // Also cleanup unused RxJS subjects
+      this.cleanupUnusedSubjects();
     }, 60000);
   }
 
@@ -663,8 +678,29 @@ export class CacheManagerService {
 
   // Update notification API
   getUpdates<T>(type: string, key: string): Observable<T> {
-    const subject = this.getOrCreateSubject(`${type}:${key}`);
-    return subject.asObservable() as Observable<T>;
+    const fullKey = `${type}:${key}`;
+    const subject = this.getOrCreateSubject(fullKey);
+
+    // Track subscriptions
+    this.subjectRefCounts.set(fullKey, (this.subjectRefCounts.get(fullKey) || 0) + 1);
+
+    return (subject.asObservable() as Observable<T>).pipe(
+      finalize(() => {
+        // Decrement ref count when subscription ends
+        const count = (this.subjectRefCounts.get(fullKey) || 1) - 1;
+        this.subjectRefCounts.set(fullKey, count);
+
+        // Clean up subject if no subscribers
+        if (count <= 0) {
+          const subj = this.updateStreams.get(fullKey);
+          if (subj) {
+            subj.complete();
+            this.updateStreams.delete(fullKey);
+            this.subjectRefCounts.delete(fullKey);
+          }
+        }
+      }),
+    );
   }
 
   private emitUpdate<T>(type: string, key: string, data: T): void {
@@ -679,5 +715,18 @@ export class CacheManagerService {
       this.updateStreams.set(fullKey, subject);
     }
     return subject;
+  }
+
+  private cleanupUnusedSubjects(): void {
+    for (const [key, count] of this.subjectRefCounts.entries()) {
+      if (count <= 0) {
+        const subject = this.updateStreams.get(key);
+        if (subject) {
+          subject.complete();
+        }
+        this.updateStreams.delete(key);
+        this.subjectRefCounts.delete(key);
+      }
+    }
   }
 }

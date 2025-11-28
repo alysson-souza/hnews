@@ -22,6 +22,11 @@ export const CACHE_TTL_SEARCH = new InjectionToken<number>('CACHE_TTL_SEARCH', {
   factory: () => 10 * 60 * 1000, // 10 minutes
 });
 
+export const CACHE_TTL_METADATA = new InjectionToken<number>('CACHE_TTL_METADATA', {
+  providedIn: 'root',
+  factory: () => 60 * 1000, // 1 minute (metadata changes frequently)
+});
+
 // Versioned cache namespace to allow seamless invalidation on schema changes
 export const CACHE_NAMESPACE_VERSION = new InjectionToken<string>('CACHE_NAMESPACE_VERSION', {
   providedIn: 'root',

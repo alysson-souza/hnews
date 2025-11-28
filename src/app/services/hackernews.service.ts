@@ -208,15 +208,54 @@ export class HackernewsService {
     return this.hn.updates();
   }
 
-  searchStories(options: SearchOptions): Observable<AlgoliaSearchResponse> {
-    return this.algolia.search(options);
+  searchStories(options: SearchOptions, forceRefresh = false): Observable<AlgoliaSearchResponse> {
+    const cacheKey = this.buildSearchCacheKey(options);
+
+    if (forceRefresh) {
+      return this.algolia.search(options).pipe(
+        switchMap((response) =>
+          from(this.cache.set('search', cacheKey, response)).pipe(map(() => response)),
+        ),
+        catchError((error) => {
+          console.error('Search failed:', error);
+          return of({ hits: [], nbHits: 0, page: 0, nbPages: 0, hitsPerPage: 0 });
+        }),
+      );
+    }
+
+    const initial$ = from(
+      this.cache.getWithSWR<AlgoliaSearchResponse>('search', cacheKey, async () => {
+        const result = await firstValueFrom(this.algolia.search(options));
+        return result ?? { hits: [], nbHits: 0, page: 0, nbPages: 0, hitsPerPage: 0 };
+      }),
+    ).pipe(map((res) => res ?? { hits: [], nbHits: 0, page: 0, nbPages: 0, hitsPerPage: 0 }));
+
+    const updates$ =
+      this.cache.getUpdates<AlgoliaSearchResponse>('search', cacheKey) ??
+      of<AlgoliaSearchResponse>({ hits: [], nbHits: 0, page: 0, nbPages: 0, hitsPerPage: 0 });
+
+    return merge(initial$, updates$).pipe(shareReplay(this.shareLatestConfig));
   }
 
-  searchByDate(query: string): Observable<AlgoliaSearchResponse> {
-    return this.searchStories({
-      query,
-      tags: 'story',
-      sortBy: 'date',
-    });
+  searchByDate(query: string, forceRefresh = false): Observable<AlgoliaSearchResponse> {
+    return this.searchStories(
+      {
+        query,
+        tags: 'story',
+        sortBy: 'date',
+      },
+      forceRefresh,
+    );
+  }
+
+  private buildSearchCacheKey(options: SearchOptions): string {
+    const parts = [
+      `q:${options.query || ''}`,
+      `tags:${options.tags || 'all'}`,
+      `sort:${options.sortBy || 'relevance'}`,
+      `date:${options.dateRange || 'all'}`,
+      `page:${options.page || 0}`,
+    ];
+    return parts.join('|');
   }
 }

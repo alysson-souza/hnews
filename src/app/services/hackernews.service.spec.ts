@@ -19,8 +19,12 @@ class MockCacheManagerService {
   set() {
     return Promise.resolve();
   }
-  getWithSWR() {
-    return Promise.resolve(null);
+  async getWithSWR<T>(_type: string, _key: string, fetcher: () => Promise<T>) {
+    // Actually call the fetcher to trigger HTTP requests in tests
+    return fetcher();
+  }
+  getUpdates() {
+    return of(null);
   }
 }
 
@@ -432,6 +436,79 @@ describe('HackernewsService data orchestration', () => {
       sortBy: 'date',
     });
     expect(result).toEqual(response);
+  });
+
+  it('caches search results with getWithSWR', async () => {
+    const response: AlgoliaSearchResponse = {
+      hits: [{ objectID: '1', title: 'Test' }],
+      nbHits: 1,
+      page: 0,
+      nbPages: 1,
+      hitsPerPage: 20,
+    };
+    algoliaClient.search.mockReturnValue(of(response));
+
+    const result = await firstValueFrom(service.searchStories({ query: 'react' }));
+
+    expect(cacheGetWithSWRSpy).toHaveBeenCalledWith(
+      'search',
+      expect.stringContaining('q:react'),
+      expect.any(Function),
+    );
+    expect(result).toEqual(response);
+  });
+
+  it('creates unique cache keys for different search options', async () => {
+    const response: AlgoliaSearchResponse = {
+      hits: [],
+      nbHits: 0,
+      page: 0,
+      nbPages: 0,
+      hitsPerPage: 20,
+    };
+    algoliaClient.search.mockReturnValue(of(response));
+
+    await firstValueFrom(service.searchStories({ query: 'react', tags: 'story' }));
+    await firstValueFrom(service.searchStories({ query: 'vue', tags: 'story' }));
+    await firstValueFrom(service.searchStories({ query: 'react', tags: 'comment' }));
+
+    const calls = cacheGetWithSWRSpy.mock.calls;
+    const keys = calls.filter((c: unknown[]) => c[0] === 'search').map((c: unknown[]) => c[1]);
+
+    // All cache keys should be different
+    expect(new Set(keys).size).toBe(3);
+  });
+
+  it('forces refresh for search and bypasses cache', async () => {
+    const response: AlgoliaSearchResponse = {
+      hits: [{ objectID: '1', title: 'Fresh' }],
+      nbHits: 1,
+      page: 0,
+      nbPages: 1,
+      hitsPerPage: 20,
+    };
+    algoliaClient.search.mockReturnValue(of(response));
+    cacheSetSpy.mockClear();
+    cacheGetWithSWRSpy.mockClear();
+
+    const result = await firstValueFrom(service.searchStories({ query: 'angular' }, true));
+
+    expect(algoliaClient.search).toHaveBeenCalled();
+    expect(cacheSetSpy).toHaveBeenCalledWith(
+      'search',
+      expect.stringContaining('q:angular'),
+      response,
+    );
+    expect(cacheGetWithSWRSpy).not.toHaveBeenCalled();
+    expect(result).toEqual(response);
+  });
+
+  it('handles search errors gracefully with forceRefresh', async () => {
+    algoliaClient.search.mockReturnValue(throwError(() => new Error('Network error')));
+
+    const result = await firstValueFrom(service.searchStories({ query: 'fail' }, true));
+
+    expect(result).toEqual({ hits: [], nbHits: 0, page: 0, nbPages: 0, hitsPerPage: 0 });
   });
 
   it('returns cached observable on repeated getItem calls', async () => {
