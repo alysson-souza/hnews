@@ -85,7 +85,7 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
       }
 
       .filter-bar {
-        @apply mb-4 flex justify-center sm:justify-start;
+        @apply mb-2 flex justify-center sm:justify-start;
       }
 
       .filter-empty {

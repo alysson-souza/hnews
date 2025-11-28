@@ -1,110 +1,113 @@
 <app-page-container
   [class.lg:w-[60vw]]="sidebarService.isOpen()"
   class="transition-all duration-300"
+  [noPadding]="true"
 >
-  <!-- Offline Indicator -->
-  @if (isOffline()) {
-    <div class="offline-indicator" role="status" aria-live="polite">
-      <span class="offline-text">Showing saved results. Connect to refresh.</span>
+  <div class="pt-3 pb-6 sm:py-8">
+    <!-- Offline Indicator -->
+    @if (isOffline()) {
+      <div class="offline-indicator" role="status" aria-live="polite">
+        <span class="offline-text">Showing saved results. Connect to refresh.</span>
+      </div>
+    }
+
+    <!-- Filter Bar -->
+    <div class="filter-bar" role="group" aria-label="Story filter options">
+      <app-segmented-control
+        [options]="filterOptions"
+        [value]="filterMode()"
+        (valueChange)="onFilterModeChange($event)"
+      />
     </div>
-  }
 
-  <!-- Filter Bar -->
-  <div class="filter-bar" role="group" aria-label="Story filter options">
-    <app-segmented-control
-      [options]="filterOptions"
-      [value]="filterMode()"
-      (valueChange)="onFilterModeChange($event)"
-    />
-  </div>
-
-  <!-- New Stories Indicator -->
-  @if (newStoriesAvailable() > 0 && !refreshing()) {
-    <button
-      (click)="loadNewStories()"
-      class="new-stories-indicator"
-      [attr.aria-label]="
-        'Load ' +
-        newStoriesAvailable() +
-        ' new ' +
-        (newStoriesAvailable() === 1 ? 'story' : 'stories')
-      "
-      role="button"
-    >
-      {{ newStoriesAvailable() }} new {{ newStoriesAvailable() === 1 ? 'story' : 'stories' }}
-    </button>
-  }
-
-  <!-- Loading State with Skeletons -->
-  @if ((loading() && stories().length === 0) || refreshing()) {
-    <div role="status" aria-live="polite" aria-label="Loading Stories">
-      @for (i of skeletonArray; track i) {
-        <app-story-item [loading]="true" />
-      }
-    </div>
-  }
-
-  <!-- Error State -->
-  @if (error()) {
-    <div class="alert-error">
-      <p>{{ error() }}</p>
-      <button (click)="refresh()" class="alert-link">Try again</button>
-    </div>
-  }
-
-  <!-- Filter Empty State -->
-  @if (isFilteredEmpty() && !loading()) {
-    <div class="filter-empty" role="status" aria-live="polite">
-      <p class="filter-empty-title">No matching stories</p>
-      <p class="filter-empty-text">{{ getFilterEmptyMessage() }}</p>
-      <button (click)="resetFilter()" class="filter-reset-btn">Reset to Default</button>
-    </div>
-  }
-
-  <!-- Stories List -->
-  @if (!isFilteredEmpty()) {
-    <div class="stories-space">
-      @for (story of stories(); track story.id; let i = $index) {
-        <app-story-item
-          [story]="story"
-          [loading]="false"
-          [index]="i + 1"
-          [isSelected]="keyboardNavService.selectedIndex() === i"
-          [attr.data-story-index]="i"
-          [attr.data-story-id]="story.id"
-        />
-      }
-    </div>
-  }
-
-  <!-- Offline empty state (no cached stories) -->
-  @if (isOffline() && stories().length === 0 && !loading() && !isFilteredEmpty()) {
-    <div class="empty">
-      <p>No saved results</p>
-    </div>
-  }
-
-  <!-- Load More Button -->
-  @if (hasMore() && !loading() && !isFilteredEmpty()) {
-    <div class="text-center mt-8">
-      <button (click)="loadMore()" class="load-more-btn" aria-label="Load More Stories">
-        Load More Stories
+    <!-- New Stories Indicator -->
+    @if (newStoriesAvailable() > 0 && !refreshing()) {
+      <button
+        (click)="loadNewStories()"
+        class="new-stories-indicator"
+        [attr.aria-label]="
+          'Load ' +
+          newStoriesAvailable() +
+          ' new ' +
+          (newStoriesAvailable() === 1 ? 'story' : 'stories')
+        "
+        role="button"
+      >
+        {{ newStoriesAvailable() }} new {{ newStoriesAvailable() === 1 ? 'story' : 'stories' }}
       </button>
-    </div>
-  }
+    }
 
-  <!-- Loading More Indicator -->
-  @if (loading() && stories().length > 0) {
-    <div class="loading-wrap">
-      <div class="loading-spin"></div>
-      <span class="loading-text">Loading more stories...</span>
-    </div>
-  }
+    <!-- Loading State with Skeletons -->
+    @if ((loading() && stories().length === 0) || refreshing()) {
+      <div role="status" aria-live="polite" aria-label="Loading Stories">
+        @for (i of skeletonArray; track i) {
+          <app-story-item [loading]="true" />
+        }
+      </div>
+    }
 
-  <!-- No More Stories -->
-  @if (!hasMore() && stories().length > 0 && !isFilteredEmpty()) {
-    <div class="empty">
-      <p>No more stories to load</p>
-    </div>
-  }
+    <!-- Error State -->
+    @if (error()) {
+      <div class="alert-error">
+        <p>{{ error() }}</p>
+        <button (click)="refresh()" class="alert-link">Try again</button>
+      </div>
+    }
+
+    <!-- Filter Empty State -->
+    @if (isFilteredEmpty() && !loading()) {
+      <div class="filter-empty" role="status" aria-live="polite">
+        <p class="filter-empty-title">No matching stories</p>
+        <p class="filter-empty-text">{{ getFilterEmptyMessage() }}</p>
+        <button (click)="resetFilter()" class="filter-reset-btn">Reset to Default</button>
+      </div>
+    }
+
+    <!-- Stories List -->
+    @if (!isFilteredEmpty()) {
+      <div class="stories-space">
+        @for (story of stories(); track story.id; let i = $index) {
+          <app-story-item
+            [story]="story"
+            [loading]="false"
+            [index]="i + 1"
+            [isSelected]="keyboardNavService.selectedIndex() === i"
+            [attr.data-story-index]="i"
+            [attr.data-story-id]="story.id"
+          />
+        }
+      </div>
+    }
+
+    <!-- Offline empty state (no cached stories) -->
+    @if (isOffline() && stories().length === 0 && !loading() && !isFilteredEmpty()) {
+      <div class="empty">
+        <p>No saved results</p>
+      </div>
+    }
+
+    <!-- Load More Button -->
+    @if (hasMore() && !loading() && !isFilteredEmpty()) {
+      <div class="text-center mt-8">
+        <button (click)="loadMore()" class="load-more-btn" aria-label="Load More Stories">
+          Load More Stories
+        </button>
+      </div>
+    }
+
+    <!-- Loading More Indicator -->
+    @if (loading() && stories().length > 0) {
+      <div class="loading-wrap">
+        <div class="loading-spin"></div>
+        <span class="loading-text">Loading more stories...</span>
+      </div>
+    }
+
+    <!-- No More Stories -->
+    @if (!hasMore() && stories().length > 0 && !isFilteredEmpty()) {
+      <div class="empty">
+        <p>No more stories to load</p>
+      </div>
+    }
+  </div>
 </app-page-container>

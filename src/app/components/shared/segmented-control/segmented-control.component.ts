@@ -40,7 +40,7 @@ export interface SegmentOption {
       }
 
       .segment-button {
-        @apply relative px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold;
+        @apply relative px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold whitespace-nowrap;
         @apply text-gray-600 dark:text-gray-300;
         @apply hover:text-gray-900 dark:hover:text-gray-100;
         @apply transition-all duration-200 cursor-pointer rounded-lg;
