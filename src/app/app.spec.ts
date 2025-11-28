@@ -45,7 +45,10 @@ describe('App', () => {
     // Override template to avoid deep rendering of child components (e.g., fontawesome)
     TestBed.overrideComponent(App, {
       set: {
-        template: '<span>HNews</span>',
+        template: `
+          <span>HNews</span>
+          <app-keyboard-shortcuts />
+        `,
       },
     });
     await TestBed.configureTestingModule({
