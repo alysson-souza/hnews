@@ -7,7 +7,6 @@ import {
   computed,
   OnInit,
   HostListener,
-  ViewChild,
   viewChild,
 } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
@@ -48,7 +47,7 @@ import { ItemKeyboardNavigationService } from './services/item-keyboard-navigati
   styleUrl: './app.css',
 })
 export class App implements OnInit {
-  @ViewChild(KeyboardShortcutsComponent) keyboardShortcuts!: KeyboardShortcutsComponent;
+  readonly keyboardShortcuts = viewChild.required(KeyboardShortcutsComponent);
   readonly outlet = viewChild.required(RouterOutlet);
 
   title = 'HNews';
@@ -179,7 +178,8 @@ export class App implements OnInit {
       (target as HTMLInputElement).type === 'search';
 
     // Don't process if help dialog is open
-    if (this.keyboardShortcuts && this.keyboardShortcuts.isOpen()) {
+    const keyboardShortcuts = this.keyboardShortcuts();
+    if (keyboardShortcuts && keyboardShortcuts.isOpen()) {
       return;
     }
 
@@ -255,8 +255,9 @@ export class App implements OnInit {
   }
 
   private showKeyboardShortcuts(): void {
-    if (this.keyboardShortcuts) {
-      this.keyboardShortcuts.open();
+    const keyboardShortcuts = this.keyboardShortcuts();
+    if (keyboardShortcuts) {
+      keyboardShortcuts.open();
     }
   }
 
