@@ -87,7 +87,6 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           border-top: none;
           /* Override glass utility for PWA: disable blur and use solid backgrounds */
           backdrop-filter: none !important;
-          backdrop-saturate: none !important;
           /* Solid background matching app background for seamless blend */
           background-color: #f9fafb !important;
         }
