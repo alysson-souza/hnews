@@ -103,14 +103,14 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           left: 0;
           right: 0;
           height: env(safe-area-inset-top, 0px);
-          /* Light mode: solid white to match glass bg-white/95 appearance */
+          /* Light mode: solid white to match PWA header bg-white/95 */
           background-color: white;
           z-index: -1;
         }
 
         /* Dark mode safe area background */
         :host-context(.dark) .app-header::before {
-          /* Dark mode: slate-900 to match glass bg-slate-900/95 appearance */
+          /* Dark mode: slate-900 to match PWA header bg-slate-900/95 */
           background-color: #0f172a;
         }
       }
