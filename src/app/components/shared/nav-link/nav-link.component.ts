@@ -37,12 +37,12 @@ import { ScrollService } from '../../../services/scroll.service';
       }
 
       .nav-link-mobile {
-        @apply block text-gray-600 dark:text-slate-300 px-4 py-3 transition-colors font-medium border-l-4 border-transparent;
-        @apply hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400;
+        @apply block text-white/90 dark:text-slate-100 px-4 py-3 transition-colors font-medium border-l-4 border-transparent;
+        @apply hover:bg-white/10 dark:hover:bg-black/30 hover:text-white dark:hover:text-white;
       }
 
       .nav-link-mobile.nav-link-active {
-        @apply border-blue-500 bg-blue-50/50 dark:bg-slate-800 text-blue-600 dark:text-blue-400;
+        @apply border-white/80 bg-white/10 text-white dark:text-white;
       }
     `,
   ],

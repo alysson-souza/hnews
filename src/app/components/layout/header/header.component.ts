@@ -80,30 +80,45 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
         @apply glass;
       }
 
+      @media (max-width: 1023.98px) {
+        .app-header {
+          background-color: #155dfc;
+          border-top-width: 0;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+
+        :host-context(.dark) .app-header {
+          background-color: #3b5998;
+        }
+      }
+
       @media (display-mode: standalone) {
         .app-header {
           padding-top: env(safe-area-inset-top, 0px);
-          /* Remove top border to blend seamlessly with the notch area */
-          border-top: none;
+          border-top-width: 0;
+          background-color: #155dfc;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
         }
 
-        /* Solid background for safe area - prevents blur artifacts in notch */
         .app-header::before {
           content: '';
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
-          height: env(safe-area-inset-top, 0px);
-          /* Light mode: solid white to match glass bg-white/50 appearance */
-          background-color: white;
+          height: calc(env(safe-area-inset-top, 0px) + 1px);
+          background-color: #155dfc;
           z-index: -1;
         }
 
-        /* Dark mode safe area background */
         :host-context(.dark) .app-header::before {
-          /* Dark mode: slate-900 to match glass bg-slate-900/60 appearance */
-          background-color: #0f172a;
+          background-color: #3b5998;
+        }
+
+        :host-context(.dark) .app-header {
+          background-color: #3b5998;
         }
       }
     `,

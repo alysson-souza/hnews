@@ -49,8 +49,8 @@ import {
       @reference '../../../../../styles.css';
 
       .mobile-menu-button {
-        @apply p-2 text-gray-600 dark:text-slate-300 rounded-lg transition-colors;
-        @apply hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-slate-800 dark:hover:text-white;
+        @apply p-2 text-white/90 dark:text-slate-100 rounded-lg transition-colors;
+        @apply hover:bg-white/10 hover:text-white dark:hover:bg-black/30 dark:hover:text-white;
         @apply cursor-pointer flex items-center justify-center;
       }
     `,

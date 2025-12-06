@@ -18,7 +18,7 @@ import { ScrollService } from '../../../../services/scroll.service';
           </svg>
         </div>
         <span
-          class="text-gray-900 dark:text-white text-xl sm:text-2xl font-bold lg:hidden xl:inline"
+          class="text-white xl:text-gray-900 dark:text-white text-xl sm:text-2xl font-bold lg:hidden xl:inline"
           >HNews</span
         >
       </a>
