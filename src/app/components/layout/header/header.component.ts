@@ -85,9 +85,17 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           padding-top: env(safe-area-inset-top, 0px);
           /* Remove top border to blend seamlessly with the notch area */
           border-top: none;
+          /* Disable backdrop blur for PWA - it doesn't play nice with app background */
+          backdrop-filter: none;
+          /* Use more opaque backgrounds without blur */
+          background-color: rgb(255 255 255 / 0.95);
         }
 
-        /* Solid background for safe area - prevents blur artifacts in notch */
+        :host-context(.dark) .app-header {
+          background-color: rgb(15 23 42 / 0.95);
+        }
+
+        /* Solid background for safe area */
         .app-header::before {
           content: '';
           position: absolute;
@@ -95,14 +103,14 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           left: 0;
           right: 0;
           height: env(safe-area-inset-top, 0px);
-          /* Light mode: solid white to match glass bg-white/50 appearance */
+          /* Light mode: solid white to match glass bg-white/95 appearance */
           background-color: white;
           z-index: -1;
         }
 
         /* Dark mode safe area background */
         :host-context(.dark) .app-header::before {
-          /* Dark mode: slate-900 to match glass bg-slate-900/60 appearance */
+          /* Dark mode: slate-900 to match glass bg-slate-900/95 appearance */
           background-color: #0f172a;
         }
       }
