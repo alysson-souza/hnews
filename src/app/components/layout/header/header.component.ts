@@ -83,6 +83,27 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
       @media (display-mode: standalone) {
         .app-header {
           padding-top: env(safe-area-inset-top, 0px);
+          /* Remove top border to blend seamlessly with the notch area */
+          border-top: none;
+        }
+
+        /* Solid background for safe area - prevents blur artifacts in notch */
+        .app-header::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top, 0px);
+          /* Light mode: solid white to match glass bg-white/50 appearance */
+          background-color: white;
+          z-index: -1;
+        }
+
+        /* Dark mode safe area background */
+        :host-context(.dark) .app-header::before {
+          /* Dark mode: slate-900 to match glass bg-slate-900/60 appearance */
+          background-color: #0f172a;
         }
       }
     `,
