@@ -85,14 +85,16 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           padding-top: env(safe-area-inset-top, 0px);
           /* Remove top border to blend seamlessly with the notch area */
           border-top: none;
-          /* Disable backdrop blur for PWA - it doesn't play nice with app background */
-          backdrop-filter: none;
-          /* Match app background color for perfect blending: gray-50 in light, slate-950 in dark */
-          background-color: #f9fafb;
+          /* Override glass utility for PWA: disable blur and use solid backgrounds */
+          backdrop-filter: none !important;
+          backdrop-saturate: none !important;
+          /* Solid background matching app background for seamless blend */
+          background-color: #f9fafb !important;
         }
 
+        /* Dark mode: solid background */
         :host-context(.dark) .app-header {
-          background-color: #020617;
+          background-color: #020617 !important;
         }
 
         /* Solid background for safe area */
