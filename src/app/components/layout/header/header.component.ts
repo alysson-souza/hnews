@@ -87,12 +87,12 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           border-top: none;
           /* Disable backdrop blur for PWA - it doesn't play nice with app background */
           backdrop-filter: none;
-          /* Use more opaque backgrounds without blur */
-          background-color: rgb(255 255 255 / 0.95);
+          /* Match app background color for perfect blending: gray-50 in light, slate-950 in dark */
+          background-color: #f9fafb;
         }
 
         :host-context(.dark) .app-header {
-          background-color: rgb(15 23 42 / 0.95);
+          background-color: #020617;
         }
 
         /* Solid background for safe area */
@@ -103,15 +103,15 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           left: 0;
           right: 0;
           height: env(safe-area-inset-top, 0px);
-          /* Light mode: solid white to match PWA header bg-white/95 */
-          background-color: white;
+          /* Light mode: gray-50 to match app background */
+          background-color: #f9fafb;
           z-index: -1;
         }
 
         /* Dark mode safe area background */
         :host-context(.dark) .app-header::before {
-          /* Dark mode: slate-900 to match PWA header bg-slate-900/95 */
-          background-color: #0f172a;
+          /* Dark mode: slate-950 to match app background */
+          background-color: #020617;
         }
       }
     `,
