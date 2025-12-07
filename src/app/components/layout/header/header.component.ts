@@ -76,7 +76,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
       @reference '../../../../styles.css';
 
       .app-header {
-        @apply sticky top-0 z-40;
+        @apply fixed top-0 left-0 right-0 z-40;
         @apply glass;
       }
 
