@@ -12,6 +12,8 @@ import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { CommandRegistryService } from '../../services/command-registry.service';
 import { ScrollService } from '../../services/scroll.service';
+import { PrivacyRedirectService } from '../../services/privacy-redirect.service';
+import { PrivacyService } from '../../models/privacy-redirect';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
@@ -39,6 +41,9 @@ import {
   solarCPULinear,
   solarGalleryLinear,
   solarMagniferLinear,
+  solarShieldLinear,
+  solarDangerTriangleLinear,
+  solarLinkLinear,
 } from '@ng-icons/solar-icons/linear';
 
 @Component({
@@ -73,6 +78,9 @@ import {
       solarCPULinear,
       solarGalleryLinear,
       solarMagniferLinear,
+      solarShieldLinear,
+      solarDangerTriangleLinear,
+      solarLinkLinear,
     }),
   ],
   templateUrl: './settings.component.html',
@@ -305,6 +313,56 @@ import {
           @apply justify-end;
         }
       }
+
+      /* Privacy Redirect Section */
+      .privacy-warning {
+        @apply p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30 mb-4;
+        @apply flex items-start gap-3;
+      }
+
+      .privacy-warning-icon {
+        @apply text-xl text-amber-500 flex-shrink-0 mt-0.5;
+      }
+
+      .privacy-warning-content {
+        @apply flex-1;
+      }
+
+      .privacy-warning-title {
+        @apply font-semibold mb-1;
+      }
+
+      .privacy-warning-text {
+        @apply text-sm opacity-90;
+      }
+
+      .service-list {
+        @apply space-y-3 mt-4;
+      }
+
+      .service-item {
+        @apply flex items-center justify-between gap-4 p-4 rounded-lg bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/60;
+      }
+
+      .service-info {
+        @apply flex items-center gap-3;
+      }
+
+      .service-icon {
+        @apply text-gray-500 dark:text-gray-400;
+      }
+
+      .service-name {
+        @apply font-medium text-gray-900 dark:text-gray-100;
+      }
+
+      .attribution-footer {
+        @apply mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400;
+      }
+
+      .attribution-link {
+        @apply text-blue-600 dark:text-blue-400 hover:underline;
+      }
     `,
   ],
 })
@@ -317,6 +375,7 @@ export class SettingsComponent implements OnInit {
   deviceService = inject(DeviceService);
   private commandRegistry = inject(CommandRegistryService);
   private scrollService = inject(ScrollService);
+  privacyRedirectService = inject(PrivacyRedirectService);
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');
@@ -346,6 +405,11 @@ export class SettingsComponent implements OnInit {
   cacheError = signal(false);
 
   openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
+
+  // Privacy redirect computed signals
+  privacyRedirectEnabled = computed(() => this.privacyRedirectService.settings().enabled);
+  privacyRedirectState = computed(() => this.privacyRedirectService.state());
+  privacyRedirectRegistry = this.privacyRedirectService.registry;
 
   constructor() {
     this.loadTags();
@@ -589,5 +653,32 @@ export class SettingsComponent implements OnInit {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  }
+
+  // Privacy redirect methods
+  togglePrivacyRedirect(): void {
+    const newValue = !this.privacyRedirectEnabled();
+    this.privacyRedirectService.setEnabled(newValue);
+  }
+
+  togglePrivacyService(service: PrivacyService): void {
+    const current = this.privacyRedirectService.settings().services[service];
+    this.privacyRedirectService.setServiceEnabled(service, !current);
+  }
+
+  isServiceEnabled(service: PrivacyService): boolean {
+    return this.privacyRedirectService.settings().services[service];
+  }
+
+  refreshPrivacyInstances(): void {
+    this.privacyRedirectService.refresh();
+  }
+
+  formatRetryTime(): string {
+    const state = this.privacyRedirectState();
+    if (!state.nextRetryAt) return '';
+    const seconds = Math.max(0, Math.ceil((state.nextRetryAt - Date.now()) / 1000));
+    if (seconds < 60) return `${seconds}s`;
+    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   }
 }

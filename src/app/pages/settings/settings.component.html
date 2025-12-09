@@ -40,15 +40,120 @@
                 When enabled, comments will open in a sidebar instead of navigating to a new page
               </p>
             </div>
-            <app-toggle-switch
-              id="sidebar-toggle"
-              [checked]="openCommentsInSidebar()"
-              (checkedChange)="toggleSidebarPreference()"
-              ariaLabel="Toggle sidebar preference"
-              descriptionId="sidebar-toggle-description"
-            />
+            <div (click)="$event.stopPropagation()" aria-hidden="true">
+              <app-toggle-switch
+                id="sidebar-toggle"
+                [checked]="openCommentsInSidebar()"
+                (checkedChange)="toggleSidebarPreference()"
+                ariaLabel="Toggle sidebar preference"
+                descriptionId="sidebar-toggle-description"
+              />
+            </div>
           </div>
         </div>
+      </div>
+    </app-card>
+
+    <!-- Privacy Redirects Section -->
+    <app-card class="block setting-section" role="region" aria-label="Privacy Redirects">
+      <div class="section-header">
+        <ng-icon name="solarShieldLinear" class="section-icon" />
+        <app-section-title>Privacy Redirects</app-section-title>
+      </div>
+
+      <!-- Warning when instances not loaded -->
+      @if (privacyRedirectEnabled() && privacyRedirectState().error) {
+        <div class="privacy-warning" role="alert">
+          <ng-icon name="solarDangerTriangleLinear" class="privacy-warning-icon" />
+          <div class="privacy-warning-content">
+            <div class="privacy-warning-title">Unable to load privacy instances</div>
+            <p class="privacy-warning-text">
+              {{ privacyRedirectState().error }}
+              @if (privacyRedirectState().nextRetryAt) {
+                <span> • Retrying in {{ formatRetryTime() }}</span>
+              }
+            </p>
+            <app-button
+              (clicked)="refreshPrivacyInstances()"
+              variant="secondary"
+              size="sm"
+              class="mt-2"
+              ariaLabel="Retry loading privacy instances"
+            >
+              <ng-icon name="solarRefreshLinear" class="mr-2" />
+              Retry Now
+            </app-button>
+          </div>
+        </div>
+      }
+
+      <div class="space-y-6">
+        <div class="setting-group">
+          <div
+            class="modern-toggle-container cursor-pointer"
+            [class.opacity-60]="privacyRedirectState().loading"
+            (click)="togglePrivacyRedirect()"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="togglePrivacyRedirect()"
+            (keydown.space)="togglePrivacyRedirect()"
+            [attr.aria-label]="
+              'Toggle privacy redirects. Currently ' +
+              (privacyRedirectEnabled() ? 'enabled' : 'disabled')
+            "
+          >
+            <div class="setting-info">
+              <label class="setting-title" for="privacy-toggle">
+                Redirect links to privacy frontends
+              </label>
+              <p class="setting-description" id="privacy-toggle-description">
+                When enabled, links to sites like Twitter/X will redirect to privacy-respecting
+                alternatives (e.g., Nitter). The original URL is still displayed.
+              </p>
+            </div>
+            <div (click)="$event.stopPropagation()" aria-hidden="true">
+              <app-toggle-switch
+                id="privacy-toggle"
+                [checked]="privacyRedirectEnabled()"
+                (checkedChange)="togglePrivacyRedirect()"
+                ariaLabel="Toggle privacy redirects"
+                descriptionId="privacy-toggle-description"
+              />
+            </div>
+          </div>
+
+          <!-- Service list when enabled -->
+          @if (privacyRedirectEnabled()) {
+            <div class="service-list">
+              @for (config of privacyRedirectRegistry; track config.service) {
+                <div class="service-item">
+                  <div class="service-info">
+                    <ng-icon name="solarLinkLinear" class="service-icon" />
+                    <span class="service-name">{{ config.displayName }}</span>
+                  </div>
+                  <app-toggle-switch
+                    [checked]="isServiceEnabled(config.service)"
+                    (checkedChange)="togglePrivacyService(config.service)"
+                    [ariaLabel]="'Toggle ' + config.displayName + ' redirect'"
+                  />
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Attribution footer -->
+      <div class="attribution-footer">
+        Instance data powered by
+        <a
+          href="https://libredirect.github.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="attribution-link"
+        >
+          LibRedirect
+        </a>
       </div>
     </app-card>
 

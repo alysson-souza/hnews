@@ -61,7 +61,7 @@
                 [href]="story()!.url"
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                (click)="markAsVisited()"
+                (click)="onStoryLinkClick($event)"
                 class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
                 [attr.title]="story()!.title || ''"
               >

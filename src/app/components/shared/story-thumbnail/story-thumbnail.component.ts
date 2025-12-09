@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, output, input } from '@angular/core';
+import { Component, output, input, inject } from '@angular/core';
 import { StoryFaviconComponent } from '../story-favicon/story-favicon.component';
+import { PrivacyRedirectService } from '../../../services/privacy-redirect.service';
 
 @Component({
   selector: 'app-story-thumbnail',
@@ -27,7 +28,7 @@ import { StoryFaviconComponent } from '../story-favicon/story-favicon.component'
           [href]="storyUrl()"
           target="_blank"
           rel="noopener noreferrer nofollow"
-          (click)="handleLinkClick()"
+          (click)="handleLinkClick($event)"
           class="thumb-link"
         >
           <app-story-favicon [url]="storyUrl()" [altText]="'Favicon for ' + storyTitle()" />
@@ -57,9 +58,24 @@ export class StoryThumbnailComponent {
   readonly isTextPost = input(false);
   readonly linkClicked = output<void>();
 
-  handleLinkClick(): void {
-    // Don't prevent default - let the link work normally
-    // Just emit the event for parent to handle (e.g., mark as visited)
-    this.linkClicked.emit();
+  private redirectService = inject(PrivacyRedirectService);
+
+  handleLinkClick(event: MouseEvent): void {
+    const url = this.storyUrl();
+    if (!url) {
+      this.linkClicked.emit();
+      return;
+    }
+
+    // Check if privacy redirect applies
+    const transformedUrl = this.redirectService.transformUrl(url);
+    if (transformedUrl !== url) {
+      event.preventDefault();
+      this.linkClicked.emit();
+      window.open(transformedUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // Let the link work normally, just emit the event
+      this.linkClicked.emit();
+    }
   }
 }

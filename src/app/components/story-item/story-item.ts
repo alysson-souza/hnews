@@ -12,6 +12,7 @@ import { DeviceService } from '../../services/device.service';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { UserSettingsService } from '../../services/user-settings.service';
 import { StoryShareService } from '../../services/story-share.service';
+import { PrivacyRedirectService } from '../../services/privacy-redirect.service';
 import { getDomain } from '../../services/domain.utils';
 import { StoryActionsMenuComponent } from './story-actions-menu.component';
 
@@ -43,6 +44,7 @@ export class StoryItem {
   private locationStrategy = inject(LocationStrategy);
   private userSettings = inject(UserSettingsService);
   private shareService = inject(StoryShareService);
+  private redirectService = inject(PrivacyRedirectService);
   private static itemComponentPrefetched = false;
 
   // Computed property to safely determine loading state
@@ -228,5 +230,36 @@ export class StoryItem {
   isVisited(): boolean {
     const story = this.story();
     return story ? this.visitedService.isVisited(story.id) : false;
+  }
+
+  /**
+   * Handle click on story link with privacy redirect support.
+   * Redirects to privacy frontend if enabled and URL matches.
+   */
+  onStoryLinkClick(event: MouseEvent): void {
+    const story = this.story();
+    if (!story?.url) return;
+
+    // Allow modifier key clicks to work normally (opens in new tab via browser)
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      // Check if we should redirect the URL
+      const transformedUrl = this.redirectService.transformUrl(story.url);
+      if (transformedUrl !== story.url) {
+        event.preventDefault();
+        this.markAsVisited();
+        window.open(transformedUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+
+    // For normal clicks, check if redirect is needed
+    const transformedUrl = this.redirectService.transformUrl(story.url);
+    if (transformedUrl !== story.url) {
+      event.preventDefault();
+      this.markAsVisited();
+      window.open(transformedUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      this.markAsVisited();
+    }
   }
 }
