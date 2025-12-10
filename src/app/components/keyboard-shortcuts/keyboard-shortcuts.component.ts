@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, signal, HostListener, inject, computed } from '@angular/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarCloseCircleLinear } from '@ng-icons/solar-icons/linear';
 
 import { KeyboardShortcutConfigService } from '../../services/keyboard-shortcut-config.service';
 import { KeyboardContextService } from '../../services/keyboard-context.service';
@@ -8,7 +10,8 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
 @Component({
   selector: 'app-keyboard-shortcuts',
   standalone: true,
-  imports: [],
+  imports: [NgIconComponent],
+  viewProviders: [provideIcons({ solarCloseCircleLinear })],
   template: `
     @if (isOpen()) {
       <!-- Backdrop with fade-in -->
@@ -37,7 +40,7 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
             >
               <h2
                 id="shortcuts-title"
-                class="text-xl font-semibold text-gray-900 dark:text-gray-100"
+                class="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1"
               >
                 Keyboard Shortcuts
                 @if (contextLabel()) {
@@ -50,12 +53,12 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
                 (click)="close()"
                 (keydown.enter)="close()"
                 (keydown.space)="close()"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-1 cursor-pointer"
+                class="ml-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded transition-colors flex-shrink-0"
                 role="button"
                 tabindex="0"
                 aria-label="Close keyboard shortcuts dialog"
               >
-                ×
+                <ng-icon name="solarCloseCircleLinear" class="w-6 h-6" />
               </button>
             </div>
 

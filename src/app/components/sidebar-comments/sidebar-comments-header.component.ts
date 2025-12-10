@@ -1,62 +1,110 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, output, input } from '@angular/core';
+import { Component, output, input, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { solarMaximizeSquare3Linear, solarCloseCircleLinear } from '@ng-icons/solar-icons/linear';
+import {
+  solarAltArrowLeftLinear,
+  solarMaximizeSquare3Linear,
+  solarCloseCircleLinear,
+} from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-sidebar-comments-header',
   standalone: true,
   imports: [RouterLink, NgIconComponent],
-  viewProviders: [provideIcons({ solarMaximizeSquare3Linear, solarCloseCircleLinear })],
+  viewProviders: [
+    provideIcons({
+      solarAltArrowLeftLinear,
+      solarMaximizeSquare3Linear,
+      solarCloseCircleLinear,
+    }),
+  ],
   template: `
-    <div class="header">
-      <div class="back-btn-container">
-        @if (canGoBack()) {
+    <div class="header" [class.mac-layout]="isMac()">
+      <!-- macOS: Close button on left, back and open on right -->
+      <!-- Windows/Linux: Back button on left, close and open on right -->
+      @if (isMac()) {
+        <!-- macOS Layout -->
+        <div class="left-controls">
           <button
             type="button"
-            (click)="back.emit()"
-            class="back-btn"
-            aria-label="Go back to previous view"
-            title="Go back to previous view"
+            (click)="dismiss.emit()"
+            class="close-btn"
+            aria-label="Close sidebar"
+            title="Close sidebar"
           >
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              ></path>
-            </svg>
+            <ng-icon name="solarCloseCircleLinear" class="icon" />
           </button>
-        }
-      </div>
-      <h2 class="title">Comments</h2>
-      <div class="actions">
-        @if (itemId()) {
-          <a
-            [routerLink]="['/item', itemId()]"
-            target="_blank"
-            rel="noopener noreferrer"
-            role="link"
-            class="action-btn"
-            aria-label="Open in full view"
-            title="Open in full view"
+        </div>
+        <h2 class="title">Comments</h2>
+        <div class="right-controls">
+          @if (canGoBack()) {
+            <button
+              type="button"
+              (click)="back.emit()"
+              class="back-btn"
+              aria-label="Go back to previous view"
+              title="Go back to previous view"
+            >
+              <ng-icon name="solarAltArrowLeftLinear" class="icon" />
+            </button>
+          }
+          @if (itemId()) {
+            <a
+              [routerLink]="['/item', itemId()]"
+              target="_blank"
+              rel="noopener noreferrer"
+              role="link"
+              class="action-btn"
+              aria-label="Open in full view"
+              title="Open in full view"
+            >
+              <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
+            </a>
+          }
+        </div>
+      } @else {
+        <!-- Windows/Linux Layout -->
+        <div class="left-controls">
+          @if (canGoBack()) {
+            <button
+              type="button"
+              (click)="back.emit()"
+              class="back-btn"
+              aria-label="Go back to previous view"
+              title="Go back to previous view"
+            >
+              <ng-icon name="solarAltArrowLeftLinear" class="icon" />
+            </button>
+          }
+        </div>
+        <h2 class="title">Comments</h2>
+        <div class="right-controls">
+          @if (itemId()) {
+            <a
+              [routerLink]="['/item', itemId()]"
+              target="_blank"
+              rel="noopener noreferrer"
+              role="link"
+              class="action-btn"
+              aria-label="Open in full view"
+              title="Open in full view"
+            >
+              <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
+            </a>
+          }
+          <button
+            type="button"
+            (click)="dismiss.emit()"
+            class="close-btn"
+            aria-label="Close sidebar"
+            title="Close sidebar"
           >
-            <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
-          </a>
-        }
-        <button
-          type="button"
-          (click)="dismiss.emit()"
-          class="close-btn"
-          aria-label="Close sidebar"
-          title="Close sidebar"
-        >
-          <ng-icon name="solarCloseCircleLinear" class="icon" />
-        </button>
-      </div>
+            <ng-icon name="solarCloseCircleLinear" class="icon" />
+          </button>
+        </div>
+      }
     </div>
   `,
   styles: [
@@ -64,15 +112,15 @@ import { solarMaximizeSquare3Linear, solarCloseCircleLinear } from '@ng-icons/so
       @reference '../../../styles.css';
 
       .header {
-        @apply sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-3 sm:p-4 flex items-center justify-between shadow-sm dark:shadow-md;
+        @apply sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-3 sm:p-4 flex items-center justify-between shadow-sm dark:shadow-md gap-2;
       }
-      .back-btn-container {
-        @apply w-9 h-9 flex items-center justify-start;
+      .left-controls {
+        @apply flex items-center gap-1;
       }
       .title {
         @apply text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 flex-1 text-center;
       }
-      .actions {
+      .right-controls {
         @apply flex items-center gap-1;
       }
       .back-btn {
@@ -95,4 +143,8 @@ export class SidebarCommentsHeaderComponent {
   readonly itemId = input<number | undefined>(undefined);
   readonly dismiss = output<void>();
   readonly back = output<void>();
+
+  isMac = computed(() => {
+    return typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+  });
 }
