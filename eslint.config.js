@@ -28,6 +28,8 @@ module.exports = defineConfig([
       'package-lock.json',
       '**/*.min.*',
       '**/*.log',
+      'public/version.json',
+      'public/hnews-redirect.user.js',
     ],
   },
   eslint.configs.recommended,

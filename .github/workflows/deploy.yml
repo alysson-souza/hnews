@@ -57,6 +57,7 @@ jobs:
 
           # Build with the correct base href
           npm run generate:version
+          npm run generate:userscript
           npx ng build --configuration production --base-href "$BASE_HREF"
 
       - name: Run Playwright e2e tests

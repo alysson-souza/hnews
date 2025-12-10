@@ -9,3 +9,5 @@ package-lock.json
 tmp
 *.log
 
+public/version.json
+public/hnews-redirect.user.js

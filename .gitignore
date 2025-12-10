@@ -52,7 +52,11 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Generated files
 public/version.json
+public/hnews-redirect.user.js
+
 
 # E2E test results
 /playwright-report

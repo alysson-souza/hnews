@@ -23,7 +23,7 @@ import { Component, output, input } from '@angular/core';
       @reference '../../../../styles.css';
 
       .btn-base {
-        @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap;
+        @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap border border-transparent;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
         @apply dark:focus-visible:ring-offset-gray-800;
       }

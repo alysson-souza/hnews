@@ -22,6 +22,7 @@ Live demo: https://alysson-souza.github.io/hnews/
 - PWA-ready: Angular Service Worker enabled in production builds
 - Responsive UI: Optimized for desktop, tablet, and mobile
 - HN-compatible routes (e.g., `/item?id=123`, `/user?id=pg`)
+- Userscript: Automatic redirect from news.ycombinator.com to HNews (visit `/userscript` for installation)
 
 ## Keyboard Shortcuts
 

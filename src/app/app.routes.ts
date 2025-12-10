@@ -78,6 +78,11 @@ export const routes: Routes = [
       import('./pages/settings/settings.component').then((m) => m.SettingsComponent),
   },
   {
+    path: 'userscript',
+    loadComponent: () =>
+      import('./pages/userscript/userscript.component').then((m) => m.UserscriptComponent),
+  },
+  {
     path: '**',
     redirectTo: '/top',
   },

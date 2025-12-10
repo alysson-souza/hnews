@@ -1,0 +1,138 @@
+<app-page-container>
+  <div class="space-y-6">
+    <!-- Header Section -->
+    <app-card class="block">
+      <div class="section-header">
+        <ng-icon name="solarCodeLinear" class="section-icon" />
+        <app-section-title>HNews Redirect Userscript</app-section-title>
+      </div>
+
+      <div class="info-section">
+        <p class="info-text">
+          Automatically redirect all Hacker News links to this HNews frontend. Install this
+          userscript in your browser to seamlessly browse HN with an improved reading experience.
+        </p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <ng-icon name="solarCheckCircleLinear" class="feature-icon" />
+            <span>Redirects news.ycombinator.com to HNews automatically</span>
+          </div>
+          <div class="feature-item">
+            <ng-icon name="solarCheckCircleLinear" class="feature-icon" />
+            <span>Preserves all URLs (items, users, story lists)</span>
+          </div>
+        </div>
+      </div>
+    </app-card>
+
+    <!-- Installation Instructions -->
+    <app-card class="block">
+      <div class="section-header">
+        <ng-icon name="solarDocumentLinear" class="section-icon" />
+        <app-section-title>Installation</app-section-title>
+      </div>
+
+      <div class="info-section">
+        <ol class="instructions-list">
+          <li class="instruction-item">
+            Install a userscript manager extension in your browser:
+            <ul class="ml-6 mt-2 space-y-1">
+              <li class="text-gray-600 dark:text-gray-400">
+                •
+                <a
+                  href="https://www.tampermonkey.net/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="external-link"
+                >
+                  Tampermonkey
+                </a>
+                (Chrome, Firefox, Safari, Edge)
+              </li>
+              <li class="text-gray-600 dark:text-gray-400">
+                •
+                <a
+                  href="https://violentmonkey.github.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="external-link"
+                >
+                  Violentmonkey
+                </a>
+                (Chrome, Firefox, Edge)
+              </li>
+              <li class="text-gray-600 dark:text-gray-400">
+                •
+                <a
+                  href="https://www.greasespot.net/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="external-link"
+                >
+                  Greasemonkey
+                </a>
+                (Firefox)
+              </li>
+            </ul>
+          </li>
+          <li class="instruction-item">
+            Click "Install Script" below to open the <code>hnews-redirect.user.js</code> file
+          </li>
+          <li class="instruction-item">
+            Your userscript manager should automatically prompt you to install it
+          </li>
+          <li class="instruction-item">Click "Install" in the manager's prompt to confirm</li>
+          <li class="instruction-item">
+            Visit
+            <a
+              href="https://news.ycombinator.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="external-link"
+            >
+              news.ycombinator.com
+            </a>
+            and you'll be automatically redirected!
+          </li>
+        </ol>
+      </div>
+    </app-card>
+
+    <!-- Userscript Code -->
+    <app-card class="block">
+      <div class="section-header-wrapper">
+        <div class="section-header">
+          <ng-icon name="solarCodeLinear" class="section-icon" />
+          <app-section-title>Userscript Code</app-section-title>
+        </div>
+
+        <div class="button-group">
+          <a
+            [href]="installUrl()"
+            class="responsive-btn inline-flex items-center justify-center px-4 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900 transition-colors"
+            aria-label="Install userscript"
+          >
+            <ng-icon name="solarDownloadLinear" class="mr-2" />
+            Install Script
+          </a>
+
+          <app-button
+            (clicked)="copyToClipboard()"
+            variant="secondary"
+            size="md"
+            ariaLabel="Copy userscript to clipboard"
+            class="responsive-btn"
+          >
+            <ng-icon name="solarCopyLinear" class="mr-2" />
+            {{ isCopied() ? 'Copied!' : 'Copy to Clipboard' }}
+          </app-button>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div [innerHTML]="highlightedUserscript()"></div>
+      </div>
+    </app-card>
+  </div>
+</app-page-container>

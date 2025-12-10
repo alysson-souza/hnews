@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, input } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [],
+  imports: [RouterModule],
   template: `
     <footer class="app-footer" role="contentinfo">
       <div class="container mx-auto px-4 flex flex-col md:block items-center">
@@ -54,6 +55,10 @@ import { Component, input } from '@angular/core';
               class="footer-link"
               >Algolia API</a
             >
+          </p>
+          <p class="footer-subtext">
+            <a routerLink="/userscript" class="footer-link">Install Userscript</a>
+            to auto-redirect from news.ycombinator.com
           </p>
           <p class="footer-subtext">
             Version
