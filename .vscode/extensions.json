@@ -2,11 +2,12 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=827846
   "recommendations": [
     "angular.ng-template",
+    "bradlc.vscode-tailwindcss",
     "christian-kohler.npm-intellisense",
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "github.vscode-github-actions",
     "idered.npm",
-    "spmeesseman.vscode-taskexplorer"
+    "sanaajani.taskrunnercode"
   ]
 }
