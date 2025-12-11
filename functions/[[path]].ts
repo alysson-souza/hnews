@@ -5,7 +5,7 @@ export interface Env {
 }
 
 const CRAWLER_UA_RE =
-  /Slackbot|Twitterbot|facebookexternalhit|LinkedInBot|Discordbot|WhatsApp|Applebot|TelegramBot|bingbot|Googlebot|DuckDuckBot/i;
+  /Slackbot|Twitterbot|facebookexternalhit|LinkedInBot|Discordbot|WhatsApp|Applebot|com\.apple\.social|SocialLayer|iMessage|Apple-PubSub|TelegramBot|bingbot|Googlebot|DuckDuckBot/i;
 
 const FEED_ROUTES: Record<string, { title: string; description: string }> = {
   '/top': {
