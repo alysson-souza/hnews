@@ -18,36 +18,38 @@ concurrency:
 
 jobs:
   build-and-test:
+    name: Build and Test
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
+      - name: Set up Node.js from .nvmrc
         uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install npm dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Run linting
+      - name: Lint (ESLint)
         run: npm run lint
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium browser
         run: npx playwright install --with-deps chromium
 
-      - name: Run tests
+      - name: Unit tests (Vitest)
         run: npm test
 
-      - name: Build
+      - name: Generate build-time assets
         run: |
-          # Generate build-time assets once
           npm run generate:version
           npm run generate:userscript
 
+      - name: Build production bundle for GitHub Pages
+        run: |
           # Determine base href for GitHub Pages based on repository
           if [ "${{ github.repository }}" = "alysson-souza/hnews" ]; then
             GH_BASE_HREF="/hnews/"
@@ -60,26 +62,30 @@ jobs:
           echo "Building GitHub Pages bundle with base-href: $GH_BASE_HREF"
           npx ng build --configuration production --base-href "$GH_BASE_HREF" --output-path dist/hnews-gh
 
+      - name: Build production bundle for Cloudflare Pages
+        if: secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
+        run: |
           echo "Building Cloudflare Pages bundle with base-href: /"
           npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
 
-      - name: Run Playwright e2e tests
+      - name: E2E tests (Playwright Chromium)
         run: npm run e2e:chromium
 
-      - name: Upload Pages Artifact
+      - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-pages-artifact@v4
         with:
           path: dist/hnews-gh/browser
 
-      - name: Upload Cloudflare Artifact
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      - name: Upload Cloudflare Pages artifact
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages
           path: dist/hnews-cf/browser
 
   deploy-github:
+    name: Deploy to GitHub Pages
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -87,22 +93,23 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Publish to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
   deploy-cloudflare:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    name: Deploy to Cloudflare Pages (optional)
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
-      - name: Download Cloudflare Artifact
+      - name: Download Cloudflare Pages artifact
         uses: actions/download-artifact@v4
         with:
           name: cloudflare-pages
           path: cf-dist
 
-      - name: Deploy to Cloudflare Pages
+      - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
