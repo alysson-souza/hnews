@@ -16,15 +16,14 @@ concurrency:
   group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
-env:
-  CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-  CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
 jobs:
   build-and-test:
     name: Build and Test
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -103,17 +102,22 @@ jobs:
 
   deploy-cloudflare:
     name: Deploy to Cloudflare Pages (optional)
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: build-and-test
     runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Download Cloudflare Pages artifact
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         uses: actions/download-artifact@v4
         with:
           name: cloudflare-pages
           path: cf-dist
 
       - name: Publish to Cloudflare Pages
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ env.CF_API_TOKEN }}
