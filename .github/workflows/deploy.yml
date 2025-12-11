@@ -125,3 +125,4 @@ jobs:
           projectName: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME || 'hnews' }}
           directory: cf-dist
           branch: ${{ github.ref_name }}
+          wranglerVersion: '3'
