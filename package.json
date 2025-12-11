@@ -21,6 +21,8 @@
     "test:coverage:watch": "ng test --code-coverage",
     "pretest:coverage:watch": "node ./scripts/clean-test-output.mjs && npm run generate:version && npm run generate:userscript",
     "predeploy": "npm run build:prod",
+    "deploy:cf": "npx ng build --configuration production --base-href \"/\" --output-path dist/hnews-cf && wrangler pages deploy dist/hnews-cf/browser --project-name=hnews",
+    "preview:cf": "npx ng build --configuration production --base-href \"/\" --output-path dist/hnews-cf && wrangler pages dev dist/hnews-cf/browser",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
@@ -94,6 +96,7 @@
     "tailwindcss": "^4.1.12",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.39.1",
-    "vitest": "^4.0.12"
+    "vitest": "^4.0.12",
+    "wrangler": "^4.54.0"
   }
 }

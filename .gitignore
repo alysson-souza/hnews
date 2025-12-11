@@ -38,6 +38,7 @@ testem.log
 /typings
 .eslintcache
 node_modules/.cache/
+.wrangler/
 
 # System files
 .DS_Store
