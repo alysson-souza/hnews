@@ -16,6 +16,10 @@ concurrency:
   group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
+env:
+  CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -63,7 +67,7 @@ jobs:
           npx ng build --configuration production --base-href "$GH_BASE_HREF" --output-path dist/hnews-gh
 
       - name: Build production bundle for Cloudflare Pages
-        if: secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         run: |
           echo "Building Cloudflare Pages bundle with base-href: /"
           npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
@@ -78,7 +82,7 @@ jobs:
           path: dist/hnews-gh/browser
 
       - name: Upload Cloudflare Pages artifact
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages
@@ -99,7 +103,7 @@ jobs:
 
   deploy-cloudflare:
     name: Deploy to Cloudflare Pages (optional)
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
@@ -112,8 +116,8 @@ jobs:
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ env.CF_API_TOKEN }}
+          accountId: ${{ env.CF_ACCOUNT_ID }}
           projectName: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME || 'hnews' }}
           directory: cf-dist
           branch: ${{ github.ref_name }}
