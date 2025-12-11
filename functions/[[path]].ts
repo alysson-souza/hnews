@@ -44,14 +44,21 @@ export async function onRequest(context: {
   next: () => Promise<Response>;
 }): Promise<Response> {
   const { request, env } = context;
+  const url = new URL(request.url);
+  const pathname = url.pathname.replace(/\/+$/, '') || '/';
   const userAgent = request.headers.get('user-agent') || '';
 
-  if (!CRAWLER_UA_RE.test(userAgent)) {
+  // Prevent recursion when we fetch index.html internally.
+  if (request.headers.get('x-hnews-og-bypass') === '1') {
     return context.next();
   }
 
-  const url = new URL(request.url);
-  const pathname = url.pathname.replace(/\/+$/, '') || '/';
+  // Never treat static assets as SPA routes.
+  if (isAssetPath(pathname) || pathname === '/index.html' || pathname === '/404.html') {
+    return context.next();
+  }
+
+  const isCrawler = CRAWLER_UA_RE.test(userAgent);
 
   let meta: {
     title: string;
@@ -60,19 +67,21 @@ export async function onRequest(context: {
     type: 'article' | 'website';
   } | null = null;
 
-  try {
-    meta = await buildMetaForPath(pathname, env);
-  } catch {
-    meta = null;
+  if (isCrawler) {
+    try {
+      meta = await buildMetaForPath(pathname, env);
+    } catch {
+      meta = null;
+    }
   }
 
-  if (!meta) {
-    return context.next();
-  }
-
-  const response = await context.next();
+  const response = await fetchIndexHtml(request, url);
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) {
+    return response;
+  }
+
+  if (!isCrawler || !meta) {
     return response;
   }
 
@@ -82,11 +91,32 @@ export async function onRequest(context: {
   const headers = new Headers(response.headers);
   headers.set('content-type', 'text/html; charset=utf-8');
   headers.set('cache-control', 'public, max-age=300');
+  headers.delete('content-encoding');
+  headers.delete('content-length');
+  headers.delete('etag');
 
   return new Response(injected, {
-    status: response.status,
-    statusText: response.statusText,
+    status: 200,
+    statusText: 'OK',
     headers,
+  });
+}
+
+function isAssetPath(pathname: string) {
+  return /\.[a-z0-9]+$/i.test(pathname);
+}
+
+async function fetchIndexHtml(request: Request, url: URL) {
+  const indexUrl = new URL('/index.html', url);
+  const headers = new Headers(request.headers);
+  headers.set('x-hnews-og-bypass', '1');
+  // Avoid compressed bodies when we need to inject meta.
+  headers.set('accept-encoding', 'identity');
+
+  return fetch(indexUrl.toString(), {
+    method: 'GET',
+    headers,
+    redirect: 'follow',
   });
 }
 
