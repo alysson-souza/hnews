@@ -2,6 +2,7 @@ export interface Env {
   HN_API_BASE: string;
   SITE_URL: string;
   DEFAULT_OG_IMAGE: string;
+  ASSETS: Fetcher;
 }
 
 const CRAWLER_UA_RE =
@@ -48,14 +49,9 @@ export async function onRequest(context: {
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
   const userAgent = request.headers.get('user-agent') || '';
 
-  // Prevent recursion when we fetch index.html internally.
-  if (request.headers.get('x-hnews-og-bypass') === '1') {
-    return context.next();
-  }
-
-  // Never treat static assets as SPA routes.
-  if (isAssetPath(pathname) || pathname === '/index.html' || pathname === '/404.html') {
-    return context.next();
+  // Serve static assets directly via ASSETS binding.
+  if (isAssetPath(pathname)) {
+    return env.ASSETS.fetch(request);
   }
 
   const isCrawler = CRAWLER_UA_RE.test(userAgent);
@@ -75,12 +71,18 @@ export async function onRequest(context: {
     }
   }
 
-  const response = await fetchIndexHtml(request, url);
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('text/html')) {
+  // Fetch index.html directly via ASSETS binding for SPA routing.
+  const indexRequest = new Request(new URL('/index.html', url), {
+    method: 'GET',
+    headers: { 'accept-encoding': 'identity' },
+  });
+  const response = await env.ASSETS.fetch(indexRequest);
+
+  if (!response.ok) {
     return response;
   }
 
+  // For non-crawlers, just return the index.html (SPA routing).
   if (!isCrawler || !meta) {
     return response;
   }
@@ -104,20 +106,6 @@ export async function onRequest(context: {
 
 function isAssetPath(pathname: string) {
   return /\.[a-z0-9]+$/i.test(pathname);
-}
-
-async function fetchIndexHtml(request: Request, url: URL) {
-  const indexUrl = new URL('/index.html', url);
-  const headers = new Headers(request.headers);
-  headers.set('x-hnews-og-bypass', '1');
-  // Avoid compressed bodies when we need to inject meta.
-  headers.set('accept-encoding', 'identity');
-
-  return fetch(indexUrl.toString(), {
-    method: 'GET',
-    headers,
-    redirect: 'follow',
-  });
 }
 
 async function buildMetaForPath(pathname: string, env: Env) {
@@ -295,12 +283,15 @@ async function fetchArticleImage(articleUrl: string): Promise<string | null> {
 }
 
 function matchMetaContent(html: string, key: string) {
-  const re = new RegExp(
+  const re1 = new RegExp(
     `<meta[^>]+(?:property|name)=["']${key}["'][^>]+content=["']([^"']+)["'][^>]*>`,
     'i',
   );
-  const m = html.match(re);
-  return m?.[1] || null;
+  const re2 = new RegExp(
+    `<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${key}["'][^>]*>`,
+    'i',
+  );
+  return html.match(re1)?.[1] || html.match(re2)?.[1] || null;
 }
 
 function resolveImageUrl(raw: string, base: URL) {
@@ -320,6 +311,10 @@ function injectMeta(
   pathname: string,
   env: Env,
 ) {
+  const cleaned = html.replace(
+    /<meta\b[^>]*(?:property|name)=["'](?:og:|twitter:)[^"']*["'][^>]*>\s*/gi,
+    '',
+  );
   const ogUrl = absoluteUrl(pathname, env.SITE_URL);
   const title = escapeAttr(meta.title);
   const description = escapeAttr(meta.description);
@@ -332,23 +327,25 @@ function injectMeta(
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
 <meta property="og:site_name" content="HNews">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${image}">`;
 
-  const idx = html.toLowerCase().indexOf('</title>');
+  const idx = cleaned.toLowerCase().indexOf('</title>');
   if (idx !== -1) {
-    return html.slice(0, idx + 8) + tags + html.slice(idx + 8);
+    return cleaned.slice(0, idx + 8) + tags + cleaned.slice(idx + 8);
   }
 
-  const headIdx = html.toLowerCase().indexOf('<head>');
+  const headIdx = cleaned.toLowerCase().indexOf('<head>');
   if (headIdx !== -1) {
-    return html.slice(0, headIdx + 6) + tags + html.slice(headIdx + 6);
+    return cleaned.slice(0, headIdx + 6) + tags + cleaned.slice(headIdx + 6);
   }
 
-  return tags + html;
+  return tags + cleaned;
 }
 
 function escapeAttr(value: string) {
