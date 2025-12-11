@@ -70,6 +70,7 @@ jobs:
         run: |
           echo "Building Cloudflare Pages bundle with base-href: /"
           npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
+          cp -r functions dist/hnews-cf/
 
       - name: E2E tests (Playwright Chromium)
         run: npm run e2e:chromium
@@ -85,7 +86,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages
-          path: dist/hnews-cf/browser
+          path: |
+            dist/hnews-cf/browser
+            dist/hnews-cf/functions
 
   deploy-github:
     name: Deploy to GitHub Pages
@@ -114,7 +117,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cloudflare-pages
-          path: cf-dist
+          path: cf-artifact
+
+      - name: Prepare Cloudflare deployment directory
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
+        run: |
+          mkdir -p cf-dist
+          cp -r cf-artifact/dist/hnews-cf/browser/* cf-dist/
+          cp -r cf-artifact/dist/hnews-cf/functions cf-dist/
 
       - name: Publish to Cloudflare Pages
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
