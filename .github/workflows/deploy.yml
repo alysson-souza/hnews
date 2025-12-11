@@ -67,20 +67,20 @@ jobs:
         run: npm run e2e:chromium
 
       - name: Upload Pages Artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-pages-artifact@v4
         with:
           path: dist/hnews-gh/browser
 
       - name: Upload Cloudflare Artifact
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages
           path: dist/hnews-cf/browser
 
   deploy-github:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: build-and-test
     runs-on: ubuntu-latest
     environment:
@@ -92,7 +92,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
   deploy-cloudflare:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
