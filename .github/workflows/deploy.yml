@@ -144,7 +144,13 @@ jobs:
           rm -f cf-dist/_redirects
           # Copy wrangler.toml to current directory for config
           cp cf-artifact/wrangler.toml .
+          # Debug: show structure
+          echo "=== cf-dist structure ==="
+          find cf-dist -type f | head -50
+          echo "=== wrangler.toml ==="
+          cat wrangler.toml
 
       - name: Publish to Cloudflare Pages
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
-        run: npx wrangler pages deploy cf-dist --project-name=${CF_PAGES_PROJECT_NAME:-hnews} --branch=${{ github.ref_name }}
+        run: |
+          npx wrangler pages deploy --project-name=${CF_PAGES_PROJECT_NAME:-hnews} --branch=${{ github.ref_name }}
