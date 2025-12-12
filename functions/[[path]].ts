@@ -1,4 +1,4 @@
-export interface Env {
+interface Env {
   HN_API_BASE: string;
   SITE_URL: string;
   DEFAULT_OG_IMAGE: string;
@@ -39,11 +39,7 @@ const FEED_ROUTES: Record<string, { title: string; description: string }> = {
   },
 };
 
-export async function onRequest(context: {
-  request: Request;
-  env: Env;
-  next: () => Promise<Response>;
-}): Promise<Response> {
+export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
@@ -102,7 +98,7 @@ export async function onRequest(context: {
     statusText: 'OK',
     headers,
   });
-}
+};
 
 function isAssetPath(pathname: string) {
   return /\.[a-z0-9]+$/i.test(pathname);
@@ -141,36 +137,45 @@ async function buildMetaForPath(pathname: string, env: Env) {
   if (itemMatch) {
     const id = Number(itemMatch[1]);
     const item = await fetchJSON(`${env.HN_API_BASE}/item/${id}.json`);
-    if (!item || typeof item !== 'object') return null;
+    if (!isRecord(item)) return null;
 
-    if (item.type === 'comment') {
-      const text = truncate(stripHtml(String(item.text || '')), 200);
+    const itemType = getString(item, 'type');
+
+    if (itemType === 'comment') {
+      const text = truncate(stripHtml(String(getString(item, 'text') || '')), 200);
       let parentTitle = '';
-      if (item.parent) {
-        const parent = await fetchJSON(`${env.HN_API_BASE}/item/${item.parent}.json`);
-        if (parent && typeof parent.title === 'string') parentTitle = parent.title;
+      const parentId = getNumber(item, 'parent');
+      if (typeof parentId === 'number') {
+        const parent = await fetchJSON(`${env.HN_API_BASE}/item/${parentId}.json`);
+        if (isRecord(parent)) {
+          const title = getString(parent, 'title');
+          if (title) parentTitle = title;
+        }
       }
 
       const description = parentTitle ? `Re: ${parentTitle} — ${text}` : text;
       return {
-        title: `Comment by ${item.by || 'unknown'} | HNews`,
+        title: `Comment by ${getString(item, 'by') || 'unknown'} | HNews`,
         description: description || 'Hacker News comment.',
         image: absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL),
         type: 'article' as const,
       };
     }
 
-    if (item.type === 'story' || item.type === 'job' || item.type === 'poll') {
-      const title = String(item.title || 'HNews');
-      const score = typeof item.score === 'number' ? item.score : undefined;
-      const author = item.by ? String(item.by) : undefined;
+    if (itemType === 'story' || itemType === 'job' || itemType === 'poll') {
+      const title = String(getString(item, 'title') || 'HNews');
+      const score = getNumber(item, 'score');
+      const author = getString(item, 'by');
+      const descendants = getNumber(item, 'descendants');
+      const kids = item['kids'];
       const comments =
-        typeof item.descendants === 'number'
-          ? item.descendants
-          : Array.isArray(item.kids)
-            ? item.kids.length
+        typeof descendants === 'number'
+          ? descendants
+          : Array.isArray(kids)
+            ? kids.length
             : undefined;
-      const domain = item.url ? safeHostname(item.url) : undefined;
+      const itemUrl = getString(item, 'url');
+      const domain = itemUrl ? safeHostname(itemUrl) : undefined;
 
       const parts: string[] = [];
       if (typeof score === 'number') parts.push(`${score} points`);
@@ -179,10 +184,8 @@ async function buildMetaForPath(pathname: string, env: Env) {
       if (domain) parts.push(domain);
 
       const description = parts.join(' | ') || 'Hacker News story.';
-      const image =
-        item.url && typeof item.url === 'string'
-          ? (await fetchArticleImage(item.url)) || absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL)
-          : absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL);
+      const defaultImage = absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL);
+      const image = itemUrl ? (await fetchArticleImage(itemUrl)) || defaultImage : defaultImage;
 
       return {
         title,
@@ -197,10 +200,10 @@ async function buildMetaForPath(pathname: string, env: Env) {
   if (userMatch) {
     const id = decodeURIComponent(userMatch[1]);
     const user = await fetchJSON(`${env.HN_API_BASE}/user/${encodeURIComponent(id)}.json`);
-    if (!user || typeof user !== 'object') return null;
+    if (!isRecord(user)) return null;
 
-    const karma = typeof user.karma === 'number' ? user.karma : 0;
-    const created = typeof user.created === 'number' ? user.created : 0;
+    const karma = getNumber(user, 'karma') ?? 0;
+    const created = getNumber(user, 'created') ?? 0;
     const date = created ? new Date(created * 1000).toISOString().slice(0, 10) : 'unknown date';
 
     return {
@@ -224,7 +227,21 @@ async function fetchJSON(url: string) {
     headers: { accept: 'application/json' },
   });
   if (!res.ok) return null;
-  return res.json();
+  return (await res.json()) as unknown;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getString(obj: Record<string, unknown>, key: string): string | undefined {
+  const value = obj[key];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function getNumber(obj: Record<string, unknown>, key: string): number | undefined {
+  const value = obj[key];
+  return typeof value === 'number' ? value : undefined;
 }
 
 async function fetchArticleImage(articleUrl: string): Promise<string | null> {

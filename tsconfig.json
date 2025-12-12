@@ -2,6 +2,7 @@
 /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "compileOnSave": false,
+  "exclude": ["functions/**/*"],
   "compilerOptions": {
     "strict": true,
     "noImplicitOverride": true,
