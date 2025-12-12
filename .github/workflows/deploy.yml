@@ -128,11 +128,4 @@ jobs:
 
       - name: Publish to Cloudflare Pages
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ env.CF_API_TOKEN }}
-          accountId: ${{ env.CF_ACCOUNT_ID }}
-          projectName: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME || 'hnews' }}
-          directory: cf-dist
-          branch: ${{ github.ref_name }}
-          wranglerVersion: '3'
+        run: npx wrangler pages deploy cf-dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME || 'hnews' }} --branch=${{ github.ref_name }}
