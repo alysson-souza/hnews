@@ -103,6 +103,7 @@ jobs:
           path: |
             dist/hnews-cf/browser
             dist/hnews-cf/functions
+            wrangler.toml
 
   deploy-github:
     name: Deploy to GitHub Pages
@@ -125,6 +126,7 @@ jobs:
     env:
       CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_PAGES_PROJECT_NAME: ${{ vars['CLOUDFLARE_PAGES_PROJECT_NAME'] }}
     steps:
       - name: Download Cloudflare Pages artifact
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
@@ -140,6 +142,8 @@ jobs:
           cp -r cf-artifact/browser/* cf-dist/
           cp -r cf-artifact/functions cf-dist/
           rm -f cf-dist/_redirects
+          # Copy wrangler.toml to current directory for config
+          cp cf-artifact/wrangler.toml .
 
       - name: Publish to Cloudflare Pages
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
