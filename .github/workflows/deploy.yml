@@ -149,16 +149,6 @@ jobs:
           
           # Copy wrangler.toml to current directory for config
           cp cf-artifact/wrangler.toml .
-          
-          # Debug: show structure
-          echo "=== Directory structure ==="
-          ls -la
-          echo "=== cf-dist (static assets) ==="
-          ls cf-dist | head -20
-          echo "=== functions directory ==="
-          ls functions
-          echo "=== wrangler.toml ==="
-          cat wrangler.toml
 
       - name: Publish to Cloudflare Pages
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
