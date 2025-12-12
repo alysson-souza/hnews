@@ -139,8 +139,8 @@ jobs:
         if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         run: |
           mkdir -p cf-dist
-          cp -r cf-artifact/browser/* cf-dist/
-          cp -r cf-artifact/functions cf-dist/
+          cp -r cf-artifact/dist/hnews-cf/browser/* cf-dist/
+          cp -r cf-artifact/dist/hnews-cf/functions cf-dist/
           rm -f cf-dist/_redirects
           # Copy wrangler.toml to current directory for config
           cp cf-artifact/wrangler.toml .
