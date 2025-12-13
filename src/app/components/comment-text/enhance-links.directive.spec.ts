@@ -8,7 +8,6 @@ import { EnhanceLinksDirective } from './enhance-links.directive';
 
 @Component({
   template: '<div [innerHTML]="html()" appEnhanceLinks></div>',
-  standalone: true,
   imports: [EnhanceLinksDirective],
 })
 class TestComponent {

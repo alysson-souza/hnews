@@ -10,7 +10,6 @@ import {
 
 @Component({
   selector: 'app-header-mobile-controls',
-  standalone: true,
   imports: [NgIconComponent],
   viewProviders: [
     provideIcons({ solarMagniferLinear, solarHamburgerMenuLinear, solarCloseCircleLinear }),

@@ -11,7 +11,6 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
 
 @Component({
   selector: 'app-header',
-  standalone: true,
   imports: [
     HeaderBrandComponent,
     HeaderDesktopNavComponent,

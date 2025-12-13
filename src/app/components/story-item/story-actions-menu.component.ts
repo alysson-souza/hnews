@@ -7,7 +7,6 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-story-actions-menu',
-  standalone: true,
   imports: [NgIconComponent],
   viewProviders: [provideIcons({ solarMenuDotsLinear })],
   template: `

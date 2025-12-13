@@ -29,7 +29,6 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
 
 @Component({
   selector: 'app-story-list',
-  standalone: true,
   imports: [StoryItem, PageContainerComponent, SegmentedControlComponent],
   templateUrl: './story-list.html',
   styleUrl: './story-list.css',

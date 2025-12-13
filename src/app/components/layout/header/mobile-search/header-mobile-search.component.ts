@@ -8,7 +8,6 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-header-mobile-search',
-  standalone: true,
   imports: [FormsModule, NgIconComponent],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `

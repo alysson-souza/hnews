@@ -6,7 +6,6 @@ export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
 
 @Component({
   selector: 'app-comment-sort-dropdown',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
   template: `

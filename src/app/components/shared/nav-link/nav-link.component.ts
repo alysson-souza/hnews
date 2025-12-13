@@ -7,7 +7,6 @@ import { ScrollService } from '../../../services/scroll.service';
 
 @Component({
   selector: 'app-nav-link',
-  standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
     <a

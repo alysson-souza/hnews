@@ -4,7 +4,6 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-section-title',
-  standalone: true,
   imports: [],
   template: `
     <h1 [class]="getTitleClass()">

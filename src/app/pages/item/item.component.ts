@@ -21,7 +21,6 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 
 @Component({
   selector: 'app-item',
-  standalone: true,
   imports: [
     CommentThread,
     PageContainerComponent,

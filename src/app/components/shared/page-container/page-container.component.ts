@@ -4,7 +4,6 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-page-container',
-  standalone: true,
   imports: [],
   template: `
     <div [class]="getContainerClasses()">

@@ -5,7 +5,6 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-footer',
-  standalone: true,
   imports: [RouterModule],
   template: `
     <footer class="app-footer" role="contentinfo">

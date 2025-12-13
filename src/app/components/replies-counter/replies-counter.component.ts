@@ -4,7 +4,6 @@ import { Component, output, input, ChangeDetectionStrategy } from '@angular/core
 
 @Component({
   selector: 'app-replies-counter',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
   template: `

@@ -4,7 +4,6 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-op-badge',
-  standalone: true,
   template: `
     <span class="op-badge" role="img" [attr.aria-label]="'Original Poster'" title="Original Poster">
       OP

@@ -7,7 +7,6 @@ import { ScrollService } from '../../../../services/scroll.service';
 
 @Component({
   selector: 'app-header-brand',
-  standalone: true,
   imports: [RouterLink],
   template: `
     <div class="flex items-center">

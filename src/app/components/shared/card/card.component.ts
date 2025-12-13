@@ -4,7 +4,6 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-card',
-  standalone: true,
   imports: [],
   template: `
     <div [class]="getCardClasses()">

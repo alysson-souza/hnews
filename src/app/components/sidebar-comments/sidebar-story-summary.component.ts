@@ -10,7 +10,6 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 
 @Component({
   selector: 'app-sidebar-story-summary',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent],
   template: `

@@ -7,7 +7,6 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 
 @Component({
   selector: 'app-thread-gutter',
-  standalone: true,
   template: `
     <div
       class="thread-container group"

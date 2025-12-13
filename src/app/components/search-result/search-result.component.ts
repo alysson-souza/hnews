@@ -28,7 +28,6 @@ interface SearchHit {
 
 @Component({
   selector: 'app-search-result',
-  standalone: true,
   imports: [RouterLink, ResultMetaComponent],
   template: `
     <div class="result-row">

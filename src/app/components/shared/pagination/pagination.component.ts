@@ -7,7 +7,6 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
 
 @Component({
   selector: 'app-pagination',
-  standalone: true,
   imports: [NgIconComponent],
   viewProviders: [provideIcons({ solarAltArrowLeftLinear, solarAltArrowRightLinear })],
   template: `

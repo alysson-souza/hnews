@@ -48,7 +48,6 @@ import {
 
 @Component({
   selector: 'app-settings',
-  standalone: true,
   imports: [
     FormsModule,
     RouterModule,

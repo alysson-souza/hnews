@@ -11,7 +11,6 @@ import {
 
 @Component({
   selector: 'app-sidebar-comments-header',
-  standalone: true,
   imports: [RouterLink, NgIconComponent],
   viewProviders: [
     provideIcons({

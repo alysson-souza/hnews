@@ -13,7 +13,6 @@ import {
 
 @Component({
   selector: 'app-theme-selector',
-  standalone: true,
   imports: [FormsModule, NgIconComponent],
   viewProviders: [provideIcons({ solarSunLinear, solarMoonLinear, solarMonitorSmartphoneLinear })],
   template: `

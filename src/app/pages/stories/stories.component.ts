@@ -7,7 +7,6 @@ import { StoryList } from '../../components/story-list/story-list';
 
 @Component({
   selector: 'app-stories',
-  standalone: true,
   imports: [StoryList],
   template: ` <app-story-list [storyType]="storyType" /> `,
 })

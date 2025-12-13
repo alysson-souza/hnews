@@ -12,7 +12,6 @@ import { EnhanceLinksDirective } from './enhance-links.directive';
 
 @Component({
   selector: 'app-comment-text',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EnhanceLinksDirective],
   viewProviders: [provideIcons({ solarLinkLinear })],

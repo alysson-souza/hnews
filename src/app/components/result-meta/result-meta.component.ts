@@ -8,7 +8,6 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 
 @Component({
   selector: 'app-result-meta',
-  standalone: true,
   imports: [RouterLink, UserTagComponent, DecimalPipe],
   template: `
     <div class="result-meta">

@@ -18,7 +18,6 @@ import { StoryActionsMenuComponent } from './story-actions-menu.component';
 
 @Component({
   selector: 'app-story-item',
-  standalone: true,
   imports: [
     RouterLink,
     StoryThumbnailComponent,

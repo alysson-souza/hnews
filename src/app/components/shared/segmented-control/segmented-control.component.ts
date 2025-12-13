@@ -9,7 +9,6 @@ export interface SegmentOption {
 
 @Component({
   selector: 'app-segmented-control',
-  standalone: true,
   imports: [],
   template: `
     <div class="segmented-control-container" role="tablist">

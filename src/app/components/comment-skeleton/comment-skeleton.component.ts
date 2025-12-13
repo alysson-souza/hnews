@@ -5,7 +5,6 @@ import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-comment-skeleton',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgClass],
   template: `

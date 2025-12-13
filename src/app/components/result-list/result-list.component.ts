@@ -6,7 +6,6 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
 @Component({
   selector: 'app-result-list',
-  standalone: true,
   imports: [AppButtonComponent],
   template: `
     <div class="result-list-container">

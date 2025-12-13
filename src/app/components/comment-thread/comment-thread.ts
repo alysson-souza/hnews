@@ -22,7 +22,6 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-comment-thread',
-  standalone: true,
   imports: [
     CommentThread,
     ThreadGutterComponent,

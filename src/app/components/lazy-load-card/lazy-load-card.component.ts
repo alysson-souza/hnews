@@ -6,7 +6,6 @@ import { AppButtonComponent } from '../shared/app-button/app-button.component';
 
 @Component({
   selector: 'app-lazy-load-card',
-  standalone: true,
   imports: [AppButtonComponent, NgClass],
   template: `
     <div

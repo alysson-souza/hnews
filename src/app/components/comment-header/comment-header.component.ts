@@ -12,7 +12,6 @@ import { DeviceService } from '../../services/device.service';
 
 @Component({
   selector: 'app-comment-header',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     UpvoteButtonComponent,

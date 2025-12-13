@@ -19,7 +19,6 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-user-tag',
-  standalone: true,
   imports: [FormsModule, RouterLink, NgIconComponent],
   viewProviders: [provideIcons({ solarTagLinear })],
   changeDetection: ChangeDetectionStrategy.OnPush,

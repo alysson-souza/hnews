@@ -19,7 +19,6 @@ import {
 
 @Component({
   selector: 'app-userscript',
-  standalone: true,
   imports: [
     CardComponent,
     PageContainerComponent,

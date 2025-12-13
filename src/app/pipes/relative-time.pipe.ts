@@ -5,7 +5,6 @@ import { formatRelativeTime } from '../services/relative-time.util';
 
 @Pipe({
   name: 'relativeTime',
-  standalone: true,
   pure: true,
 })
 export class RelativeTimePipe implements PipeTransform {

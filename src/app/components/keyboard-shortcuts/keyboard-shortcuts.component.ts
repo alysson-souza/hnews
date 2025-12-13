@@ -9,7 +9,6 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
 
 @Component({
   selector: 'app-keyboard-shortcuts',
-  standalone: true,
   imports: [NgIconComponent],
   viewProviders: [provideIcons({ solarCloseCircleLinear })],
   template: `

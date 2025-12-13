@@ -15,7 +15,6 @@ import { PrivacyRedirectService } from '../../../services/privacy-redirect.servi
  */
 @Directive({
   selector: 'a[appPrivacyRedirect]',
-  standalone: true,
 })
 export class PrivacyRedirectDirective implements OnInit, OnDestroy {
   private el = inject(ElementRef<HTMLAnchorElement>);

@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-api-key-input',
-  standalone: true,
   imports: [FormsModule],
   template: `
     @if (!hideLabel()) {

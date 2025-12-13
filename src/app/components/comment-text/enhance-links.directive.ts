@@ -32,7 +32,6 @@ import { PrivacyRedirectService } from '../../services/privacy-redirect.service'
  */
 @Directive({
   selector: '[appEnhanceLinks]',
-  standalone: true,
 })
 export class EnhanceLinksDirective implements AfterViewInit, OnDestroy {
   private elementRef = inject(ElementRef);

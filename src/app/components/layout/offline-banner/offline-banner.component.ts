@@ -4,7 +4,6 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-offline-banner',
-  standalone: true,
   imports: [],
   template: `
     @if (visible()) {

@@ -12,7 +12,6 @@ import {
 
 @Component({
   selector: 'app-theme-toggle',
-  standalone: true,
   imports: [NgIconComponent],
   viewProviders: [provideIcons({ solarSunLinear, solarMoonLinear, solarMonitorSmartphoneLinear })],
   template: `

@@ -6,7 +6,6 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
 
 @Component({
   selector: 'app-header-mobile-nav',
-  standalone: true,
   imports: [NavLinkComponent],
   template: `
     <nav

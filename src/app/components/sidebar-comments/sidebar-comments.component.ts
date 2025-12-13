@@ -18,7 +18,6 @@ import {
 
 @Component({
   selector: 'app-sidebar-comments',
-  standalone: true,
   imports: [
     CommentThread,
     SidebarCommentsHeaderComponent,

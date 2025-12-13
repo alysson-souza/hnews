@@ -4,7 +4,6 @@ import { Component, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-upvote-button',
-  standalone: true,
   template: `
     <button
       type="button"

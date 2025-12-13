@@ -8,7 +8,6 @@ import { AppShellComponent } from './app-shell.component';
 import { AppHeaderComponent } from '../header/header.component';
 
 @Component({
-  standalone: true,
   imports: [AppShellComponent],
   template: `
     <app-shell

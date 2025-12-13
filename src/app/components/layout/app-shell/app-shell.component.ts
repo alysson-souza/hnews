@@ -7,7 +7,6 @@ import { AppFooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-shell',
-  standalone: true,
   imports: [AppHeaderComponent, AppFooterComponent],
   template: `
     <app-header

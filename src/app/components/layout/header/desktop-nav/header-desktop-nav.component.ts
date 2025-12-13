@@ -20,7 +20,6 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
 
 @Component({
   selector: 'app-header-desktop-nav',
-  standalone: true,
   imports: [NavLinkComponent],
   template: `
     <nav

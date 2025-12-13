@@ -6,7 +6,6 @@ import { ScrollService } from '../../../services/scroll.service';
 
 @Component({
   selector: 'app-scroll-to-top',
-  standalone: true,
   imports: [],
   template: `
     @if (isVisible()) {

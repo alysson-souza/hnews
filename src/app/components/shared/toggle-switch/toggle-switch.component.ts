@@ -4,7 +4,6 @@ import { Component, output, input } from '@angular/core';
 
 @Component({
   selector: 'app-toggle-switch',
-  standalone: true,
   imports: [],
   template: `
     <button

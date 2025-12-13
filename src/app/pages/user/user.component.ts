@@ -24,7 +24,6 @@ import {
 
 @Component({
   selector: 'app-user',
-  standalone: true,
   imports: [
     PageContainerComponent,
     CardComponent,

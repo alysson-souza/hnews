@@ -5,7 +5,6 @@ import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-story-favicon',
-  standalone: true,
   imports: [NgOptimizedImage],
   template: `
     @if (!hasError()) {

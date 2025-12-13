@@ -35,7 +35,6 @@ import { ItemKeyboardNavigationService } from './services/item-keyboard-navigati
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [
     RouterOutlet,
     SidebarCommentsComponent,

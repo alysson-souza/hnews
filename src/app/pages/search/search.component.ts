@@ -43,7 +43,6 @@ interface SearchHit {
 
 @Component({
   selector: 'app-search',
-  standalone: true,
   imports: [
     FormsModule,
     PageContainerComponent,

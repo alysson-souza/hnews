@@ -6,7 +6,6 @@ import { PrivacyRedirectService } from '../../../services/privacy-redirect.servi
 
 @Component({
   selector: 'app-story-thumbnail',
-  standalone: true,
   imports: [StoryFaviconComponent],
   template: `
     <div class="thumb">
