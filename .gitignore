@@ -46,7 +46,6 @@ Thumbs.db
 
 # AI
 .claude/*.local.json
-.claude/**/*.md
 .kilocode/mcp.json
 
 # Environment variables
