@@ -7,11 +7,12 @@ import { HNItem } from '../../models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
+import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
 
 @Component({
   selector: 'app-sidebar-story-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent],
+  imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent, PrivacyRedirectDirective],
   template: `
     <section class="story">
       <h3 class="story-title">
@@ -22,6 +23,7 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
             rel="noopener noreferrer nofollow"
             class="story-link"
             [attr.title]="item().title || ''"
+            appPrivacyRedirect
           >
             {{ item().title }}
           </a>

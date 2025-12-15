@@ -187,4 +187,42 @@ describe('SidebarStorySummaryComponent', () => {
       expect(meta.nativeElement.textContent).toContain('0 points');
     });
   });
+
+  describe('privacy redirect directive', () => {
+    it('should apply privacy redirect directive to external story links', () => {
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'story',
+        by: 'testuser',
+        time: 1708099200,
+        title: 'Test Story with Twitter Link',
+        url: 'https://twitter.com/example',
+        score: 100,
+      });
+      fixture.detectChanges();
+
+      const link = fixture.debugElement.query(By.css('.story-link'));
+      expect(link).toBeTruthy();
+      expect(link.nativeElement.href).toBe('https://twitter.com/example');
+      expect(link.nativeElement.target).toBe('_blank');
+      expect(link.nativeElement.rel).toBe('noopener noreferrer nofollow');
+    });
+
+    it('should display original URL in link href', () => {
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'story',
+        by: 'testuser',
+        time: 1708099200,
+        title: 'Test Story',
+        url: 'https://youtube.com/watch?v=test',
+        score: 50,
+      });
+      fixture.detectChanges();
+
+      const link = fixture.debugElement.query(By.css('.story-link'));
+      expect(link).toBeTruthy();
+      expect(link.nativeElement.href).toBe('https://youtube.com/watch?v=test');
+    });
+  });
 });
