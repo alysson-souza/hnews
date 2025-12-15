@@ -755,8 +755,8 @@ describe('SearchResultComponent', () => {
     });
   });
 
-  describe('privacy redirect directive', () => {
-    it('should apply appPrivacyRedirect directive to external links in search results', () => {
+  describe('external link rendering', () => {
+    it('should render external links with target="_blank" for search results', () => {
       fixture.componentRef.setInput('item', {
         objectID: '123456',
         title: 'Test Story with External URL',
@@ -770,33 +770,14 @@ describe('SearchResultComponent', () => {
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement as HTMLElement;
-      const externalLink = compiled.querySelector('a[href*="twitter.com"]');
+      const externalLink = compiled.querySelector('a[href*="twitter.com"]') as HTMLAnchorElement;
 
       expect(externalLink).toBeTruthy();
-      expect(externalLink?.hasAttribute('appprivacyredirect')).toBe(true);
+      expect(externalLink?.target).toBe('_blank');
+      expect(externalLink?.rel).toBe('noopener noreferrer');
     });
 
-    it('should not apply directive to internal links', () => {
-      fixture.componentRef.setInput('item', {
-        objectID: '123456',
-        title: 'Ask HN: Test Question',
-        url: '',
-        author: 'testuser',
-        points: 42,
-        num_comments: 10,
-        created_at: '2025-10-03T00:00:00Z',
-      });
-      fixture.componentRef.setInput('isSearchResult', true);
-      fixture.detectChanges();
-
-      const compiled = fixture.nativeElement as HTMLElement;
-      const internalLink = compiled.querySelector('a.title-link');
-
-      expect(internalLink).toBeTruthy();
-      expect(internalLink?.hasAttribute('appprivacyredirect')).toBe(false);
-    });
-
-    it('should not apply directive to dead/flagged items', () => {
+    it('should render dead/flagged items with special styling', () => {
       fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
@@ -812,7 +793,7 @@ describe('SearchResultComponent', () => {
       const deadLink = compiled.querySelector('a.dead-item');
 
       expect(deadLink).toBeTruthy();
-      expect(deadLink?.hasAttribute('appprivacyredirect')).toBe(false);
+      expect(deadLink?.textContent?.trim()).toBe('[flagged]');
     });
   });
 });
