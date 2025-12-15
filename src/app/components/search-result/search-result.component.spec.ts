@@ -754,4 +754,46 @@ describe('SearchResultComponent', () => {
       expect(component.getPoints()).toBe(0); // null fallback
     });
   });
+
+  describe('external link rendering', () => {
+    it('should render external links with target="_blank" for search results', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123456',
+        title: 'Test Story with External URL',
+        url: 'https://twitter.com/example',
+        author: 'testuser',
+        points: 42,
+        num_comments: 10,
+        created_at: '2025-10-03T00:00:00Z',
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const externalLink = compiled.querySelector('a[href*="twitter.com"]') as HTMLAnchorElement;
+
+      expect(externalLink).toBeTruthy();
+      expect(externalLink?.target).toBe('_blank');
+      expect(externalLink?.rel).toBe('noopener noreferrer');
+    });
+
+    it('should render dead/flagged items with special styling', () => {
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'story',
+        time: 1234567890,
+        title: 'Dead Story',
+        url: 'https://example.com',
+        dead: true,
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const deadLink = compiled.querySelector('a.dead-item');
+
+      expect(deadLink).toBeTruthy();
+      expect(deadLink?.textContent?.trim()).toBe('[flagged]');
+    });
+  });
 });

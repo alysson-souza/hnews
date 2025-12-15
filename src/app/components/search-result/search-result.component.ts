@@ -10,6 +10,7 @@ import {
 import { HNItem } from '../../models/hn';
 import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
+import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
 
 interface SearchHit {
   objectID: string;
@@ -28,7 +29,7 @@ interface SearchHit {
 
 @Component({
   selector: 'app-search-result',
-  imports: [RouterLink, ResultMetaComponent],
+  imports: [RouterLink, ResultMetaComponent, PrivacyRedirectDirective],
   template: `
     <div class="result-row">
       @if (isStory()) {
@@ -50,6 +51,7 @@ interface SearchHit {
               class="title-link"
               [attr.title]="getPlainTitle()"
               [innerHTML]="getHighlightedTitle()"
+              appPrivacyRedirect
             >
             </a>
           } @else {
