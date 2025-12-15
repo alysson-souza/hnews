@@ -21,6 +21,7 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
 import { getDomain } from '../../services/domain.utils';
+import { PrivacyRedirectDirective } from '../../components/shared/privacy-redirect/privacy-redirect.directive';
 
 interface HighlightField {
   value: string;
@@ -53,6 +54,7 @@ interface SearchHit {
     CommentTextComponent,
     RouterLink,
     DecimalPipe,
+    PrivacyRedirectDirective,
   ],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
@@ -207,6 +209,7 @@ interface SearchHit {
                         rel="noopener noreferrer"
                         class="title-link"
                         [innerHTML]="getHighlightedText(hit, 'title')"
+                        appPrivacyRedirect
                       ></a>
                     } @else {
                       <a
