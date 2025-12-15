@@ -754,4 +754,65 @@ describe('SearchResultComponent', () => {
       expect(component.getPoints()).toBe(0); // null fallback
     });
   });
+
+  describe('privacy redirect directive', () => {
+    it('should apply appPrivacyRedirect directive to external links in search results', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123456',
+        title: 'Test Story with External URL',
+        url: 'https://twitter.com/example',
+        author: 'testuser',
+        points: 42,
+        num_comments: 10,
+        created_at: '2025-10-03T00:00:00Z',
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const externalLink = compiled.querySelector('a[href*="twitter.com"]');
+
+      expect(externalLink).toBeTruthy();
+      expect(externalLink?.hasAttribute('appprivacyredirect')).toBe(true);
+    });
+
+    it('should not apply directive to internal links', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123456',
+        title: 'Ask HN: Test Question',
+        url: '',
+        author: 'testuser',
+        points: 42,
+        num_comments: 10,
+        created_at: '2025-10-03T00:00:00Z',
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const internalLink = compiled.querySelector('a.title-link');
+
+      expect(internalLink).toBeTruthy();
+      expect(internalLink?.hasAttribute('appprivacyredirect')).toBe(false);
+    });
+
+    it('should not apply directive to dead/flagged items', () => {
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'story',
+        time: 1234567890,
+        title: 'Dead Story',
+        url: 'https://example.com',
+        dead: true,
+      });
+      fixture.componentRef.setInput('isSearchResult', false);
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const deadLink = compiled.querySelector('a.dead-item');
+
+      expect(deadLink).toBeTruthy();
+      expect(deadLink?.hasAttribute('appprivacyredirect')).toBe(false);
+    });
+  });
 });
