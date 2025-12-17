@@ -57,14 +57,45 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
       @reference '../../../styles.css';
 
       .thread-container {
-        @apply relative mb-3;
-        --line-width: 2px;
+        @apply relative mb-4;
+        --line-width: 3px;
         --avatar-size: 32px;
         --header-height: 28px;
       }
 
+      /* Top-level comment separator */
+      .thread-container:not(.thread-indent) {
+        @apply pb-4;
+      }
+
+      .thread-container:not(.thread-indent)::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgb(229 231 235) 10%,
+          rgb(229 231 235) 90%,
+          transparent 100%
+        );
+      }
+
+      :host-context(.dark) .thread-container:not(.thread-indent)::after {
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgb(51 65 85) 10%,
+          rgb(51 65 85) 90%,
+          transparent 100%
+        );
+      }
+
       .thread-indent {
-        @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative;
+        @apply ml-3 sm:ml-5 pl-3 sm:pl-4 relative;
         border-left: none; /* Remove simple border, use ::before instead */
       }
 
@@ -75,21 +106,63 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         left: 0;
         top: 0;
         width: var(--line-width);
-        height: calc(100% + 12px); /* Extend to bridge gap between comments */
-        background-color: rgb(229 231 235); /* gray-200 */
+        height: calc(100% + 16px); /* Extend to bridge gap between comments */
+        border-radius: 2px;
         transition:
           background-color 200ms ease,
           opacity 200ms ease;
       }
 
-      /* Dark mode line color */
+      /* Depth-based thread line colors for visual hierarchy */
+      .thread-indent::before {
+        background-color: rgb(191 219 254); /* blue-200 */
+      }
+
+      .thread-indent .thread-indent::before {
+        background-color: rgb(196 181 253); /* violet-200 */
+      }
+
+      .thread-indent .thread-indent .thread-indent::before {
+        background-color: rgb(253 186 116); /* orange-200 */
+      }
+
+      .thread-indent .thread-indent .thread-indent .thread-indent::before {
+        background-color: rgb(134 239 172); /* green-200 */
+      }
+
+      .thread-indent .thread-indent .thread-indent .thread-indent .thread-indent::before {
+        background-color: rgb(252 165 165); /* red-200 */
+      }
+
+      /* Dark mode line colors */
       :host-context(.dark) .thread-indent::before {
-        background-color: rgb(51 65 85); /* slate-700 */
+        background-color: rgb(30 58 138); /* blue-900 */
+      }
+
+      :host-context(.dark) .thread-indent .thread-indent::before {
+        background-color: rgb(76 29 149); /* violet-900 */
+      }
+
+      :host-context(.dark) .thread-indent .thread-indent .thread-indent::before {
+        background-color: rgb(124 45 18); /* orange-900 */
+      }
+
+      :host-context(.dark) .thread-indent .thread-indent .thread-indent .thread-indent::before {
+        background-color: rgb(20 83 45); /* green-900 */
+      }
+
+      :host-context(.dark)
+        .thread-indent
+        .thread-indent
+        .thread-indent
+        .thread-indent
+        .thread-indent::before {
+        background-color: rgb(127 29 29); /* red-900 */
       }
 
       /* Collapsed state - dim the line */
       .thread-container.collapsed .thread-indent::before {
-        opacity: 0.5;
+        opacity: 0.4;
       }
 
       .header {
@@ -140,6 +213,26 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 
       .content {
         @apply relative;
+      }
+
+      /* Subtle hover effect on comment node */
+      .comment-node {
+        @apply rounded-lg transition-colors duration-150;
+        padding: 4px 8px;
+        margin: -4px -8px;
+      }
+
+      .comment-node:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+
+      :host-context(.dark) .comment-node:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+
+      /* Don't apply hover when keyboard focused (already has border) */
+      .comment-node.keyboard-focused:hover {
+        background-color: transparent;
       }
     `,
   ],
