@@ -79,9 +79,9 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         content: '';
         position: absolute;
         left: 0;
-        top: -6px; /* Start slightly above for balanced spacing */
+        top: -6px; /* Start slightly above to connect with previous comment */
         width: var(--line-width);
-        height: calc(100% + 12px); /* Extend equally above and below */
+        height: calc(100% + 6px); /* Extend only above, stop at baseline */
         background-color: rgb(209 213 219); /* gray-300 - more visible */
         transition:
           background-color 200ms ease,
