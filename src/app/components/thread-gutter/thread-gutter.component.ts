@@ -63,6 +63,12 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         --header-height: 28px;
       }
 
+      /* Top-level comment separator and background */
+      .thread-container[aria-level='1'] {
+        @apply mb-6 pb-6 border-b border-gray-200 dark:border-slate-700;
+        @apply bg-gray-50/30 dark:bg-slate-800/20 rounded-lg p-3;
+      }
+
       .thread-indent {
         @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative;
         border-left: none; /* Remove simple border, use ::before instead */
@@ -76,15 +82,15 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         top: 0;
         width: var(--line-width);
         height: calc(100% + 12px); /* Extend to bridge gap between comments */
-        background-color: rgb(229 231 235); /* gray-200 */
+        background-color: rgb(209 213 219); /* gray-300 - more visible */
         transition:
           background-color 200ms ease,
           opacity 200ms ease;
       }
 
-      /* Dark mode line color */
+      /* Dark mode line color - more visible */
       :host-context(.dark) .thread-indent::before {
-        background-color: rgb(51 65 85); /* slate-700 */
+        background-color: rgb(71 85 105); /* slate-600 - more visible */
       }
 
       /* Collapsed state - dim the line */
