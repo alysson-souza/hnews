@@ -66,7 +66,7 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
       /* Top-level comment separator and background */
       .thread-container[aria-level='1'] {
         @apply mb-6 pb-6 border-b border-gray-200 dark:border-slate-700;
-        @apply bg-gray-50/30 dark:bg-slate-800/20 rounded-lg p-3;
+        @apply bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3;
       }
 
       .thread-indent {
