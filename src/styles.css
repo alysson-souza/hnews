@@ -215,12 +215,13 @@ code {
   margin-top: 0;
 }
 /* Comments panel: control bottom spacing via last child margin, not card padding */
-.comments-card .space-y-4 > :last-child {
+.comments-card .comment-list-divided > :last-child {
   /* Last top-level thread should not add extra space beyond card padding */
   margin-bottom: 0;
+  padding-bottom: 0;
 }
 
-.comments-card .space-y-4 + .mt-6 {
+.comments-card .comment-list-divided + .mt-6 {
   /* Load-more container itself should not push the card bottom further down */
   margin-bottom: 0;
 }
@@ -269,4 +270,17 @@ code {
   line-height: 1.15rem !important;
   /* Slightly tighter chip paddings */
   padding: 0.125rem 0.375rem !important; /* ~py-0.5 px-1.5 -> a bit tighter */
+}
+
+/* Top-level comment separators */
+.comment-list-divided > *:not(:first-child) {
+  @apply pt-5 border-t border-gray-200;
+}
+.dark .comment-list-divided > *:not(:first-child) {
+  @apply border-slate-700/60;
+}
+
+/* Spacing for top-level comments */
+.comment-list-divided > * {
+  @apply pb-1;
 }
