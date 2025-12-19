@@ -30,7 +30,7 @@ import {
     @if (sidebarService.isOpen()) {
       <!-- Mobile: Full screen overlay, tablet: below header overlay -->
       <div
-        class="lg:hidden fixed inset-0 sm:top-16 bg-black bg-opacity-50 z-40"
+        class="sidebar-overlay lg:hidden fixed inset-0 sm:top-16 bg-black bg-opacity-50 z-40"
         role="button"
         tabindex="0"
         aria-label="Close sidebar"
@@ -42,7 +42,7 @@ import {
 
       <!-- Sidebar Panel -->
       <div
-        class="fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700/60 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
+        class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700/60 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
         [class.translate-x-full]="!sidebarService.isOpen()"
         [class.translate-x-0]="sidebarService.isOpen()"
       >
@@ -151,6 +151,30 @@ import {
 
       :host {
         display: contents;
+      }
+
+      /* PWA standalone mode: adjust for safe area insets */
+      @media (display-mode: standalone) {
+        .sidebar-overlay {
+          /* Position overlay below header which includes safe area */
+          top: calc(4rem + env(safe-area-inset-top, 0px)) !important;
+        }
+
+        .sidebar-panel {
+          /* Position panel below header which includes safe area */
+          top: calc(4rem + env(safe-area-inset-top, 0px)) !important;
+        }
+
+        /* On mobile (no sm: prefix), reset to full screen in PWA mode */
+        @media (max-width: 639.98px) {
+          .sidebar-overlay {
+            top: 0 !important;
+          }
+
+          .sidebar-panel {
+            top: 0 !important;
+          }
+        }
       }
 
       .slide-out-left {
