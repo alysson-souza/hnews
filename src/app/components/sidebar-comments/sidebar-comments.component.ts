@@ -28,9 +28,9 @@ import {
   template: `
     <!-- Sidebar Comments -->
     @if (sidebarService.isOpen()) {
-      <!-- Mobile: Full screen overlay -->
+      <!-- Mobile: Full screen overlay, tablet: below header overlay -->
       <div
-        class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+        class="lg:hidden fixed inset-0 sm:top-16 bg-black bg-opacity-50 z-40"
         role="button"
         tabindex="0"
         aria-label="Close sidebar"
@@ -42,7 +42,7 @@ import {
 
       <!-- Sidebar Panel -->
       <div
-        class="fixed right-0 top-0 lg:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700/60 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 lg:z-30"
+        class="fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700/60 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
         [class.translate-x-full]="!sidebarService.isOpen()"
         [class.translate-x-0]="sidebarService.isOpen()"
       >
