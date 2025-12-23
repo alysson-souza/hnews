@@ -214,24 +214,6 @@ code {
 .comment-body blockquote p:first-child {
   margin-top: 0;
 }
-/* Comments panel: control bottom spacing via last child margin, not card padding */
-.comments-card .comment-list-divided > :last-child {
-  /* Last top-level thread should not add extra space beyond card padding */
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.comments-card .comment-list-divided + .mt-6 {
-  /* Load-more container itself should not push the card bottom further down */
-  margin-bottom: 0;
-}
-
-/* When there is no "Load more comments" section, reduce bottom padding on the
-   main comments card so that the space below the last comment roughly matches
-   the space above the "Comments" heading. */
-.comments-card:not(:has(div.mt-6.flex.justify-center)) .card-base.card-padding {
-  padding-bottom: 0.75rem; /* 12px instead of default 24px */
-}
 
 /* Distinct URL styling inside comment text and story bodies */
 .comment-body a,
@@ -272,15 +254,17 @@ code {
   padding: 0.125rem 0.375rem !important; /* ~py-0.5 px-1.5 -> a bit tighter */
 }
 
-/* Top-level comment separators */
-.comment-list-divided > *:not(:first-child) {
-  @apply pt-5 border-t border-gray-200;
-}
-.dark .comment-list-divided > *:not(:first-child) {
-  @apply border-slate-700/60;
+/* Top-level comment separators and spacing */
+.comment-list-divided > * {
+  /* Give each comment some breathing room at the bottom */
+  @apply pb-4;
 }
 
-/* Spacing for top-level comments */
-.comment-list-divided > * {
-  @apply pb-1;
+.comment-list-divided > *:not(:first-child) {
+  /* Add border and padding above (not margin to avoid collapse) */
+  @apply pt-4 border-t border-gray-200;
+}
+
+.dark .comment-list-divided > *:not(:first-child) {
+  @apply border-slate-700/60;
 }
