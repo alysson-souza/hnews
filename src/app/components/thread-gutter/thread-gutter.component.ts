@@ -89,7 +89,7 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         position: absolute;
         left: 0;
         top: var(--connector-offset); /* Align with comment header center */
-        width: calc(0.5rem + 0.5rem); /* Extend to reach comment box (8px + 8px) */
+        width: 1rem; /* Extends to reach comment box */
         height: var(--line-width);
         background-color: rgb(229 231 235); /* gray-200 */
         transition:
