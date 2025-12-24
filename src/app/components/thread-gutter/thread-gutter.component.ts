@@ -57,39 +57,65 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
       @reference '../../../styles.css';
 
       .thread-container {
-        @apply relative mb-3;
+        @apply relative;
         --line-width: 2px;
         --avatar-size: 32px;
         --header-height: 28px;
       }
 
+      /* Bottom margin only for nested comments */
       .thread-indent {
-        @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative;
-        border-left: none; /* Remove simple border, use ::before instead */
+        @apply mb-3;
       }
 
-      /* Enhanced vertical thread line - contiguous without gaps */
+      .thread-indent {
+        @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative;
+        border-left: none; /* Remove simple border, use pseudo-elements for tree */
+      }
+
+      /* Vertical thread line (parent connector) */
       .thread-indent::before {
         content: '';
         position: absolute;
         left: 0;
         top: 0;
         width: var(--line-width);
-        height: calc(100% + 12px); /* Extend to bridge gap between comments */
+        height: 100%;
         background-color: rgb(229 231 235); /* gray-200 */
         transition:
           background-color 200ms ease,
           opacity 200ms ease;
       }
 
-      /* Dark mode line color */
-      :host-context(.dark) .thread-indent::before {
+      /* Horizontal connector line (tree branch to comment) */
+      .thread-indent::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 14px; /* Align with comment header center */
+        width: 0.5rem; /* 8px horizontal branch */
+        height: var(--line-width);
+        background-color: rgb(229 231 235); /* gray-200 */
+        transition:
+          background-color 200ms ease,
+          opacity 200ms ease;
+      }
+
+      /* Dark mode line colors */
+      :host-context(.dark) .thread-indent::before,
+      :host-context(.dark) .thread-indent::after {
         background-color: rgb(51 65 85); /* slate-700 */
       }
 
-      /* Collapsed state - dim the line */
-      .thread-container.collapsed .thread-indent::before {
+      /* Collapsed state - dim the lines */
+      .thread-container.collapsed .thread-indent::before,
+      .thread-container.collapsed .thread-indent::after {
         opacity: 0.5;
+      }
+
+      /* Last child: shorten vertical line to only reach the comment */
+      .thread-indent:last-child::before {
+        height: 14px; /* Only extend to horizontal connector */
       }
 
       .header {
