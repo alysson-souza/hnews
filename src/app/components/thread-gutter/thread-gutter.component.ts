@@ -61,15 +61,11 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         --line-width: 2px;
         --avatar-size: 32px;
         --header-height: 28px;
-      }
-
-      /* Bottom margin only for nested comments */
-      .thread-indent {
-        @apply mb-3;
+        --connector-offset: 14px; /* Vertical position where horizontal branch connects */
       }
 
       .thread-indent {
-        @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative;
+        @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative mb-3;
         border-left: none; /* Remove simple border, use pseudo-elements for tree */
       }
 
@@ -92,7 +88,7 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         content: '';
         position: absolute;
         left: 0;
-        top: 14px; /* Align with comment header center */
+        top: var(--connector-offset); /* Align with comment header center */
         width: 0.5rem; /* 8px horizontal branch */
         height: var(--line-width);
         background-color: rgb(229 231 235); /* gray-200 */
@@ -115,7 +111,7 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 
       /* Last child: shorten vertical line to only reach the comment */
       .thread-indent:last-child::before {
-        height: 14px; /* Only extend to horizontal connector */
+        height: var(--connector-offset); /* Only extend to horizontal connector */
       }
 
       .header {
