@@ -69,27 +69,27 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         border-left: none; /* Remove simple border, use pseudo-elements for tree */
       }
 
-      /* Vertical thread line (parent connector) */
+      /* Vertical thread line (parent connector) - extends through gaps */
       .thread-indent::before {
         content: '';
         position: absolute;
         left: 0;
         top: 0;
         width: var(--line-width);
-        height: 100%;
+        height: calc(100% + 0.75rem); /* Extend through mb-3 gap to connect with sibling */
         background-color: rgb(229 231 235); /* gray-200 */
         transition:
           background-color 200ms ease,
           opacity 200ms ease;
       }
 
-      /* Horizontal connector line (tree branch to comment) */
+      /* Horizontal connector line (tree branch to comment) - extends to comment box */
       .thread-indent::after {
         content: '';
         position: absolute;
         left: 0;
         top: var(--connector-offset); /* Align with comment header center */
-        width: 0.5rem; /* 8px horizontal branch */
+        width: calc(0.5rem + 0.5rem); /* Extend to reach comment box (8px + 8px) */
         height: var(--line-width);
         background-color: rgb(229 231 235); /* gray-200 */
         transition:

@@ -256,10 +256,6 @@ code {
 
 /* Top-level comment separators and spacing */
 .comment-list-divided > *:not(:first-child) {
-  /* Add margin for space between comments, then border, then padding inside */
-  @apply mt-4 pt-4 border-t border-gray-200;
-}
-
-.dark .comment-list-divided > *:not(:first-child) {
-  @apply border-slate-700/60;
+  /* Add margin for space between comments without border separator */
+  @apply mt-4;
 }
