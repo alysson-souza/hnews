@@ -74,9 +74,9 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         content: '';
         position: absolute;
         left: 0;
-        top: 0;
+        top: var(--connector-offset); /* Start at comment level, not container top */
         width: var(--line-width);
-        height: calc(100% + 0.75rem); /* Extend through mb-3 gap to connect with sibling */
+        height: calc(100% - var(--connector-offset) + 0.75rem); /* Extend through mb-3 gap */
         background-color: rgb(229 231 235); /* gray-200 */
         transition:
           background-color 200ms ease,
@@ -109,9 +109,9 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         opacity: 0.5;
       }
 
-      /* Last child: shorten vertical line to only reach the comment */
+      /* Last child: vertical line only extends to this comment, not beyond */
       .thread-indent:last-child::before {
-        height: var(--connector-offset); /* Only extend to horizontal connector */
+        height: 0; /* Line ends at this comment's horizontal connector */
       }
 
       .header {
