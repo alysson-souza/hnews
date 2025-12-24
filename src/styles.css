@@ -255,14 +255,9 @@ code {
 }
 
 /* Top-level comment separators and spacing */
-.comment-list-divided > * {
-  /* Give each comment some breathing room at the bottom */
-  @apply pb-4;
-}
-
 .comment-list-divided > *:not(:first-child) {
-  /* Add border and padding above (not margin to avoid collapse) */
-  @apply pt-4 border-t border-gray-200;
+  /* Add margin for space between comments, then border, then padding inside */
+  @apply mt-4 pt-4 border-t border-gray-200;
 }
 
 .dark .comment-list-divided > *:not(:first-child) {
