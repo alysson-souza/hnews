@@ -69,14 +69,14 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         border-left: none; /* Remove simple border, use pseudo-elements for tree */
       }
 
-      /* Vertical thread line (parent connector) - extends through gaps */
+      /* Vertical thread line (parent connector) - connects siblings */
       .thread-indent::before {
         content: '';
         position: absolute;
         left: 0;
-        top: var(--connector-offset); /* Start at comment level, not container top */
+        top: var(--connector-offset); /* Start at this comment's branch point */
         width: var(--line-width);
-        height: calc(100% - var(--connector-offset) + 0.75rem); /* Extend through mb-3 gap */
+        height: calc(100% - var(--connector-offset) + 0.75rem); /* Extend to next sibling */
         background-color: rgb(229 231 235); /* gray-200 */
         transition:
           background-color 200ms ease,
@@ -109,9 +109,11 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
         opacity: 0.5;
       }
 
-      /* Last child: vertical line only extends to this comment, not beyond */
+      /* Last child: vertical line doesn't extend beyond this comment */
       .thread-indent:last-child::before {
-        height: 0; /* Line ends at this comment's horizontal connector */
+        height: calc(
+          var(--connector-offset) + 2px
+        ); /* Only to branch point, slightly extend for visual connection */
       }
 
       .header {

@@ -257,5 +257,5 @@ code {
 /* Top-level comment separators and spacing */
 .comment-list-divided > *:not(:first-child) {
   /* Add consistent spacing between top-level comments */
-  @apply mt-6;
+  @apply mt-4;
 }
