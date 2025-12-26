@@ -214,7 +214,29 @@ code {
 .comment-body blockquote p:first-child {
   margin-top: 0;
 }
-/* Comments panel: control bottom spacing via last child margin, not card padding */
+/* Comments section: clean, consistent spacing for top-level comments */
+.comments-card .space-y-4,
+.sidebar-comments-panel .space-y-4 {
+  /* Override Tailwind space-y to use our custom spacing */
+  --tw-space-y-reverse: 0;
+  margin-top: 0;
+}
+
+/* Top-level comment threads: uniform spacing, no dividers */
+.comments-card .space-y-4 > app-comment-thread,
+.sidebar-comments-panel .space-y-4 > app-comment-thread {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Use gap instead of margins for cleaner spacing control */
+.comments-card .space-y-4[role='tree'],
+.sidebar-comments-panel .space-y-4[role='tree'] {
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* Comments have their own bottom margin in thread-gutter */
+}
+
 .comments-card .space-y-4 > :last-child {
   /* Last top-level thread should not add extra space beyond card padding */
   margin-bottom: 0;
