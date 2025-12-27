@@ -11,6 +11,7 @@ import { HNItem } from '../../models/hn';
 import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
 import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
+import { EnhanceLinksDirective } from '../comment-text/enhance-links.directive';
 
 interface SearchHit {
   objectID: string;
@@ -29,7 +30,7 @@ interface SearchHit {
 
 @Component({
   selector: 'app-search-result',
-  imports: [RouterLink, ResultMetaComponent, PrivacyRedirectDirective],
+  imports: [RouterLink, ResultMetaComponent, PrivacyRedirectDirective, EnhanceLinksDirective],
   template: `
     <div class="result-row">
       @if (isStory()) {
@@ -69,6 +70,7 @@ interface SearchHit {
           <div
             class="result-snippet item-prose prose prose-sm max-w-none dark:prose-invert line-clamp-2"
             [innerHTML]="getHighlightedStoryText()"
+            appEnhanceLinks
           ></div>
         }
       } @else if (isComment()) {
@@ -77,6 +79,7 @@ interface SearchHit {
           <div
             class="result-comment comment-body prose prose-sm max-w-none dark:prose-invert line-clamp-3"
             [innerHTML]="getHighlightedCommentText()"
+            appEnhanceLinks
           ></div>
         }
       }
