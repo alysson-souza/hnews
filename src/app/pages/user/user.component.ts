@@ -21,6 +21,7 @@ import {
   SegmentedControlComponent,
   SegmentOption,
 } from '../../components/shared/segmented-control/segmented-control.component';
+import { StoryLinkComponent } from '../../components/shared/story-link/story-link.component';
 
 @Component({
   selector: 'app-user',
@@ -33,6 +34,7 @@ import {
     CommentTextComponent,
     RouterLink,
     DecimalPipe,
+    StoryLinkComponent,
   ],
   template: `
     <app-page-container
@@ -153,14 +155,11 @@ import {
                     @if (isStory(item)) {
                       <h3 class="activity-title">
                         @if (item.url) {
-                          <a
-                            [href]="item.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <app-story-link
+                            [url]="item.url"
+                            [textContent]="item.title || '[untitled]'"
                             class="title-link"
-                          >
-                            {{ item.title || '[untitled]' }}
-                          </a>
+                          />
                         } @else {
                           <a [routerLink]="['/item', item.id]" class="title-link">
                             {{ item.title || '[untitled]' }}

@@ -21,7 +21,7 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
 import { getDomain } from '../../services/domain.utils';
-import { PrivacyRedirectDirective } from '../../components/shared/privacy-redirect/privacy-redirect.directive';
+import { StoryLinkComponent } from '../../components/shared/story-link/story-link.component';
 
 interface HighlightField {
   value: string;
@@ -54,7 +54,7 @@ interface SearchHit {
     CommentTextComponent,
     RouterLink,
     DecimalPipe,
-    PrivacyRedirectDirective,
+    StoryLinkComponent,
   ],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
@@ -203,14 +203,11 @@ interface SearchHit {
                 @if (!isComment(hit)) {
                   <h3 class="activity-title">
                     @if (hit.url) {
-                      <a
-                        [href]="hit.url"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <app-story-link
+                        [url]="hit.url"
+                        [htmlContent]="getHighlightedText(hit, 'title')"
                         class="title-link"
-                        [innerHTML]="getHighlightedText(hit, 'title')"
-                        appPrivacyRedirect
-                      ></a>
+                      />
                     } @else {
                       <a
                         [routerLink]="['/item', hit.objectID]"

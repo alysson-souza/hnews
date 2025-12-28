@@ -10,9 +10,8 @@ import {
 import { HNItem } from '../../models/hn';
 import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
-import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
 import { EnhanceLinksDirective } from '../comment-text/enhance-links.directive';
-import { isHnLink, translateHnLink } from '../comment-text/hn-link.utils';
+import { StoryLinkComponent } from '../shared/story-link/story-link.component';
 
 interface SearchHit {
   objectID: string;
@@ -31,7 +30,7 @@ interface SearchHit {
 
 @Component({
   selector: 'app-search-result',
-  imports: [RouterLink, ResultMetaComponent, PrivacyRedirectDirective, EnhanceLinksDirective],
+  imports: [RouterLink, ResultMetaComponent, EnhanceLinksDirective, StoryLinkComponent],
   template: `
     <div class="result-row">
       @if (isStory()) {
@@ -45,26 +44,13 @@ interface SearchHit {
             >
               [flagged]
             </a>
-          } @else if (isHnStoryUrl() && getHnStoryRoute()) {
-            <!-- HN link - use internal navigation -->
-            <a
-              [routerLink]="getHnStoryRoute()"
-              class="title-link"
-              [attr.title]="getPlainTitle()"
-              [innerHTML]="getHighlightedTitle()"
-            >
-            </a>
           } @else if (getExternalUrl()) {
-            <a
-              [href]="getExternalUrl()"
-              target="_blank"
-              rel="noopener noreferrer"
+            <app-story-link
+              [url]="getExternalUrl()"
+              [linkTitle]="getPlainTitle()"
+              [htmlContent]="getHighlightedTitle()"
               class="title-link"
-              [attr.title]="getPlainTitle()"
-              [innerHTML]="getHighlightedTitle()"
-              appPrivacyRedirect
-            >
-            </a>
+            />
           } @else {
             <a
               [routerLink]="['/item', getItemId()]"
@@ -212,19 +198,6 @@ export class SearchResultComponent {
     }
 
     return (item as HNItem).url;
-  }
-
-  // Check if story URL is an HN link that should be translated
-  isHnStoryUrl(): boolean {
-    const url = this.getExternalUrl();
-    return url ? isHnLink(url) : false;
-  }
-
-  // Get translated internal route for HN story URLs
-  getHnStoryRoute(): string | null {
-    const url = this.getExternalUrl();
-    if (!url) return null;
-    return translateHnLink(url);
   }
 
   getItemId(): string {
