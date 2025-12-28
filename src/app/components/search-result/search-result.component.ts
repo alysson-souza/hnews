@@ -12,6 +12,7 @@ import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
 import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
 import { EnhanceLinksDirective } from '../comment-text/enhance-links.directive';
+import { isHnLink, translateHnLink } from '../comment-text/hn-link.utils';
 
 interface SearchHit {
   objectID: string;
@@ -43,6 +44,15 @@ interface SearchHit {
               [attr.title]="getPlainTitle()"
             >
               [flagged]
+            </a>
+          } @else if (isHnStoryUrl() && getHnStoryRoute()) {
+            <!-- HN link - use internal navigation -->
+            <a
+              [routerLink]="getHnStoryRoute()"
+              class="title-link"
+              [attr.title]="getPlainTitle()"
+              [innerHTML]="getHighlightedTitle()"
+            >
             </a>
           } @else if (getExternalUrl()) {
             <a
@@ -202,6 +212,19 @@ export class SearchResultComponent {
     }
 
     return (item as HNItem).url;
+  }
+
+  // Check if story URL is an HN link that should be translated
+  isHnStoryUrl(): boolean {
+    const url = this.getExternalUrl();
+    return url ? isHnLink(url) : false;
+  }
+
+  // Get translated internal route for HN story URLs
+  getHnStoryRoute(): string | null {
+    const url = this.getExternalUrl();
+    if (!url) return null;
+    return translateHnLink(url);
   }
 
   getItemId(): string {

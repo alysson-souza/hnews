@@ -15,6 +15,7 @@ import { StoryShareService } from '../../services/story-share.service';
 import { PrivacyRedirectService } from '../../services/privacy-redirect.service';
 import { getDomain } from '../../services/domain.utils';
 import { StoryActionsMenuComponent } from './story-actions-menu.component';
+import { isHnLink, translateHnLink } from '../comment-text/hn-link.utils';
 
 @Component({
   selector: 'app-story-item',
@@ -64,6 +65,19 @@ export class StoryItem {
 
   // Expose getDomain utility for template
   getDomain = getDomain;
+
+  // Check if story URL is an HN link that should be translated
+  isHnStoryUrl = computed(() => {
+    const url = this.story()?.url;
+    return url ? isHnLink(url) : false;
+  });
+
+  // Get translated internal route for HN story URLs
+  hnStoryRoute = computed(() => {
+    const url = this.story()?.url;
+    if (!url) return null;
+    return translateHnLink(url);
+  });
 
   private static async prefetchItemComponent(): Promise<void> {
     if (StoryItem.itemComponentPrefetched || typeof window === 'undefined') {
