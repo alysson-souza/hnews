@@ -10,7 +10,8 @@ import {
 import { HNItem } from '../../models/hn';
 import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
-import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
+import { EnhanceLinksDirective } from '../comment-text/enhance-links.directive';
+import { StoryLinkComponent } from '../shared/story-link/story-link.component';
 
 interface SearchHit {
   objectID: string;
@@ -29,7 +30,7 @@ interface SearchHit {
 
 @Component({
   selector: 'app-search-result',
-  imports: [RouterLink, ResultMetaComponent, PrivacyRedirectDirective],
+  imports: [RouterLink, ResultMetaComponent, EnhanceLinksDirective, StoryLinkComponent],
   template: `
     <div class="result-row">
       @if (isStory()) {
@@ -44,16 +45,12 @@ interface SearchHit {
               [flagged]
             </a>
           } @else if (getExternalUrl()) {
-            <a
-              [href]="getExternalUrl()"
-              target="_blank"
-              rel="noopener noreferrer"
+            <app-story-link
+              [url]="getExternalUrl()"
+              [linkTitle]="getPlainTitle()"
+              [htmlContent]="getHighlightedTitle()"
               class="title-link"
-              [attr.title]="getPlainTitle()"
-              [innerHTML]="getHighlightedTitle()"
-              appPrivacyRedirect
-            >
-            </a>
+            />
           } @else {
             <a
               [routerLink]="['/item', getItemId()]"
@@ -69,6 +66,7 @@ interface SearchHit {
           <div
             class="result-snippet item-prose prose prose-sm max-w-none dark:prose-invert line-clamp-2"
             [innerHTML]="getHighlightedStoryText()"
+            appEnhanceLinks
           ></div>
         }
       } @else if (isComment()) {
@@ -77,6 +75,7 @@ interface SearchHit {
           <div
             class="result-comment comment-body prose prose-sm max-w-none dark:prose-invert line-clamp-3"
             [innerHTML]="getHighlightedCommentText()"
+            appEnhanceLinks
           ></div>
         }
       }

@@ -100,10 +100,14 @@ describe('SidebarStorySummaryComponent', () => {
 
   describe('template rendering', () => {
     it('should render story title as link when URL exists', () => {
-      const link = fixture.debugElement.query(By.css('.story-link'));
-      expect(link).toBeTruthy();
-      expect(link.nativeElement.textContent.trim()).toBe('Test Story');
-      expect(link.nativeElement.href).toBe('https://example.com/article');
+      const storyLink = fixture.debugElement.query(By.css('.story-link'));
+      expect(storyLink).toBeTruthy();
+
+      // The anchor is inside the StoryLinkComponent
+      const anchor = storyLink.query(By.css('a'));
+      expect(anchor).toBeTruthy();
+      expect(anchor.nativeElement.textContent.trim()).toBe('Test Story');
+      expect(anchor.nativeElement.href).toBe('https://example.com/article');
     });
 
     it('should render story title as text when no URL', () => {
@@ -115,8 +119,12 @@ describe('SidebarStorySummaryComponent', () => {
       });
       fixture.detectChanges();
 
-      const link = fixture.debugElement.query(By.css('.story-link'));
-      expect(link).toBeFalsy();
+      const storyLink = fixture.debugElement.query(By.css('.story-link'));
+      expect(storyLink).toBeTruthy();
+
+      // No anchor should be rendered inside when there's no URL
+      const anchor = storyLink.query(By.css('a'));
+      expect(anchor).toBeFalsy();
 
       const title = fixture.debugElement.query(By.css('.story-title'));
       expect(title.nativeElement.textContent.trim()).toContain('Text Only Story');
@@ -201,11 +209,15 @@ describe('SidebarStorySummaryComponent', () => {
       });
       fixture.detectChanges();
 
-      const link = fixture.debugElement.query(By.css('.story-link'));
-      expect(link).toBeTruthy();
-      expect(link.nativeElement.href).toBe('https://twitter.com/example');
-      expect(link.nativeElement.target).toBe('_blank');
-      expect(link.nativeElement.rel).toBe('noopener noreferrer nofollow');
+      const storyLink = fixture.debugElement.query(By.css('.story-link'));
+      expect(storyLink).toBeTruthy();
+
+      // The anchor is inside the StoryLinkComponent
+      const anchor = storyLink.query(By.css('a'));
+      expect(anchor).toBeTruthy();
+      expect(anchor.nativeElement.href).toBe('https://twitter.com/example');
+      expect(anchor.nativeElement.target).toBe('_blank');
+      expect(anchor.nativeElement.rel).toBe('noopener noreferrer nofollow');
     });
 
     it('should display original URL in link href', () => {
@@ -220,9 +232,13 @@ describe('SidebarStorySummaryComponent', () => {
       });
       fixture.detectChanges();
 
-      const link = fixture.debugElement.query(By.css('.story-link'));
-      expect(link).toBeTruthy();
-      expect(link.nativeElement.href).toBe('https://youtube.com/watch?v=test');
+      const storyLink = fixture.debugElement.query(By.css('.story-link'));
+      expect(storyLink).toBeTruthy();
+
+      // The anchor is inside the StoryLinkComponent
+      const anchor = storyLink.query(By.css('a'));
+      expect(anchor).toBeTruthy();
+      expect(anchor.nativeElement.href).toBe('https://youtube.com/watch?v=test');
     });
   });
 });

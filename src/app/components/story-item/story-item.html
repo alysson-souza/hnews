@@ -57,16 +57,13 @@
             [class.story-title-visited]="isVisited()"
           >
             @if (story()!.url) {
-              <a
-                [href]="story()!.url"
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                (click)="onStoryLinkClick($event)"
+              <app-story-link
+                [url]="story()!.url"
+                [textContent]="story()!.title"
+                [linkTitle]="story()!.title || ''"
+                (clicked)="markAsVisited()"
                 class="story-title-link story-link-trigger cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-                [attr.title]="story()!.title || ''"
-              >
-                {{ story()!.title }}
-              </a>
+              />
             } @else {
               <a
                 [routerLink]="['/item', story()!.id]"
@@ -80,10 +77,10 @@
           </h2>
         }
 
-        <!-- Domain - Now clickable -->
+        <!-- Domain - Now clickable (hidden for HN links) -->
         @if (isLoading()) {
           <div class="h-4 bg-gray-200 rounded w-32 mb-1 skeleton"></div>
-        } @else if (story()!.url && getDomain(story()!.url)) {
+        } @else if (story()!.url && getDomain(story()!.url) && !isHnUrl(story()!.url!)) {
           <button
             type="button"
             (click)="searchByDomain($event)"

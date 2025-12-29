@@ -774,7 +774,7 @@ describe('SearchResultComponent', () => {
 
       expect(externalLink).toBeTruthy();
       expect(externalLink?.target).toBe('_blank');
-      expect(externalLink?.rel).toBe('noopener noreferrer');
+      expect(externalLink?.rel).toBe('noopener noreferrer nofollow');
     });
 
     it('should render dead/flagged items with special styling', () => {

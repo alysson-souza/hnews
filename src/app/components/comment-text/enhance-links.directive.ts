@@ -12,12 +12,15 @@ import {
   createComponent,
   ComponentRef,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgIconComponent } from '@ng-icons/core';
 import { formatUrlForDisplay } from './link.utils';
+import { isHnLink, translateHnLink } from './hn-link.utils';
 import { PrivacyRedirectService } from '../../services/privacy-redirect.service';
 
 /**
  * Directive that enhances anchor tags within its host element by:
+ * - Translating Hacker News links to internal routes for in-app navigation
  * - Formatting link text to show domain + truncated path
  * - Adding the solarLinkLinear icon next to each external link
  * - Setting security attributes (target="_blank", rel attributes)
@@ -36,6 +39,7 @@ import { PrivacyRedirectService } from '../../services/privacy-redirect.service'
 export class EnhanceLinksDirective implements AfterViewInit, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
+  private router = inject(Router);
   private injector = inject(Injector);
   private envInjector = inject(EnvironmentInjector);
   private redirectService = inject(PrivacyRedirectService);
@@ -106,8 +110,17 @@ export class EnhanceLinksDirective implements AfterViewInit, OnDestroy {
       const isExternal = href.startsWith('http') || href.startsWith('//');
       if (!isExternal) return;
 
-      // Skip if already processed (has icon)
-      if (link.querySelector('ng-icon')) return;
+      // Skip if already processed (has icon or hn-link class)
+      if (link.querySelector('ng-icon') || link.classList.contains('hn-link')) return;
+
+      // Check if this is a Hacker News link that should be translated
+      if (isHnLink(href)) {
+        const wasProcessed = this.processHnLink(link, href);
+        if (wasProcessed) {
+          return;
+        }
+        // If not processed (unsupported HN page), fall through to external link handling
+      }
 
       // Format and update link text
       const displayText = formatUrlForDisplay(href);
@@ -158,6 +171,48 @@ export class EnhanceLinksDirective implements AfterViewInit, OnDestroy {
       // Track component reference for cleanup
       this.iconRefs.push(iconRef);
     });
+  }
+
+  /**
+   * Process a Hacker News link by translating it to an internal route.
+   * Sets up a click handler for in-app navigation.
+   *
+   * @returns true if the link was processed as an internal route, false if it should be treated as external
+   */
+  private processHnLink(link: HTMLAnchorElement, originalHref: string): boolean {
+    const internalRoute = translateHnLink(originalHref);
+
+    if (!internalRoute) {
+      // Could not translate, treat as regular external link
+      return false;
+    }
+
+    // Mark as processed
+    this.renderer.addClass(link, 'hn-link');
+
+    // Update href to internal route for accessibility and right-click "copy link"
+    this.renderer.setAttribute(link, 'href', internalRoute);
+
+    // Remove external link attributes if they exist
+    this.renderer.removeAttribute(link, 'target');
+    this.renderer.removeAttribute(link, 'rel');
+
+    // Set up click handler for in-app navigation
+    const handleClick = (event: MouseEvent) => {
+      // Allow modifier keys to open in new tab using default browser behavior
+      if (event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      this.router.navigateByUrl(internalRoute);
+    };
+
+    const unlisten = this.renderer.listen(link, 'click', handleClick);
+    this.clickListeners.push(unlisten);
+
+    return true;
   }
 
   /**

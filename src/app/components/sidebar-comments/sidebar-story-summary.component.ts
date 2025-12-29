@@ -7,33 +7,26 @@ import { HNItem } from '../../models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
-import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-redirect.directive';
+import { StoryLinkComponent } from '../shared/story-link/story-link.component';
+import { isHnLink } from '../comment-text/hn-link.utils';
 
 @Component({
   selector: 'app-sidebar-story-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent, PrivacyRedirectDirective],
+  imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent, StoryLinkComponent],
   template: `
     <section class="story">
       <h3 class="story-title">
-        @if (item().url) {
-          <a
-            [href]="item().url"
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            class="story-link"
-            [attr.title]="item().title || ''"
-            appPrivacyRedirect
-          >
-            {{ item().title }}
-          </a>
-        } @else {
-          {{ item().title }}
-        }
+        <app-story-link
+          [url]="item().url"
+          [textContent]="item().title"
+          [linkTitle]="item().title || ''"
+          class="story-link"
+        />
       </h3>
 
-      <!-- Domain - clickable -->
-      @if (item().url && getDomain(item().url)) {
+      <!-- Domain - clickable (hidden for HN links) -->
+      @if (item().url && getDomain(item().url) && !isHnUrl(item().url!)) {
         <button
           type="button"
           role="button"
@@ -97,6 +90,9 @@ import { PrivacyRedirectDirective } from '../shared/privacy-redirect/privacy-red
 export class SidebarStorySummaryComponent {
   readonly item = input.required<HNItem>();
   private router = inject(Router);
+
+  // Expose for template
+  isHnUrl = isHnLink;
 
   getDomain(url?: string): string {
     if (!url) return '';

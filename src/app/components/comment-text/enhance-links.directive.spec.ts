@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
 import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
 import { EnhanceLinksDirective } from './enhance-links.directive';
@@ -18,16 +19,18 @@ describe('EnhanceLinksDirective', () => {
   let fixture: ComponentFixture<TestComponent>;
   let component: TestComponent;
   let element: HTMLElement;
+  let router: Router;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TestComponent],
-      providers: [provideIcons({ solarLinkLinear })],
+      providers: [provideIcons({ solarLinkLinear }), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement;
+    router = TestBed.inject(Router);
   });
 
   it('should create', () => {
@@ -207,5 +210,130 @@ describe('EnhanceLinksDirective', () => {
     // should skip links that already have icons
     const finalIconCount = element.querySelectorAll('ng-icon').length;
     expect(finalIconCount).toBe(initialIconCount);
+  });
+
+  describe('Hacker News link translation', () => {
+    it('should translate HN item links to internal routes', () => {
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">HN Item</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      expect(link?.getAttribute('href')).toBe('/item/12345');
+    });
+
+    it('should translate HN user links to internal routes', () => {
+      component.html.set('<a href="https://news.ycombinator.com/user?id=pg">pg</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      expect(link?.getAttribute('href')).toBe('/user/pg');
+    });
+
+    it('should add hn-link class to HN links', () => {
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">HN Item</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      expect(link?.classList.contains('hn-link')).toBe(true);
+      expect(link?.classList.contains('ext-link')).toBe(false);
+    });
+
+    it('should not add external link icon to HN links', () => {
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">HN Item</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      const icon = link?.querySelector('ng-icon');
+      expect(icon).toBeFalsy();
+    });
+
+    it('should not set target="_blank" on HN links', () => {
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">HN Item</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      expect(link?.getAttribute('target')).toBeNull();
+      expect(link?.getAttribute('rel')).toBeNull();
+    });
+
+    it('should navigate to internal route on click', () => {
+      const navigateSpy = vi.spyOn(router, 'navigateByUrl');
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">HN Item</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      link?.click();
+
+      expect(navigateSpy).toHaveBeenCalledWith('/item/12345');
+    });
+
+    it('should not navigate when modifier keys are pressed', () => {
+      const navigateSpy = vi.spyOn(router, 'navigateByUrl');
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">HN Item</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+
+      // Simulate Ctrl+click
+      const ctrlClickEvent = new MouseEvent('click', { ctrlKey: true, bubbles: true });
+      link?.dispatchEvent(ctrlClickEvent);
+
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should translate HN homepage links to /top', () => {
+      component.html.set('<a href="https://news.ycombinator.com/">HN Home</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      expect(link?.getAttribute('href')).toBe('/top');
+    });
+
+    it('should translate HN story type pages', () => {
+      component.html.set(`
+        <a href="https://news.ycombinator.com/newest">Newest</a>
+        <a href="https://news.ycombinator.com/best">Best</a>
+        <a href="https://news.ycombinator.com/ask">Ask</a>
+      `);
+      fixture.detectChanges();
+
+      const links = element.querySelectorAll('a');
+      expect(links[0]?.getAttribute('href')).toBe('/newest');
+      expect(links[1]?.getAttribute('href')).toBe('/best');
+      expect(links[2]?.getAttribute('href')).toBe('/ask');
+    });
+
+    it('should handle mixed HN and external links', () => {
+      component.html.set(`
+        <a href="https://news.ycombinator.com/item?id=12345">HN Item</a>
+        <a href="https://example.com">External</a>
+      `);
+      fixture.detectChanges();
+
+      const links = element.querySelectorAll('a');
+      expect(links[0]?.getAttribute('href')).toBe('/item/12345');
+      expect(links[0]?.classList.contains('hn-link')).toBe(true);
+      expect(links[0]?.querySelector('ng-icon')).toBeFalsy();
+
+      expect(links[1]?.classList.contains('ext-link')).toBe(true);
+      expect(links[1]?.querySelector('ng-icon')).toBeTruthy();
+    });
+
+    it('should not translate unsupported HN pages', () => {
+      component.html.set('<a href="https://news.ycombinator.com/submit">Submit</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      // Should be treated as external link since /submit is not supported
+      expect(link?.classList.contains('ext-link')).toBe(true);
+    });
+
+    it('should preserve original link text for HN links', () => {
+      component.html.set('<a href="https://news.ycombinator.com/item?id=12345">Original Text</a>');
+      fixture.detectChanges();
+
+      const link = element.querySelector('a');
+      expect(link?.textContent).toBe('Original Text');
+    });
   });
 });
