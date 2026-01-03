@@ -21,22 +21,27 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
       [attr.aria-selected]="isKeyboardFocused()"
       tabindex="-1"
     >
-      <!-- Wrapper for the comment itself (header + text) -->
-      <div class="comment-node" [class.keyboard-focused]="isKeyboardFocused()">
-        <div
-          class="header"
-          [class.clickable-header]="clickable()"
-          [attr.role]="clickable() ? 'button' : null"
-          [attr.tabindex]="clickable() ? '0' : null"
-          [attr.aria-label]="
-            clickable() ? (collapsed() ? 'Expand comment' : 'Collapse comment') : null
-          "
-          (click)="clickable() ? toggleThread.emit() : null"
-          (keydown.enter)="clickable() ? toggleThread.emit() : null"
-          (keydown.space)="
-            clickable() ? toggleThread.emit() : null; clickable() ? $event.preventDefault() : null
-          "
-        >
+      <!-- Tree connector (T or L shape based on isLastChild) - always clickable -->
+      @if (depth() > 0) {
+        <button
+          type="button"
+          class="tree-connector"
+          [class.connector-T]="!isLastChild()"
+          [class.connector-L]="isLastChild()"
+          [class.has-previous-sibling]="!isFirstChild()"
+          (click)="toggleThread.emit()"
+          [attr.aria-label]="collapsed() ? 'Expand comment' : 'Collapse comment'"
+          [attr.aria-expanded]="!collapsed()"
+        ></button>
+      }
+
+      <!-- Comment card -->
+      <div
+        class="comment-card"
+        [class.keyboard-focused]="isKeyboardFocused()"
+        [class.collapsed]="collapsed()"
+      >
+        <div class="header">
           <ng-content select="[header]" />
         </div>
         <div class="content relative">
@@ -56,90 +61,40 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
     `
       @reference '../../../styles.css';
 
+      :host {
+        display: block;
+      }
+
       .thread-container {
-        @apply relative mb-3;
-        --line-width: 2px;
-        --avatar-size: 32px;
-        --header-height: 28px;
+        @apply relative;
       }
 
-      .thread-indent {
-        @apply ml-2 sm:ml-4 pl-2 sm:pl-4 relative;
-        border-left: none; /* Remove simple border, use ::before instead */
-      }
-
-      /* Enhanced vertical thread line - contiguous without gaps */
-      .thread-indent::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: var(--line-width);
-        height: calc(100% + 12px); /* Extend to bridge gap between comments */
-        background-color: rgb(229 231 235); /* gray-200 */
-        transition:
-          background-color 200ms ease,
-          opacity 200ms ease;
-      }
-
-      /* Dark mode line color */
-      :host-context(.dark) .thread-indent::before {
-        background-color: rgb(51 65 85); /* slate-700 */
-      }
-
-      /* Collapsed state - dim the line */
-      .thread-container.collapsed .thread-indent::before {
-        opacity: 0.5;
+      .children-wrapper {
+        @apply relative;
+        display: flow-root; /* Prevent margin collapse */
       }
 
       .header {
         @apply relative z-10;
       }
 
-      /* Clickable header for top-level comments */
-      .clickable-header {
-        cursor: pointer;
-        transition: background-color 150ms ease;
-        border-radius: 4px;
-        margin: 0 -4px;
-        padding: 0 4px;
-      }
-
-      .clickable-header:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-      }
-
-      :host-context(.dark) .clickable-header:hover {
-        background-color: rgba(96, 165, 250, 0.08);
-      }
-
-      .clickable-header:focus-visible {
-        outline: 2px solid rgb(59 130 246);
-        outline-offset: 2px;
-      }
-
-      /* Keyboard focus indicator */
-      .comment-node.keyboard-focused {
-        @apply relative;
-      }
-
-      .comment-node.keyboard-focused::after {
-        content: '';
-        position: absolute;
-        inset: -4px;
-        border: 2px solid rgb(59 130 246); /* blue-500 */
-        border-radius: 6px;
-        pointer-events: none;
-        z-index: 1;
-        transition: opacity 200ms ease;
-      }
-
-      :host-context(.dark) .comment-node.keyboard-focused::after {
-        border-color: rgb(96 165 250); /* blue-400 */
-      }
-
       .content {
         @apply relative;
+      }
+
+      /* Keyboard focus ring for comment card */
+      .comment-card.keyboard-focused {
+        box-shadow:
+          0 0 0 2px rgb(59 130 246),
+          0 0 0 4px rgba(59, 130, 246, 0.2);
+        border-color: rgb(59 130 246);
+      }
+
+      :host-context(.dark) .comment-card.keyboard-focused {
+        box-shadow:
+          0 0 0 2px rgb(96 165 250),
+          0 0 0 4px rgba(96, 165, 250, 0.2);
+        border-color: rgb(96 165 250);
       }
     `,
   ],
@@ -149,6 +104,9 @@ export class ThreadGutterComponent {
   readonly clickable = input(true);
   readonly collapsed = input(false);
   readonly commentId = input<number>();
+  readonly hasChildren = input(false);
+  readonly isLastChild = input(true);
+  readonly isFirstChild = input(true);
   readonly toggleThread = output<void>();
 
   private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);

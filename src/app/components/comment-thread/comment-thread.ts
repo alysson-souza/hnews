@@ -43,6 +43,9 @@ import { Router } from '@angular/router';
         [clickable]="true"
         [collapsed]="isCollapsed()"
         [commentId]="commentId()"
+        [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
+        [isLastChild]="isLastChild()"
+        [isFirstChild]="isFirstChild()"
         (toggleThread)="toggleCollapse()"
       >
         <div header>
@@ -70,48 +73,22 @@ import { Router } from '@angular/router';
         </div>
         <div children>
           @if (!isCollapsed() && (replies().length > 0 || loadingReplies())) {
-            <div class="mt-1">
-              @for (reply of replies(); track reply.id) {
-                @if (reply.kids && reply.kids.length > 0) {
-                  <app-comment-thread
-                    [commentId]="reply.id"
-                    [depth]="depth() + 1"
-                    [lazyLoad]="true"
-                    [initialComment]="reply"
-                    [storyAuthor]="storyAuthor()"
-                    [isStandalonePage]="isStandalonePage()"
-                  />
-                } @else {
-                  <app-thread-gutter
-                    [depth]="depth() + 1"
-                    [clickable]="true"
-                    [collapsed]="false"
-                    [commentId]="reply.id"
-                  >
-                    <div header>
-                      <app-comment-header
-                        [by]="reply.by || ''"
-                        [timestamp]="reply.time"
-                        [voted]="hasVotedById(reply.id)"
-                        [repliesCount]="0"
-                        [showExpand]="false"
-                        [loadingReplies]="false"
-                        [commentId]="reply.id"
-                        [hasChildren]="false"
-                        [storyAuthor]="storyAuthor()"
-                        [isStandalonePage]="isStandalonePage()"
-                        (upvote)="upvoteById(reply.id)"
-                      />
-                    </div>
-                    <div body>
-                      <app-comment-text [html]="reply.text || ''" />
-                    </div>
-                  </app-thread-gutter>
-                }
+            <div class="mt-3 space-y-3">
+              @for (reply of replies(); track reply.id; let isFirst = $first; let isLast = $last) {
+                <app-comment-thread
+                  [commentId]="reply.id"
+                  [depth]="depth() + 1"
+                  [lazyLoad]="true"
+                  [initialComment]="reply"
+                  [storyAuthor]="storyAuthor()"
+                  [isStandalonePage]="isStandalonePage()"
+                  [isFirstChild]="isFirst"
+                  [isLastChild]="isLast && !hasMoreReplies()"
+                />
               }
 
               @if (hasMoreReplies()) {
-                <div class="mt-2 ml-2 sm:ml-4">
+                <div class="mt-3">
                   <app-button
                     variant="secondary"
                     size="sm"
@@ -154,6 +131,11 @@ import { Router } from '@angular/router';
   styles: [
     `
       @reference '../../../styles.css';
+
+      /* Host element must be block for margins to work */
+      :host {
+        display: block;
+      }
 
       /* Loading states */
       .loading-inline {
@@ -217,6 +199,8 @@ export class CommentThread implements OnInit {
   readonly initialComment = input<HNItem>();
   readonly storyAuthor = input<string>();
   readonly isStandalonePage = input(false);
+  readonly isLastChild = input(true);
+  readonly isFirstChild = input(true);
 
   private hnService = inject(HackernewsService);
   private commentStateService = inject(CommentStateService);

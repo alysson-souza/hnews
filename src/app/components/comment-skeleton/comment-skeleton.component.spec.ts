@@ -7,8 +7,11 @@ describe('CommentSkeletonComponent', () => {
   let fixture: ComponentFixture<CommentSkeletonComponent>;
   let component: CommentSkeletonComponent;
 
-  const getContainer = (): HTMLDivElement | null =>
-    fixture.nativeElement.querySelector('div.skeleton.mb-4');
+  const getThreadContainer = (): HTMLDivElement | null =>
+    fixture.nativeElement.querySelector('.thread-container');
+
+  const getCommentCard = (): HTMLDivElement | null =>
+    fixture.nativeElement.querySelector('.comment-card');
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -24,85 +27,54 @@ describe('CommentSkeletonComponent', () => {
     expect(component).toBeDefined();
   });
 
-  it('renders base structure with two skeleton lines', () => {
-    const container = getContainer();
-    expect(container, 'container should exist').not.toBeNull();
+  it('renders base structure with skeleton card and loading lines', () => {
+    const card = getCommentCard();
+    expect(card, 'comment card should exist').not.toBeNull();
+    expect(card!.classList.contains('skeleton')).toBe(true);
 
-    const children = container!.children;
-    expect(children.length).toBe(2);
+    const lines = card!.querySelectorAll('div');
+    expect(lines.length).toBe(2);
 
-    const line1 = children.item(0) as HTMLDivElement;
-    const line2 = children.item(1) as HTMLDivElement;
+    const line1 = lines.item(0) as HTMLDivElement;
+    const line2 = lines.item(1) as HTMLDivElement;
 
     expect(line1.classList.contains('h-4')).toBe(true);
-    expect(line1.classList.contains('bg-gray-200')).toBe(true);
-    expect(line1.classList.contains('dark:bg-slate-800')).toBe(true);
     expect(line1.classList.contains('rounded')).toBe(true);
     expect(line1.classList.contains('w-1/4')).toBe(true);
     expect(line1.classList.contains('mb-2')).toBe(true);
 
     expect(line2.classList.contains('h-3')).toBe(true);
-    expect(line2.classList.contains('bg-gray-200')).toBe(true);
-    expect(line2.classList.contains('dark:bg-slate-800')).toBe(true);
     expect(line2.classList.contains('rounded')).toBe(true);
     expect(line2.classList.contains('w-3/4')).toBe(true);
   });
 
-  it('does not render indentation/border classes when depth is 0 (default)', () => {
+  it('does not apply thread-indent when depth is 0', () => {
     fixture.componentRef.setInput('depth', 0);
     fixture.detectChanges();
 
-    const container = getContainer()!;
-    const classList = container.classList;
-
-    expect(classList.contains('ml-4')).toBe(false);
-    expect(classList.contains('border-l-2')).toBe(false);
-    expect(classList.contains('border-gray-200')).toBe(false);
-    expect(classList.contains('dark:border-slate-700')).toBe(false);
-    expect(classList.contains('pl-4')).toBe(false);
-    expect(classList.contains('relative')).toBe(false);
-    expect(classList.contains('group')).toBe(false);
+    const container = getThreadContainer()!;
+    expect(container.classList.contains('thread-indent')).toBe(false);
   });
 
-  it('applies indentation/border classes when depth > 0', () => {
+  it('applies thread-indent when depth > 0', () => {
     fixture.componentRef.setInput('depth', 1);
     fixture.detectChanges();
 
-    const container = getContainer()!;
-    const classList = container.classList;
-
-    expect(classList.contains('ml-4')).toBe(true);
-    expect(classList.contains('border-l-2')).toBe(true);
-    expect(classList.contains('border-gray-200')).toBe(true);
-    expect(classList.contains('dark:border-slate-700')).toBe(true);
-    expect(classList.contains('pl-4')).toBe(true);
-    expect(classList.contains('relative')).toBe(true);
-    expect(classList.contains('group')).toBe(true);
+    const container = getThreadContainer()!;
+    expect(container.classList.contains('thread-indent')).toBe(true);
   });
 
   it('updates classes when depth changes at runtime', () => {
     fixture.componentRef.setInput('depth', 2);
     fixture.detectChanges();
 
-    let container = getContainer()!;
-    let classList = container.classList;
-
-    expect(classList.contains('ml-4')).toBe(true);
-    expect(classList.contains('border-l-2')).toBe(true);
-    expect(classList.contains('pl-4')).toBe(true);
+    let container = getThreadContainer()!;
+    expect(container.classList.contains('thread-indent')).toBe(true);
 
     fixture.componentRef.setInput('depth', 0);
     fixture.detectChanges();
 
-    container = getContainer()!;
-    classList = container.classList;
-
-    expect(classList.contains('ml-4')).toBe(false);
-    expect(classList.contains('border-l-2')).toBe(false);
-    expect(classList.contains('border-gray-200')).toBe(false);
-    expect(classList.contains('dark:border-slate-700')).toBe(false);
-    expect(classList.contains('pl-4')).toBe(false);
-    expect(classList.contains('relative')).toBe(false);
-    expect(classList.contains('group')).toBe(false);
+    container = getThreadContainer()!;
+    expect(container.classList.contains('thread-indent')).toBe(false);
   });
 });

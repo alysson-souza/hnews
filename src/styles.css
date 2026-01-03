@@ -27,6 +27,14 @@
   --viewport-width: 100vw;
   --viewport-height: 100vh;
   --vh: 1vh; /* Calculated as viewport-height * 0.01 */
+
+  /* === Thread Lines Design System === */
+  --thread-indent-mobile: 12px;
+  --thread-indent-desktop: 20px;
+  --thread-line-width: 2px;
+  --thread-line-hover-width: 4px;
+  --thread-gap: 12px;
+  --thread-color: #e5e7eb; /* gray-200 - matches card border */
 }
 
 /* PWA: Prevent white flash during navigation */
@@ -37,6 +45,112 @@ html {
 
 html.dark {
   background-color: #020617; /* slate-950 */
+}
+
+.dark {
+  --thread-color: rgb(51 65 85 / 0.6); /* slate-700/60 - matches card border */
+}
+
+/* === Thread Layout Classes === */
+
+/* Base indentation - used by all thread components */
+.thread-indent {
+  position: relative;
+  margin-left: var(--thread-indent-mobile);
+}
+
+@media (min-width: 640px) {
+  .thread-indent {
+    margin-left: var(--thread-indent-desktop);
+  }
+}
+
+/* Tree connector - creates I, T, L shapes for thread hierarchy */
+.tree-connector {
+  position: absolute;
+  left: calc(var(--thread-indent-mobile) * -1);
+  top: 0;
+  bottom: 0;
+  width: var(--thread-indent-mobile);
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: var(--thread-color);
+}
+
+/* Clickable connector (button) */
+button.tree-connector {
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .tree-connector {
+    left: calc(var(--thread-indent-desktop) * -1);
+    width: var(--thread-indent-desktop);
+  }
+}
+
+/* Vertical segment - first child extends up through full gap to reach parent */
+.tree-connector::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(var(--thread-gap) * -1);
+  width: var(--thread-line-width);
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+/* Non-first children extend up through half the gap to meet previous sibling's line */
+.tree-connector.has-previous-sibling::before {
+  top: calc(var(--thread-gap) / -2);
+}
+
+/* Horizontal segment (connects to card) */
+.tree-connector::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 12px; /* Align with card top area */
+  height: var(--thread-line-width);
+  width: 50%;
+  background: currentColor;
+}
+
+/* T connector - vertical extends through half the gap to next sibling */
+.tree-connector.connector-T::before {
+  bottom: calc(var(--thread-gap) / -2);
+}
+
+/* L connector - vertical stops at horizontal */
+.tree-connector.connector-L::before {
+  bottom: calc(100% - 12px - var(--thread-line-width));
+}
+
+/* Hover effect */
+.tree-connector:hover::before,
+.tree-connector:hover::after {
+  opacity: 0.7;
+}
+
+.tree-connector:focus-visible {
+  outline: 2px solid var(--thread-color);
+  outline-offset: 2px;
+}
+
+/* Comment card base styling */
+.comment-card {
+  @apply relative;
+  @apply bg-gray-50 dark:bg-slate-800/50;
+  @apply border border-gray-200 dark:border-slate-700/60;
+  @apply rounded-lg p-3;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.comment-card.collapsed {
+  @apply bg-gray-100/50 dark:bg-slate-800/30;
 }
 
 /* Skeleton loader utility with gentle pulse */
