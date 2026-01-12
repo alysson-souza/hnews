@@ -3,7 +3,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AlgoliaSearchResponse } from '../models/algolia';
+import { AlgoliaSearchResponse, AlgoliaItemResponse } from '../models/algolia';
 import { SearchOptions } from '../models/search';
 
 /**
@@ -79,5 +79,19 @@ export class AlgoliaApiClient {
 
     const url = `${baseUrl}?${params.toString()}`;
     return this.http.get<AlgoliaSearchResponse>(url);
+  }
+
+  /**
+   * Fetch a single item (story or comment) with ALL nested children in one request.
+   * This avoids the N+1 problem when loading comment threads.
+   *
+   * Returns the full comment tree nested in the `children` array.
+   * Note: Comments are NOT sorted - they come in arbitrary order from Algolia.
+   *
+   * @param id - The HN item ID
+   * @returns Observable<AlgoliaItemResponse> - Item with nested children
+   */
+  getItem(id: number): Observable<AlgoliaItemResponse> {
+    return this.http.get<AlgoliaItemResponse>(`https://hn.algolia.com/api/v1/items/${id}`);
   }
 }

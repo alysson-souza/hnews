@@ -7,6 +7,7 @@ import { ActivatedRoute, ActivatedRouteSnapshot, Params } from '@angular/router'
 import { of, throwError, BehaviorSubject } from 'rxjs';
 import { ItemComponent } from './item.component';
 import { HackernewsService } from '../../services/hackernews.service';
+import { BulkLoadResult } from '../../services/algolia-comment-loader.service';
 import { VisitedService } from '../../services/visited.service';
 import { ScrollService } from '../../services/scroll.service';
 import { CommentSortService } from '../../services/comment-sort.service';
@@ -61,10 +62,22 @@ describe('ItemComponent', () => {
     },
   ];
 
+  // Create a bulk load result that mimics what Algolia returns
+  const createBulkLoadResult = (story: HNItem, comments: HNItem[]): BulkLoadResult => {
+    const commentsMap = new Map<number, HNItem>();
+    comments.forEach((c) => commentsMap.set(c.id, c));
+    return {
+      story,
+      commentsMap,
+      commentCount: comments.length,
+    };
+  };
+
   beforeEach(async () => {
     mockHnService = {
       getItem: vi.fn(),
       getStoryTopLevelComments: vi.fn(),
+      getStoryWithAllComments: vi.fn(),
     } as unknown as MockedObject<HackernewsService>;
     mockVisitedService = {
       markAsVisited: vi.fn(),
@@ -96,6 +109,10 @@ describe('ItemComponent', () => {
       ],
     }).compileComponents();
 
+    // Default: Algolia bulk load returns success
+    mockHnService.getStoryWithAllComments.mockReturnValue(
+      of(createBulkLoadResult(mockItem, mockComments)),
+    );
     mockHnService.getItem.mockReturnValue(of(mockItem));
     mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
 
@@ -140,6 +157,12 @@ describe('ItemComponent', () => {
 
   describe('State Management', () => {
     it('should keep sort order when loading new item', () => {
+      // Setup mock for the new item
+      const newItem: HNItem = { ...mockItem, id: 456 };
+      mockHnService.getStoryWithAllComments.mockReturnValue(
+        of(createBulkLoadResult(newItem, mockComments)),
+      );
+
       mockCommentSortService.sortOrder.set('best');
       component.allComments.set(mockComments);
       component.commentsLoading.set(true);
@@ -148,17 +171,29 @@ describe('ItemComponent', () => {
 
       // Sort order persists globally
       expect(mockCommentSortService.sortOrder()).toBe('best');
-      expect(component.allComments()).toEqual([]);
+      // allComments is now populated from bulk load
+      expect(component.allComments().length).toBe(mockComments.length);
       expect(component.commentsLoading()).toBe(false);
     });
 
     it('should load comments only once for non-default sorts', () => {
       component.item.set(mockItem);
+      // When bulk loading succeeds, allComments is already populated
+      // So getStoryTopLevelComments should not be called
+      component.allComments.set(mockComments);
       component.onSortChange('best');
 
-      expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(1);
+      expect(mockHnService.getStoryTopLevelComments).not.toHaveBeenCalled();
 
       component.onSortChange('newest');
+      expect(mockHnService.getStoryTopLevelComments).not.toHaveBeenCalled();
+    });
+
+    it('should fallback to getStoryTopLevelComments when allComments is empty', () => {
+      component.item.set(mockItem);
+      component.allComments.set([]); // Empty - would trigger fallback
+      component.onSortChange('best');
+
       expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(1);
     });
   });
@@ -203,15 +238,22 @@ describe('ItemComponent', () => {
   describe('Route Handling', () => {
     it('should handle route params correctly', () => {
       component.ngOnInit();
-      expect(mockHnService.getItem).toHaveBeenCalledWith(123);
+      // Now uses Algolia bulk loading first
+      expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(123);
     });
 
     it('should handle query params correctly', () => {
+      const newItem: HNItem = { ...mockItem, id: 456 };
+      mockHnService.getStoryWithAllComments.mockReturnValue(
+        of(createBulkLoadResult(newItem, mockComments)),
+      );
+
       (mockActivatedRoute.params as BehaviorSubject<Params>).next({});
       (mockActivatedRoute.queryParams as BehaviorSubject<Params>).next({ id: '456' });
 
       component.ngOnInit();
-      expect(mockHnService.getItem).toHaveBeenCalledWith(456);
+      // Now uses Algolia bulk loading first
+      expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(456);
     });
 
     it('should scroll to submission title after loading', async () => {
@@ -220,6 +262,54 @@ describe('ItemComponent', () => {
       setTimeout(() => {
         expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title');
       }, 150);
+    });
+
+    it('should fallback to Firebase API when Algolia fails', () => {
+      mockHnService.getStoryWithAllComments.mockReturnValue(of(null));
+
+      component.ngOnInit();
+
+      // Should have called Algolia first
+      expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(123);
+      // Then fallback to Firebase API
+      expect(mockHnService.getItem).toHaveBeenCalledWith(123);
+    });
+
+    it('should fallback to Firebase API on Algolia error', () => {
+      mockHnService.getStoryWithAllComments.mockReturnValue(
+        throwError(() => new Error('Algolia error')),
+      );
+
+      component.ngOnInit();
+
+      // Should have called Algolia first
+      expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(123);
+      // Then fallback to Firebase API
+      expect(mockHnService.getItem).toHaveBeenCalledWith(123);
+    });
+  });
+
+  describe('Bulk Loading', () => {
+    it('should populate allComments from bulk load result', () => {
+      component.ngOnInit();
+
+      // allComments should be populated from bulk load
+      expect(component.allComments().length).toBe(mockComments.length);
+    });
+
+    it('should set item from bulk load result', () => {
+      component.ngOnInit();
+
+      expect(component.item()).toEqual(mockItem);
+    });
+
+    it('should mark item as visited after bulk load', () => {
+      component.ngOnInit();
+
+      expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(
+        mockItem.id,
+        mockItem.descendants,
+      );
     });
   });
 });

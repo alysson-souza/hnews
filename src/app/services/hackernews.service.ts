@@ -4,6 +4,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of, from, merge, firstValueFrom } from 'rxjs';
 import { catchError, switchMap, shareReplay, map, take, finalize } from 'rxjs/operators';
 import { CacheManagerService } from './cache-manager.service';
+import { BatchedItemLoaderService } from './batched-item-loader.service';
+import { AlgoliaCommentLoaderService, BulkLoadResult } from './algolia-comment-loader.service';
 import { HNItem, HNUser } from '../models/hn';
 import { AlgoliaSearchResponse } from '../models/algolia';
 import { HnApiClient } from '../data/hn-api.client';
@@ -15,6 +17,8 @@ import { SearchOptions } from '../models/search';
 })
 export class HackernewsService {
   private cache = inject(CacheManagerService);
+  private batcher = inject(BatchedItemLoaderService);
+  private algoliaLoader = inject(AlgoliaCommentLoaderService);
   private hn = inject(HnApiClient);
   private algolia = inject(AlgoliaApiClient);
 
@@ -79,28 +83,14 @@ export class HackernewsService {
 
   getItem(id: number, forceRefresh = false): Observable<HNItem | null> {
     const key = id.toString();
-    if (forceRefresh) {
-      return this.hn.item(id).pipe(
-        switchMap((item) =>
-          item ? from(this.cache.set(this.storyScope, key, item)).pipe(map(() => item)) : of(item),
-        ),
-        catchError(() => of(null)),
-      );
-    }
 
-    // Return cached observable if it exists
-    if (this.itemStreams.has(id)) {
+    // Return cached observable if it exists (and not force refresh)
+    if (!forceRefresh && this.itemStreams.has(id)) {
       return this.itemStreams.get(id)!;
     }
 
-    // Build new cached observable
-    const initial$ = from(
-      this.cache.getWithSWR<HNItem | null>(
-        this.storyScope,
-        key,
-        async () => (await firstValueFrom(this.hn.item(id))) ?? null,
-      ),
-    );
+    // Use batched loader for the initial fetch - it handles caching internally
+    const initial$ = from(this.batcher.getItem(id, forceRefresh));
 
     // Get updates stream, using guard for test environments
     const updates$ =
@@ -115,7 +105,12 @@ export class HackernewsService {
       }),
       shareReplay(this.shareLatestConfig),
     );
-    this.itemStreams.set(id, stream$);
+
+    // Don't cache streams for force refresh calls
+    if (!forceRefresh) {
+      this.itemStreams.set(id, stream$);
+    }
+
     return stream$;
   }
 
@@ -303,5 +298,42 @@ export class HackernewsService {
       `page:${options.page || 0}`,
     ];
     return parts.join('|');
+  }
+
+  // ============================================================
+  // Algolia Bulk Comment Loading
+  // ============================================================
+
+  /**
+   * Load a story with ALL its comments in a single Algolia API request.
+   *
+   * This is a MAJOR performance optimization for the item page.
+   * Instead of N+1 requests (1 story + N comments), we make 1 request.
+   *
+   * The result includes:
+   * - The story item (with kids[] populated)
+   * - A Map of all comments for O(1) lookup
+   * - All items are cached for subsequent getItem() calls
+   *
+   * @param id - The story ID
+   * @returns Observable<BulkLoadResult | null>
+   */
+  getStoryWithAllComments(id: number): Observable<BulkLoadResult | null> {
+    return this.algoliaLoader.loadStoryWithComments(id);
+  }
+
+  /**
+   * Async version of getStoryWithAllComments for easier use in components.
+   */
+  async getStoryWithAllCommentsAsync(id: number): Promise<BulkLoadResult | null> {
+    return this.algoliaLoader.loadStoryWithCommentsAsync(id);
+  }
+
+  /**
+   * Check if bulk loading should be used for a story.
+   * Returns true if the story has enough comments to benefit from bulk loading.
+   */
+  shouldUseBulkLoading(descendantsCount: number | undefined): boolean {
+    return this.algoliaLoader.shouldUseBulkLoading(descendantsCount);
   }
 }

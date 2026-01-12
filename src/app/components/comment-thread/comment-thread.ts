@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, OnInit, inject, signal, computed, DestroyRef, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+  computed,
+  DestroyRef,
+  input,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
 import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
@@ -22,6 +31,7 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-comment-thread',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommentThread,
     ThreadGutterComponent,

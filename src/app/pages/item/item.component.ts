@@ -4,6 +4,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
+import { BulkLoadResult } from '../../services/algolia-comment-loader.service';
 import { HNItem } from '../../models/hn';
 import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
@@ -48,6 +49,10 @@ export class ItemComponent implements OnInit {
   sortOrder = this.commentSortService.sortOrder;
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
+
+  // Bulk loading state - stores the result from Algolia bulk load
+  private bulkLoadResult = signal<BulkLoadResult | null>(null);
+  bulkLoadingComments = signal(false);
 
   private readonly commentsPageSize = 10;
   private visibleTopLevelCount = signal(this.commentsPageSize);
@@ -131,23 +136,65 @@ export class ItemComponent implements OnInit {
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
     this.commentsLoading.set(false);
+    this.bulkLoadResult.set(null);
+    this.bulkLoadingComments.set(false);
     this.itemKeyboardNav.clearSelection();
 
+    // Use Algolia bulk loading for stories with comments
+    // This fetches the story AND all comments in a single request
+    this.loadWithAlgoliaBulk(itemId);
+  }
+
+  /**
+   * Load item using Algolia bulk API - fetches story and ALL comments in ONE request.
+   * This is a major performance optimization: instead of N+1 requests, we make 1.
+   *
+   * The bulk load pre-populates the cache, so subsequent getItem() calls
+   * from CommentThread components are instant cache hits.
+   */
+  private loadWithAlgoliaBulk(itemId: number) {
+    this.bulkLoadingComments.set(true);
+
+    this.hnService.getStoryWithAllComments(itemId).subscribe({
+      next: (result) => {
+        if (result) {
+          // Algolia bulk load succeeded
+          this.bulkLoadResult.set(result);
+          this.item.set(result.story);
+
+          // Pre-populate allComments for sorting (top-level only)
+          const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
+          this.allComments.set(topLevelComments);
+
+          // Mark as visited
+          this.visitedService.markAsVisited(result.story.id, result.story.descendants);
+
+          this.handleLoadSuccess();
+        } else {
+          // Algolia failed, fallback to Firebase API
+          this.loadWithFirebaseApi(itemId);
+        }
+        this.bulkLoadingComments.set(false);
+      },
+      error: () => {
+        // Algolia failed, fallback to Firebase API
+        this.bulkLoadingComments.set(false);
+        this.loadWithFirebaseApi(itemId);
+      },
+    });
+  }
+
+  /**
+   * Fallback: Load item using Firebase API (original N+1 approach).
+   * Used when Algolia bulk load fails.
+   */
+  private loadWithFirebaseApi(itemId: number) {
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
         if (item) {
           this.item.set(item);
-          // Mark as visited with current comment count
           this.visitedService.markAsVisited(item.id, item.descendants);
-
-          // Scroll to first comment if available, otherwise submission title
-          setTimeout(() => {
-            if (document.getElementById('first-comment')) {
-              this.scrollService.scrollToElement('first-comment');
-            } else {
-              this.scrollService.scrollToElement('submission-title');
-            }
-          }, 100);
+          this.handleLoadSuccess();
         } else {
           this.error.set('Item not found');
         }
@@ -158,6 +205,33 @@ export class ItemComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  /**
+   * Common success handler for both bulk and fallback loading.
+   */
+  private handleLoadSuccess() {
+    this.loading.set(false);
+
+    // Scroll to first comment if available, otherwise submission title
+    setTimeout(() => {
+      if (document.getElementById('first-comment')) {
+        this.scrollService.scrollToElement('first-comment');
+      } else {
+        this.scrollService.scrollToElement('submission-title');
+      }
+    }, 100);
+  }
+
+  /**
+   * Extract top-level comments from bulk load result.
+   * These are the direct children of the story.
+   */
+  private getTopLevelCommentsFromBulkResult(result: BulkLoadResult): HNItem[] {
+    const kids = result.story.kids ?? [];
+    return kids
+      .map((id) => result.commentsMap.get(id))
+      .filter((item): item is HNItem => item !== undefined && !item.deleted);
   }
 
   loadMoreTopLevelComments() {
@@ -186,6 +260,11 @@ export class ItemComponent implements OnInit {
   }
 
   private loadAllComments(): void {
+    // If we already have comments from bulk loading, no need to fetch again
+    if (this.allComments().length > 0) {
+      return;
+    }
+
     const storyId = this.item()?.id;
     if (!storyId) {
       return;

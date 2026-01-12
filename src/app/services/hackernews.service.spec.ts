@@ -7,6 +7,7 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 import { Observable, firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { HackernewsService } from './hackernews.service';
 import { CacheManagerService } from './cache-manager.service';
+import { BatchedItemLoaderService } from './batched-item-loader.service';
 import { HnApiClient } from '../data/hn-api.client';
 import { AlgoliaApiClient } from '../data/algolia-api.client';
 import { HNItem, HNUser } from '../models/hn';
@@ -82,6 +83,8 @@ describe('HackernewsService searchStories', () => {
 describe('HackernewsService data orchestration', () => {
   let service: HackernewsService;
   let cache: CacheManagerService;
+  let batcher: MockedObject<BatchedItemLoaderService>;
+  let batcherGetItemSpy: Mock;
   let cacheSetSpy: Mock;
   let cacheGetWithSWRSpy: Mock;
   let cacheGetUpdatesSpy: Mock;
@@ -157,9 +160,32 @@ describe('HackernewsService data orchestration', () => {
       search: vi.fn().mockReturnValue(of({ hits: [] } as AlgoliaSearchResponse)),
     } as unknown as MockedObject<AlgoliaApiClient>;
 
+    // Mock BatchedItemLoaderService to use our cacheStore for consistency
+    batcherGetItemSpy = vi.fn().mockImplementation(async (id: number, forceRefresh?: boolean) => {
+      const storeKey = `story:${id}`;
+      if (!forceRefresh && cacheStore.has(storeKey)) {
+        return cacheStore.get(storeKey) as HNItem | null;
+      }
+      // Simulate API fetch through hnClient (with error handling like real batcher)
+      try {
+        const item = await firstValueFrom(hnClient.item(id));
+        if (item !== null) {
+          cacheStore.set(storeKey, item);
+        }
+        return item;
+      } catch {
+        return null;
+      }
+    });
+
+    batcher = {
+      getItem: batcherGetItemSpy,
+    } as unknown as MockedObject<BatchedItemLoaderService>;
+
     TestBed.configureTestingModule({
       providers: [
         { provide: CacheManagerService, useValue: cache },
+        { provide: BatchedItemLoaderService, useValue: batcher },
         { provide: HnApiClient, useValue: hnClient },
         { provide: AlgoliaApiClient, useValue: algoliaClient },
       ],
@@ -274,6 +300,8 @@ describe('HackernewsService data orchestration', () => {
     // Let subscription deliver cached value
     await Promise.resolve();
     expect(value).toEqual(cachedItem);
+    // Batcher is called but returns cached value without API call
+    expect(batcherGetItemSpy).toHaveBeenCalledWith(42, false);
     expect(hnClient.item).not.toHaveBeenCalled();
   });
 
@@ -283,9 +311,11 @@ describe('HackernewsService data orchestration', () => {
 
     const result = await firstValueFrom(service.getItem(7, true));
 
+    expect(batcherGetItemSpy).toHaveBeenCalledWith(7, true);
     expect(hnClient.item).toHaveBeenCalledWith(7);
     expect(result).toEqual(freshItem);
-    expect(cache.set).toHaveBeenCalledWith('story', '7', freshItem);
+    // Caching is now handled internally by the batcher
+    expect(cacheStore.get('story:7')).toEqual(freshItem);
   });
 
   it('maps API failures to null items', async () => {
