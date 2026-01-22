@@ -41,7 +41,7 @@ Shortcuts are contextual: different sets apply on the story list, comments sideb
 
 - Angular 21 (standalone components, signals)
 - Tailwind CSS v4 (with @tailwind/postcss)
-- TypeScript 5.8, RxJS 7.8
+- TypeScript 5.9, RxJS 7.8
 - highlight.js (syntax highlighting with auto-detection)
 - Angular Service Worker (PWA)
 - ESLint (angular-eslint), Prettier, Husky + lint-staged

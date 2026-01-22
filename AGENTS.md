@@ -15,7 +15,7 @@ npm run e2e              # Playwright e2e tests
 npm run e2e:ui           # Interactive e2e UI mode
 ```
 
-**Running a single test file:** `npm test -- src/path/to/file.spec.ts`
+**Running a single test file:** `npm test -- --include src/path/to/file.spec.ts`
 
 **Important:** Always use `ng test` or `npm test`—never run `vitest` directly.
 
@@ -38,7 +38,7 @@ Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.9.
 
 - `HackernewsService` — Orchestrates API calls
 - `CacheManagerService` — Stale-while-revalidate via `getWithSWR()`. Layers: Memory → IndexedDB → localStorage
-- `IndexedDBService` — Schema: `stories`, `users`, `apiCache` stores
+- `IndexedDBService` — Schema: `stories`, `users`, `storyLists`, `apiCache` stores
 - `ThemeService` — Dark mode via `.dark` class
 - `CommandRegistryService` — Maps string commands to callbacks for keyboard nav
 - `KeyboardNavigationService` — Global shortcuts (j/k for stories, etc.)
