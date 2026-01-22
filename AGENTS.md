@@ -15,13 +15,13 @@ npm run e2e              # Playwright e2e tests
 npm run e2e:ui           # Interactive e2e UI mode
 ```
 
-**Running a single test file:** `ng test --include src/path/to/file.spec.ts`
+**Running a single test file:** `npm test -- src/path/to/file.spec.ts`
 
 **Important:** Always use `ng test` or `npm test`—never run `vitest` directly.
 
 ## Architecture
 
-Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.8.
+Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.9.
 
 ### Core Folders
 
@@ -31,7 +31,7 @@ Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.8.
 - `src/app/stores/` — Signal-based state management
 - `src/app/data/` — API clients (Algolia, HN API)
 - `src/app/models/` — TypeScript interfaces
-- `e2e/` — Playwright tests with page objects in `e2e/page-objects/`
+- `e2e/` — Playwright tests with page objects in `e2e/page-objects/` and fixtures in `e2e/fixtures/`
 - `functions/` — Cloudflare Pages functions
 
 ### Key Services
