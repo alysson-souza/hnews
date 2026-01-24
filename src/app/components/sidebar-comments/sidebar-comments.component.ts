@@ -59,7 +59,7 @@ import {
             <!-- Content -->
             <div
               #sidebarContent
-              class="sidebar-comments-panel flex-1 overflow-y-auto p-4 sm:p-6"
+              class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6"
               tabindex="-1"
               [class.slide-out-left]="
                 sidebarService.isTransitioning() &&
