@@ -5,6 +5,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        brand: '#155dfc',
+        'brand-dark': '#3B5998',
         'digg-blue': '#3B5998',
         'digg-blue-dark': '#2D4373',
         'digg-blue-light': '#4E6CAD',
@@ -12,7 +14,8 @@ module.exports = {
         'link-hover': '#155080',
       },
       fontFamily: {
-        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['var(--font-sans)'],
+        mono: ['var(--font-mono)'],
       },
       boxShadow: {
         card: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',

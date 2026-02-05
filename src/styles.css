@@ -1,5 +1,5 @@
 /* Import Fonts and External Styles first */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 @import 'highlight.js/styles/atom-one-dark.css';
 
 /* Import Tailwind CSS */
@@ -23,6 +23,29 @@
 
 /* CSS Custom Properties for Dynamic Viewport (PWA Orientation Fix) */
 :root {
+  /* === Type === */
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-mono:
+    'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    monospace;
+
+  /* === App palette (Neo blue, not blue-washed) === */
+  --app-brand: #155dfc;
+  --app-brand-2: #3b5998;
+
+  --app-bg: #f8fafc;
+  --app-surface: #ffffff;
+  --app-surface-2: #f3f6ff;
+
+  --app-text: #0b1220;
+  --app-muted: #475569;
+  --app-border: rgba(15, 23, 42, 0.12);
+  --app-border-strong: rgba(15, 23, 42, 0.18);
+
+  --app-shadow: 0 1px 0 rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.08);
+  --app-shadow-strong: 0 1px 0 rgba(15, 23, 42, 0.05), 0 18px 48px rgba(15, 23, 42, 0.16);
+
   /* These are set by DeviceService and update on orientation change */
   --viewport-width: 100vw;
   --viewport-height: 100vh;
@@ -39,16 +62,66 @@
 
 /* PWA: Prevent white flash during navigation */
 html {
-  background-color: #f9fafb; /* gray-50 */
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  background-image:
+    radial-gradient(1100px 600px at 12% -10%, rgb(21 93 252 / 0.14), transparent 60%),
+    radial-gradient(900px 520px at 92% 0%, rgb(59 89 152 / 0.12), transparent 55%);
+
   @apply transition-colors duration-200;
 }
 
 html.dark {
   background-color: #020617; /* slate-950 */
+  color: #e6edf7;
+  background-image:
+    radial-gradient(1000px 520px at 14% -10%, rgb(21 93 252 / 0.2), transparent 62%),
+    radial-gradient(900px 560px at 92% 0%, rgb(59 89 152 / 0.14), transparent 58%);
 }
 
 .dark {
+  --app-bg: #020617;
+  --app-surface: #0b1220;
+  --app-surface-2: #0a1020;
+  --app-text: #e6edf7;
+  --app-muted: #94a3b8;
+  --app-border: rgba(148, 163, 184, 0.18);
+  --app-border-strong: rgba(148, 163, 184, 0.28);
+  --app-shadow: 0 1px 0 rgba(2, 6, 23, 0.55), 0 18px 58px rgba(0, 0, 0, 0.55);
+  --app-shadow-strong: 0 1px 0 rgba(2, 6, 23, 0.65), 0 26px 86px rgba(0, 0, 0, 0.6);
+
   --thread-color: rgb(51 65 85 / 0.6); /* slate-700/60 - matches card border */
+}
+
+body {
+  background: transparent;
+  color: inherit;
+}
+
+/* Headings feel intentional (but keep component-level sizing) */
+/* Use display face only where explicitly desired */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
 }
 
 /* === Thread Layout Classes === */
@@ -141,16 +214,20 @@ button.tree-connector {
 /* Comment card base styling */
 .comment-card {
   @apply relative;
-  @apply bg-gray-50 dark:bg-slate-800/50;
-  @apply border border-gray-200 dark:border-slate-700/60;
   @apply rounded-lg p-3;
+  background-color: var(--app-surface-2);
+  border: 1px solid var(--app-border);
   transition:
     background-color 200ms ease,
     border-color 200ms ease;
 }
 
 .comment-card.collapsed {
-  @apply bg-gray-100/50 dark:bg-slate-800/30;
+  background-color: rgba(15, 23, 42, 0.03);
+}
+
+.dark .comment-card.collapsed {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 /* Skeleton loader utility with gentle pulse */
@@ -160,7 +237,10 @@ button.tree-connector {
 
 /* Glassmorphism utility */
 @utility glass {
-  @apply bg-white/50 dark:bg-slate-900/60 backdrop-blur-3xl backdrop-saturate-200 border border-white/40 dark:border-slate-700/50 shadow-xl;
+  @apply bg-white/70 dark:bg-slate-950/70;
+  @apply backdrop-blur-2xl backdrop-saturate-150;
+  @apply border border-white/60 dark:border-slate-800/60;
+  @apply shadow-lg dark:shadow-black/40;
   @apply transition-all duration-300;
 }
 

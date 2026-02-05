@@ -19,16 +19,20 @@ import { Component, input } from '@angular/core';
       }
 
       .card-base {
-        @apply bg-white dark:bg-slate-900;
-        @apply border border-gray-200 dark:border-slate-700;
-        @apply rounded-xl shadow-sm dark:shadow-md dark:shadow-black/20;
-        @apply overflow-hidden;
-        @apply transition-all duration-200;
+        background-color: var(--app-surface);
+        border: 1px solid var(--app-border);
+        box-shadow: var(--app-shadow);
+        @apply rounded-xl overflow-hidden;
+        @apply transition-[box-shadow,border-color,background-color] duration-200;
       }
 
       .card-hoverable {
-        @apply hover:shadow-md hover:border-gray-300 dark:hover:border-slate-600 dark:hover:shadow-lg dark:hover:shadow-black/30;
-        @apply transition-all duration-200;
+        @apply transition-[box-shadow,border-color,transform] duration-200;
+      }
+
+      .card-hoverable:hover {
+        border-color: var(--app-border-strong);
+        box-shadow: var(--app-shadow-strong);
       }
 
       .card-clickable {

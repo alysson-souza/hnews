@@ -16,10 +16,12 @@ import { Component, input } from '@angular/core';
 
       .section-title {
         @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-0 leading-none;
+        font-family: var(--font-display);
       }
 
       .section-subtitle {
         @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-0 leading-none;
+        font-family: var(--font-display);
       }
     `,
   ],

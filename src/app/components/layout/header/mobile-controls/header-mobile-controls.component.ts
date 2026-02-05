@@ -48,8 +48,10 @@ import {
       @reference '../../../../../styles.css';
 
       .mobile-menu-button {
-        @apply p-2 text-white/90 dark:text-slate-100 rounded-lg transition-colors;
-        @apply hover:bg-white/10 hover:text-white dark:hover:bg-black/30 dark:hover:text-white;
+        @apply p-2 rounded-lg transition-colors;
+        @apply text-slate-700 hover:text-slate-900;
+        @apply dark:text-slate-200 dark:hover:text-white;
+        @apply hover:bg-slate-900/5 dark:hover:bg-white/5;
         @apply cursor-pointer flex items-center justify-center;
       }
     `,

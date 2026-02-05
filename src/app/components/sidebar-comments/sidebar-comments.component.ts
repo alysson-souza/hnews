@@ -30,7 +30,7 @@ import {
     @if (sidebarService.isOpen()) {
       <!-- Mobile: Full screen overlay, tablet: below header overlay -->
       <div
-        class="sidebar-overlay lg:hidden fixed inset-0 sm:top-16 bg-black bg-opacity-50 z-40"
+        class="sidebar-overlay lg:hidden fixed inset-0 sm:top-16 bg-slate-950/40 backdrop-blur-[2px] z-40"
         role="button"
         tabindex="0"
         aria-label="Close sidebar"
@@ -42,7 +42,7 @@ import {
 
       <!-- Sidebar Panel -->
       <div
-        class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-700/60 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
+        class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
         [class.translate-x-full]="!sidebarService.isOpen()"
         [class.translate-x-0]="sidebarService.isOpen()"
       >
@@ -59,7 +59,7 @@ import {
             <!-- Content -->
             <div
               #sidebarContent
-              class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6"
+              class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 focus:outline-none"
               tabindex="-1"
               [class.slide-out-left]="
                 sidebarService.isTransitioning() &&
@@ -151,6 +151,11 @@ import {
 
       :host {
         display: contents;
+      }
+
+      /* Prevent default browser focus outline on programmatic focus */
+      .sidebar-comments-panel:focus {
+        outline: none;
       }
 
       /* PWA standalone mode: adjust for safe area insets */

@@ -25,23 +25,31 @@ import { ScrollService } from '../../../services/scroll.service';
 
       .nav-link {
         @apply relative z-10;
-        @apply text-gray-500 dark:text-slate-400 px-3 py-1.5 rounded-full font-medium text-sm;
-        @apply hover:text-blue-600 dark:hover:text-blue-400;
+        @apply text-slate-600 dark:text-slate-300/80 px-3 py-1.5 rounded-full font-medium text-sm;
+        @apply hover:text-brand dark:hover:text-blue-300;
         @apply transition-colors duration-200 cursor-pointer;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
 
       .nav-link-active {
-        @apply text-blue-600 dark:text-blue-400;
+        @apply text-brand dark:text-blue-300;
       }
 
       .nav-link-mobile {
-        @apply block text-white/90 dark:text-slate-100 px-4 py-3 transition-colors font-medium border-l-4 border-transparent;
-        @apply hover:bg-white/10 dark:hover:bg-black/30 hover:text-white dark:hover:text-white;
+        @apply block px-4 py-3 transition-colors font-medium;
+        @apply text-slate-800 dark:text-slate-100;
+        @apply border-l-4 border-transparent;
+        @apply hover:bg-slate-900/5 dark:hover:bg-white/5;
       }
 
       .nav-link-mobile.nav-link-active {
-        @apply border-white/80 bg-white/10 text-white dark:text-white;
+        @apply border-brand;
+        @apply text-slate-900 dark:text-white;
+        background-color: rgba(21, 93, 252, 0.1);
+      }
+
+      :host-context(.dark) .nav-link-mobile.nav-link-active {
+        background-color: rgba(21, 93, 252, 0.18);
       }
     `,
   ],

@@ -37,7 +37,7 @@ import { AppFooterComponent } from '../footer/footer.component';
         /* Use CSS custom property for dynamic viewport height (PWA orientation fix) */
         min-height: calc(var(--vh, 1vh) * 100);
         padding-top: 4rem;
-        @apply bg-gray-50 dark:bg-blue-950;
+        background: transparent;
       }
 
       @media (display-mode: standalone) {

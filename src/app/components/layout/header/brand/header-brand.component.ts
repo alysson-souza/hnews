@@ -17,7 +17,7 @@ import { ScrollService } from '../../../../services/scroll.service';
           </svg>
         </div>
         <span
-          class="text-white xl:text-gray-900 dark:text-white text-xl sm:text-2xl font-bold lg:hidden xl:inline"
+          class="text-slate-900 dark:text-slate-50 text-xl sm:text-2xl font-bold lg:hidden xl:inline"
           >HNews</span
         >
       </a>
@@ -31,7 +31,23 @@ import { ScrollService } from '../../../../services/scroll.service';
       @reference '../../../../../styles.css';
 
       .app-logo-container {
-        @apply bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-xl p-2 shadow-lg shadow-blue-500/20;
+        @apply bg-gradient-to-br from-digg-blue-light to-digg-blue-dark rounded-xl p-2;
+        box-shadow: 0 10px 24px rgba(21, 93, 252, 0.22);
+        position: relative;
+      }
+
+      .app-logo-container::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 0.75rem;
+        pointer-events: none;
+        background: radial-gradient(
+          80px 50px at 30% 18%,
+          rgba(255, 255, 255, 0.35),
+          transparent 60%
+        );
+        mix-blend-mode: soft-light;
       }
 
       .app-logo-icon {

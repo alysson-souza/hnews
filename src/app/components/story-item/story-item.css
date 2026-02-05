@@ -2,8 +2,11 @@
 
 /* Story Item Card */
 .story-card {
-  @apply relative flex flex-col sm:flex-row border border-gray-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md mb-2 overflow-hidden;
-  @apply bg-white dark:bg-slate-900 dark:shadow-black/20 top-0 transition-[border-color,box-shadow,background-color,top] duration-200 ease-out;
+  @apply relative flex flex-col sm:flex-row rounded-2xl mb-2 overflow-hidden;
+  @apply top-0 transition-[border-color,box-shadow,background-color,top] duration-200 ease-out;
+  background-color: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
 }
 
 @media (display-mode: standalone) {
@@ -14,13 +17,22 @@
 }
 
 .story-card:hover {
-  @apply border-blue-200 dark:border-blue-800;
+  border-color: rgba(21, 93, 252, 0.28);
+  box-shadow: var(--app-shadow-strong);
   top: -1px;
+}
+
+:host-context(.dark) .story-card:hover {
+  border-color: rgba(147, 197, 253, 0.26);
 }
 
 .story-card-selected {
   @apply ring-2 ring-blue-500 dark:ring-blue-400 border-blue-500 dark:border-blue-400;
-  @apply bg-blue-50/50 dark:bg-blue-900/20;
+  background-color: rgba(21, 93, 252, 0.06);
+}
+
+:host-context(.dark) .story-card-selected {
+  background-color: rgba(21, 93, 252, 0.14);
 }
 
 /* Vote Section */
@@ -28,8 +40,10 @@
   /* Mobile-first (default): horizontal layout at top */
   @apply flex flex-row items-center gap-2;
   @apply px-3 py-1.5;
-  @apply bg-gray-50 dark:bg-slate-950/30;
-  @apply border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-slate-700;
+  background-color: var(--app-surface-2);
+  border-bottom: 1px solid var(--app-border);
+  @apply sm:border-b-0;
+  border-right: 0;
   @apply w-full;
 
   /* Desktop (sm: breakpoint): vertical layout on left */
@@ -37,6 +51,12 @@
   @apply sm:px-2 sm:py-4;
   @apply sm:w-[88px] sm:min-w-[88px];
   @apply sm:flex-shrink-0;
+}
+
+@media (min-width: 640px) {
+  .vote-section {
+    border-right: 1px solid var(--app-border);
+  }
 }
 
 .vote-button {
@@ -92,7 +112,8 @@
 }
 
 .story-title {
-  @apply text-lg sm:text-xl font-bold break-words leading-tight tracking-tight line-clamp-2;
+  font-family: var(--font-sans);
+  @apply text-lg sm:text-xl font-semibold break-words leading-tight tracking-tight line-clamp-2;
 }
 
 .story-title-unread {
@@ -100,7 +121,7 @@
 }
 
 .story-title-visited {
-  @apply text-gray-600 dark:text-slate-400 font-medium;
+  @apply text-gray-600 dark:text-slate-400;
 }
 
 .story-title-link {

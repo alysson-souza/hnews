@@ -52,8 +52,9 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
 
       .nav-pill {
         @apply absolute rounded-xl pointer-events-none;
-        @apply bg-blue-50 dark:bg-blue-900/30;
-        @apply shadow-sm ring-1 ring-blue-100 dark:ring-blue-900/50;
+        @apply shadow-sm;
+        border: 1px solid rgba(21, 93, 252, 0.16);
+        background: linear-gradient(180deg, rgba(21, 93, 252, 0.1), rgba(21, 93, 252, 0.04));
         @apply opacity-0;
         top: -4px;
         bottom: -4px;
@@ -66,6 +67,11 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
 
       .nav-pill-visible {
         @apply opacity-100;
+      }
+
+      :host-context(.dark) .nav-pill {
+        border-color: rgba(147, 197, 253, 0.18);
+        background: linear-gradient(180deg, rgba(21, 93, 252, 0.24), rgba(59, 89, 152, 0.14));
       }
     `,
   ],

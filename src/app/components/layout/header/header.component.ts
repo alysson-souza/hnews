@@ -77,28 +77,31 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
       .app-header {
         @apply fixed top-0 left-0 right-0 z-40;
         @apply glass;
+        /* Crisp edge so glass doesn't feel floaty */
+        border-bottom-color: var(--app-border);
       }
 
-      @media (max-width: 1023.98px) {
-        .app-header {
-          background-color: #155dfc;
-          border-top-width: 0;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-        }
-
-        :host-context(.dark) .app-header {
-          background-color: #3b5998;
-        }
+      .app-header::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 2px;
+        pointer-events: none;
+        opacity: 0.55;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(21, 93, 252, 0.85),
+          rgba(59, 89, 152, 0.65),
+          transparent
+        );
       }
 
       @media (display-mode: standalone) {
         .app-header {
           padding-top: env(safe-area-inset-top, 0px);
-          border-top-width: 0;
-          background-color: #155dfc;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
         }
 
         .app-header::before {
@@ -108,16 +111,12 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           left: 0;
           right: 0;
           height: calc(env(safe-area-inset-top, 0px) + 1px);
-          background-color: #155dfc;
+          background-color: rgb(255 255 255 / 0.92);
           z-index: -1;
         }
 
         :host-context(.dark) .app-header::before {
-          background-color: #3b5998;
-        }
-
-        :host-context(.dark) .app-header {
-          background-color: #3b5998;
+          background-color: rgb(2 6 23 / 0.92);
         }
       }
     `,

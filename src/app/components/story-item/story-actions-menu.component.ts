@@ -90,7 +90,8 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
 
       /* Actions Menu */
       .story-actions-menu {
-        @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg dark:shadow-2xl border border-gray-200 dark:border-slate-700 z-50;
+        @apply w-64 bg-white dark:bg-slate-900 rounded-lg shadow-lg dark:shadow-2xl border border-gray-200 dark:border-slate-700;
+        z-index: 70;
       }
       .story-actions-menu-fixed {
         @apply fixed;

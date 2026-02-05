@@ -100,8 +100,9 @@ import { RouterModule } from '@angular/router';
       @reference '../../../../styles.css';
 
       .app-footer {
-        @apply bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800;
-        @apply text-gray-600 dark:text-gray-400 py-8 mt-12 relative;
+        background-color: var(--app-surface);
+        border-top: 1px solid var(--app-border);
+        @apply text-slate-600 dark:text-slate-300/80 py-8 mt-12 relative;
       }
 
       .footer-text {

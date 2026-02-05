@@ -111,7 +111,10 @@ import {
       @reference '../../../styles.css';
 
       .header {
-        @apply sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 p-3 sm:p-4 flex items-center justify-between shadow-sm dark:shadow-md gap-2;
+        @apply sticky top-0 z-10 p-3 sm:p-4 flex items-center justify-between gap-2;
+        background-color: var(--app-surface);
+        border-bottom: 1px solid var(--app-border);
+        box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
       }
       .left-controls {
         @apply flex items-center gap-1;
@@ -123,13 +126,25 @@ import {
         @apply flex items-center gap-1;
       }
       .back-btn {
-        @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center justify-center;
+        @apply p-1 sm:p-2 text-slate-600 dark:text-slate-300/80 rounded transition-colors cursor-pointer;
+        @apply hover:text-brand dark:hover:text-blue-300;
+        @apply hover:bg-slate-900/5 dark:hover:bg-white/5;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply flex items-center justify-center;
       }
       .action-btn {
-        @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center justify-center;
+        @apply p-1 sm:p-2 text-slate-600 dark:text-slate-300/80 rounded transition-colors cursor-pointer;
+        @apply hover:text-brand dark:hover:text-blue-300;
+        @apply hover:bg-slate-900/5 dark:hover:bg-white/5;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply flex items-center justify-center;
       }
       .close-btn {
-        @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center justify-center;
+        @apply p-1 sm:p-2 text-slate-600 dark:text-slate-300/80 rounded transition-colors cursor-pointer;
+        @apply hover:text-brand dark:hover:text-blue-300;
+        @apply hover:bg-slate-900/5 dark:hover:bg-white/5;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply flex items-center justify-center;
       }
       .icon {
         @apply w-5 h-5;
