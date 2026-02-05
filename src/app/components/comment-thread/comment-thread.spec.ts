@@ -141,12 +141,13 @@ describe('CommentThread', () => {
       getItem: vi.fn(),
     } as unknown as MockedObject<HackernewsService>;
     mockVoteStore = new MockCommentVoteStoreService();
-    mockRepliesLoader = new MockCommentRepliesLoaderService();
     mockCommentStateService = new MockCommentStateService();
 
     TestBed.overrideComponent(CommentThread, {
       set: {
-        providers: [{ provide: CommentRepliesLoaderService, useValue: mockRepliesLoader }],
+        providers: [
+          { provide: CommentRepliesLoaderService, useClass: MockCommentRepliesLoaderService },
+        ],
       },
     });
 
@@ -172,6 +173,9 @@ describe('CommentThread', () => {
 
     fixture = TestBed.createComponent(CommentThread);
     component = fixture.componentInstance;
+    mockRepliesLoader = fixture.debugElement.injector.get(
+      CommentRepliesLoaderService,
+    ) as unknown as MockCommentRepliesLoaderService;
 
     // Provide required inputs using componentRef.setInput for signal inputs
     fixture.componentRef.setInput('commentId', 123);
