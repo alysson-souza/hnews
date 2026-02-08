@@ -39,7 +39,7 @@ import { StoryLinkComponent } from '../../components/shared/story-link/story-lin
   template: `
     <app-page-container
       [class.lg:w-[60vw]]="sidebarService.isOpen() && deviceService.isDesktop()"
-      class="transition-all duration-300"
+      class="lg:transition-[width] lg:duration-300"
     >
       <div class="space-y-3 sm:space-y-4">
         @if (loading()) {

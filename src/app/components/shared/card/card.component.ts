@@ -6,7 +6,12 @@ import { Component, input } from '@angular/core';
   selector: 'app-card',
   imports: [],
   template: `
-    <div [class]="getCardClasses()">
+    <div
+      class="card-base"
+      [class.card-padding]="!noPadding()"
+      [class.card-hoverable]="hoverable()"
+      [class.card-clickable]="clickable()"
+    >
       <ng-content />
     </div>
   `,
@@ -49,22 +54,4 @@ export class CardComponent {
   readonly noPadding = input(false);
   readonly hoverable = input(false);
   readonly clickable = input(false);
-
-  getCardClasses(): string {
-    const classes = ['card-base'];
-
-    if (!this.noPadding()) {
-      classes.push('card-padding');
-    }
-
-    if (this.hoverable()) {
-      classes.push('card-hoverable');
-    }
-
-    if (this.clickable()) {
-      classes.push('card-clickable');
-    }
-
-    return classes.join(' ');
-  }
 }
