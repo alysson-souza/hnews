@@ -5,7 +5,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "prestart": "npm run generate:version && npm run generate:userscript",
+    "prestart": "BASE_URL=http://localhost:4200 npm run generate:version && BASE_URL=http://localhost:4200 npm run generate:userscript",
     "build": "ng build",
     "prebuild": "npm run generate:version && npm run generate:userscript",
     "build:prod": "ng build --configuration production",
