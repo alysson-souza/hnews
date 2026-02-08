@@ -23,7 +23,7 @@ import { Component, input } from '@angular/core';
         border: 1px solid var(--app-border);
         box-shadow: var(--app-shadow);
         @apply rounded-xl overflow-hidden;
-        @apply transition-[box-shadow,border-color,background-color] duration-200;
+        @apply transition-[box-shadow,background-color] duration-200;
       }
 
       .card-hoverable {

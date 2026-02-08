@@ -27,123 +27,128 @@ import {
   ],
   template: `
     <!-- Sidebar Comments -->
-    @if (sidebarService.isOpen()) {
-      <!-- Mobile: Full screen overlay, tablet: below header overlay -->
-      <div
-        class="sidebar-overlay lg:hidden fixed inset-0 sm:top-16 bg-slate-950/40 backdrop-blur-[2px] z-40"
-        role="button"
-        tabindex="0"
-        aria-label="Close sidebar"
-        title="Close sidebar"
-        (click)="sidebarService.closeSidebar()"
-        (keydown.enter)="sidebarService.closeSidebar()"
-        (keydown.space)="sidebarService.closeSidebar()"
-      ></div>
+    <!-- Overlay: always in DOM, visibility driven by CSS -->
+    <div
+      class="sidebar-overlay lg:hidden fixed inset-0 sm:top-16 bg-slate-950/40 backdrop-blur-[2px] z-40 transition-opacity duration-300"
+      [class.opacity-0]="!sidebarService.isOpen()"
+      [class.opacity-100]="sidebarService.isOpen()"
+      [class.pointer-events-none]="!sidebarService.isOpen()"
+      [class.pointer-events-auto]="sidebarService.isOpen()"
+      [attr.aria-hidden]="!sidebarService.isOpen()"
+      role="button"
+      tabindex="0"
+      aria-label="Close sidebar"
+      title="Close sidebar"
+      (click)="sidebarService.closeSidebar()"
+      (keydown.enter)="sidebarService.closeSidebar()"
+      (keydown.space)="sidebarService.closeSidebar()"
+    ></div>
 
-      <!-- Sidebar Panel -->
-      <div
-        class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
-        [class.translate-x-full]="!sidebarService.isOpen()"
-        [class.translate-x-0]="sidebarService.isOpen()"
-      >
-        @if (sidebarService.currentItemId()) {
-          <div class="h-full flex flex-col">
-            <!-- Header -->
-            <app-sidebar-comments-header
-              [canGoBack]="sidebarService.canGoBack()"
-              [itemId]="sidebarService.currentItemId()!"
-              (dismiss)="sidebarService.closeSidebar()"
-              (back)="sidebarService.goBack()"
-            />
+    <!-- Sidebar Panel: always in DOM, slide driven by CSS -->
+    <div
+      class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30 will-change-transform translate-x-full"
+      [class.translate-x-full]="!sidebarService.isOpen()"
+      [class.translate-x-0]="sidebarService.isOpen()"
+      [attr.inert]="sidebarService.isOpen() ? null : true"
+      [attr.aria-hidden]="!sidebarService.isOpen()"
+    >
+      @if (sidebarService.currentItemId()) {
+        <div class="h-full flex flex-col">
+          <!-- Header -->
+          <app-sidebar-comments-header
+            [canGoBack]="sidebarService.canGoBack()"
+            [itemId]="sidebarService.currentItemId()!"
+            (dismiss)="sidebarService.closeSidebar()"
+            (back)="sidebarService.goBack()"
+          />
 
-            <!-- Content -->
-            <div
-              #sidebarContent
-              class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 focus:outline-none"
-              tabindex="-1"
-              [class.slide-out-left]="
-                sidebarService.isTransitioning() &&
-                sidebarService.animatingOut() &&
-                sidebarService.animationDirection() === 'left'
-              "
-              [class.slide-out-right]="
-                sidebarService.isTransitioning() &&
-                sidebarService.animatingOut() &&
-                sidebarService.animationDirection() === 'right'
-              "
-              [class.slide-in-left]="
-                sidebarService.isTransitioning() &&
-                !sidebarService.animatingOut() &&
-                sidebarService.animationDirection() === 'left'
-              "
-              [class.slide-in-right]="
-                sidebarService.isTransitioning() &&
-                !sidebarService.animatingOut() &&
-                sidebarService.animationDirection() === 'right'
-              "
-            >
-              @if (loading()) {
-                <div class="skeleton space-y-4">
-                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
-                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
-                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
-                </div>
-              } @else if (item()) {
-                <!-- Story Details -->
-                <app-sidebar-story-summary [item]="item()!" />
+          <!-- Content -->
+          <div
+            #sidebarContent
+            class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 focus:outline-none"
+            tabindex="-1"
+            [class.slide-out-left]="
+              sidebarService.isTransitioning() &&
+              sidebarService.animatingOut() &&
+              sidebarService.animationDirection() === 'left'
+            "
+            [class.slide-out-right]="
+              sidebarService.isTransitioning() &&
+              sidebarService.animatingOut() &&
+              sidebarService.animationDirection() === 'right'
+            "
+            [class.slide-in-left]="
+              sidebarService.isTransitioning() &&
+              !sidebarService.animatingOut() &&
+              sidebarService.animationDirection() === 'left'
+            "
+            [class.slide-in-right]="
+              sidebarService.isTransitioning() &&
+              !sidebarService.animatingOut() &&
+              sidebarService.animationDirection() === 'right'
+            "
+          >
+            @if (loading()) {
+              <div class="skeleton space-y-4">
+                <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+              </div>
+            } @else if (item()) {
+              <!-- Story Details -->
+              <app-sidebar-story-summary [item]="item()!" />
 
-                <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
+              <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
 
-                <!-- Comments Header with Sort -->
-                <div class="flex items-center justify-between mb-6">
-                  <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Comments ({{ item()!.kids?.length || 0 }})
-                  </h4>
+              <!-- Comments Header with Sort -->
+              <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Comments ({{ item()!.kids?.length || 0 }})
+                </h4>
 
-                  <app-comment-sort-dropdown
-                    [sortOrder]="sortOrder()"
-                    [loading]="commentsLoading()"
-                    (sortChange)="onSortChange($event)"
-                  />
-                </div>
+                <app-comment-sort-dropdown
+                  [sortOrder]="sortOrder()"
+                  [loading]="commentsLoading()"
+                  (sortChange)="onSortChange($event)"
+                />
+              </div>
 
-                @if (item()!.kids && item()!.kids!.length > 0) {
-                  <div class="space-y-4" role="tree" aria-label="Comments">
-                    @for (commentId of visibleCommentIds(); track commentId) {
-                      <app-comment-thread
-                        [commentId]="commentId"
-                        [depth]="0"
-                        [storyAuthor]="item()?.by"
-                      />
-                    }
-                  </div>
-
-                  @if (hasMoreTopLevelComments()) {
-                    <div class="mt-4 flex justify-center">
-                      <app-button
-                        variant="secondary"
-                        size="sm"
-                        class="load-more-btn"
-                        [ariaLabel]="'Load more comments'"
-                        (clicked)="loadMoreTopLevelComments()"
-                      >
-                        Load {{ remainingTopLevelCount() }} more comments
-                      </app-button>
-                    </div>
+              @if (item()!.kids && item()!.kids!.length > 0) {
+                <div class="space-y-4" role="tree" aria-label="Comments">
+                  @for (commentId of visibleCommentIds(); track commentId) {
+                    <app-comment-thread
+                      [commentId]="commentId"
+                      [depth]="0"
+                      [storyAuthor]="item()?.by"
+                    />
                   }
-                } @else {
-                  <p class="text-gray-500 text-center py-8">No comments yet</p>
-                }
-              } @else if (error()) {
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p class="text-red-800">{{ error() }}</p>
                 </div>
+
+                @if (hasMoreTopLevelComments()) {
+                  <div class="mt-4 flex justify-center">
+                    <app-button
+                      variant="secondary"
+                      size="sm"
+                      class="load-more-btn"
+                      [ariaLabel]="'Load more comments'"
+                      (clicked)="loadMoreTopLevelComments()"
+                    >
+                      Load {{ remainingTopLevelCount() }} more comments
+                    </app-button>
+                  </div>
+                }
+              } @else {
+                <p class="text-gray-500 text-center py-8">No comments yet</p>
               }
-            </div>
+            } @else if (error()) {
+              <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p class="text-red-800">{{ error() }}</p>
+              </div>
+            }
           </div>
-        }
-      </div>
-    }
+        </div>
+      }
+    </div>
   `,
   styles: [
     `
