@@ -1,13 +1,13 @@
 <app-page-container>
-  <div class="space-y-6">
+  <div class="space-y-2 sm:space-y-3">
     <!-- Header Section -->
-    <app-card class="block">
+    <app-card class="block setting-section">
       <div class="section-header">
         <ng-icon name="solarCodeLinear" class="section-icon" />
         <app-section-title>HNews Redirect Userscript</app-section-title>
       </div>
 
-      <div class="info-section">
+      <div class="space-y-6">
         <p class="info-text">
           Automatically redirect all Hacker News links to this HNews frontend. Install this
           userscript in your browser to seamlessly browse HN with an improved reading experience.
@@ -27,13 +27,13 @@
     </app-card>
 
     <!-- Installation Instructions -->
-    <app-card class="block">
+    <app-card class="block setting-section">
       <div class="section-header">
         <ng-icon name="solarDocumentLinear" class="section-icon" />
         <app-section-title>Installation</app-section-title>
       </div>
 
-      <div class="info-section">
+      <div class="space-y-6">
         <ol class="instructions-list">
           <li class="instruction-item">
             Install a userscript manager extension in your browser:
@@ -100,7 +100,7 @@
     </app-card>
 
     <!-- Userscript Code -->
-    <app-card class="block">
+    <app-card class="block setting-section">
       <div class="section-header-wrapper">
         <div class="section-header">
           <ng-icon name="solarCodeLinear" class="section-icon" />
@@ -108,11 +108,7 @@
         </div>
 
         <div class="button-group">
-          <a
-            [href]="installUrl()"
-            class="responsive-btn inline-flex items-center justify-center px-4 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900 transition-colors"
-            aria-label="Install userscript"
-          >
+          <a [href]="installUrl()" class="btn-primary" aria-label="Install userscript">
             <ng-icon name="solarDownloadLinear" class="mr-2" />
             Install Script
           </a>
@@ -120,9 +116,8 @@
           <app-button
             (clicked)="copyToClipboard()"
             variant="secondary"
-            size="md"
+            size="sm"
             ariaLabel="Copy userscript to clipboard"
-            class="responsive-btn"
           >
             <ng-icon name="solarCopyLinear" class="mr-2" />
             {{ isCopied() ? 'Copied!' : 'Copy to Clipboard' }}

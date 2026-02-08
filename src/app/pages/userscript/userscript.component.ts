@@ -41,6 +41,20 @@ import {
     `
       @reference '../../../styles.css';
 
+      .setting-section {
+        @apply relative overflow-hidden;
+      }
+
+      .btn-primary {
+        @apply inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap border border-transparent;
+        @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm;
+        @apply hover:from-blue-700 hover:to-blue-800 hover:shadow-md;
+        @apply dark:from-blue-500 dark:to-blue-600;
+        @apply dark:hover:from-blue-600 dark:hover:to-blue-700;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500;
+        @apply dark:focus-visible:ring-offset-gray-800;
+      }
+
       .section-header {
         @apply flex items-center gap-3 mb-6;
       }
@@ -49,16 +63,12 @@ import {
         @apply text-lg text-gray-500 dark:text-gray-400 flex-shrink-0 inline-flex items-center justify-center;
       }
 
-      .info-section {
-        @apply space-y-4;
-      }
-
       .info-text {
         @apply text-gray-700 dark:text-gray-300 leading-relaxed;
       }
 
       .instructions-list {
-        @apply space-y-3 my-4 pl-6;
+        @apply space-y-3 pl-6;
         counter-reset: step-counter;
       }
 
@@ -73,7 +83,7 @@ import {
       }
 
       .code-block {
-        @apply relative bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700/60 overflow-hidden my-4 shadow-sm;
+        @apply relative bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700/60 overflow-hidden mt-4 shadow-sm;
         max-height: 500px;
         overflow-y: auto;
       }
@@ -83,9 +93,13 @@ import {
         padding: 1rem !important;
       }
 
+      .code-block ::ng-deep code.hljs {
+        font-size: 0.75rem;
+      }
+
       @media (min-width: 640px) {
         .code-block ::ng-deep code.hljs {
-          font-size: 0.875rem;
+          font-size: 0.8125rem;
         }
       }
 
@@ -97,20 +111,14 @@ import {
         @apply mb-0;
       }
 
-      .section-header {
-        @apply flex items-center gap-3 mb-6;
-      }
-
       .button-group {
-        @apply flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto;
+        @apply flex flex-wrap items-center justify-center gap-2;
       }
 
-      .responsive-btn {
-        @apply w-full sm:w-auto;
-      }
-
-      .responsive-btn ::ng-deep button {
-        @apply w-full sm:w-auto justify-center;
+      @media (min-width: 640px) {
+        .button-group {
+          @apply justify-end;
+        }
       }
 
       .external-link {
@@ -122,7 +130,7 @@ import {
       }
 
       .feature-list {
-        @apply space-y-2 my-4;
+        @apply space-y-2;
       }
 
       .feature-item {
