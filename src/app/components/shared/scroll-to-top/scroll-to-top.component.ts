@@ -17,7 +17,7 @@ import { ScrollService } from '../../../services/scroll.service';
         title="Scroll To Top"
       >
         <div
-          class="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600/90 dark:bg-blue-700/90 backdrop-blur-sm border border-blue-400/20 dark:border-blue-500/20 shadow-lg hover:shadow-xl transition-all duration-200 hover:bg-blue-700 dark:hover:bg-blue-600"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600/90 dark:bg-blue-700/90 backdrop-blur-sm border border-blue-400/20 dark:border-blue-500/20 shadow-lg hover:shadow-xl transition-all duration-200 hover:bg-blue-700 dark:hover:bg-blue-600"
         >
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

@@ -21,6 +21,7 @@ import { KeyboardNavigationService } from '../../services/keyboard-navigation.se
 import { NetworkStateService } from '../../services/network-state.service';
 import { StoryListStore } from '../../stores/story-list.store';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
+import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import {
   SegmentedControlComponent,
   SegmentOption,
@@ -29,7 +30,7 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
 
 @Component({
   selector: 'app-story-list',
-  imports: [StoryItem, PageContainerComponent, SegmentedControlComponent],
+  imports: [StoryItem, PageContainerComponent, SegmentedControlComponent, AppButtonComponent],
   templateUrl: './story-list.html',
   styleUrl: './story-list.css',
   styles: [
@@ -45,10 +46,6 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
 
       .stories-space {
         @apply space-y-3 sm:space-y-4;
-      }
-
-      .load-more-btn {
-        @apply px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 focus-visible:ring-blue-500 text-sm sm:text-base;
       }
 
       .loading-wrap {

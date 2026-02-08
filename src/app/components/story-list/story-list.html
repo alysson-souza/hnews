@@ -89,9 +89,15 @@
     <!-- Load More Button -->
     @if (hasMore() && !loading() && !isFilteredEmpty()) {
       <div class="text-center mt-8">
-        <button (click)="loadMore()" class="load-more-btn" aria-label="Load More Stories">
+        <app-button
+          (clicked)="loadMore()"
+          variant="primary"
+          size="sm"
+          class="load-more-btn"
+          ariaLabel="Load More Stories"
+        >
           Load More Stories
-        </button>
+        </app-button>
       </div>
     }
 
