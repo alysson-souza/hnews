@@ -80,7 +80,7 @@ import { RouterModule } from '@angular/router';
           href="https://github.com/alysson-souza/hnews"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-6 md:mt-0 static md:absolute md:top-1/2 md:-translate-y-1/2 md:right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+          class="mt-6 md:mt-0 static md:absolute md:top-1/2 md:-translate-y-1/2 md:right-6 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
           aria-label="View Source Code On GitHub"
           title="View On GitHub"
         >
