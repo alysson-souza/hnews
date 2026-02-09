@@ -7,7 +7,7 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNUser, HNItem, isStory, isComment } from '../../models/hn';
-import { forkJoin } from 'rxjs';
+
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { UserTagComponent } from '../../components/user-tag/user-tag.component';
@@ -444,9 +444,7 @@ export class UserComponent implements OnInit {
     const end = Math.min(this.pageSize, user.submitted.length);
     const itemIds = user.submitted.slice(start, end);
 
-    const requests = itemIds.map((id) => this.hnService.getItem(id));
-
-    forkJoin(requests).subscribe({
+    this.hnService.getItems(itemIds).subscribe({
       next: (items) => {
         const validItems = items.filter((item) => item !== null && !item.deleted) as HNItem[];
         this.submissions.set(validItems);
@@ -468,9 +466,7 @@ export class UserComponent implements OnInit {
     const end = Math.min(start + this.pageSize, user.submitted.length);
     const itemIds = user.submitted.slice(start, end);
 
-    const requests = itemIds.map((id) => this.hnService.getItem(id));
-
-    forkJoin(requests).subscribe({
+    this.hnService.getItems(itemIds).subscribe({
       next: (items) => {
         const validItems = items.filter((item) => item !== null && !item.deleted) as HNItem[];
         this.submissions.update((subs) => [...subs, ...validItems]);
