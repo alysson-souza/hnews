@@ -45,6 +45,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
   const userAgent = request.headers.get('user-agent') || '';
 
+  // API routes — must be checked before static-asset or SPA fallback.
+  if (pathname === '/api/og-image') {
+    return handleOgImageApi(url);
+  }
+  if (pathname === '/api/og-image-proxy') {
+    return handleOgImageProxy(url);
+  }
+
   // Serve static assets directly via ASSETS binding.
   if (isAssetPath(pathname)) {
     return env.ASSETS.fetch(request);
@@ -244,12 +252,20 @@ function getNumber(obj: Record<string, unknown>, key: string): number | undefine
   return typeof value === 'number' ? value : undefined;
 }
 
-async function fetchArticleImage(articleUrl: string): Promise<string | null> {
+interface OgMeta {
+  imageUrl: string | null;
+  title: string | null;
+  description: string | null;
+}
+
+async function fetchArticleOgMeta(articleUrl: string): Promise<OgMeta> {
+  const empty: OgMeta = { imageUrl: null, title: null, description: null };
+
   let parsed: URL;
   try {
     parsed = new URL(articleUrl);
   } catch {
-    return null;
+    return empty;
   }
 
   const controller = new AbortController();
@@ -265,7 +281,7 @@ async function fetchArticleImage(articleUrl: string): Promise<string | null> {
       },
     });
 
-    if (!res.ok || !res.body) return null;
+    if (!res.ok || !res.body) return empty;
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -277,26 +293,43 @@ async function fetchArticleImage(articleUrl: string): Promise<string | null> {
       if (done || !value) break;
       bytesRead += value.byteLength;
       htmlChunk += decoder.decode(value, { stream: true });
-      if (
-        htmlChunk.includes('</head>') ||
-        htmlChunk.includes('og:image') ||
-        htmlChunk.includes('twitter:image')
-      ) {
+      if (htmlChunk.includes('</head>')) {
         break;
       }
     }
 
-    const og = matchMetaContent(htmlChunk, 'og:image');
-    const tw = matchMetaContent(htmlChunk, 'twitter:image');
-    const candidate = og || tw;
-    if (!candidate) return null;
+    const ogImage = matchMetaContent(htmlChunk, 'og:image');
+    const twImage = matchMetaContent(htmlChunk, 'twitter:image');
+    const candidate = ogImage || twImage;
 
-    return resolveImageUrl(candidate, parsed);
+    // Title: og:title → twitter:title → <title>
+    const ogTitle =
+      matchMetaContent(htmlChunk, 'og:title') ||
+      matchMetaContent(htmlChunk, 'twitter:title') ||
+      matchHtmlTitle(htmlChunk);
+
+    // Description: og:description → twitter:description → meta description
+    const ogDesc =
+      matchMetaContent(htmlChunk, 'og:description') ||
+      matchMetaContent(htmlChunk, 'twitter:description') ||
+      matchMetaContent(htmlChunk, 'description');
+
+    return {
+      imageUrl: candidate ? resolveImageUrl(candidate, parsed) : null,
+      title: ogTitle ? truncate(decodeEntities(ogTitle), 200) : null,
+      description: ogDesc ? truncate(decodeEntities(ogDesc), 300) : null,
+    };
   } catch {
-    return null;
+    return empty;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/** Legacy wrapper used by buildMetaForPath — returns only the image URL. */
+async function fetchArticleImage(articleUrl: string): Promise<string | null> {
+  const meta = await fetchArticleOgMeta(articleUrl);
+  return meta.imageUrl;
 }
 
 function matchMetaContent(html: string, key: string) {
@@ -309,6 +342,11 @@ function matchMetaContent(html: string, key: string) {
     'i',
   );
   return html.match(re1)?.[1] || html.match(re2)?.[1] || null;
+}
+
+function matchHtmlTitle(html: string): string | null {
+  const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  return match?.[1]?.trim() || null;
 }
 
 function resolveImageUrl(raw: string, base: URL) {
@@ -416,4 +454,217 @@ function absoluteUrl(path: string, siteUrl: string) {
   const base = siteUrl.replace(/\/+$/, '');
   const p = path.startsWith('/') ? path : `/${path}`;
   return `${base}${p}`;
+}
+
+// ---------------------------------------------------------------------------
+// OG Image API handlers
+// ---------------------------------------------------------------------------
+
+const CORS_HEADERS: Record<string, string> = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, OPTIONS',
+  'access-control-allow-headers': 'Content-Type',
+};
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+/**
+ * Validate that a URL is a safe, public HTTP(S) URL.
+ * Blocks SSRF vectors: private IPs, loopback, link-local, metadata endpoints,
+ * non-HTTP schemes, and hostnames that resolve to numeric-only labels.
+ */
+function isSafePublicUrl(raw: string): URL | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return null;
+  }
+
+  // Block credentials in URL
+  if (parsed.username || parsed.password) {
+    return null;
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+
+  // Block IP-based hostnames (IPv4 and IPv6) to prevent SSRF.
+  // Only domain-name hostnames are allowed.
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return null; // IPv4
+  if (hostname.startsWith('[') || hostname.includes(':')) return null; // IPv6
+
+  // Block well-known internal/metadata hostnames
+  const blockedHosts = [
+    'localhost',
+    'metadata.google.internal',
+    'metadata.google',
+    'instance-data',
+    'kubernetes.default',
+  ];
+  if (blockedHosts.includes(hostname)) return null;
+
+  // Block .internal, .local, .localhost TLDs
+  if (
+    hostname.endsWith('.internal') ||
+    hostname.endsWith('.local') ||
+    hostname.endsWith('.localhost')
+  ) {
+    return null;
+  }
+
+  // Block AWS metadata endpoint (169.254.169.254 is caught above as IPv4,
+  // but also block the magic hostname if it ever resolves)
+  if (hostname === '169.254.169.254') return null;
+
+  // Require at least one dot (no bare hostnames like "intranet")
+  if (!hostname.includes('.')) return null;
+
+  // Block non-standard ports that are commonly used for internal services
+  const port = parsed.port ? Number(parsed.port) : parsed.protocol === 'https:' ? 443 : 80;
+  const allowedPorts = [80, 443, 8080, 8443];
+  if (!allowedPorts.includes(port)) return null;
+
+  return parsed;
+}
+
+/**
+ * GET /api/og-image?url=<article-url>
+ * Returns JSON `{ imageUrl: string | null }` with the OG image URL for a page.
+ */
+async function handleOgImageApi(reqUrl: URL): Promise<Response> {
+  const articleUrl = reqUrl.searchParams.get('url');
+  if (!articleUrl) {
+    return jsonResponse({ imageUrl: null }, 400);
+  }
+
+  if (!isSafePublicUrl(articleUrl)) {
+    return jsonResponse({ imageUrl: null }, 400);
+  }
+
+  try {
+    const ogMeta = await fetchArticleOgMeta(articleUrl);
+
+    // Validate that the discovered image URL is also a safe public URL
+    if (ogMeta.imageUrl && !isSafePublicUrl(ogMeta.imageUrl)) {
+      ogMeta.imageUrl = null;
+    }
+
+    return jsonResponse(ogMeta, 200, {
+      'cache-control': 'public, max-age=604800', // 7 days
+    });
+  } catch {
+    return jsonResponse({ imageUrl: null, title: null, description: null }, 200, {
+      'cache-control': 'public, max-age=3600', // cache failures for 1 hour
+    });
+  }
+}
+
+/**
+ * GET /api/og-image-proxy?url=<image-url>
+ * Proxies the actual image, enforcing HTTPS, size limits, and content-type validation.
+ * Only serves image/* content types to prevent data exfiltration.
+ */
+async function handleOgImageProxy(reqUrl: URL): Promise<Response> {
+  const imageUrl = reqUrl.searchParams.get('url');
+  if (!imageUrl) {
+    return new Response('Missing url parameter', { status: 400, headers: CORS_HEADERS });
+  }
+
+  if (!isSafePublicUrl(imageUrl)) {
+    return new Response('Invalid url', { status: 400, headers: CORS_HEADERS });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(imageUrl, {
+      signal: controller.signal,
+      redirect: 'follow',
+      headers: {
+        accept: 'image/*',
+        'user-agent': 'HNews OG Proxy',
+      },
+    });
+
+    if (!res.ok || !res.body) {
+      return new Response('Upstream error', { status: 502, headers: CORS_HEADERS });
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) {
+      return new Response('Not an image', { status: 400, headers: CORS_HEADERS });
+    }
+
+    // Block SVGs to prevent XSS via proxied SVG content
+    if (contentType.includes('svg')) {
+      return new Response('SVG not allowed', { status: 400, headers: CORS_HEADERS });
+    }
+
+    // Enforce size limit via Content-Length header when available
+    const contentLength = Number(res.headers.get('content-length') || 0);
+    if (contentLength > MAX_IMAGE_SIZE) {
+      return new Response('Image too large', { status: 413, headers: CORS_HEADERS });
+    }
+
+    // Stream-read with hard size limit
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let totalBytes = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done || !value) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_IMAGE_SIZE) {
+        reader.cancel();
+        return new Response('Image too large', { status: 413, headers: CORS_HEADERS });
+      }
+      chunks.push(value);
+    }
+
+    // Concatenate chunks
+    const body = new Uint8Array(totalBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'content-type': contentType,
+        'content-length': String(totalBytes),
+        'cache-control': 'public, max-age=604800', // 7 days
+        // Security: prevent content sniffing and framing
+        'x-content-type-options': 'nosniff',
+        'content-disposition': 'inline',
+        ...CORS_HEADERS,
+      },
+    });
+  } catch {
+    return new Response('Proxy error', { status: 502, headers: CORS_HEADERS });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function jsonResponse(
+  data: unknown,
+  status: number,
+  extraHeaders?: Record<string, string>,
+): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'content-type': 'application/json',
+      ...CORS_HEADERS,
+      ...extraHeaders,
+    },
+  });
 }

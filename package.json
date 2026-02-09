@@ -5,6 +5,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:cf": "ng serve --port 4200 & wrangler pages dev --proxy 4200 --port 8788",
     "prestart": "BASE_URL=http://localhost:4200 npm run generate:version && BASE_URL=http://localhost:4200 npm run generate:userscript",
     "build": "ng build",
     "prebuild": "npm run generate:version && npm run generate:userscript",
@@ -22,7 +23,6 @@
     "pretest:coverage:watch": "node ./scripts/clean-test-output.mjs && npm run generate:version && npm run generate:userscript",
     "predeploy": "npm run build:prod",
     "deploy:cf": "npx ng build --configuration production --base-href \"/\" --output-path dist/hnews-cf && wrangler pages deploy dist/hnews-cf/browser --project-name=hnews",
-    "preview:cf": "npx ng build --configuration production --base-href \"/\" --output-path dist/hnews-cf && wrangler pages dev dist/hnews-cf/browser",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",

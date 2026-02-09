@@ -12,6 +12,7 @@ import {
   CACHE_TTL_USER,
   CACHE_TTL_SEARCH,
   CACHE_TTL_METADATA,
+  CACHE_TTL_OG_IMAGE,
 } from '../config/cache.config';
 
 export enum StorageType {
@@ -44,6 +45,7 @@ export class CacheManagerService {
   private ttlUser = inject(CACHE_TTL_USER);
   private ttlSearch = inject(CACHE_TTL_SEARCH);
   private ttlMetadata = inject(CACHE_TTL_METADATA);
+  private ttlOgImage = inject(CACHE_TTL_OG_IMAGE);
 
   // Memory cache for frequently accessed items
   private memoryCache = new Map<string, MemoryCacheItem<unknown>>();
@@ -111,6 +113,14 @@ export class CacheManagerService {
       {
         storageType: StorageType.SERVICE_WORKER,
         ttl: 7 * 24 * 60 * 60 * 1000,
+      },
+    ],
+    [
+      'ogImage',
+      {
+        storageType: StorageType.INDEXED_DB,
+        ttl: this.ttlOgImage,
+        fallback: StorageType.LOCAL_STORAGE,
       },
     ],
   ]);
