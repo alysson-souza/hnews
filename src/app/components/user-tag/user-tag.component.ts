@@ -11,7 +11,6 @@ import {
   input,
 } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserTagsService, UserTag } from '../../services/user-tags.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -19,7 +18,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-user-tag',
-  imports: [FormsModule, RouterLink, NgIconComponent],
+  imports: [RouterLink, NgIconComponent],
   viewProviders: [provideIcons({ solarTagLinear })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -70,7 +69,8 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
         <div class="editor">
           <input
             type="text"
-            [(ngModel)]="editValue"
+            [value]="editValue"
+            (input)="editValue = $any($event.target).value"
             (keyup.enter)="saveTag()"
             (keyup.escape)="cancelEdit()"
             (keydown.space)="$event.stopPropagation()"

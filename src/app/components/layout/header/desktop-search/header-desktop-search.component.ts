@@ -2,19 +2,18 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, output, model } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
 import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-header-desktop-search',
-  imports: [FormsModule, ThemeToggleComponent, NgIconComponent],
+  imports: [ThemeToggleComponent, NgIconComponent],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
     <div class="hidden lg:flex items-center gap-4">
       <app-theme-toggle />
-      <form (ngSubmit)="onSubmit()" class="relative" role="search">
+      <form (submit)="$event.preventDefault(); onSubmit()" class="relative" role="search">
         <button
           type="submit"
           role="button"
@@ -27,7 +26,8 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
         <input
           type="search"
           name="searchQuery"
-          [(ngModel)]="searchQuery"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
           (keydown)="onKeydown($event)"
           placeholder="Search stories..."
           aria-label="Search Hacker News stories"

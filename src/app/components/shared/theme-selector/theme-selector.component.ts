@@ -2,7 +2,6 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../../services/theme.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -13,7 +12,7 @@ import {
 
 @Component({
   selector: 'app-theme-selector',
-  imports: [FormsModule, NgIconComponent],
+  imports: [NgIconComponent],
   viewProviders: [provideIcons({ solarSunLinear, solarMoonLinear, solarMonitorSmartphoneLinear })],
   template: `
     <div class="theme-selector">

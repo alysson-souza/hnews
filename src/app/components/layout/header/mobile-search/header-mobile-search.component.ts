@@ -2,17 +2,16 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, output, model } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-header-mobile-search',
-  imports: [FormsModule, NgIconComponent],
+  imports: [NgIconComponent],
   viewProviders: [provideIcons({ solarMagniferLinear })],
   template: `
     <div class="lg:hidden py-3 px-4 border-t border-gray-200 dark:border-slate-700">
-      <form (ngSubmit)="onSubmit()" class="relative" role="search">
+      <form (submit)="$event.preventDefault(); onSubmit()" class="relative" role="search">
         <button
           type="submit"
           role="button"
@@ -24,7 +23,8 @@ import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
         <input
           type="search"
           name="mobileSearchQuery"
-          [(ngModel)]="searchQuery"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
           placeholder="Search stories..."
           aria-label="Search Hacker News stories"
           aria-describedby="search-hint"
