@@ -84,6 +84,7 @@ jobs:
           echo "Building Cloudflare Pages bundle with base-href: /"
           npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
           cp -r functions dist/hnews-cf/
+          rm -rf dist/hnews-cf/functions/__tests__
 
       - name: E2E tests (Playwright Chromium)
         if: steps.changes.outputs.code_changed == 'true'

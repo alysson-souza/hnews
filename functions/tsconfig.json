@@ -2,7 +2,12 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
+    "moduleResolution": "bundler",
     "lib": ["esnext"],
-    "types": ["./types.d.ts"]
-  }
+    "types": ["./types.d.ts", "vitest/globals"],
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["**/*.ts"]
 }

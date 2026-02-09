@@ -14,6 +14,7 @@
     "watch": "ng build --watch --configuration development",
     "prewatch": "npm run generate:version && npm run generate:userscript",
     "test": "ng test --watch=false --no-progress",
+    "test:functions": "vitest run --config vitest.functions.config.ts",
     "pretest": "node ./scripts/clean-test-output.mjs && npm run generate:version && npm run generate:userscript",
     "test:watch": "ng test",
     "pretest:watch": "node ./scripts/clean-test-output.mjs && npm run generate:version && npm run generate:userscript",
