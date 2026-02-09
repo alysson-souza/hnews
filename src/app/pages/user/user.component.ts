@@ -340,9 +340,17 @@ export class UserComponent implements OnInit {
   currentPage = signal(0);
   pageSize = 20;
 
-  isStory = isStory;
-  isComment = isComment;
-  getDomain = getDomain;
+  isStory(item: HNItem): boolean {
+    return isStory(item);
+  }
+
+  isComment(item: HNItem): boolean {
+    return isComment(item);
+  }
+
+  getDomain(url?: string): string {
+    return getDomain(url);
+  }
 
   // Filter for submission type
   submissionFilter = signal<'all' | 'stories' | 'comments'>('all');

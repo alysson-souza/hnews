@@ -92,7 +92,9 @@ export class SidebarStorySummaryComponent {
   private router = inject(Router);
 
   // Expose for template
-  isHnUrl = isHnLink;
+  isHnUrl(url: string): boolean {
+    return isHnLink(url);
+  }
 
   getDomain(url?: string): string {
     if (!url) return '';

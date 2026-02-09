@@ -64,8 +64,13 @@ export class StoryItem {
   hasVoted = computed(() => (this.storyId() ? this.votedItems().has(this.storyId()!) : false));
 
   // Expose utilities for template
-  getDomain = getDomain;
-  isHnUrl = isHnLink;
+  getDomain(url?: string): string {
+    return getDomain(url);
+  }
+
+  isHnUrl(url: string): boolean {
+    return isHnLink(url);
+  }
 
   private static async prefetchItemComponent(): Promise<void> {
     if (StoryItem.itemComponentPrefetched || typeof window === 'undefined') {
