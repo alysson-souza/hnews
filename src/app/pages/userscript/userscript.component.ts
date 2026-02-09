@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, computed, signal, inject } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
+import { Component, computed, signal, inject, effect } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { highlightCodeBlocks } from '../../components/comment-text/code-highlight.transform';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
@@ -227,12 +227,22 @@ export class UserscriptComponent {
 })();`;
   });
 
-  readonly highlightedUserscript = computed(() => {
-    const code = this.userscriptContent();
-    const html = `<pre><code class="language-javascript">${code}</code></pre>`;
-    const highlighted = highlightCodeBlocks(html);
-    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
-  });
+  readonly highlightedUserscript = signal<SafeHtml>('');
+
+  constructor() {
+    effect(() => {
+      const code = this.userscriptContent();
+      const html = `<pre><code class="language-javascript">${code}</code></pre>`;
+
+      // Show unhighlighted code immediately
+      this.highlightedUserscript.set(this.sanitizer.bypassSecurityTrustHtml(html));
+
+      // Then apply syntax highlighting asynchronously
+      highlightCodeBlocks(html).then((highlighted) => {
+        this.highlightedUserscript.set(this.sanitizer.bypassSecurityTrustHtml(highlighted));
+      });
+    });
+  }
 
   readonly installUrl = computed(() => {
     return `${this.baseUrl()}/hnews-redirect.user.js`;

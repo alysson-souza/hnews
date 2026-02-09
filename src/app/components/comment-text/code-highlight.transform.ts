@@ -1,58 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import hljs from 'highlight.js/lib/core';
-import javascript from 'highlight.js/lib/languages/javascript';
-import typescript from 'highlight.js/lib/languages/typescript';
-import python from 'highlight.js/lib/languages/python';
-import go from 'highlight.js/lib/languages/go';
-import rust from 'highlight.js/lib/languages/rust';
-import bash from 'highlight.js/lib/languages/bash';
-import sql from 'highlight.js/lib/languages/sql';
-import json from 'highlight.js/lib/languages/json';
-import css from 'highlight.js/lib/languages/css';
-import xml from 'highlight.js/lib/languages/xml';
-import cpp from 'highlight.js/lib/languages/cpp';
-import java from 'highlight.js/lib/languages/java';
-import ruby from 'highlight.js/lib/languages/ruby';
-import php from 'highlight.js/lib/languages/php';
-import swift from 'highlight.js/lib/languages/swift';
-import kotlin from 'highlight.js/lib/languages/kotlin';
-import csharp from 'highlight.js/lib/languages/csharp';
-import shell from 'highlight.js/lib/languages/shell';
-import scala from 'highlight.js/lib/languages/scala';
-import elixir from 'highlight.js/lib/languages/elixir';
-import haskell from 'highlight.js/lib/languages/haskell';
-import lua from 'highlight.js/lib/languages/lua';
-import perl from 'highlight.js/lib/languages/perl';
-import r from 'highlight.js/lib/languages/r';
-import plaintext from 'highlight.js/lib/languages/plaintext';
-
-// Register languages with highlight.js
-hljs.registerLanguage('javascript', javascript);
-hljs.registerLanguage('typescript', typescript);
-hljs.registerLanguage('python', python);
-hljs.registerLanguage('go', go);
-hljs.registerLanguage('rust', rust);
-hljs.registerLanguage('bash', bash);
-hljs.registerLanguage('sql', sql);
-hljs.registerLanguage('json', json);
-hljs.registerLanguage('css', css);
-hljs.registerLanguage('xml', xml);
-hljs.registerLanguage('cpp', cpp);
-hljs.registerLanguage('java', java);
-hljs.registerLanguage('ruby', ruby);
-hljs.registerLanguage('php', php);
-hljs.registerLanguage('swift', swift);
-hljs.registerLanguage('kotlin', kotlin);
-hljs.registerLanguage('csharp', csharp);
-hljs.registerLanguage('shell', shell);
-hljs.registerLanguage('scala', scala);
-hljs.registerLanguage('elixir', elixir);
-hljs.registerLanguage('haskell', haskell);
-hljs.registerLanguage('lua', lua);
-hljs.registerLanguage('perl', perl);
-hljs.registerLanguage('r', r);
-hljs.registerLanguage('plaintext', plaintext);
+import type { HLJSApi } from 'highlight.js';
 
 /** Supported languages for auto-detection */
 const SUPPORTED_LANGUAGES = [
@@ -85,6 +33,108 @@ const SUPPORTED_LANGUAGES = [
 /** Minimum relevance score threshold for auto-detection.
  * Below this threshold, code is treated as plaintext to avoid false positives. */
 const RELEVANCE_THRESHOLD = 3;
+
+/** Cached hljs instance, loaded lazily on first use. */
+let hljsInstance: HLJSApi | null = null;
+let hljsLoadPromise: Promise<HLJSApi> | null = null;
+
+/**
+ * Lazily loads highlight.js core and registers all supported languages.
+ * Returns a cached instance on subsequent calls.
+ */
+async function getHljs(): Promise<HLJSApi> {
+  if (hljsInstance) return hljsInstance;
+  if (hljsLoadPromise) return hljsLoadPromise;
+
+  hljsLoadPromise = (async () => {
+    const [
+      { default: hljs },
+      { default: javascript },
+      { default: typescript },
+      { default: python },
+      { default: go },
+      { default: rust },
+      { default: bash },
+      { default: sql },
+      { default: json },
+      { default: css },
+      { default: xml },
+      { default: cpp },
+      { default: java },
+      { default: ruby },
+      { default: php },
+      { default: swift },
+      { default: kotlin },
+      { default: csharp },
+      { default: shell },
+      { default: scala },
+      { default: elixir },
+      { default: haskell },
+      { default: lua },
+      { default: perl },
+      { default: r },
+      { default: plaintext },
+    ] = await Promise.all([
+      import('highlight.js/lib/core'),
+      import('highlight.js/lib/languages/javascript'),
+      import('highlight.js/lib/languages/typescript'),
+      import('highlight.js/lib/languages/python'),
+      import('highlight.js/lib/languages/go'),
+      import('highlight.js/lib/languages/rust'),
+      import('highlight.js/lib/languages/bash'),
+      import('highlight.js/lib/languages/sql'),
+      import('highlight.js/lib/languages/json'),
+      import('highlight.js/lib/languages/css'),
+      import('highlight.js/lib/languages/xml'),
+      import('highlight.js/lib/languages/cpp'),
+      import('highlight.js/lib/languages/java'),
+      import('highlight.js/lib/languages/ruby'),
+      import('highlight.js/lib/languages/php'),
+      import('highlight.js/lib/languages/swift'),
+      import('highlight.js/lib/languages/kotlin'),
+      import('highlight.js/lib/languages/csharp'),
+      import('highlight.js/lib/languages/shell'),
+      import('highlight.js/lib/languages/scala'),
+      import('highlight.js/lib/languages/elixir'),
+      import('highlight.js/lib/languages/haskell'),
+      import('highlight.js/lib/languages/lua'),
+      import('highlight.js/lib/languages/perl'),
+      import('highlight.js/lib/languages/r'),
+      import('highlight.js/lib/languages/plaintext'),
+    ]);
+
+    hljs.registerLanguage('javascript', javascript);
+    hljs.registerLanguage('typescript', typescript);
+    hljs.registerLanguage('python', python);
+    hljs.registerLanguage('go', go);
+    hljs.registerLanguage('rust', rust);
+    hljs.registerLanguage('bash', bash);
+    hljs.registerLanguage('sql', sql);
+    hljs.registerLanguage('json', json);
+    hljs.registerLanguage('css', css);
+    hljs.registerLanguage('xml', xml);
+    hljs.registerLanguage('cpp', cpp);
+    hljs.registerLanguage('java', java);
+    hljs.registerLanguage('ruby', ruby);
+    hljs.registerLanguage('php', php);
+    hljs.registerLanguage('swift', swift);
+    hljs.registerLanguage('kotlin', kotlin);
+    hljs.registerLanguage('csharp', csharp);
+    hljs.registerLanguage('shell', shell);
+    hljs.registerLanguage('scala', scala);
+    hljs.registerLanguage('elixir', elixir);
+    hljs.registerLanguage('haskell', haskell);
+    hljs.registerLanguage('lua', lua);
+    hljs.registerLanguage('perl', perl);
+    hljs.registerLanguage('r', r);
+    hljs.registerLanguage('plaintext', plaintext);
+
+    hljsInstance = hljs;
+    return hljs;
+  })();
+
+  return hljsLoadPromise;
+}
 
 /**
  * Strips common leading whitespace from code lines, using the first line's indentation as the baseline.
@@ -122,8 +172,10 @@ function stripCommonIndentation(code: string): string {
  * Highlights code blocks in HTML using highlight.js with automatic language detection.
  * Searches for <pre><code> elements and applies syntax highlighting.
  * Falls back to plaintext if detection confidence is too low.
+ *
+ * Lazily loads highlight.js and language grammars on first invocation.
  */
-export function highlightCodeBlocks(html: string): string {
+export async function highlightCodeBlocks(html: string): Promise<string> {
   if (!html || typeof document === 'undefined') return html || '';
 
   try {
@@ -131,6 +183,10 @@ export function highlightCodeBlocks(html: string): string {
     container.innerHTML = html;
 
     const codeBlocks = Array.from(container.querySelectorAll('pre code')) as HTMLElement[];
+    if (codeBlocks.length === 0) return html;
+
+    const hljs = await getHljs();
+
     for (const codeBlock of codeBlocks) {
       const rawCode = codeBlock.textContent || '';
       if (!rawCode.trim()) continue;

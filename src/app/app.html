@@ -23,6 +23,8 @@
   </button>
 }
 
-<app-sidebar-comments />
+@defer (when sidebarService.currentItemId()) {
+  <app-sidebar-comments />
+}
 <app-scroll-to-top />
 <app-keyboard-shortcuts />

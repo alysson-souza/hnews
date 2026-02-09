@@ -1,14 +1,23 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, signal, effect } from '@angular/core';
 
-import { DomSanitizer } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import DOMPurify from 'dompurify';
 import { provideIcons } from '@ng-icons/core';
 import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
 import { transformQuotesHtml } from './quote.transform';
 import { highlightCodeBlocks } from './code-highlight.transform';
 import { EnhanceLinksDirective } from './enhance-links.directive';
+
+/** Sanitize HTML to prevent XSS attacks while preserving formatting */
+function sanitize(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'blockquote', 'a', 'pre', 'code', 'br', 'i', 'em', 'b', 'strong', 'span'],
+    ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class'],
+    KEEP_CONTENT: true,
+  });
+}
 
 @Component({
   selector: 'app-comment-text',
@@ -57,18 +66,21 @@ export class CommentTextComponent {
   readonly html = input('');
   private sanitizer = inject(DomSanitizer);
 
-  readonly processedHtml = computed(() => {
-    const rawHtml = this.html() || '';
-    const withQuotes = transformQuotesHtml(rawHtml);
-    const withHighlight = highlightCodeBlocks(withQuotes);
+  /** Rendered HTML — shows sanitized content immediately, then upgrades with syntax highlighting. */
+  readonly processedHtml = signal<SafeHtml>('');
 
-    // Sanitize HTML to prevent XSS attacks while preserving formatting
-    const sanitized = DOMPurify.sanitize(withHighlight, {
-      ALLOWED_TAGS: ['p', 'blockquote', 'a', 'pre', 'code', 'br', 'i', 'em', 'b', 'strong', 'span'],
-      ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class'],
-      KEEP_CONTENT: true,
+  constructor() {
+    effect(() => {
+      const rawHtml = this.html() || '';
+      const withQuotes = transformQuotesHtml(rawHtml);
+
+      // Render sanitized HTML immediately (without syntax highlighting)
+      this.processedHtml.set(this.sanitizer.bypassSecurityTrustHtml(sanitize(withQuotes)));
+
+      // Asynchronously apply syntax highlighting, then re-render
+      highlightCodeBlocks(withQuotes).then((withHighlight) => {
+        this.processedHtml.set(this.sanitizer.bypassSecurityTrustHtml(sanitize(withHighlight)));
+      });
     });
-
-    return this.sanitizer.bypassSecurityTrustHtml(sanitized);
-  });
+  }
 }
