@@ -63,3 +63,4 @@ public/hnews-redirect.user.js
 /playwright-report
 /playwright/.cache
 /test-results
+/.playwright-cli

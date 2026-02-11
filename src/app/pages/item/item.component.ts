@@ -10,6 +10,7 @@ import { CommentThread } from '../../components/comment-thread/comment-thread';
 import { VisitedService } from '../../services/visited.service';
 import { ScrollService } from '../../services/scroll.service';
 import { CommentSortService } from '../../services/comment-sort.service';
+import { CommentDisplayStrategyService } from '../../services/comment-display-strategy.service';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/sidebar-story-summary.component';
@@ -39,6 +40,7 @@ export class ItemComponent implements OnInit {
   private visitedService = inject(VisitedService);
   private scrollService = inject(ScrollService);
   private commentSortService = inject(CommentSortService);
+  private commentDisplayStrategy = inject(CommentDisplayStrategyService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
 
   item = signal<HNItem | null>(null);
@@ -55,7 +57,9 @@ export class ItemComponent implements OnInit {
   bulkLoadingComments = signal(false);
 
   private readonly commentsPageSize = 10;
+  private readonly smallThreadDescendantsThreshold = 40;
   private visibleTopLevelCount = signal(this.commentsPageSize);
+  smallThreadMode = signal(false);
 
   sortedCommentIds = computed(() => {
     const order = this.sortOrder();
@@ -132,6 +136,7 @@ export class ItemComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.visibleTopLevelCount.set(this.commentsPageSize);
+    this.smallThreadMode.set(false);
 
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
@@ -161,6 +166,7 @@ export class ItemComponent implements OnInit {
           // Algolia bulk load succeeded
           this.bulkLoadResult.set(result);
           this.item.set(result.story);
+          this.applyCommentDisplayStrategy(result.story);
 
           // Pre-populate allComments for sorting (top-level only)
           const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
@@ -193,6 +199,7 @@ export class ItemComponent implements OnInit {
       next: (item) => {
         if (item) {
           this.item.set(item);
+          this.applyCommentDisplayStrategy(item);
           this.visitedService.markAsVisited(item.id, item.descendants);
           this.handleLoadSuccess();
         } else {
@@ -251,7 +258,13 @@ export class ItemComponent implements OnInit {
     this.commentSortService.setSortOrder(newSort);
 
     // Reset pagination to first page
-    this.visibleTopLevelCount.set(this.commentsPageSize);
+    this.visibleTopLevelCount.set(
+      this.commentDisplayStrategy.getInitialVisibleTopLevelCount({
+        totalTopLevel: this.item()?.kids?.length ?? 0,
+        pageSize: this.commentsPageSize,
+        smallThreadMode: this.smallThreadMode(),
+      }),
+    );
 
     // Fetch comments if not already loaded and sort requires them
     if (newSort !== 'default' && this.allComments().length === 0) {
@@ -283,5 +296,14 @@ export class ItemComponent implements OnInit {
         this.commentSortService.setSortOrder('default');
       },
     });
+  }
+
+  private applyCommentDisplayStrategy(item: HNItem): void {
+    const strategy = this.commentDisplayStrategy.resolveForItem(item, {
+      pageSize: this.commentsPageSize,
+      smallThreadDescendantsThreshold: this.smallThreadDescendantsThreshold,
+    });
+    this.smallThreadMode.set(strategy.smallThreadMode);
+    this.visibleTopLevelCount.set(strategy.initialVisibleTopLevelCount);
   }
 }

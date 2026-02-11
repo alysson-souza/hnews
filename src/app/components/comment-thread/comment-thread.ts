@@ -89,6 +89,7 @@ import { Router } from '@angular/router';
                   [commentId]="reply.id"
                   [depth]="depth() + 1"
                   [lazyLoad]="true"
+                  [autoExpandReplies]="autoExpandReplies()"
                   [initialComment]="reply"
                   [storyAuthor]="storyAuthor()"
                   [isStandalonePage]="isStandalonePage()"
@@ -205,6 +206,7 @@ export class CommentThread implements OnInit {
   readonly commentId = input.required<number>();
   readonly depth = input(0);
   readonly lazyLoad = input(false);
+  readonly autoExpandReplies = input(false);
   // Optional: when a parent already fetched this comment, pass it to avoid refetching
   readonly initialComment = input<HNItem>();
   readonly storyAuthor = input<string>();
@@ -350,6 +352,7 @@ export class CommentThread implements OnInit {
       this.commentLoaded.set(true);
       this.loading.set(false);
       this.restoreCommentState();
+      this.maybeAutoExpandReplies();
     } else {
       this.repliesLoader.configureKids([]);
       this.loading.set(false);
@@ -367,6 +370,7 @@ export class CommentThread implements OnInit {
           this.commentLoaded.set(true);
           this.loading.set(false);
           this.restoreCommentState();
+          this.maybeAutoExpandReplies();
         } else {
           this.repliesLoader.configureKids([]);
           this.loading.set(false);
@@ -387,18 +391,23 @@ export class CommentThread implements OnInit {
     }
   }
 
-  expandReplies() {
+  expandReplies(options?: { persistState?: boolean }) {
+    const persistState = options?.persistState ?? true;
     if (!this.repliesLoaded() && !this.loadingReplies()) {
       // Uncollapse the comment if it's currently collapsed
       const commentId = this.commentId();
       if (this.isCollapsed()) {
         this.isCollapsed.set(false);
-        this.commentStateService.setCollapsed(commentId, false);
+        if (persistState) {
+          this.commentStateService.setCollapsed(commentId, false);
+        }
       }
 
       this.repliesLoader.loadFirstPage();
-      this.commentStateService.setRepliesExpanded(commentId, true);
-      this.commentStateService.setLoadedPages(commentId, 1);
+      if (persistState) {
+        this.commentStateService.setRepliesExpanded(commentId, true);
+        this.commentStateService.setLoadedPages(commentId, 1);
+      }
     }
   }
 
@@ -428,6 +437,29 @@ export class CommentThread implements OnInit {
         });
       }
     }
+  }
+
+  private maybeAutoExpandReplies() {
+    if (!this.autoExpandReplies()) {
+      return;
+    }
+
+    const state = this.commentStateService.getState(this.commentId());
+    if (state) {
+      return;
+    }
+
+    const totalReplies = this.comment()?.kids?.length ?? 0;
+    if (totalReplies === 0 || this.repliesLoaded() || this.loadingReplies()) {
+      return;
+    }
+
+    if (this.isCollapsed()) {
+      this.isCollapsed.set(false);
+    }
+
+    const targetPage = Math.floor((totalReplies - 1) / this.repliesLoader.pageSize);
+    this.repliesLoader.loadUpToPage(targetPage);
   }
 
   upvoteComment() {

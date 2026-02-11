@@ -215,10 +215,11 @@ describe('ItemComponent', () => {
     it('should reset pagination when sort changes', () => {
       component.item.set(mockItem);
       component['visibleTopLevelCount'].set(20);
+      component.smallThreadMode.set(true);
 
       component.onSortChange('best');
 
-      expect(component['visibleTopLevelCount']()).toBe(10);
+      expect(component['visibleTopLevelCount']()).toBe(3);
     });
 
     it('should fallback to default order on error', () => {
@@ -310,6 +311,39 @@ describe('ItemComponent', () => {
         mockItem.id,
         mockItem.descendants,
       );
+    });
+
+    it('should enable small thread mode and show all top-level comments for small threads', () => {
+      component.ngOnInit();
+
+      expect(component.smallThreadMode()).toBe(true);
+      expect(component.visibleCommentIds()).toEqual(mockItem.kids);
+      expect(component.hasMoreTopLevelComments()).toBe(false);
+    });
+
+    it('should keep default pagination for large threads', () => {
+      const largeStory: HNItem = {
+        ...mockItem,
+        descendants: 120,
+        kids: Array.from({ length: 25 }, (_, i) => i + 1),
+      };
+      const largeComments: HNItem[] = largeStory.kids!.map((id) => ({
+        id,
+        type: 'comment',
+        by: `user${id}`,
+        time: 1000 + id,
+        text: `Comment ${id}`,
+      }));
+
+      mockHnService.getStoryWithAllComments.mockReturnValue(
+        of(createBulkLoadResult(largeStory, largeComments)),
+      );
+
+      component.loadItem(999);
+
+      expect(component.smallThreadMode()).toBe(false);
+      expect(component.visibleCommentIds().length).toBe(10);
+      expect(component.hasMoreTopLevelComments()).toBe(true);
     });
   });
 });

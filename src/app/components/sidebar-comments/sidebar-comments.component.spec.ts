@@ -207,10 +207,11 @@ describe('SidebarCommentsComponent', () => {
     it('should reset pagination when sort changes', () => {
       component.item.set(mockItem);
       component['visibleTopLevelCount'].set(20);
+      component.smallThreadMode.set(true);
 
       component.onSortChange('best');
 
-      expect(component['visibleTopLevelCount']()).toBe(10);
+      expect(component['visibleTopLevelCount']()).toBe(3);
     });
 
     it('should show loading state while fetching comments', () => {
@@ -304,6 +305,32 @@ describe('SidebarCommentsComponent', () => {
       const compiled = fixture.nativeElement;
       const counterElement = compiled.querySelector('h4');
       expect(counterElement?.textContent).toContain('Comments (0)');
+    });
+  });
+
+  describe('Small Thread Strategy', () => {
+    it('should enable small thread mode and show all top-level comments', () => {
+      component['loadItem'](123);
+
+      expect(component.smallThreadMode()).toBe(true);
+      expect(component.visibleCommentIds()).toEqual(mockItem.kids);
+      expect(component.hasMoreTopLevelComments()).toBe(false);
+    });
+
+    it('should keep default pagination for larger threads', () => {
+      const largeStory: HNItem = {
+        ...mockItem,
+        descendants: 120,
+        kids: Array.from({ length: 25 }, (_, i) => i + 1),
+      };
+
+      mockHnService.getItem.mockReturnValue(of(largeStory));
+
+      component['loadItem'](999);
+
+      expect(component.smallThreadMode()).toBe(false);
+      expect(component.visibleCommentIds().length).toBe(10);
+      expect(component.hasMoreTopLevelComments()).toBe(true);
     });
   });
 });

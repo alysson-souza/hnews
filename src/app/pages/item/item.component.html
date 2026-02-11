@@ -38,6 +38,7 @@
             <app-comment-thread
               [commentId]="commentId"
               [depth]="0"
+              [autoExpandReplies]="smallThreadMode()"
               [storyAuthor]="item()?.by"
               [isStandalonePage]="true"
               [attr.id]="first ? 'first-comment' : null"

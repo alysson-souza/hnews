@@ -11,6 +11,7 @@ import { SidebarStorySummaryComponent } from './sidebar-story-summary.component'
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { VisitedService } from '../../services/visited.service';
 import { CommentSortService } from '../../services/comment-sort.service';
+import { CommentDisplayStrategyService } from '../../services/comment-display-strategy.service';
 import {
   CommentSortDropdownComponent,
   CommentSortOrder,
@@ -119,6 +120,7 @@ import {
                     <app-comment-thread
                       [commentId]="commentId"
                       [depth]="0"
+                      [autoExpandReplies]="smallThreadMode()"
                       [storyAuthor]="item()?.by"
                     />
                   }
@@ -256,6 +258,7 @@ export class SidebarCommentsComponent {
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private commentSortService = inject(CommentSortService);
+  private commentDisplayStrategy = inject(CommentDisplayStrategyService);
 
   item = signal<HNItem | null>(null);
   loading = signal(false);
@@ -267,7 +270,9 @@ export class SidebarCommentsComponent {
   commentsLoading = signal(false);
 
   private readonly commentsPageSize = 10;
+  private readonly smallThreadDescendantsThreshold = 40;
   private visibleTopLevelCount = signal(this.commentsPageSize);
+  smallThreadMode = signal(false);
 
   sortedCommentIds = computed(() => {
     const order = this.sortOrder();
@@ -339,6 +344,7 @@ export class SidebarCommentsComponent {
     this.loading.set(true);
     this.error.set(null);
     this.visibleTopLevelCount.set(this.commentsPageSize);
+    this.smallThreadMode.set(false);
 
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
@@ -348,6 +354,7 @@ export class SidebarCommentsComponent {
       next: (item) => {
         if (item) {
           this.item.set(item);
+          this.applyCommentDisplayStrategy(item);
           // Mark as visited
           this.visitedService.markAsVisited(item.id, item.descendants);
         } else {
@@ -379,7 +386,13 @@ export class SidebarCommentsComponent {
     this.commentSortService.setSortOrder(newSort);
 
     // Reset pagination to first page
-    this.visibleTopLevelCount.set(this.commentsPageSize);
+    this.visibleTopLevelCount.set(
+      this.commentDisplayStrategy.getInitialVisibleTopLevelCount({
+        totalTopLevel: this.item()?.kids?.length ?? 0,
+        pageSize: this.commentsPageSize,
+        smallThreadMode: this.smallThreadMode(),
+      }),
+    );
 
     // Fetch comments if not already loaded and sort requires them
     if (newSort !== 'default' && this.allComments().length === 0) {
@@ -406,5 +419,14 @@ export class SidebarCommentsComponent {
         this.commentSortService.setSortOrder('default');
       },
     });
+  }
+
+  private applyCommentDisplayStrategy(item: HNItem): void {
+    const strategy = this.commentDisplayStrategy.resolveForItem(item, {
+      pageSize: this.commentsPageSize,
+      smallThreadDescendantsThreshold: this.smallThreadDescendantsThreshold,
+    });
+    this.smallThreadMode.set(strategy.smallThreadMode);
+    this.visibleTopLevelCount.set(strategy.initialVisibleTopLevelCount);
   }
 }

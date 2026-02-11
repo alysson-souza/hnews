@@ -440,6 +440,32 @@ describe('CommentThread', () => {
 
       expect(mockRepliesLoader.loadFirstPage).not.toHaveBeenCalled();
     });
+
+    it('should auto-expand without persisting state when enabled', () => {
+      fixture.componentRef.setInput('autoExpandReplies', true);
+      fixture.componentRef.setInput('initialComment', mockComment);
+      mockRepliesLoader.loadUpToPage.mockClear();
+      mockCommentStateService.getState.mockClear();
+      mockCommentStateService.setRepliesExpanded.mockClear();
+      mockCommentStateService.setLoadedPages.mockClear();
+
+      component.ngOnInit();
+
+      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalledWith(0);
+      expect(mockCommentStateService.setRepliesExpanded).not.toHaveBeenCalled();
+      expect(mockCommentStateService.setLoadedPages).not.toHaveBeenCalled();
+    });
+
+    it('should not auto-expand when comment state exists', () => {
+      mockCommentStateService.setSavedState(123, { collapsed: false, repliesExpanded: false });
+      fixture.componentRef.setInput('autoExpandReplies', true);
+      fixture.componentRef.setInput('initialComment', mockComment);
+      mockRepliesLoader.loadUpToPage.mockClear();
+
+      component.ngOnInit();
+
+      expect(mockRepliesLoader.loadUpToPage).not.toHaveBeenCalled();
+    });
   });
 
   describe('toggleCollapse', () => {
