@@ -7,7 +7,7 @@ import { ItemKeyboardNavigationService } from './item-keyboard-navigation.servic
 import { SidebarCommentsInteractionService } from './sidebar-comments-interaction.service';
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { Subject } from 'rxjs';
 
 describe('ItemKeyboardNavigationService', () => {
@@ -15,10 +15,10 @@ describe('ItemKeyboardNavigationService', () => {
   let commandRegistrySpy: MockedObject<CommandRegistryService>;
   let routerSpy: MockedObject<Router>;
   let locationSpy: MockedObject<Location>;
-  let routerEventsSubject: Subject<NavigationEnd>;
+  let routerEventsSubject: Subject<NavigationStart | NavigationEnd>;
 
   beforeEach(() => {
-    routerEventsSubject = new Subject<NavigationEnd>();
+    routerEventsSubject = new Subject<NavigationStart | NavigationEnd>();
 
     const interactionSpy = {
       dispatchAction: vi.fn(),
@@ -107,5 +107,23 @@ describe('ItemKeyboardNavigationService', () => {
       service.goBack();
       expect(locationSpy.back).toHaveBeenCalled();
     });
+  });
+
+  it('should restore saved window scroll on popstate after thread navigation', async () => {
+    vi.useFakeTimers();
+    const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(900);
+
+    service.navigateToThread(456);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/item', 456]);
+
+    routerEventsSubject.next(new NavigationStart(1, '/item/123', 'popstate'));
+    routerEventsSubject.next(new NavigationEnd(2, '/item/123', '/item/123'));
+
+    vi.advanceTimersByTime(150);
+    await Promise.resolve();
+
+    expect(scrollToSpy).toHaveBeenCalledWith({ top: 900, behavior: 'auto' });
+    vi.useRealTimers();
   });
 });

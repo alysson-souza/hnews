@@ -3,8 +3,15 @@ import type { MockedObject } from 'vitest';
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, ActivatedRouteSnapshot, Params } from '@angular/router';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { Location } from '@angular/common';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  NavigationStart,
+  Params,
+  Router,
+} from '@angular/router';
+import { of, throwError, BehaviorSubject, Subject } from 'rxjs';
 import { ItemComponent } from './item.component';
 import { HackernewsService } from '../../services/hackernews.service';
 import { BulkLoadResult } from '../../services/algolia-comment-loader.service';
@@ -21,6 +28,9 @@ describe('ItemComponent', () => {
   let mockScrollService: MockedObject<ScrollService>;
   let mockCommentSortService: MockedObject<CommentSortService>;
   let mockActivatedRoute: Partial<ActivatedRoute>;
+  let mockRouter: MockedObject<Router>;
+  let mockLocation: MockedObject<Location>;
+  let routerEvents: Subject<NavigationStart>;
 
   const mockItem: HNItem = {
     id: 123,
@@ -74,6 +84,8 @@ describe('ItemComponent', () => {
   };
 
   beforeEach(async () => {
+    routerEvents = new Subject<NavigationStart>();
+
     mockHnService = {
       getItem: vi.fn(),
       getStoryTopLevelComments: vi.fn(),
@@ -89,6 +101,14 @@ describe('ItemComponent', () => {
       setSortOrder: vi.fn(),
       sortOrder: signal('default'),
     } as unknown as MockedObject<CommentSortService>;
+    mockRouter = {
+      events: routerEvents.asObservable(),
+      navigate: vi.fn(),
+      url: '/item/123',
+    } as unknown as MockedObject<Router>;
+    mockLocation = {
+      back: vi.fn(),
+    } as unknown as MockedObject<Location>;
 
     mockActivatedRoute = {
       params: new BehaviorSubject<Params>({ id: '123' }),
@@ -106,6 +126,8 @@ describe('ItemComponent', () => {
         { provide: ScrollService, useValue: mockScrollService },
         { provide: CommentSortService, useValue: mockCommentSortService },
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
+        { provide: Router, useValue: mockRouter },
+        { provide: Location, useValue: mockLocation },
       ],
     }).compileComponents();
 
@@ -257,12 +279,29 @@ describe('ItemComponent', () => {
       expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(456);
     });
 
-    it('should scroll to submission title after loading', async () => {
+    it('should scroll to submission title after loading', () => {
+      vi.useFakeTimers();
       component.ngOnInit();
+      vi.advanceTimersByTime(150);
+      expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title');
+      vi.useRealTimers();
+    });
 
-      setTimeout(() => {
-        expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title');
-      }, 150);
+    it('should always land comment threads at submission title', () => {
+      vi.useFakeTimers();
+      const commentThread: HNItem = {
+        ...mockItem,
+        type: 'comment',
+      };
+      mockHnService.getStoryWithAllComments.mockReturnValue(
+        of(createBulkLoadResult(commentThread, mockComments)),
+      );
+
+      component.loadItem(123);
+      vi.advanceTimersByTime(150);
+
+      expect(mockScrollService.scrollToElement).toHaveBeenCalledWith('submission-title');
+      vi.useRealTimers();
     });
 
     it('should fallback to Firebase API when Algolia fails', () => {
@@ -287,6 +326,21 @@ describe('ItemComponent', () => {
       expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(123);
       // Then fallback to Firebase API
       expect(mockHnService.getItem).toHaveBeenCalledWith(123);
+    });
+
+    it('should not force scroll restoration on popstate navigation', () => {
+      vi.useFakeTimers();
+      component.ngOnInit();
+      vi.advanceTimersByTime(150);
+      mockScrollService.scrollToElement.mockClear();
+
+      routerEvents.next(new NavigationStart(1, '/item/123', 'popstate'));
+
+      component.loadItem(123);
+      vi.advanceTimersByTime(150);
+
+      expect(mockScrollService.scrollToElement).not.toHaveBeenCalled();
+      vi.useRealTimers();
     });
   });
 

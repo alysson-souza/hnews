@@ -3,19 +3,24 @@
 import { Injectable, inject } from '@angular/core';
 import { BaseCommentNavigationService } from './base-comment-navigation.service';
 import { SidebarService } from './sidebar.service';
-
-interface SidebarState {
-  itemId: number;
-  selectedCommentId: number | null;
-  scrollPosition: number;
-}
+import { SidebarThreadNavigationService } from './sidebar-thread-navigation.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SidebarKeyboardNavigationService extends BaseCommentNavigationService {
   private sidebarService = inject(SidebarService);
-  private stateStack: SidebarState[] = [];
+  private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
+
+  constructor() {
+    super();
+
+    this.sidebarThreadNavigation.registerSelectionCallbacks({
+      captureSelectedCommentId: () => this.selectedCommentId(),
+      restoreSelectedCommentId: (commentId) => this.restoreSelectedComment(commentId),
+      selectFirstVisibleComment: () => this.selectFirstVisibleComment({ scrollIntoView: false }),
+    });
+  }
 
   protected get containerSelector(): string {
     return '.sidebar-comments-panel';
@@ -48,49 +53,12 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
   }
 
   /**
-   * Save current state before navigating deeper
-   */
-  private saveCurrentState(): void {
-    const currentItemId = this.sidebarService.currentItemId();
-    if (currentItemId === null) return;
-
-    const container = document.querySelector(this.containerSelector);
-    this.stateStack.push({
-      itemId: currentItemId,
-      selectedCommentId: this.selectedCommentId(),
-      scrollPosition: container?.scrollTop ?? 0,
-    });
-  }
-
-  /**
-   * Restore state after navigating back
-   */
-  private async restoreState(): Promise<void> {
-    const state = this.stateStack.pop();
-    if (!state) {
-      this.clearSelection();
-      return;
-    }
-
-    // Wait for animation and DOM update
-    await new Promise((resolve) => setTimeout(resolve, 350));
-
-    if (state.selectedCommentId !== null) {
-      this.selectedCommentId.set(state.selectedCommentId);
-      await this.scrollSelectedIntoView();
-    } else {
-      this.clearSelection();
-    }
-  }
-
-  /**
    * View thread of selected comment - save state first
    */
   override viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null) {
-      this.saveCurrentState();
-      this.sidebarService.openSidebarWithSlideAnimation(selectedId);
+      this.sidebarThreadNavigation.pushThread(selectedId, { selectFirstVisibleOnOpen: true });
     }
   }
 
@@ -99,8 +67,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
    */
   goBack(): void {
     if (this.sidebarService.canGoBack()) {
-      this.sidebarService.goBack();
-      this.restoreState();
+      void this.sidebarThreadNavigation.goBack();
     }
   }
 
@@ -108,9 +75,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
    * Close sidebar and clear state
    */
   closeSidebar(): void {
-    this.sidebarService.closeSidebar();
-    this.clearSelection();
-    this.stateStack = [];
+    this.sidebarThreadNavigation.closeSidebar();
   }
 
   /**
@@ -122,5 +87,29 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     } else {
       this.closeSidebar();
     }
+  }
+
+  private restoreSelectedComment(commentId: number | null): void {
+    if (commentId === null) {
+      this.clearSelection();
+      return;
+    }
+
+    this.selectedCommentId.set(commentId);
+    const element = this.findElementById(commentId);
+    if (element && !this.isElementVisibleInSidebar(element)) {
+      void this.scrollSelectedIntoView();
+    }
+  }
+
+  private isElementVisibleInSidebar(element: HTMLElement): boolean {
+    const container = document.querySelector(this.containerSelector) as HTMLElement | null;
+    if (!container) {
+      return true;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    return elementRect.bottom > containerRect.top && elementRect.top < containerRect.bottom;
   }
 }

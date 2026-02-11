@@ -7,8 +7,9 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { RepliesCounterComponent } from '../replies-counter/replies-counter.component';
 import { OPBadgeComponent } from '../shared/op-badge/op-badge.component';
-import { SidebarService } from '../../services/sidebar.service';
+import { SidebarThreadNavigationService } from '../../services/sidebar-thread-navigation.service';
 import { DeviceService } from '../../services/device.service';
+import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-comment-header',
@@ -86,9 +87,10 @@ import { DeviceService } from '../../services/device.service';
   ],
 })
 export class CommentHeaderComponent {
-  private sidebarService = inject(SidebarService);
+  private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
   private router = inject(Router);
   private deviceService = inject(DeviceService);
+  private itemKeyboardNav = inject(ItemKeyboardNavigationService);
 
   readonly by = input<string>();
   readonly timestamp = input.required<number>();
@@ -115,10 +117,22 @@ export class CommentHeaderComponent {
     const commentId = this.commentId();
     if (!commentId) return;
 
-    if (this.isStandalonePage() || this.deviceService.isMobile()) {
+    if (this.isStandalonePage()) {
+      if (typeof window !== 'undefined') {
+        const currentState = window.history.state ?? {};
+        window.history.replaceState(
+          {
+            ...currentState,
+            __hnewsThreadReturnScrollY: window.scrollY,
+          },
+          '',
+        );
+      }
+      this.itemKeyboardNav.navigateToThread(commentId);
+    } else if (this.deviceService.isMobile()) {
       this.router.navigate(['/item', commentId]);
     } else {
-      this.sidebarService.openSidebarWithSlideAnimation(commentId);
+      this.sidebarThreadNavigation.pushThread(commentId);
     }
   }
 }

@@ -5,15 +5,36 @@ import { By } from '@angular/platform-browser';
 import { CommentHeaderComponent } from './comment-header.component';
 
 import { provideRouter } from '@angular/router';
+import { SidebarThreadNavigationService } from '../../services/sidebar-thread-navigation.service';
+import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
 
 describe('CommentHeaderComponent', () => {
   let fixture: ComponentFixture<CommentHeaderComponent>;
   let component: CommentHeaderComponent;
+  let mockSidebarThreadNavigation: { pushThread: ReturnType<typeof vi.fn> };
+  let mockItemKeyboardNavigation: { navigateToThread: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
+    mockSidebarThreadNavigation = {
+      pushThread: vi.fn(),
+    };
+    mockItemKeyboardNavigation = {
+      navigateToThread: vi.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [CommentHeaderComponent],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        {
+          provide: SidebarThreadNavigationService,
+          useValue: mockSidebarThreadNavigation,
+        },
+        {
+          provide: ItemKeyboardNavigationService,
+          useValue: mockItemKeyboardNavigation,
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CommentHeaderComponent);
@@ -109,5 +130,19 @@ describe('CommentHeaderComponent', () => {
     const btnDe = fixture.debugElement.query(By.css('app-replies-counter button'));
     (btnDe.nativeElement as HTMLButtonElement).click();
     expect(expanded).toBe(true);
+  });
+
+  it('navigates via item keyboard service when standalone page is true', () => {
+    fixture.componentRef.setInput('hasChildren', true);
+    fixture.componentRef.setInput('commentId', 123);
+    fixture.componentRef.setInput('isStandalonePage', true);
+    fixture.detectChanges();
+
+    const viewThreadBtn = fixture.debugElement.query(By.css('.view-thread-inline'));
+    expect(viewThreadBtn).toBeDefined();
+    (viewThreadBtn.nativeElement as HTMLButtonElement).click();
+
+    expect(mockItemKeyboardNavigation.navigateToThread).toHaveBeenCalledWith(123);
+    expect(mockSidebarThreadNavigation.pushThread).not.toHaveBeenCalled();
   });
 });

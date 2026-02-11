@@ -3,6 +3,7 @@
 import { Component, inject, signal, effect, computed, ElementRef, viewChild } from '@angular/core';
 
 import { SidebarService } from '../../services/sidebar.service';
+import { SidebarThreadNavigationService } from '../../services/sidebar-thread-navigation.service';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
 import { CommentThread } from '../comment-thread/comment-thread';
@@ -40,9 +41,9 @@ import {
       tabindex="0"
       aria-label="Close sidebar"
       title="Close sidebar"
-      (click)="sidebarService.closeSidebar()"
-      (keydown.enter)="sidebarService.closeSidebar()"
-      (keydown.space)="sidebarService.closeSidebar()"
+      (click)="onDismiss()"
+      (keydown.enter)="onDismiss()"
+      (keydown.space)="onDismiss()"
     ></div>
 
     <!-- Sidebar Panel: always in DOM, slide driven by CSS -->
@@ -59,8 +60,8 @@ import {
           <app-sidebar-comments-header
             [canGoBack]="sidebarService.canGoBack()"
             [itemId]="sidebarService.currentItemId()!"
-            (dismiss)="sidebarService.closeSidebar()"
-            (back)="sidebarService.goBack()"
+            (dismiss)="onDismiss()"
+            (back)="onBack()"
           />
 
           <!-- Content -->
@@ -254,6 +255,7 @@ import {
 export class SidebarCommentsComponent {
   private sidebarContentRef = viewChild<ElementRef<HTMLElement>>('sidebarContent');
   sidebarService = inject(SidebarService);
+  private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
   // Intentionally no device-specific behavior here
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
@@ -328,6 +330,36 @@ export class SidebarCommentsComponent {
       if (id && (!current || current.id !== id)) {
         this.loadItem(id);
       }
+    });
+
+    // Reset nested panel scroll position on thread change.
+    effect(() => {
+      const id = this.sidebarService.currentItemId();
+      if (!id) {
+        return;
+      }
+
+      setTimeout(() => {
+        const container = this.sidebarContentRef()?.nativeElement;
+        if (container) {
+          container.scrollTop = 0;
+        }
+      });
+    });
+
+    // Apply one-shot keyboard selection for "view thread" after content has loaded.
+    effect(() => {
+      const id = this.sidebarService.currentItemId();
+      const item = this.item();
+      const isLoading = this.loading();
+
+      if (!id || isLoading || !item || item.id !== id) {
+        return;
+      }
+
+      setTimeout(() => {
+        this.sidebarThreadNavigation.applyPendingFirstVisibleSelection();
+      });
     });
 
     // Focus the scroll container so browser arrow keys scroll the sidebar instead of the page
@@ -428,5 +460,13 @@ export class SidebarCommentsComponent {
     });
     this.smallThreadMode.set(strategy.smallThreadMode);
     this.visibleTopLevelCount.set(strategy.initialVisibleTopLevelCount);
+  }
+
+  onBack(): void {
+    void this.sidebarThreadNavigation.goBack();
+  }
+
+  onDismiss(): void {
+    this.sidebarThreadNavigation.closeSidebar();
   }
 }

@@ -3,7 +3,7 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Location } from '@angular/common';
 import { BaseCommentNavigationService } from './base-comment-navigation.service';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 
 interface ItemPageState {
@@ -24,10 +24,20 @@ export class ItemKeyboardNavigationService
 
   private stateStack: ItemPageState[] = [];
   private isNavigatingBack = false;
+  private selectFirstVisibleOnNextThreadLoad = false;
   private routerSubscription: Subscription;
+  private routerStartSubscription: Subscription;
 
   constructor() {
     super();
+    this.routerStartSubscription = this.router.events
+      .pipe(filter((event): event is NavigationStart => event instanceof NavigationStart))
+      .subscribe((event) => {
+        if (event.navigationTrigger === 'popstate' && this.stateStack.length > 0) {
+          this.isNavigatingBack = true;
+        }
+      });
+
     // Listen for navigation events to detect back navigation
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -41,6 +51,7 @@ export class ItemKeyboardNavigationService
 
   ngOnDestroy(): void {
     this.routerSubscription?.unsubscribe();
+    this.routerStartSubscription?.unsubscribe();
   }
 
   protected get containerSelector(): string {
@@ -64,11 +75,11 @@ export class ItemKeyboardNavigationService
     const itemId = this.getCurrentItemId();
     if (!itemId) return;
 
-    const container = document.querySelector(this.containerSelector);
     this.stateStack.push({
       itemId,
       selectedCommentId: this.selectedCommentId(),
-      scrollPosition: container?.scrollTop ?? window.scrollY,
+      // Item page uses window scrolling (not a nested scroll container).
+      scrollPosition: window.scrollY,
     });
   }
 
@@ -82,10 +93,16 @@ export class ItemKeyboardNavigationService
     // Wait for DOM to be ready
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    // Let back navigation restore prior page position before applying selection logic.
+    window.scrollTo({ top: state.scrollPosition, behavior: 'auto' });
+
     // Restore comment selection
     if (state.selectedCommentId !== null) {
       this.selectedCommentId.set(state.selectedCommentId);
-      await this.scrollSelectedIntoView();
+      const element = this.findElementById(state.selectedCommentId);
+      if (element && !this.isElementVisibleInWindow(element)) {
+        await this.scrollSelectedIntoView();
+      }
     }
   }
 
@@ -111,9 +128,29 @@ export class ItemKeyboardNavigationService
   override viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null) {
-      // Save current state before navigating
-      this.saveCurrentState();
-      this.router.navigate(['/item', selectedId]);
+      this.navigateToThread(selectedId, { selectFirstVisibleOnNextThreadLoad: true });
     }
+  }
+
+  navigateToThread(
+    commentId: number,
+    options?: { selectFirstVisibleOnNextThreadLoad?: boolean },
+  ): void {
+    if (options?.selectFirstVisibleOnNextThreadLoad) {
+      this.selectFirstVisibleOnNextThreadLoad = true;
+    }
+    this.saveCurrentState();
+    this.router.navigate(['/item', commentId]);
+  }
+
+  consumeSelectFirstVisibleOnNextThreadLoad(): boolean {
+    const shouldSelect = this.selectFirstVisibleOnNextThreadLoad;
+    this.selectFirstVisibleOnNextThreadLoad = false;
+    return shouldSelect;
+  }
+
+  private isElementVisibleInWindow(element: HTMLElement): boolean {
+    const rect = element.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
   }
 }

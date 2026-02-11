@@ -246,6 +246,32 @@ export abstract class BaseCommentNavigationService {
   }
 
   /**
+   * Select first visible comment in the current container.
+   * Falls back to first comment in DOM order if none are visible.
+   */
+  selectFirstVisibleComment(options?: { scrollIntoView?: boolean }): void {
+    const shouldScroll = options?.scrollIntoView ?? true;
+    const visibleElements = this.getVisibleCommentElements();
+    if (visibleElements.length === 0) return;
+
+    const visibleComment =
+      visibleElements.find((element) => {
+        const commentId = this.getCommentId(element);
+        return commentId !== null && this.isElementVisibleInViewport(element);
+      }) ?? visibleElements.find((element) => this.getCommentId(element) !== null);
+
+    if (!visibleComment) return;
+
+    const commentId = this.getCommentId(visibleComment);
+    if (commentId === null) return;
+
+    this.selectedCommentId.set(commentId);
+    if (shouldScroll) {
+      void this.scrollSelectedIntoView();
+    }
+  }
+
+  /**
    * Scroll selected comment into view
    */
   protected async scrollSelectedIntoView(): Promise<void> {
@@ -258,5 +284,22 @@ export abstract class BaseCommentNavigationService {
       // Add a small offset (e.g., 16px) for better visibility
       await this.scrollService.scrollToHTMLElement(element, { offset: 16, behavior: 'smooth' });
     }
+  }
+
+  private isElementVisibleInViewport(element: HTMLElement): boolean {
+    const container = document.querySelector(this.containerSelector) as HTMLElement | null;
+    const elementRect = element.getBoundingClientRect();
+
+    if (container && this.isScrollableContainer(container)) {
+      const containerRect = container.getBoundingClientRect();
+      return elementRect.bottom > containerRect.top && elementRect.top < containerRect.bottom;
+    }
+
+    return elementRect.bottom > 0 && elementRect.top < window.innerHeight;
+  }
+
+  private isScrollableContainer(container: HTMLElement): boolean {
+    const styles = window.getComputedStyle(container);
+    return ['auto', 'scroll'].includes(styles.overflowY);
   }
 }

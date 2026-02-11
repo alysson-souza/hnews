@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs/operators';
 import { HackernewsService } from '../../services/hackernews.service';
 import { BulkLoadResult } from '../../services/algolia-comment-loader.service';
 import { HNItem } from '../../models/hn';
@@ -36,12 +38,15 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 })
 export class ItemComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private scrollService = inject(ScrollService);
   private commentSortService = inject(CommentSortService);
   private commentDisplayStrategy = inject(CommentDisplayStrategyService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
+  private lastNavigationWasPopstate = false;
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
@@ -108,6 +113,15 @@ export class ItemComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationStart => event instanceof NavigationStart),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((event) => {
+        this.lastNavigationWasPopstate = event.navigationTrigger === 'popstate';
+      });
+
     // Check for both path params and query params (HN compatibility)
     this.route.params.subscribe((params) => {
       const id = params['id'];
@@ -218,11 +232,28 @@ export class ItemComponent implements OnInit {
    * Common success handler for both bulk and fallback loading.
    */
   private handleLoadSuccess() {
+    const loadedItem = this.item();
     this.loading.set(false);
 
-    // Scroll to first comment if available, otherwise submission title
+    const storedScrollY = this.getStoredThreadReturnScrollY();
+    if (storedScrollY !== null && loadedItem?.type === 'story') {
+      window.scrollTo({ top: storedScrollY, behavior: 'auto' });
+      return;
+    }
+
+    // When navigating with browser back/forward, let router restoration handle scroll.
+    if (this.lastNavigationWasPopstate) {
+      return;
+    }
+
     setTimeout(() => {
-      if (document.getElementById('first-comment')) {
+      if (this.itemKeyboardNav.consumeSelectFirstVisibleOnNextThreadLoad()) {
+        this.itemKeyboardNav.selectFirstVisibleComment({ scrollIntoView: false });
+      }
+
+      if (loadedItem?.type === 'comment') {
+        this.scrollService.scrollToElement('submission-title');
+      } else if (document.getElementById('first-comment')) {
         this.scrollService.scrollToElement('first-comment');
       } else {
         this.scrollService.scrollToElement('submission-title');
@@ -305,5 +336,14 @@ export class ItemComponent implements OnInit {
     });
     this.smallThreadMode.set(strategy.smallThreadMode);
     this.visibleTopLevelCount.set(strategy.initialVisibleTopLevelCount);
+  }
+
+  private getStoredThreadReturnScrollY(): number | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const value = window.history.state?.__hnewsThreadReturnScrollY;
+    return typeof value === 'number' ? value : null;
   }
 }
