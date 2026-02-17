@@ -42,11 +42,11 @@ import { isHnLink } from '../comment-text/hn-link.utils';
       }
 
       <div class="meta">
-        @if (item().score !== null && item().score !== undefined) {
+        @if (hasScore()) {
           <span>{{ item().score }} points</span>
         }
         @if (item().by) {
-          @if (item().score !== null && item().score !== undefined) {
+          @if (hasScore()) {
             <span>•</span>
           }
           <span>by <app-user-tag [username]="item().by!" /></span>
@@ -122,5 +122,9 @@ export class SidebarStorySummaryComponent {
         queryParams: { q: `site:${domain}` },
       });
     }
+  }
+
+  hasScore(): boolean {
+    return this.item().score != null;
   }
 }
