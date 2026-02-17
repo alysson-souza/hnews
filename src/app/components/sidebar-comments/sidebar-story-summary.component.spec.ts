@@ -192,7 +192,9 @@ describe('SidebarStorySummaryComponent', () => {
       fixture.detectChanges();
 
       const meta = fixture.debugElement.query(By.css('.meta'));
-      expect(meta.nativeElement.textContent).not.toContain('points');
+      const metaText = meta.nativeElement.textContent.trim();
+      expect(metaText).not.toContain('points');
+      expect(metaText.startsWith('•')).toBeFalse();
     });
   });
 
