@@ -67,7 +67,7 @@ import {
           <!-- Content -->
           <div
             #sidebarContent
-            class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 focus:outline-none"
+            class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain focus:outline-none"
             tabindex="-1"
             [class.slide-out-left]="
               sidebarService.isTransitioning() &&
@@ -90,64 +90,66 @@ import {
               sidebarService.animationDirection() === 'right'
             "
           >
-            @if (loading()) {
-              <div class="skeleton space-y-4">
-                <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
-                <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
-                <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
-              </div>
-            } @else if (item()) {
-              <!-- Story Details -->
-              <app-sidebar-story-summary [item]="item()!" />
+            <div class="p-4 sm:p-6">
+              @if (loading()) {
+                <div class="skeleton space-y-4">
+                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                  <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
+                </div>
+              } @else if (item()) {
+                <!-- Story Details -->
+                <app-sidebar-story-summary [item]="item()!" />
 
-              <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
+                <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
 
-              <!-- Comments Header with Sort -->
-              <div class="flex items-center justify-between mb-6">
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Comments ({{ item()!.kids?.length || 0 }})
-                </h4>
+                <!-- Comments Header with Sort -->
+                <div class="flex items-center justify-between mb-6">
+                  <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Comments ({{ item()!.kids?.length || 0 }})
+                  </h4>
 
-                <app-comment-sort-dropdown
-                  [sortOrder]="sortOrder()"
-                  [loading]="commentsLoading()"
-                  (sortChange)="onSortChange($event)"
-                />
-              </div>
-
-              @if (item()!.kids && item()!.kids!.length > 0) {
-                <div class="space-y-4" role="tree" aria-label="Comments">
-                  @for (commentId of visibleCommentIds(); track commentId) {
-                    <app-comment-thread
-                      [commentId]="commentId"
-                      [depth]="0"
-                      [autoExpandReplies]="smallThreadMode()"
-                      [storyAuthor]="item()?.by"
-                    />
-                  }
+                  <app-comment-sort-dropdown
+                    [sortOrder]="sortOrder()"
+                    [loading]="commentsLoading()"
+                    (sortChange)="onSortChange($event)"
+                  />
                 </div>
 
-                @if (hasMoreTopLevelComments()) {
-                  <div class="mt-4 flex justify-center">
-                    <app-button
-                      variant="secondary"
-                      size="sm"
-                      class="load-more-btn"
-                      [ariaLabel]="'Load more comments'"
-                      (clicked)="loadMoreTopLevelComments()"
-                    >
-                      Load {{ remainingTopLevelCount() }} more comments
-                    </app-button>
+                @if (item()!.kids && item()!.kids!.length > 0) {
+                  <div class="space-y-4" role="tree" aria-label="Comments">
+                    @for (commentId of visibleCommentIds(); track commentId) {
+                      <app-comment-thread
+                        [commentId]="commentId"
+                        [depth]="0"
+                        [autoExpandReplies]="smallThreadMode()"
+                        [storyAuthor]="item()?.by"
+                      />
+                    }
                   </div>
+
+                  @if (hasMoreTopLevelComments()) {
+                    <div class="mt-4 flex justify-center">
+                      <app-button
+                        variant="secondary"
+                        size="sm"
+                        class="load-more-btn"
+                        [ariaLabel]="'Load more comments'"
+                        (clicked)="loadMoreTopLevelComments()"
+                      >
+                        Load {{ remainingTopLevelCount() }} more comments
+                      </app-button>
+                    </div>
+                  }
+                } @else {
+                  <p class="text-gray-500 text-center py-8">No comments yet</p>
                 }
-              } @else {
-                <p class="text-gray-500 text-center py-8">No comments yet</p>
+              } @else if (error()) {
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p class="text-red-800">{{ error() }}</p>
+                </div>
               }
-            } @else if (error()) {
-              <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p class="text-red-800">{{ error() }}</p>
-              </div>
-            }
+            </div>
           </div>
         </div>
       }

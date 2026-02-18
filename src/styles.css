@@ -419,13 +419,6 @@ code {
   margin-bottom: 0;
 }
 
-/* When there is no "Load more comments" section, reduce bottom padding on the
-   main comments card so that the space below the last comment roughly matches
-   the space above the "Comments" heading. */
-.comments-card:not(:has(div.mt-6.flex.justify-center)) .card-base.card-padding {
-  padding-bottom: 0.75rem; /* 12px instead of default 24px */
-}
-
 /* Distinct URL styling inside comment text and story bodies */
 .comment-body a,
 .item-prose a {
