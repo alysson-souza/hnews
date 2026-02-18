@@ -42,16 +42,18 @@ import { isHnLink } from '../comment-text/hn-link.utils';
       }
 
       <div class="meta">
-        @if (item().score !== null && item().score !== undefined) {
+        @if (item().score != null) {
           <span>{{ item().score }} points</span>
         }
         @if (item().by) {
-          @if (item().score !== null && item().score !== undefined) {
+          @if (item().score != null) {
             <span>•</span>
           }
           <span>by <app-user-tag [username]="item().by!" /></span>
         }
-        <span>•</span>
+        @if (hasMetaPrefix()) {
+          <span>•</span>
+        }
         <span class="time-text">{{ item().time | relativeTime }}</span>
       </div>
 
@@ -94,6 +96,10 @@ import { isHnLink } from '../comment-text/hn-link.utils';
 export class SidebarStorySummaryComponent {
   readonly item = input.required<HNItem>();
   private router = inject(Router);
+
+  hasMetaPrefix(): boolean {
+    return this.item().score != null || !!this.item().by;
+  }
 
   // Expose for template
   isHnUrl(url: string): boolean {
