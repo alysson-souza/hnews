@@ -182,7 +182,7 @@ describe('SidebarStorySummaryComponent', () => {
       expect(meta.nativeElement.textContent).toContain('50 points');
     });
 
-    it('should display 0 points when score is undefined', () => {
+    it('should not display points when score is undefined', () => {
       fixture.componentRef.setInput('item', {
         id: 123,
         type: 'story',
@@ -192,7 +192,9 @@ describe('SidebarStorySummaryComponent', () => {
       fixture.detectChanges();
 
       const meta = fixture.debugElement.query(By.css('.meta'));
-      expect(meta.nativeElement.textContent).toContain('0 points');
+      const metaText = meta.nativeElement.textContent.trim();
+      expect(metaText).not.toContain('points');
+      expect(metaText.startsWith('•')).toBeFalse();
     });
   });
 
