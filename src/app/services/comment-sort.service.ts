@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, signal } from '@angular/core';
-import { CommentSortOrder } from '../components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
+import {
+  COMMENT_SORT_ORDERS,
+  CommentSortOrder,
+} from '../components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
 
 @Injectable({
   providedIn: 'root',
@@ -18,8 +21,8 @@ export class CommentSortService {
     }
 
     const stored = window.localStorage.getItem(this.STORAGE_KEY);
-    if (stored === 'default' || stored === 'best' || stored === 'newest' || stored === 'oldest') {
-      return stored;
+    if (COMMENT_SORT_ORDERS.includes(stored as CommentSortOrder)) {
+      return stored as CommentSortOrder;
     }
 
     return this.DEFAULT_SORT;

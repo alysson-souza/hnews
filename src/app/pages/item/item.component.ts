@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
@@ -83,7 +83,7 @@ export class ItemComponent implements OnInit {
     const sorted = [...comments].sort((a, b) => {
       if (order === 'newest') return b.time - a.time;
       if (order === 'oldest') return a.time - b.time;
-      if (order === 'best') {
+      if (order === 'popular') {
         return (b.descendants ?? 0) - (a.descendants ?? 0);
       }
       return 0;

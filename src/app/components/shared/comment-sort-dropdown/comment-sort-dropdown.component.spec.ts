@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommentSortDropdownComponent } from './comment-sort-dropdown.component';
 
@@ -28,8 +28,8 @@ describe('CommentSortDropdownComponent', () => {
     expect(options.length).toBe(4);
     expect(options[0].value).toBe('default');
     expect(options[0].textContent).toContain('Default');
-    expect(options[1].value).toBe('best');
-    expect(options[1].textContent).toContain('Best');
+    expect(options[1].value).toBe('popular');
+    expect(options[1].textContent).toContain('Popularity');
     expect(options[2].value).toBe('newest');
     expect(options[2].textContent).toContain('Newest');
     expect(options[3].value).toBe('oldest');
@@ -37,11 +37,11 @@ describe('CommentSortDropdownComponent', () => {
   });
 
   it('should display current sort order as selected', () => {
-    fixture.componentRef.setInput('sortOrder', 'best');
+    fixture.componentRef.setInput('sortOrder', 'popular');
     fixture.detectChanges();
 
     const select = fixture.nativeElement.querySelector('select');
-    expect(select.value).toBe('best');
+    expect(select.value).toBe('popular');
   });
 
   it('should emit sortChange when selection changes', () => {
@@ -58,7 +58,7 @@ describe('CommentSortDropdownComponent', () => {
     vi.spyOn(component.sortChange, 'emit');
     const select = fixture.nativeElement.querySelector('select');
 
-    (['default', 'best', 'newest', 'oldest'] as const).forEach((value) => {
+    (['default', 'popular', 'newest', 'oldest'] as const).forEach((value) => {
       select.value = value;
       select.dispatchEvent(new Event('change'));
       expect(component.sortChange.emit).toHaveBeenCalledWith(value);

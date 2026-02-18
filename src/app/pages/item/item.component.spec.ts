@@ -1,6 +1,6 @@
 import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { Location } from '@angular/common';
@@ -174,7 +174,7 @@ describe('ItemComponent', () => {
     });
 
     it('should sort comments by descendants (most replies first) when "best" is selected', () => {
-      mockCommentSortService.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('popular');
       const sortedIds = component.sortedCommentIds();
       // comment3: descendants 20, comment1: descendants 10, comment2: descendants 2
       expect(sortedIds).toEqual([3, 1, 2]);
@@ -189,14 +189,14 @@ describe('ItemComponent', () => {
         of(createBulkLoadResult(newItem, mockComments)),
       );
 
-      mockCommentSortService.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('popular');
       component.allComments.set(mockComments);
       component.commentsLoading.set(true);
 
       component.loadItem(456);
 
       // Sort order persists globally
-      expect(mockCommentSortService.sortOrder()).toBe('best');
+      expect(mockCommentSortService.sortOrder()).toBe('popular');
       // allComments is now populated from bulk load
       expect(component.allComments().length).toBe(mockComments.length);
       expect(component.commentsLoading()).toBe(false);
@@ -207,7 +207,7 @@ describe('ItemComponent', () => {
       // When bulk loading succeeds, allComments is already populated
       // So getStoryTopLevelComments should not be called
       component.allComments.set(mockComments);
-      component.onSortChange('best');
+      component.onSortChange('popular');
 
       expect(mockHnService.getStoryTopLevelComments).not.toHaveBeenCalled();
 
@@ -218,7 +218,7 @@ describe('ItemComponent', () => {
     it('should fallback to getStoryTopLevelComments when allComments is empty', () => {
       component.item.set(mockItem);
       component.allComments.set([]); // Empty - would trigger fallback
-      component.onSortChange('best');
+      component.onSortChange('popular');
 
       expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(1);
     });
@@ -243,7 +243,7 @@ describe('ItemComponent', () => {
       component['visibleTopLevelCount'].set(20);
       component.smallThreadMode.set(true);
 
-      component.onSortChange('best');
+      component.onSortChange('popular');
 
       expect(component['visibleTopLevelCount']()).toBe(3);
     });
@@ -254,8 +254,8 @@ describe('ItemComponent', () => {
       );
 
       component.item.set(mockItem);
-      mockCommentSortService.sortOrder.set('best');
-      component.onSortChange('best');
+      mockCommentSortService.sortOrder.set('popular');
+      component.onSortChange('popular');
 
       expect(mockCommentSortService.setSortOrder).toHaveBeenCalledWith('default');
       expect(component.commentsLoading()).toBe(false);

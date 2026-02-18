@@ -1,6 +1,6 @@
 import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { CommentSortService } from './comment-sort.service';
 
@@ -52,11 +52,11 @@ describe('CommentSortService', () => {
   });
 
   it('should load sort order from localStorage', () => {
-    (localStorageSpy.getItem as Mock).mockReturnValue('best');
+    (localStorageSpy.getItem as Mock).mockReturnValue('popular');
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
     service = TestBed.inject(CommentSortService);
-    expect(service.sortOrder()).toBe('best');
+    expect(service.sortOrder()).toBe('popular');
   });
 
   it('should fallback to default for invalid stored values', () => {
@@ -68,7 +68,7 @@ describe('CommentSortService', () => {
   });
 
   it('should accept all valid sort orders', () => {
-    ['default', 'best', 'newest', 'oldest'].forEach((order) => {
+    ['default', 'popular', 'newest', 'oldest'].forEach((order) => {
       (localStorageSpy.getItem as Mock).mockReturnValue(order);
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({});
@@ -88,8 +88,8 @@ describe('CommentSortService', () => {
     service.setSortOrder('oldest');
     expect(service.sortOrder()).toBe('oldest');
 
-    service.setSortOrder('best');
-    expect(service.sortOrder()).toBe('best');
+    service.setSortOrder('popular');
+    expect(service.sortOrder()).toBe('popular');
   });
 
   it('should handle localStorage not available', () => {
@@ -103,6 +103,6 @@ describe('CommentSortService', () => {
     const newService = new CommentSortService();
     expect(newService.sortOrder()).toBe('default');
 
-    expect(() => newService.setSortOrder('best')).not.toThrow();
+    expect(() => newService.setSortOrder('popular')).not.toThrow();
   });
 });

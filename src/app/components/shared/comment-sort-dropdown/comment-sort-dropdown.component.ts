@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, output, ChangeDetectionStrategy, input } from '@angular/core';
 
-export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
+export const COMMENT_SORT_ORDERS = ['default', 'popular', 'newest', 'oldest'] as const;
+export type CommentSortOrder = (typeof COMMENT_SORT_ORDERS)[number];
 
 @Component({
   selector: 'app-comment-sort-dropdown',
@@ -18,7 +19,7 @@ export type CommentSortOrder = 'default' | 'newest' | 'oldest' | 'best';
         aria-label="Sort comments"
       >
         <option value="default">Default</option>
-        <option value="best">Best</option>
+        <option value="popular">Popularity</option>
         <option value="newest">Newest</option>
         <option value="oldest">Oldest</option>
       </select>

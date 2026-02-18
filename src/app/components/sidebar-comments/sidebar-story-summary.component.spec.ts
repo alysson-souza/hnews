@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SidebarStorySummaryComponent } from './sidebar-story-summary.component';
 import { Router, provideRouter } from '@angular/router';

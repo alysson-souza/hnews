@@ -1,6 +1,6 @@
 import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
@@ -141,7 +141,7 @@ describe('SidebarCommentsComponent', () => {
     });
 
     it('should sort comments by descendants (most replies first) when "best" is selected', () => {
-      mockCommentSortService.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('popular');
       const sortedIds = component.sortedCommentIds();
       // comment3: descendants 20, comment1: descendants 10, comment2: descendants 2
       expect(sortedIds).toEqual([3, 1, 2]);
@@ -157,21 +157,21 @@ describe('SidebarCommentsComponent', () => {
 
   describe('State Management', () => {
     it('should keep sort order when loading new item', () => {
-      mockCommentSortService.sortOrder.set('best');
+      mockCommentSortService.sortOrder.set('popular');
       component.allComments.set(mockComments);
       component.commentsLoading.set(true);
 
       component['loadItem'](456);
 
       // Sort order persists globally
-      expect(mockCommentSortService.sortOrder()).toBe('best');
+      expect(mockCommentSortService.sortOrder()).toBe('popular');
       expect(component.allComments()).toEqual([]);
       expect(component.commentsLoading()).toBe(false);
     });
 
     it('should load comments only once for non-default sorts', () => {
       component.item.set(mockItem);
-      component.onSortChange('best');
+      component.onSortChange('popular');
 
       expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(1);
 
@@ -209,14 +209,14 @@ describe('SidebarCommentsComponent', () => {
       component['visibleTopLevelCount'].set(20);
       component.smallThreadMode.set(true);
 
-      component.onSortChange('best');
+      component.onSortChange('popular');
 
       expect(component['visibleTopLevelCount']()).toBe(3);
     });
 
     it('should show loading state while fetching comments', () => {
       component.item.set(mockItem);
-      component.onSortChange('best');
+      component.onSortChange('popular');
 
       expect(component.commentsLoading()).toBe(false); // Completed synchronously in test
     });
@@ -227,8 +227,8 @@ describe('SidebarCommentsComponent', () => {
       );
 
       component.item.set(mockItem);
-      mockCommentSortService.sortOrder.set('best');
-      component.onSortChange('best');
+      mockCommentSortService.sortOrder.set('popular');
+      component.onSortChange('popular');
 
       expect(mockCommentSortService.setSortOrder).toHaveBeenCalledWith('default');
       expect(component.commentsLoading()).toBe(false);

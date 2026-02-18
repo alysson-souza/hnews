@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, inject, signal, effect, computed, ElementRef, viewChild } from '@angular/core';
 
 import { SidebarService } from '../../services/sidebar.service';
@@ -295,7 +295,7 @@ export class SidebarCommentsComponent {
     const sorted = [...comments].sort((a, b) => {
       if (order === 'newest') return b.time - a.time;
       if (order === 'oldest') return a.time - b.time;
-      if (order === 'best') {
+      if (order === 'popular') {
         return (b.descendants ?? 0) - (a.descendants ?? 0);
       }
       return 0;
