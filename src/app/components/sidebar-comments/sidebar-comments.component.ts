@@ -296,9 +296,7 @@ export class SidebarCommentsComponent {
       if (order === 'newest') return b.time - a.time;
       if (order === 'oldest') return a.time - b.time;
       if (order === 'best') {
-        // Combine score + replies with 2x weight on replies for engagement
-        const bestScore = (item: HNItem) => (item.score ?? 0) + (item.kids?.length ?? 0) * 2;
-        return bestScore(b) - bestScore(a);
+        return (b.descendants ?? 0) - (a.descendants ?? 0);
       }
       return 0;
     });

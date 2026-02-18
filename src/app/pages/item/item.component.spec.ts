@@ -51,6 +51,7 @@ describe('ItemComponent', () => {
       text: 'Comment 1',
       score: 10,
       kids: [4, 5],
+      descendants: 10,
     },
     {
       id: 2,
@@ -60,6 +61,7 @@ describe('ItemComponent', () => {
       text: 'Comment 2',
       score: 5,
       kids: [],
+      descendants: 2,
     },
     {
       id: 3,
@@ -69,6 +71,7 @@ describe('ItemComponent', () => {
       text: 'Comment 3',
       score: 15,
       kids: [6],
+      descendants: 20,
     },
   ];
 
@@ -170,9 +173,10 @@ describe('ItemComponent', () => {
       expect(sortedIds).toEqual([1, 3, 2]);
     });
 
-    it('should sort comments by best (score + replies * 2) when "best" is selected', () => {
+    it('should sort comments by descendants (most replies first) when "best" is selected', () => {
       mockCommentSortService.sortOrder.set('best');
       const sortedIds = component.sortedCommentIds();
+      // comment3: descendants 20, comment1: descendants 10, comment2: descendants 2
       expect(sortedIds).toEqual([3, 1, 2]);
     });
   });

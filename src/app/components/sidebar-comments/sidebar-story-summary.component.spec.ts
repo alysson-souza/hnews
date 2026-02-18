@@ -194,7 +194,7 @@ describe('SidebarStorySummaryComponent', () => {
       const meta = fixture.debugElement.query(By.css('.meta'));
       const metaText = meta.nativeElement.textContent.trim();
       expect(metaText).not.toContain('points');
-      expect(metaText.startsWith('•')).toBeFalse();
+      expect(metaText.startsWith('•')).toBeFalsy();
     });
   });
 

@@ -39,6 +39,7 @@ describe('SidebarCommentsComponent', () => {
       text: 'Comment 1',
       score: 10,
       kids: [4, 5],
+      descendants: 10,
     },
     {
       id: 2,
@@ -48,6 +49,7 @@ describe('SidebarCommentsComponent', () => {
       text: 'Comment 2',
       score: 5,
       kids: [],
+      descendants: 2,
     },
     {
       id: 3,
@@ -57,6 +59,7 @@ describe('SidebarCommentsComponent', () => {
       text: 'Comment 3',
       score: 15,
       kids: [6],
+      descendants: 20,
     },
   ];
 
@@ -137,13 +140,10 @@ describe('SidebarCommentsComponent', () => {
       expect(sortedIds).toEqual([1, 3, 2]);
     });
 
-    it('should sort comments by best (score + replies * 2) when "best" is selected', () => {
+    it('should sort comments by descendants (most replies first) when "best" is selected', () => {
       mockCommentSortService.sortOrder.set('best');
       const sortedIds = component.sortedCommentIds();
-      // comment1: score 10 + kids 2 * 2 = 14
-      // comment2: score 5 + kids 0 * 2 = 5
-      // comment3: score 15 + kids 1 * 2 = 17
-      // Sorted descending: comment3 (17), comment1 (14), comment2 (5)
+      // comment3: descendants 20, comment1: descendants 10, comment2: descendants 2
       expect(sortedIds).toEqual([3, 1, 2]);
     });
 

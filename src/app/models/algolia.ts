@@ -119,8 +119,7 @@ export function mapAlgoliaItemToHNItem(item: AlgoliaItemResponse): HNItemShape {
     score: item.points ?? undefined,
     parent: item.parent_id ?? undefined,
     kids: item.children.length > 0 ? item.children.map((c) => c.id) : undefined,
-    // descendants count is only on stories, estimate from recursive child count
-    descendants: item.type === 'story' ? countDescendants(item) : undefined,
+    descendants: countDescendants(item),
   };
 }
 
