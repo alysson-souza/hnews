@@ -84,7 +84,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   let meta: {
     title: string;
     description: string;
-    image: string;
+    image: string | null;
     type: 'article' | 'website';
   } | null = null;
 
@@ -209,8 +209,7 @@ async function buildMetaForPath(pathname: string, env: Env) {
       if (domain) parts.push(domain);
 
       const description = parts.join(' | ') || 'Hacker News story.';
-      const defaultImage = absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL);
-      const image = itemUrl ? (await fetchArticleImage(itemUrl)) || defaultImage : defaultImage;
+      const image = itemUrl ? await fetchArticleImage(itemUrl) : null;
 
       return {
         title,
@@ -331,7 +330,7 @@ async function fetchArticleImage(articleUrl: string): Promise<string | null> {
 
 function injectMeta(
   html: string,
-  meta: { title: string; description: string; image: string; type: 'article' | 'website' },
+  meta: { title: string; description: string; image: string | null; type: 'article' | 'website' },
   pathname: string,
   env: Env,
 ) {
@@ -342,22 +341,26 @@ function injectMeta(
   const ogUrl = absoluteUrl(pathname, env.SITE_URL);
   const title = escapeAttr(meta.title);
   const description = escapeAttr(meta.description);
-  const image = escapeAttr(meta.image);
   const type = meta.type;
+
+  const imageTags = meta.image
+    ? `
+<meta property="og:image" content="${escapeAttr(meta.image)}">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${escapeAttr(meta.image)}">`
+    : `
+<meta name="twitter:card" content="summary">`;
 
   const tags = `
 <meta property="og:type" content="${type}">
 <meta property="og:url" content="${ogUrl}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
-<meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">
 <meta property="og:site_name" content="HNews">
-<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
-<meta name="twitter:description" content="${description}">
-<meta name="twitter:image" content="${image}">`;
+<meta name="twitter:description" content="${description}">${imageTags}`;
 
   const idx = cleaned.toLowerCase().indexOf('</title>');
   if (idx !== -1) {
