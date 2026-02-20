@@ -209,7 +209,10 @@ async function buildMetaForPath(pathname: string, env: Env) {
       if (domain) parts.push(domain);
 
       const description = parts.join(' | ') || 'Hacker News story.';
-      const image = itemUrl ? await fetchArticleImage(itemUrl) : null;
+      let image: string | null = null;
+      if (itemUrl && isSafePublicUrl(itemUrl)) {
+        image = await fetchArticleImage(itemUrl);
+      }
 
       return {
         title,
