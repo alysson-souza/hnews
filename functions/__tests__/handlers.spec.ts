@@ -1,4 +1,4 @@
-import { handleOgImageApi, handleOgImageProxy } from '../[[path]]';
+import { handleOgImageApi, handleOgImageProxy, injectMeta } from '../[[path]]';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -498,5 +498,63 @@ describe('handleOgImageProxy', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('image/webp');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// injectMeta
+// ---------------------------------------------------------------------------
+
+const mockEnv = { SITE_URL: 'https://hnews.test' } as Parameters<typeof injectMeta>[3];
+const baseMeta = { title: 'Test', description: 'Desc', type: 'article' as const };
+const baseHtml = '<html><head><title>HNews</title></head><body></body></html>';
+
+describe('injectMeta', () => {
+  describe('with image', () => {
+    const html = injectMeta(
+      baseHtml,
+      { ...baseMeta, image: 'https://cdn.example.com/og.jpg' },
+      '/item/123',
+      mockEnv,
+    );
+
+    it('includes og:image tag', () => {
+      expect(html).toContain('<meta property="og:image" content="https://cdn.example.com/og.jpg">');
+    });
+
+    it('includes og:image:width and og:image:height tags', () => {
+      expect(html).toContain('<meta property="og:image:width" content="512">');
+      expect(html).toContain('<meta property="og:image:height" content="512">');
+    });
+
+    it('includes twitter:card summary_large_image', () => {
+      expect(html).toContain('<meta name="twitter:card" content="summary_large_image">');
+    });
+
+    it('includes twitter:image tag', () => {
+      expect(html).toContain(
+        '<meta name="twitter:image" content="https://cdn.example.com/og.jpg">',
+      );
+    });
+  });
+
+  describe('without image', () => {
+    const html = injectMeta(baseHtml, { ...baseMeta, image: null }, '/item/456', mockEnv);
+
+    it('omits og:image tag', () => {
+      expect(html).not.toContain('og:image"');
+    });
+
+    it('omits twitter:image tag', () => {
+      expect(html).not.toContain('twitter:image"');
+    });
+
+    it('includes twitter:card summary', () => {
+      expect(html).toContain('<meta name="twitter:card" content="summary">');
+    });
+
+    it('does not include summary_large_image', () => {
+      expect(html).not.toContain('summary_large_image');
+    });
   });
 });

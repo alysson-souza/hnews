@@ -331,7 +331,7 @@ async function fetchArticleImage(articleUrl: string): Promise<string | null> {
   return meta.imageUrl;
 }
 
-function injectMeta(
+export function injectMeta(
   html: string,
   meta: { title: string; description: string; image: string | null; type: 'article' | 'website' },
   pathname: string,
