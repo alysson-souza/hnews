@@ -263,7 +263,7 @@ button.tree-connector {
 /* Dark mode scrollbar - overrides when .dark class is present */
 .dark ::-webkit-scrollbar {
   width: 12px;
-  background-color: #020617; /* slate-950 */
+  background-color: #0f172a; /* slate-900 */
 }
 .dark ::-webkit-scrollbar-thumb {
   background-color: #334155; /* slate-600 */
