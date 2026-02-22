@@ -42,11 +42,11 @@ import { isHnLink } from '../comment-text/hn-link.utils';
       }
 
       <div class="meta">
-        @if (item().score != null) {
+        @if (item().score !== undefined && item().score !== null) {
           <span>{{ item().score }} points</span>
         }
         @if (item().by) {
-          @if (item().score != null) {
+          @if (item().score !== undefined && item().score !== null) {
             <span>•</span>
           }
           <span>by <app-user-tag [username]="item().by!" /></span>

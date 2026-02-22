@@ -346,12 +346,15 @@ export function injectMeta(
   const description = escapeAttr(meta.description);
   const type = meta.type;
 
+  const isDefaultImage = meta.image === absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL);
+  const twitterCard = isDefaultImage ? 'summary' : 'summary_large_image';
+
   const imageTags = meta.image
     ? `
 <meta property="og:image" content="${escapeAttr(meta.image)}">
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="${twitterCard}">
 <meta name="twitter:image" content="${escapeAttr(meta.image)}">`
     : `
 <meta name="twitter:card" content="summary">`;
@@ -439,6 +442,13 @@ export async function handleOgImageProxy(reqUrl: URL): Promise<Response> {
       headers: {
         accept: 'image/*',
         'user-agent': 'HNews OG Proxy',
+      },
+      cf: {
+        image: {
+          width: 160,
+          height: 160,
+          fit: 'cover',
+        },
       },
     });
 

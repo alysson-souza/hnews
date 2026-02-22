@@ -31,6 +31,11 @@ import { NgOptimizedImage } from '@angular/common';
       :host {
         @apply block w-full h-full;
       }
+      img {
+        image-rendering: high-quality;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
     `,
   ],
 })

@@ -78,6 +78,9 @@ import { OgImageService, OgImageResult } from '../../../services/og-image.servic
       .og-image {
         @apply w-full h-full object-cover opacity-0;
         transition: opacity 0.3s ease-in;
+        image-rendering: high-quality;
+        transform: translateZ(0);
+        backface-visibility: hidden;
       }
       .og-image-loaded {
         @apply opacity-100;
