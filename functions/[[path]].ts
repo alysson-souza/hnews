@@ -432,6 +432,11 @@ export async function handleOgImageProxy(reqUrl: URL): Promise<Response> {
     return new Response('Invalid url', { status: 400, headers: CORS_HEADERS });
   }
 
+  const parsedImageUrl = new URL(imageUrl);
+  const isGithubImage =
+    parsedImageUrl.hostname.endsWith('githubusercontent.com') ||
+    parsedImageUrl.hostname.endsWith('githubassets.com');
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
 
@@ -448,6 +453,7 @@ export async function handleOgImageProxy(reqUrl: URL): Promise<Response> {
           width: 160,
           height: 160,
           fit: 'cover',
+          ...(isGithubImage ? { gravity: { x: 0, y: 0 } } : {}),
         },
       },
     });

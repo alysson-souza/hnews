@@ -49,6 +49,7 @@ import { OgImageService, OgImageResult } from '../../../services/og-image.servic
               [attr.title]="ogTooltip()"
               class="og-image"
               [class.og-image-loaded]="ogImageLoaded()"
+              [class.object-left-top]="isGithubImage()"
               decoding="async"
               loading="lazy"
               (load)="handleOgImageLoad()"
@@ -109,6 +110,13 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
   readonly ogTooltip = computed(() => {
     const parts = [this.ogTitle(), this.ogDescription()].filter(Boolean);
     return parts.join('\n') || this.storyTitle() || null;
+  });
+
+  /** Whether the image is from GitHub (used to anchor the crop to the left). */
+  readonly isGithubImage = computed(() => {
+    const url = this.ogImageUrl();
+    if (!url) return false;
+    return url.includes('githubusercontent.com') || url.includes('githubassets.com');
   });
 
   private readonly thumbEl = viewChild<ElementRef<HTMLElement>>('thumbEl');
