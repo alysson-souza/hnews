@@ -35,6 +35,19 @@ import {
           >
             <ng-icon name="solarCloseCircleLinear" class="icon" />
           </button>
+          @if (itemId()) {
+            <a
+              [routerLink]="['/item', itemId()]"
+              target="_blank"
+              rel="noopener noreferrer"
+              role="link"
+              class="action-btn"
+              aria-label="Open in full view"
+              title="Open in full view"
+            >
+              <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
+            </a>
+          }
         </div>
         <h2 class="title">Comments</h2>
         <div class="right-controls">
@@ -48,19 +61,6 @@ import {
             >
               <ng-icon name="solarAltArrowLeftLinear" class="icon" />
             </button>
-          }
-          @if (itemId()) {
-            <a
-              [routerLink]="['/item', itemId()]"
-              target="_blank"
-              rel="noopener noreferrer"
-              role="link"
-              class="action-btn"
-              aria-label="Open in full view"
-              title="Open in full view"
-            >
-              <ng-icon name="solarMaximizeSquare3Linear" class="icon" />
-            </a>
           }
         </div>
       } @else {
