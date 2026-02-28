@@ -187,6 +187,13 @@ export class KeyboardShortcutConfigService {
       commandId: 'sidebar.expandReplies',
     },
     {
+      key: 'o',
+      contexts: ['sidebar'],
+      description: 'Open in full view',
+      category: 'Navigation',
+      commandId: 'sidebar.openFullView',
+    },
+    {
       key: 'Escape',
       label: 'Esc',
       contexts: ['sidebar'],

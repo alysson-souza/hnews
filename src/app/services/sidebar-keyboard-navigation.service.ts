@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { BaseCommentNavigationService } from './base-comment-navigation.service';
 import { SidebarService } from './sidebar.service';
 import { SidebarThreadNavigationService } from './sidebar-thread-navigation.service';
@@ -11,6 +12,7 @@ import { SidebarThreadNavigationService } from './sidebar-thread-navigation.serv
 export class SidebarKeyboardNavigationService extends BaseCommentNavigationService {
   private sidebarService = inject(SidebarService);
   private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
+  private router = inject(Router);
 
   constructor() {
     super();
@@ -34,6 +36,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     this.commandRegistry.register('sidebar.viewThread', () => this.viewThreadSelected());
     this.commandRegistry.register('sidebar.back', () => this.goBack());
     this.commandRegistry.register('sidebar.close', () => this.closeSidebar());
+    this.commandRegistry.register('sidebar.openFullView', () => this.openFullView());
     this.commandRegistry.register('sidebar.backOrClose', () => this.handleBackOrClose());
   }
 
@@ -75,6 +78,17 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
    */
   closeSidebar(): void {
     this.sidebarThreadNavigation.closeSidebar();
+  }
+
+  /**
+   * Open the current item in full view
+   */
+  openFullView(): void {
+    const itemId = this.sidebarService.currentItemId();
+    if (itemId === null) return;
+
+    this.closeSidebar();
+    void this.router.navigate(['/item', itemId]);
   }
 
   /**
