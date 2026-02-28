@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, signal, HostListener, inject, computed } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarCloseCircleLinear } from '@ng-icons/solar-icons/linear';
@@ -15,7 +15,7 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
     @if (isOpen()) {
       <!-- Backdrop with fade-in -->
       <div
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 animate-fade-in"
+        class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 animate-fade-in"
         (click)="close()"
         (keydown.enter)="close()"
         (keydown.space)="close()"
@@ -26,7 +26,7 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
         <!-- Dialog centered with fade-in and scale -->
         <div class="fixed inset-0 flex items-center justify-center p-4 z-50">
           <div
-            class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-fade-in-scale"
+            class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden animate-fade-in-scale"
             (click)="$event.stopPropagation()"
             (keydown)="$event.stopPropagation()"
             role="dialog"
@@ -62,7 +62,7 @@ import { KeyboardContextService } from '../../services/keyboard-context.service'
             </div>
 
             <!-- Content -->
-            <div class="px-6 py-4 overflow-y-auto">
+            <div class="px-6 py-4 overflow-y-auto min-h-0">
               @for (category of categories(); track category) {
                 <div class="mb-6 last:mb-0">
                   <h3
