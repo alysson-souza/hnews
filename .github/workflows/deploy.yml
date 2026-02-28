@@ -59,6 +59,10 @@ jobs:
         if: steps.changes.outputs.code_changed == 'true'
         run: npm test
 
+      - name: Functions tests (Vitest)
+        if: steps.changes.outputs.code_changed == 'true'
+        run: npm run test:functions
+
       - name: Generate build-time assets
         run: |
           npm run generate:version
