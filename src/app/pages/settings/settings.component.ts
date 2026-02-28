@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
@@ -127,7 +127,7 @@ import {
       }
 
       .setting-title {
-        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 block cursor-pointer;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block cursor-pointer;
       }
 
       .setting-description {
@@ -215,7 +215,7 @@ import {
       }
 
       .empty-title {
-        @apply text-xl font-semibold text-gray-900 dark:text-gray-100;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100;
       }
 
       .empty-description {
@@ -243,7 +243,7 @@ import {
       }
 
       .stats-title {
-        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center;
       }
 
       .stats-grid {
@@ -284,7 +284,7 @@ import {
       }
 
       .stat-value {
-        @apply text-2xl font-bold text-gray-900 dark:text-gray-100;
+        @apply text-xl font-bold text-gray-900 dark:text-gray-100;
       }
 
       .cache-actions-section {
@@ -296,7 +296,7 @@ import {
       }
 
       .actions-title {
-        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center;
       }
 
       .actions-description {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, computed, signal, inject, effect } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { highlightCodeBlocks } from '../../components/comment-text/code-highlight.transform';
@@ -64,7 +64,7 @@ import {
       }
 
       .info-text {
-        @apply text-gray-700 dark:text-gray-300 leading-relaxed;
+        @apply text-sm text-gray-700 dark:text-gray-300 leading-relaxed;
       }
 
       .instructions-list {
@@ -73,7 +73,7 @@ import {
       }
 
       .instruction-item {
-        @apply text-gray-700 dark:text-gray-300 relative;
+        @apply text-sm text-gray-700 dark:text-gray-300 relative;
       }
 
       .instruction-item::before {
@@ -94,12 +94,12 @@ import {
       }
 
       .code-block ::ng-deep code.hljs {
-        font-size: 0.75rem;
+        font-size: 0.625rem;
       }
 
       @media (min-width: 640px) {
         .code-block ::ng-deep code.hljs {
-          font-size: 0.8125rem;
+          font-size: 0.6875rem;
         }
       }
 
@@ -134,7 +134,7 @@ import {
       }
 
       .feature-item {
-        @apply flex items-start gap-3 text-gray-700 dark:text-gray-300;
+        @apply flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300;
       }
 
       .feature-icon {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, inject } from '@angular/core';
 
 import { ThemeService } from '../../../services/theme.service';
@@ -93,7 +93,7 @@ import {
       }
 
       .section-subtitle {
-        @apply text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-4;
       }
 
       .theme-options {
