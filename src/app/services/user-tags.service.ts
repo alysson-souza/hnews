@@ -18,18 +18,6 @@ export class UserTagsService {
   private readonly STORAGE_KEY = 'hn_user_tags';
   private tagsMap = signal<Map<string, UserTag>>(new Map());
 
-  private readonly DEFAULT_COLORS = [
-    '#EF4444', // red
-    '#F97316', // orange
-    '#EAB308', // yellow
-    '#22C55E', // green
-    '#14B8A6', // teal
-    '#3B82F6', // blue
-    '#8B5CF6', // violet
-    '#EC4899', // pink
-    '#6B7280', // gray
-  ];
-
   constructor() {
     this.loadTags();
   }
@@ -44,7 +32,9 @@ export class UserTagsService {
       if (stored) {
         const data: UserTag[] = JSON.parse(stored);
         const map = new Map<string, UserTag>();
-        data.forEach((tag) => map.set(tag.username, tag));
+        data.forEach((tag) => {
+          map.set(tag.username, tag);
+        });
         this.tagsMap.set(map);
       }
     } catch (error) {
@@ -74,7 +64,7 @@ export class UserTagsService {
     const userTag: UserTag = {
       username,
       tag,
-      color: color || existingTag?.color || this.getRandomColor(),
+      color: color || existingTag?.color || this.generateAccessibleColor(this.tagsMap().size),
       notes: resolvedNotes,
       createdAt: existingTag?.createdAt || now,
       updatedAt: now,
@@ -168,12 +158,71 @@ export class UserTagsService {
     };
   }
 
-  private getRandomColor(): string {
-    return this.DEFAULT_COLORS[Math.floor(Math.random() * this.DEFAULT_COLORS.length)];
+  private generateAccessibleColor(hueIndex: number): string {
+    const h = (hueIndex * 137.508) % 360;
+    const c = 0.1 + Math.random() * 0.07;
+
+    // Binary search for max L where contrast with white >= 4.5:1
+    let lo = 0.35;
+    let hi = 0.7;
+    for (let i = 0; i < 20; i++) {
+      const mid = (lo + hi) / 2;
+      if (this.contrastWithWhite(this.oklchToHex(mid, c, h)) >= 4.5) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+
+    return this.oklchToHex(lo, c, h);
+  }
+
+  private oklchToHex(l: number, c: number, h: number): string {
+    const hRad = (h * Math.PI) / 180;
+    const a = c * Math.cos(hRad);
+    const b = c * Math.sin(hRad);
+
+    // OKLAB → LMS (cube-root space)
+    const lms_l = l + 0.3963377774 * a + 0.2158037573 * b;
+    const lms_m = l - 0.1055613458 * a - 0.0638541728 * b;
+    const lms_s = l - 0.0894841775 * a - 1.291485548 * b;
+
+    // Cube to get LMS
+    const L = lms_l ** 3;
+    const M = lms_m ** 3;
+    const S = lms_s ** 3;
+
+    // LMS → linear RGB
+    const rLin = 4.0767416621 * L - 3.3077115913 * M + 0.2309699292 * S;
+    const gLin = -1.2684380046 * L + 2.6097574011 * M - 0.3413193965 * S;
+    const bLin = -0.0041960863 * L - 0.7034186147 * M + 1.707614701 * S;
+
+    // Linear RGB → sRGB (gamma)
+    const toSrgb = (v: number) =>
+      v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+
+    const r = Math.round(Math.max(0, Math.min(1, toSrgb(rLin))) * 255);
+    const g = Math.round(Math.max(0, Math.min(1, toSrgb(gLin))) * 255);
+    const bVal = Math.round(Math.max(0, Math.min(1, toSrgb(bLin))) * 255);
+
+    return `#${r.toString(16).padStart(2, '0').toUpperCase()}${g.toString(16).padStart(2, '0').toUpperCase()}${bVal.toString(16).padStart(2, '0').toUpperCase()}`;
+  }
+
+  private contrastWithWhite(hex: string): number {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+
+    const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+
+    return 1.05 / (luminance + 0.05);
   }
 
   exportTags(): string {
-    const tags = this.getAllTags();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const tags = this.getAllTags().map(({ color, ...rest }) => rest);
     return JSON.stringify(tags, null, 2);
   }
 
@@ -199,7 +248,7 @@ export class UserTagsService {
           ...tag,
           createdAt: tag.createdAt || Date.now(),
           updatedAt: tag.updatedAt || Date.now(),
-          color: tag.color || this.getRandomColor(),
+          color: this.generateAccessibleColor(newMap.size),
           notes: tag.notes || undefined,
         });
       });
