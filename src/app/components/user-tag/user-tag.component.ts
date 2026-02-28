@@ -211,6 +211,8 @@ export class UserTagComponent {
   onKeydown(event: KeyboardEvent): void {
     if (!this.editing()) return;
     if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
       this.cancelEdit();
     } else if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
       event.preventDefault();

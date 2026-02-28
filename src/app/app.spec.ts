@@ -1,6 +1,6 @@
 import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { Subject } from 'rxjs';
@@ -567,6 +567,23 @@ describe('App', () => {
 
       // After escape with a selected index, it should be cleared
       expect(app.keyboardNavService.selectedIndex()).toBeNull();
+    });
+
+    it('should not process events when tag popover is open', () => {
+      vi.spyOn(app['scrollService'], 'scrollToTop');
+
+      const popover = document.createElement('div');
+      popover.classList.add('tag-popover');
+      document.body.appendChild(popover);
+
+      const event = new KeyboardEvent('keydown', { key: 'Escape' });
+      const mockTarget = document.createElement('div');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
+
+      app.handleKeyboardEvent(event);
+
+      expect(app['scrollService'].scrollToTop).not.toHaveBeenCalled();
+      popover.remove();
     });
 
     it('should scroll to top on Escape when nothing else is active', () => {

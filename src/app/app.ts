@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import {
   Component,
   inject,
@@ -176,9 +176,12 @@ export class App implements OnInit {
       target.classList.contains('search-input-mobile') ||
       (target as HTMLInputElement).type === 'search';
 
-    // Don't process if help dialog is open
+    // Don't process if a dialog/popover is open
     const keyboardShortcuts = this.keyboardShortcuts();
     if (keyboardShortcuts && keyboardShortcuts.isOpen()) {
+      return;
+    }
+    if (document.querySelector('.tag-popover')) {
       return;
     }
 

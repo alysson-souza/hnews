@@ -359,6 +359,34 @@ describe('UserTagComponent', () => {
       expect(component.editing()).toBe(false);
     });
 
+    it('should call preventDefault and stopPropagation on Escape while editing', () => {
+      component.editing.set(true);
+      fixture.detectChanges();
+
+      const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
+
+      document.dispatchEvent(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
+    });
+
+    it('should not call preventDefault or stopPropagation on Escape while not editing', () => {
+      component.editing.set(false);
+      fixture.detectChanges();
+
+      const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
+
+      document.dispatchEvent(event);
+
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      expect(event.stopPropagation).not.toHaveBeenCalled();
+    });
+
     it('should save when Cmd+Enter is pressed', () => {
       const newTag = {
         username: 'testuser',

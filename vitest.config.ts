@@ -9,10 +9,6 @@ export default defineConfig({
     isolate: true,
     // Run tests in a single thread to avoid parallel localStorage access issues
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    maxWorkers: 1,
   },
 });
