@@ -76,31 +76,6 @@ describe('CommentHeaderComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('1 minute ago');
   });
 
-  it('forwards upvote click via (vote) to parent output', () => {
-    const upvoteBtnDe = fixture.debugElement.query(By.css('app-upvote-button button'));
-    expect(upvoteBtnDe).toBeDefined();
-
-    let emitted = false;
-    component.upvote.subscribe(() => (emitted = true));
-
-    (upvoteBtnDe.nativeElement as HTMLButtonElement).click();
-    expect(emitted).toBe(true);
-  });
-
-  it('sets aria-label on upvote button based on voted state', () => {
-    fixture.componentRef.setInput('voted', false);
-    fixture.detectChanges();
-    let upvoteBtn: HTMLButtonElement = fixture.debugElement.query(
-      By.css('app-upvote-button button'),
-    ).nativeElement;
-    expect(upvoteBtn.getAttribute('aria-label')).toBe('Upvote comment');
-
-    fixture.componentRef.setInput('voted', true);
-    fixture.detectChanges();
-    upvoteBtn = fixture.debugElement.query(By.css('app-upvote-button button')).nativeElement;
-    expect(upvoteBtn.getAttribute('aria-label')).toBe('Already upvoted comment');
-  });
-
   it('renders replies counter only when showExpand=true', () => {
     fixture.componentRef.setInput('showExpand', false);
     fixture.detectChanges();

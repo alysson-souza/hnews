@@ -78,7 +78,6 @@ describe('ItemKeyboardNavigationService', () => {
       'item.toggleExpand',
       expect.any(Function),
     );
-    expect(commandRegistrySpy.register).toHaveBeenCalledWith('item.upvote', expect.any(Function));
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.expandReplies',
       expect.any(Function),

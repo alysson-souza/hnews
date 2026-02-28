@@ -52,7 +52,6 @@ describe('KeyboardShortcutConfigService', () => {
       expect(sidebarKeys).toContain('j'); // Next comment
       expect(sidebarKeys).toContain('k'); // Previous comment
       expect(sidebarKeys).toContain('c'); // Toggle collapse
-      expect(sidebarKeys).toContain('u'); // Upvote
       expect(sidebarKeys).toContain('r'); // Expand replies
       expect(sidebarKeys).toContain('l'); // View thread
       expect(sidebarKeys).toContain('h'); // Go back
@@ -97,20 +96,12 @@ describe('KeyboardShortcutConfigService', () => {
 
     it('should return context-specific shortcuts', () => {
       const defaultShortcut = service.getShortcut('c', 'default');
-      const sidebarShortcut = service.getShortcut('u', 'sidebar');
 
       expect(defaultShortcut).toBeDefined();
       expect(defaultShortcut?.commandId).toBe('story.openComments');
-
-      expect(sidebarShortcut).toBeDefined();
-      expect(sidebarShortcut?.commandId).toBe('sidebar.upvote');
     });
 
     it('should not return shortcuts from other contexts', () => {
-      // 'u' (upvote) is sidebar-only
-      const upvoteInDefault = service.getShortcut('u', 'default');
-      expect(upvoteInDefault).toBeUndefined();
-
       // 'a' (toggle actions) is default-only
       const actionsInSidebar = service.getShortcut('a', 'sidebar');
       expect(actionsInSidebar).toBeUndefined();

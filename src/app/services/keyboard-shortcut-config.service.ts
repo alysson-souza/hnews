@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, inject } from '@angular/core';
 import { PwaUpdateService } from './pwa-update.service';
 
@@ -180,13 +180,6 @@ export class KeyboardShortcutConfigService {
       commandId: 'sidebar.toggleExpand',
     },
     {
-      key: 'u',
-      contexts: ['sidebar'],
-      description: 'Upvote comment',
-      category: 'Comment Actions',
-      commandId: 'sidebar.upvote',
-    },
-    {
       key: 'r',
       contexts: ['sidebar'],
       description: 'Expand comment replies',
@@ -237,13 +230,6 @@ export class KeyboardShortcutConfigService {
       description: 'Toggle comment collapse',
       category: 'Comment Actions',
       commandId: 'item.toggleExpand',
-    },
-    {
-      key: 'u',
-      contexts: ['item-page'],
-      description: 'Upvote comment',
-      category: 'Comment Actions',
-      commandId: 'item.upvote',
     },
     {
       key: 'r',

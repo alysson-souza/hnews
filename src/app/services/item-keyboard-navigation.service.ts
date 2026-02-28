@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Location } from '@angular/common';
 import { BaseCommentNavigationService } from './base-comment-navigation.service';
@@ -62,7 +62,6 @@ export class ItemKeyboardNavigationService
     this.commandRegistry.register('item.nextComment', () => this.selectNext());
     this.commandRegistry.register('item.previousComment', () => this.selectPrevious());
     this.commandRegistry.register('item.toggleExpand', () => this.toggleExpandSelected());
-    this.commandRegistry.register('item.upvote', () => this.upvoteSelected());
     this.commandRegistry.register('item.expandReplies', () => this.expandRepliesSelected());
     this.commandRegistry.register('item.viewThread', () => this.viewThreadSelected());
     this.commandRegistry.register('item.back', () => this.goBack());

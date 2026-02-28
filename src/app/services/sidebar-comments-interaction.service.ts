@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
-export type CommentActionType = 'upvote' | 'expand' | 'collapse' | 'viewThread' | 'expandReplies';
+export type CommentActionType = 'expand' | 'collapse' | 'viewThread' | 'expandReplies';
 
 export interface CommentAction {
   commentId: number;

@@ -80,10 +80,6 @@ describe('SidebarKeyboardNavigationService', () => {
         expect.any(Function),
       );
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
-        'sidebar.upvote',
-        expect.any(Function),
-      );
-      expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.expandReplies',
         expect.any(Function),
       );
@@ -143,12 +139,6 @@ describe('SidebarKeyboardNavigationService', () => {
       service.selectedCommentId.set(123);
       service.toggleExpandSelected();
       expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(123, 'collapse');
-    });
-
-    it('should dispatch upvote action', () => {
-      service.selectedCommentId.set(123);
-      service.upvoteSelected();
-      expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(123, 'upvote');
     });
 
     it('should dispatch expandReplies action', () => {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import {
   ChangeDetectionStrategy,
   Component,
@@ -22,7 +22,6 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { LazyLoadCardComponent } from '../lazy-load-card/lazy-load-card.component';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
-import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
 import { CommentStateService } from '../../services/comment-state.service';
 import { SidebarService } from '../../services/sidebar.service';
@@ -62,7 +61,6 @@ import { Router } from '@angular/router';
           <app-comment-header
             [by]="comment()!.by || ''"
             [timestamp]="comment()!.time"
-            [voted]="hasVoted()"
             [repliesCount]="totalRepliesCount()"
             [showExpand]="showExpandButton()"
             [loadingReplies]="loadingReplies()"
@@ -70,7 +68,6 @@ import { Router } from '@angular/router';
             [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
             [storyAuthor]="storyAuthor()"
             [isStandalonePage]="isStandalonePage()"
-            (upvote)="upvoteComment()"
             (expand)="expandReplies()"
           />
         </div>
@@ -225,7 +222,6 @@ export class CommentThread implements OnInit {
   commentLoaded = signal(false);
 
   private repliesLoader = inject(CommentRepliesLoaderService);
-  private voteStore = inject(CommentVoteStoreService);
 
   readonly replies = this.repliesLoader.replies;
   readonly repliesLoaded = this.repliesLoader.repliesLoaded;
@@ -233,15 +229,6 @@ export class CommentThread implements OnInit {
   readonly loadingMore = this.repliesLoader.loadingMore;
   readonly hasMoreReplies = this.repliesLoader.hasMore;
   private readonly currentPage = this.repliesLoader.currentPage;
-
-  hasVoted = computed(() => {
-    const current = this.comment();
-    if (!current) {
-      return false;
-    }
-
-    return this.voteStore.votedCommentIds().has(current.id);
-  });
 
   totalRepliesCount = computed(() => {
     return this.comment()?.kids?.length || 0;
@@ -327,9 +314,6 @@ export class CommentThread implements OnInit {
         switch (action.action) {
           case 'collapse':
             this.toggleCollapse();
-            break;
-          case 'upvote':
-            this.upvoteComment();
             break;
           case 'expandReplies':
             this.expandReplies();
@@ -460,23 +444,6 @@ export class CommentThread implements OnInit {
 
     const targetPage = Math.floor((totalReplies - 1) / this.repliesLoader.pageSize);
     this.repliesLoader.loadUpToPage(targetPage);
-  }
-
-  upvoteComment() {
-    const current = this.comment();
-    if (!current) {
-      return;
-    }
-
-    this.voteStore.vote(current.id);
-  }
-
-  hasVotedById(id: number): boolean {
-    return this.voteStore.votedCommentIds().has(id);
-  }
-
-  upvoteById(id: number) {
-    this.voteStore.vote(id);
   }
 
   getIndentClass(): string {

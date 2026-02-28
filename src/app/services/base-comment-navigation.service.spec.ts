@@ -79,11 +79,6 @@ describe('BaseCommentNavigationService', () => {
       expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'collapse');
     });
 
-    it('should dispatch upvote action', () => {
-      service.upvoteSelected();
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'upvote');
-    });
-
     it('should dispatch expandReplies action', () => {
       service.expandRepliesSelected();
       expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'expandReplies');
@@ -97,7 +92,6 @@ describe('BaseCommentNavigationService', () => {
     it('should not dispatch actions if no comment is selected', () => {
       service.selectedCommentId.set(null);
       service.toggleExpandSelected();
-      service.upvoteSelected();
       service.expandRepliesSelected();
       service.viewThreadSelected();
       expect(interactionServiceSpy.dispatchAction).not.toHaveBeenCalled();

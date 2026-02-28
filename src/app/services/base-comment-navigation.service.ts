@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { SidebarCommentsInteractionService } from './sidebar-comments-interaction.service';
 import { CommandRegistryService } from './command-registry.service';
@@ -205,16 +205,6 @@ export abstract class BaseCommentNavigationService {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null) {
       this.interactionService.dispatchAction(selectedId, 'collapse');
-    }
-  }
-
-  /**
-   * Upvote the selected comment
-   */
-  upvoteSelected(): void {
-    const selectedId = this.selectedCommentId();
-    if (selectedId !== null) {
-      this.interactionService.dispatchAction(selectedId, 'upvote');
     }
   }
 

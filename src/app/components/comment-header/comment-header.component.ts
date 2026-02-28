@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, inject, computed, output, input, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { UpvoteButtonComponent } from '../upvote-button/upvote-button.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { RepliesCounterComponent } from '../replies-counter/replies-counter.component';
@@ -14,21 +13,9 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 @Component({
   selector: 'app-comment-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    UpvoteButtonComponent,
-    UserTagComponent,
-    RelativeTimePipe,
-    RepliesCounterComponent,
-    OPBadgeComponent,
-  ],
+  imports: [UserTagComponent, RelativeTimePipe, RepliesCounterComponent, OPBadgeComponent],
   template: `
     <div class="comment-header">
-      <app-upvote-button
-        [voted]="voted()"
-        (vote)="upvote.emit()"
-        [ariaLabel]="voted() ? 'Already upvoted comment' : 'Upvote comment'"
-      />
-
       @if (by()) {
         <app-user-tag [username]="by()!" />
         @if (isOP()) {
@@ -94,7 +81,6 @@ export class CommentHeaderComponent {
 
   readonly by = input<string>();
   readonly timestamp = input.required<number>();
-  readonly voted = input(false);
   readonly repliesCount = input(0);
   readonly showExpand = input(false);
   readonly loadingReplies = input(false);
@@ -103,7 +89,6 @@ export class CommentHeaderComponent {
   readonly storyAuthor = input<string>();
   readonly isStandalonePage = input(false);
 
-  readonly upvote = output<void>();
   readonly expand = output<void>();
 
   isOP = computed(() => {

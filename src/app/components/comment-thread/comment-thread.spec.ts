@@ -11,7 +11,6 @@ import { signal } from '@angular/core';
 import { CacheManagerService } from '../../services/cache-manager.service';
 import { HackernewsService } from '../../services/hackernews.service';
 import { HNItem } from '../../models/hn';
-import { CommentVoteStoreService } from '../../services/comment-vote-store.service';
 import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
 import { CommentStateService, CommentStateEntry } from '../../services/comment-state.service';
 import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
@@ -28,27 +27,6 @@ class MockCacheManagerService {
   }
   getWithSWR() {
     return Promise.resolve(null);
-  }
-}
-
-class MockCommentVoteStoreService {
-  private readonly state = signal<Set<number>>(new Set());
-  readonly votedCommentIds = this.state.asReadonly();
-
-  vote = vi.fn().mockImplementation((id: number) => {
-    this.state.update((current) => {
-      if (current.has(id)) {
-        return current;
-      }
-
-      const next = new Set(current);
-      next.add(id);
-      return next;
-    });
-  });
-
-  setVoted(ids: number[]) {
-    this.state.set(new Set(ids));
   }
 }
 
@@ -120,7 +98,6 @@ describe('CommentThread', () => {
   let component: CommentThread;
   let fixture: ComponentFixture<CommentThread>;
   let mockHnService: MockedObject<HackernewsService>;
-  let mockVoteStore: MockCommentVoteStoreService;
   let mockRepliesLoader: MockCommentRepliesLoaderService;
   let mockCommentStateService: MockCommentStateService;
 
@@ -140,7 +117,6 @@ describe('CommentThread', () => {
     mockHnService = {
       getItem: vi.fn(),
     } as unknown as MockedObject<HackernewsService>;
-    mockVoteStore = new MockCommentVoteStoreService();
     mockCommentStateService = new MockCommentStateService();
 
     TestBed.overrideComponent(CommentThread, {
@@ -159,7 +135,6 @@ describe('CommentThread', () => {
         provideRouter([]), // Provide an empty router configuration
         { provide: HackernewsService, useValue: mockHnService },
         { provide: CacheManagerService, useClass: MockCacheManagerService },
-        { provide: CommentVoteStoreService, useValue: mockVoteStore },
         { provide: CommentStateService, useValue: mockCommentStateService },
         {
           provide: SidebarCommentsInteractionService,
@@ -192,34 +167,7 @@ describe('CommentThread', () => {
     expect(component).toBeDefined();
   });
 
-  describe('Constructor', () => {
-    it('should reflect existing votes exposed by the vote store', () => {
-      mockVoteStore.setVoted([123, 456]);
-
-      component.comment.set(mockComment);
-
-      expect(component.hasVoted()).toBe(true);
-    });
-  });
-
   describe('Computed Properties', () => {
-    describe('hasVoted', () => {
-      it('should return false when comment is not loaded', () => {
-        expect(component.hasVoted()).toBe(false);
-      });
-
-      it('should return false when comment is not in votedComments', () => {
-        component.comment.set(mockComment);
-        expect(component.hasVoted()).toBe(false);
-      });
-
-      it('should return true when comment is in votedComments', () => {
-        component.comment.set(mockComment);
-        mockVoteStore.setVoted([123]);
-        expect(component.hasVoted()).toBe(true);
-      });
-    });
-
     describe('totalRepliesCount', () => {
       it('should return 0 when comment is not loaded', () => {
         expect(component.totalRepliesCount()).toBe(0);
@@ -491,44 +439,6 @@ describe('CommentThread', () => {
     });
   });
 
-  describe('upvoteComment', () => {
-    it('should delegate voting to the vote store when a comment is present', () => {
-      component.comment.set(mockComment);
-
-      component.upvoteComment();
-
-      expect(mockVoteStore.vote).toHaveBeenCalledWith(mockComment.id);
-    });
-
-    it('should not call the vote store when no comment is loaded', () => {
-      component.comment.set(null);
-
-      component.upvoteComment();
-
-      expect(mockVoteStore.vote).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('hasVotedById', () => {
-    it('should return false when id is not in the vote store', () => {
-      mockVoteStore.setVoted([123, 456]);
-      expect(component.hasVotedById(789)).toBe(false);
-    });
-
-    it('should return true when id is in the vote store', () => {
-      mockVoteStore.setVoted([123, 456]);
-      expect(component.hasVotedById(456)).toBe(true);
-    });
-  });
-
-  describe('upvoteById', () => {
-    it('should delegate voting to the vote store', () => {
-      component.upvoteById(456);
-
-      expect(mockVoteStore.vote).toHaveBeenCalledWith(456);
-    });
-  });
-
   describe('template integration', () => {
     const buildReply = (id: number): HNItem => ({
       id,
@@ -743,12 +653,6 @@ describe('CommentThread', () => {
       vi.spyOn(component, 'toggleCollapse');
       actionSubject.next({ commentId: 999, action: 'collapse' });
       expect(component.toggleCollapse).not.toHaveBeenCalled();
-    });
-
-    it('should upvote when upvote action is received', () => {
-      vi.spyOn(component, 'upvoteComment');
-      actionSubject.next({ commentId: 123, action: 'upvote' });
-      expect(component.upvoteComment).toHaveBeenCalled();
     });
 
     it('should expand replies when expandReplies action is received', () => {

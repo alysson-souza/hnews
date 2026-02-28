@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, inject } from '@angular/core';
 import { BaseCommentNavigationService } from './base-comment-navigation.service';
 import { SidebarService } from './sidebar.service';
@@ -30,7 +30,6 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     this.commandRegistry.register('sidebar.nextComment', () => this.selectNext());
     this.commandRegistry.register('sidebar.previousComment', () => this.selectPrevious());
     this.commandRegistry.register('sidebar.toggleExpand', () => this.toggleExpandSelected());
-    this.commandRegistry.register('sidebar.upvote', () => this.upvoteSelected());
     this.commandRegistry.register('sidebar.expandReplies', () => this.expandRepliesSelected());
     this.commandRegistry.register('sidebar.viewThread', () => this.viewThreadSelected());
     this.commandRegistry.register('sidebar.back', () => this.goBack());
