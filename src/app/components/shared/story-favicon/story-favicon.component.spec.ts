@@ -35,7 +35,23 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'Google');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('https://unavatar.io/google.com');
+    expect(component.faviconUrl()).toBe('https://unavatar.io/google.com?fallback=false');
+  });
+
+  it('should strip subdomains for favicon lookup', () => {
+    fixture.componentRef.setInput('url', 'https://edition.cnn.com/2026/02/25/politics/some-story');
+    fixture.componentRef.setInput('altText', 'CNN');
+    fixture.detectChanges();
+
+    expect(component.faviconUrl()).toBe('https://unavatar.io/cnn.com?fallback=false');
+  });
+
+  it('should preserve compound country-code TLDs (co.uk)', () => {
+    fixture.componentRef.setInput('url', 'https://news.bbc.co.uk/some/path');
+    fixture.componentRef.setInput('altText', 'BBC');
+    fixture.detectChanges();
+
+    expect(component.faviconUrl()).toBe('https://unavatar.io/bbc.co.uk?fallback=false');
   });
 
   it('should return default asset if no domain found', () => {
