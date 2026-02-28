@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommandRegistryService } from './command-registry.service';
@@ -186,19 +186,22 @@ export class KeyboardNavigationService {
 
   private openSelectedStoryFullPage(): void {
     const selectedIndex = this.selectedIndex();
-    if (selectedIndex !== null) {
-      const element = document.querySelector(
-        `[data-story-index="${selectedIndex}"] .story-link-trigger`,
-      ) as HTMLAnchorElement;
-      if (element && element.href && element.href.includes('/item/')) {
-        const match = element.href.match(/\/item\/(\d+)/);
-        if (match && match[1]) {
-          this.pushNavigationState();
-          this.router.navigate(['/item', match[1]]);
-        }
-      } else {
-        element?.click();
-      }
+    if (selectedIndex === null) return;
+
+    const linkTrigger = document.querySelector(
+      `[data-story-index="${selectedIndex}"] .story-link-trigger`,
+    );
+    if (!linkTrigger) return;
+
+    // .story-link-trigger may be on an <app-story-link> host (display: contents)
+    // or a direct <a> tag — resolve to the actual anchor element
+    const anchor =
+      linkTrigger.tagName === 'A'
+        ? (linkTrigger as HTMLAnchorElement)
+        : (linkTrigger.querySelector('a') as HTMLAnchorElement);
+
+    if (anchor?.href) {
+      window.open(anchor.href, '_blank', 'noopener');
     }
   }
 
