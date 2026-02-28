@@ -69,9 +69,9 @@ import { Router } from '@angular/router';
             [storyAuthor]="storyAuthor()"
             [isStandalonePage]="isStandalonePage()"
             [showCollapseToggle]="true"
-            [collapsed]="isCollapsed()"
+            [collapsed]="isCollapsed() || showExpandButton()"
             (expand)="expandReplies()"
-            (toggleCollapse)="toggleCollapse()"
+            (toggleCollapse)="onChevronToggle()"
           />
         </div>
         <div body>
@@ -395,6 +395,14 @@ export class CommentThread implements OnInit {
         this.commentStateService.setRepliesExpanded(commentId, true);
         this.commentStateService.setLoadedPages(commentId, 1);
       }
+    }
+  }
+
+  onChevronToggle() {
+    if (this.showExpandButton()) {
+      this.expandReplies();
+    } else {
+      this.toggleCollapse();
     }
   }
 
