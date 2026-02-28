@@ -347,7 +347,10 @@ export function injectMeta(
   const description = escapeAttr(meta.description);
   const type = meta.type;
 
-  const isDefaultImage = meta.image === absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL);
+  const defaultOgImage = env.DEFAULT_OG_IMAGE
+    ? absoluteUrl(env.DEFAULT_OG_IMAGE, env.SITE_URL)
+    : null;
+  const isDefaultImage = defaultOgImage !== null && meta.image === defaultOgImage;
   const twitterCard = isDefaultImage ? 'summary' : 'summary_large_image';
 
   const imageTags = meta.image
