@@ -2,6 +2,8 @@
 // Copyright (C) 2026 Alysson Souza
 import { Component, inject, computed, output, input, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { solarAltArrowDownLinear, solarAltArrowRightLinear } from '@ng-icons/solar-icons/linear';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { RepliesCounterComponent } from '../replies-counter/replies-counter.component';
@@ -13,9 +15,31 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
 @Component({
   selector: 'app-comment-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UserTagComponent, RelativeTimePipe, RepliesCounterComponent, OPBadgeComponent],
+  imports: [
+    UserTagComponent,
+    RelativeTimePipe,
+    RepliesCounterComponent,
+    OPBadgeComponent,
+    NgIconComponent,
+  ],
+  viewProviders: [provideIcons({ solarAltArrowDownLinear, solarAltArrowRightLinear })],
   template: `
     <div class="comment-header">
+      @if (showCollapseToggle()) {
+        <button
+          type="button"
+          class="collapse-toggle"
+          (click)="onToggleCollapse($event)"
+          [attr.aria-label]="collapsed() ? 'Expand comment' : 'Collapse comment'"
+          [attr.aria-expanded]="!collapsed()"
+        >
+          <ng-icon
+            [name]="collapsed() ? 'solarAltArrowRightLinear' : 'solarAltArrowDownLinear'"
+            class="collapse-icon"
+            aria-hidden="true"
+          />
+        </button>
+      }
       @if (by()) {
         <app-user-tag [username]="by()!" />
         @if (isOP()) {
@@ -58,6 +82,19 @@ import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navi
       .time-text {
         @apply text-gray-500 dark:text-slate-500;
       }
+      .collapse-toggle {
+        @apply inline-flex items-center justify-center;
+        @apply rounded-md;
+        @apply text-gray-500 dark:text-slate-400;
+        @apply hover:bg-gray-100 dark:hover:bg-slate-700;
+        @apply transition-colors duration-150;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply cursor-pointer;
+        @apply p-0.5 -ml-1;
+      }
+      .collapse-icon {
+        @apply text-sm;
+      }
       .view-thread-inline {
         @apply inline-flex items-center justify-center;
         @apply rounded-md;
@@ -88,14 +125,22 @@ export class CommentHeaderComponent {
   readonly hasChildren = input(false);
   readonly storyAuthor = input<string>();
   readonly isStandalonePage = input(false);
+  readonly collapsed = input(false);
+  readonly showCollapseToggle = input(false);
 
   readonly expand = output<void>();
+  readonly toggleCollapse = output<void>();
 
   isOP = computed(() => {
     const storyAuthor = this.storyAuthor();
     const by = this.by();
     return by && storyAuthor && by === storyAuthor;
   });
+
+  onToggleCollapse(event: Event): void {
+    event.stopPropagation();
+    this.toggleCollapse.emit();
+  }
 
   onViewThread(event: Event): void {
     event.stopPropagation();

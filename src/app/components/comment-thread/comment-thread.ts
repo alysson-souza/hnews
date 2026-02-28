@@ -68,7 +68,10 @@ import { Router } from '@angular/router';
             [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
             [storyAuthor]="storyAuthor()"
             [isStandalonePage]="isStandalonePage()"
+            [showCollapseToggle]="true"
+            [collapsed]="isCollapsed()"
             (expand)="expandReplies()"
+            (toggleCollapse)="toggleCollapse()"
           />
         </div>
         <div body>
