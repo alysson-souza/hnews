@@ -35,8 +35,7 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'Google');
     fixture.detectChanges();
 
-    const expectedUrl = 'https://unavatar.io/google.com?fallback=false';
-    expect(component.faviconUrl()).toBe(expectedUrl);
+    expect(component.faviconUrl()).toBe('https://unavatar.io/google.com');
   });
 
   it('should return default asset if no domain found', () => {
@@ -89,5 +88,61 @@ describe('StoryFaviconComponent', () => {
     expect(img).toBeFalsy();
     expect(letter).toBeTruthy();
     expect(letter.textContent.trim()).toBe('E');
+  });
+
+  it('should show letter fallback via DOM error event on img', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    const img = fixture.nativeElement.querySelector('img');
+    img.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('div')).toBeTruthy();
+  });
+
+  it('should reset error state when url input changes', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    component.handleError();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+
+    fixture.componentRef.setInput('url', 'https://github.com');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
+  });
+
+  it('should allow favicon to load after error recovery on new url', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    // Error on URL A
+    component.handleError();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+
+    // Switch to URL B — img should show
+    fixture.componentRef.setInput('url', 'https://github.com');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+
+    // Error on URL B
+    component.handleError();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+
+    // Switch back to URL A — img should show again
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
   });
 });
