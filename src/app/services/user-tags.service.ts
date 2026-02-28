@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Injectable, signal } from '@angular/core';
 
 export interface UserTag {
   username: string;
   tag: string;
   color?: string;
+  notes?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -64,20 +65,39 @@ export class UserTagsService {
     }
   }
 
-  setTag(username: string, tag: string, color?: string): void {
+  setTag(username: string, tag: string, color?: string, notes?: string): void {
     const now = Date.now();
     const existingTag = this.tagsMap().get(username);
+
+    const resolvedNotes = notes === undefined ? existingTag?.notes : notes.trim() || undefined;
 
     const userTag: UserTag = {
       username,
       tag,
-      color: color || this.getRandomColor(),
+      color: color || existingTag?.color || this.getRandomColor(),
+      notes: resolvedNotes,
       createdAt: existingTag?.createdAt || now,
       updatedAt: now,
     };
 
     const newMap = new Map(this.tagsMap());
     newMap.set(username, userTag);
+    this.tagsMap.set(newMap);
+    this.saveTags();
+  }
+
+  setNotes(username: string, notes: string): void {
+    const existingTag = this.tagsMap().get(username);
+    if (!existingTag) return;
+
+    const updatedTag: UserTag = {
+      ...existingTag,
+      notes: notes.trim() || undefined,
+      updatedAt: Date.now(),
+    };
+
+    const newMap = new Map(this.tagsMap());
+    newMap.set(username, updatedTag);
     this.tagsMap.set(newMap);
     this.saveTags();
   }
@@ -113,7 +133,11 @@ export class UserTagsService {
       if (!tag.username || !tag.tag) {
         return false;
       }
-      return tag.username.toLowerCase().includes(query) || tag.tag.toLowerCase().includes(query);
+      return (
+        tag.username.toLowerCase().includes(query) ||
+        tag.tag.toLowerCase().includes(query) ||
+        (tag.notes?.toLowerCase().includes(query) ?? false)
+      );
     });
   }
 
@@ -176,6 +200,7 @@ export class UserTagsService {
           createdAt: tag.createdAt || Date.now(),
           updatedAt: tag.updatedAt || Date.now(),
           color: tag.color || this.getRandomColor(),
+          notes: tag.notes || undefined,
         });
       });
 

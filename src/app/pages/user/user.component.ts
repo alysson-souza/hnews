@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
 import { DecimalPipe } from '@angular/common';
@@ -15,6 +15,7 @@ import { AppButtonComponent } from '../../components/shared/app-button/app-butto
 import { SidebarService } from '../../services/sidebar.service';
 import { DeviceService } from '../../services/device.service';
 import { ScrollService } from '../../services/scroll.service';
+import { UserTagsService } from '../../services/user-tags.service';
 import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
 import { getDomain } from '../../services/domain.utils';
 import {
@@ -100,6 +101,12 @@ import { StoryLinkComponent } from '../../components/shared/story-link/story-lin
               <div class="space-y-2">
                 <p class="section-label">About</p>
                 <app-comment-text [html]="user()!.about || ''" />
+              </div>
+            }
+            @if (userTag()?.notes) {
+              <div class="space-y-2 mt-4">
+                <p class="section-label">Note</p>
+                <p class="user-notes">{{ userTag()!.notes }}</p>
               </div>
             }
           </app-card>
@@ -246,6 +253,9 @@ import { StoryLinkComponent } from '../../components/shared/story-link/story-lin
       .muted {
         @apply text-sm text-gray-500 dark:text-gray-400;
       }
+      .user-notes {
+        @apply text-sm italic text-gray-600 dark:text-gray-400;
+      }
 
       /* Stats */
       .stat-box {
@@ -327,9 +337,15 @@ export class UserComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private hnService = inject(HackernewsService);
+  private userTagsService = inject(UserTagsService);
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
   private scrollService = inject(ScrollService);
+
+  userTag = computed(() => {
+    const u = this.user();
+    return u ? this.userTagsService.getTag(u.id) : undefined;
+  });
 
   user = signal<HNUser | null>(null);
   submissions = signal<HNItem[]>([]);

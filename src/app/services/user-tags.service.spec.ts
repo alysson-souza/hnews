@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { UserTagsService } from './user-tags.service';
 
@@ -170,5 +170,122 @@ describe('UserTagsService', () => {
     expect(result.currentPage).toBe(1);
     expect(result.totalPages).toBe(1);
     expect(result.tags).toEqual([]);
+  });
+
+  describe('notes support', () => {
+    it('should store and retrieve notes', () => {
+      service.setTag('alice', 'Expert', undefined, 'Great Rust contributor');
+
+      expect(service.getTag('alice')?.notes).toBe('Great Rust contributor');
+    });
+
+    it('should preserve existing notes when updating tag without notes arg', () => {
+      service.setTag('alice', 'Expert', undefined, 'Great Rust contributor');
+      service.setTag('alice', 'Guru');
+
+      expect(service.getTag('alice')?.tag).toBe('Guru');
+      expect(service.getTag('alice')?.notes).toBe('Great Rust contributor');
+    });
+
+    it('should clear notes when empty string is passed', () => {
+      service.setTag('alice', 'Expert', undefined, 'Great Rust contributor');
+      service.setTag('alice', 'Expert', undefined, '');
+
+      expect(service.getTag('alice')?.notes).toBeUndefined();
+    });
+
+    it('tags without notes should still work (backwards compat)', () => {
+      // Seed old-format data (no notes key) via importTags
+      const oldData = JSON.stringify([
+        {
+          username: 'old-user',
+          tag: 'OG',
+          color: '#EF4444',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
+
+      service.importTags(oldData);
+
+      expect(service.getTag('old-user')?.tag).toBe('OG');
+      expect(service.getTag('old-user')?.notes).toBeUndefined();
+    });
+  });
+
+  describe('setNotes', () => {
+    it('should update notes via setNotes', () => {
+      service.setTag('alice', 'Expert');
+      service.setNotes('alice', 'Added via setNotes');
+
+      expect(service.getTag('alice')?.notes).toBe('Added via setNotes');
+    });
+
+    it('should be no-op if user has no tag', () => {
+      service.setNotes('nonexistent', 'note');
+
+      expect(service.getTag('nonexistent')).toBeUndefined();
+    });
+
+    it('should clear notes when empty string is passed', () => {
+      service.setTag('alice', 'Expert', undefined, 'Some note');
+      service.setNotes('alice', '');
+
+      expect(service.getTag('alice')?.notes).toBeUndefined();
+    });
+  });
+
+  describe('notes in filter and import/export', () => {
+    it('getFilteredTags should match within notes text', () => {
+      service.setTag('alice', 'Expert', undefined, 'Rust and WebAssembly');
+      service.setTag('bob', 'Dev');
+
+      const filtered = service.getFilteredTags('WebAssembly');
+
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].username).toBe('alice');
+    });
+
+    it('should import tags with notes', () => {
+      const json = JSON.stringify([
+        {
+          username: 'imported-user',
+          tag: 'Imported',
+          color: '#EF4444',
+          notes: 'Has notes',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
+
+      service.importTags(json);
+
+      expect(service.getTag('imported-user')?.notes).toBe('Has notes');
+    });
+
+    it('should import tags without notes (backwards compat)', () => {
+      const json = JSON.stringify([
+        {
+          username: 'old-import',
+          tag: 'Old',
+          color: '#EF4444',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
+
+      service.importTags(json);
+
+      expect(service.getTag('old-import')?.tag).toBe('Old');
+      expect(service.getTag('old-import')?.notes).toBeUndefined();
+    });
+
+    it('should export tags with notes', () => {
+      service.setTag('alice', 'Expert', undefined, 'Great contributor');
+
+      const exported = JSON.parse(service.exportTags());
+
+      expect(exported[0].notes).toBe('Great contributor');
+    });
   });
 });

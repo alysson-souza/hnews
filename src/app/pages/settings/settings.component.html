@@ -176,7 +176,7 @@
               type="search"
               [ngModel]="searchQuery()"
               (ngModelChange)="onSearchChange($event)"
-              placeholder="Search by username or tag..."
+              placeholder="Search by username, tag, or notes..."
               aria-label="Search user tags"
               class="search-input"
               data-lpignore="true"
@@ -206,9 +206,9 @@
           <div class="tags-list">
             @for (tag of paginatedTags().tags; track tag.username) {
               <div class="tag-item-modern">
+                <ng-icon name="solarUserLinear" class="user-icon" />
                 <div class="tag-content">
                   <div class="tag-user-info">
-                    <ng-icon name="solarUserLinear" class="user-icon" />
                     <a
                       class="tag-username"
                       [routerLink]="['/user', tag.username]"
@@ -221,18 +221,61 @@
                       {{ tag.tag }}
                     </span>
                   </div>
+                  @if (tag.notes && editingNotesFor() !== tag.username) {
+                    <p class="tag-notes">{{ tag.notes }}</p>
+                  }
+                  @if (editingNotesFor() === tag.username) {
+                    <div class="tag-notes-editor">
+                      <textarea
+                        [value]="editingNotesValue()"
+                        (input)="editingNotesValue.set($any($event.target).value)"
+                        (keyup.escape)="editingNotesFor.set(null)"
+                        class="tag-notes-input app-input app-input-xs"
+                        rows="2"
+                        placeholder="Add a note..."
+                        [attr.aria-label]="'Notes for ' + tag.username"
+                      ></textarea>
+                      <div class="tag-notes-actions">
+                        <button
+                          (click)="saveTagNotes(tag.username)"
+                          class="tag-notes-save"
+                          type="button"
+                        >
+                          Save
+                        </button>
+                        <button
+                          (click)="editingNotesFor.set(null)"
+                          class="tag-notes-cancel"
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  }
                 </div>
-                <button
-                  (click)="removeTag(tag.username)"
-                  class="tag-remove-modern"
-                  type="button"
-                  [title]="'Remove tag for ' + tag.username"
-                  [attr.aria-label]="'Remove tag for ' + tag.username"
-                  (keydown.enter)="removeTag(tag.username)"
-                  (keydown.space)="removeTag(tag.username)"
-                >
-                  <ng-icon name="solarCloseCircleLinear" />
-                </button>
+                <div class="tag-actions">
+                  <button
+                    (click)="editTagNotes(tag)"
+                    class="tag-notes-btn"
+                    type="button"
+                    [title]="'Edit notes for ' + tag.username"
+                    [attr.aria-label]="'Edit notes for ' + tag.username"
+                  >
+                    <ng-icon name="solarPen2Linear" />
+                  </button>
+                  <button
+                    (click)="removeTag(tag.username)"
+                    class="tag-remove-modern"
+                    type="button"
+                    [title]="'Remove tag for ' + tag.username"
+                    [attr.aria-label]="'Remove tag for ' + tag.username"
+                    (keydown.enter)="removeTag(tag.username)"
+                    (keydown.space)="removeTag(tag.username)"
+                  >
+                    <ng-icon name="solarCloseCircleLinear" />
+                  </button>
+                </div>
               </div>
             }
           </div>

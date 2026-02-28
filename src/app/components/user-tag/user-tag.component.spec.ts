@@ -1,6 +1,6 @@
-import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserTagComponent } from './user-tag.component';
 import { UserTagsService } from '../../services/user-tags.service';
@@ -22,6 +22,7 @@ describe('UserTagComponent', () => {
       getTag: vi.fn(),
       setTag: vi.fn(),
       removeTag: vi.fn(),
+      setNotes: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -164,7 +165,12 @@ describe('UserTagComponent', () => {
 
       component.saveTag();
 
-      expect(tagsService.setTag).toHaveBeenCalledWith('testuser', 'colleague');
+      expect(tagsService.setTag).toHaveBeenCalledWith(
+        'testuser',
+        'colleague',
+        undefined,
+        undefined,
+      );
       expect(component.editing()).toBe(false);
       expect(component.editValue).toBe('');
     });
@@ -175,7 +181,7 @@ describe('UserTagComponent', () => {
 
       component.saveTag();
 
-      expect(tagsService.setTag).toHaveBeenCalledWith('testuser', 'friend');
+      expect(tagsService.setTag).toHaveBeenCalledWith('testuser', 'friend', undefined, undefined);
     });
 
     it('should remove tag when saving empty value and tag exists', () => {
@@ -206,6 +212,30 @@ describe('UserTagComponent', () => {
       expect(tagsService.setTag).not.toHaveBeenCalled();
       expect(tagsService.removeTag).not.toHaveBeenCalled();
       expect(component.editing()).toBe(false);
+    });
+
+    it('should save notes along with tag', () => {
+      const newTag = {
+        username: 'testuser',
+        tag: 'friend',
+        color: '#00ff00',
+        notes: 'Good writer',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      tagsService.getTag.mockReturnValue(newTag);
+      component.editValue = 'friend';
+      component.editNotes = 'Good writer';
+      component.editing.set(true);
+
+      component.saveTag();
+
+      expect(tagsService.setTag).toHaveBeenCalledWith(
+        'testuser',
+        'friend',
+        undefined,
+        'Good writer',
+      );
     });
   });
 
@@ -247,36 +277,117 @@ describe('UserTagComponent', () => {
     });
   });
 
-  describe('onInputBlur', () => {
+  describe('notes display', () => {
     beforeEach(() => {
-      vi.useFakeTimers();
+      fixture.componentRef.setInput('username', 'testuser');
+      fixture.detectChanges();
     });
 
-    afterEach(() => {
-      vi.useRealTimers();
+    it('should show title attribute with notes on tag chip', () => {
+      const mockTag = {
+        username: 'testuser',
+        tag: 'friend',
+        color: '#00ff00',
+        notes: 'Met at conference',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      component.tag.set(mockTag);
+      fixture.detectChanges();
+
+      const tagChip = fixture.debugElement.query(By.css('.tag-chip'));
+      expect(tagChip.nativeElement.title).toBe('Met at conference');
     });
 
-    it('should cancel edit after delay', () => {
+    it('should have empty title when no notes', () => {
+      const mockTag = {
+        username: 'testuser',
+        tag: 'friend',
+        color: '#00ff00',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      component.tag.set(mockTag);
+      fixture.detectChanges();
+
+      const tagChip = fixture.debugElement.query(By.css('.tag-chip'));
+      expect(tagChip.nativeElement.title).toBe('');
+    });
+  });
+
+  describe('notes editing', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('username', 'testuser');
+      fixture.detectChanges();
+    });
+
+    it('should populate editNotes when starting edit with existing notes', () => {
+      const mockTag = {
+        username: 'testuser',
+        tag: 'friend',
+        color: '#00ff00',
+        notes: 'Met at conference',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      component.tag.set(mockTag);
+
+      const event = new Event('click');
+      component.startEdit(event);
+
+      expect(component.editNotes).toBe('Met at conference');
+    });
+
+    it('should show popover with notes textarea when editing', () => {
       component.editing.set(true);
-      component.editValue = 'test';
+      fixture.detectChanges();
 
-      component.onInputBlur();
+      const popover = fixture.debugElement.query(By.css('.tag-popover'));
+      const notesInput = fixture.debugElement.query(By.css('.notes-input'));
 
-      expect(component.editing()).toBe(true);
+      expect(popover).toBeTruthy();
+      expect(notesInput).toBeTruthy();
+    });
 
-      vi.advanceTimersByTime(100);
+    it('should dismiss popover when Escape is pressed', () => {
+      component.editing.set(true);
+      fixture.detectChanges();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      fixture.detectChanges();
 
       expect(component.editing()).toBe(false);
     });
 
-    it('should not cancel if already not editing', () => {
-      component.editing.set(false);
-      vi.spyOn(component, 'cancelEdit');
+    it('should save when Cmd+Enter is pressed', () => {
+      const newTag = {
+        username: 'testuser',
+        tag: 'test',
+        color: '#00ff00',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      tagsService.getTag.mockReturnValue(newTag);
+      component.editing.set(true);
+      component.editValue = 'test';
+      fixture.detectChanges();
 
-      component.onInputBlur();
-      vi.advanceTimersByTime(100);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', metaKey: true }));
+      fixture.detectChanges();
 
-      expect(component.cancelEdit).not.toHaveBeenCalled();
+      expect(tagsService.setTag).toHaveBeenCalledWith('testuser', 'test', undefined, undefined);
+      expect(component.editing()).toBe(false);
+    });
+
+    it('should dismiss popover when backdrop is clicked', () => {
+      component.editing.set(true);
+      fixture.detectChanges();
+
+      const backdrop = fixture.debugElement.query(By.css('.popover-backdrop'));
+      backdrop.nativeElement.click();
+      fixture.detectChanges();
+
+      expect(component.editing()).toBe(false);
     });
   });
 
@@ -319,20 +430,20 @@ describe('UserTagComponent', () => {
       expect(bgColor === 'rgb(0, 255, 0)' || bgColor === '#00ff00').toBe(true);
     });
 
-    it('should show editor when editing', () => {
+    it('should show popover when editing', () => {
       component.editing.set(true);
       fixture.detectChanges();
 
-      const editor = fixture.debugElement.query(By.css('.editor'));
+      const popover = fixture.debugElement.query(By.css('.tag-popover'));
       const input = fixture.debugElement.query(By.css('.tag-input'));
       const saveBtn = fixture.debugElement.query(By.css('.save-btn'));
 
-      expect(editor).toBeTruthy();
+      expect(popover).toBeTruthy();
       expect(input).toBeTruthy();
       expect(saveBtn).toBeTruthy();
     });
 
-    it('should show remove button in editor when tag exists', () => {
+    it('should show remove button in popover when tag exists', () => {
       component.tag.set({
         username: 'testuser',
         tag: 'friend',

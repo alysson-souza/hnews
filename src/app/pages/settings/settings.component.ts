@@ -44,6 +44,7 @@ import {
   solarShieldLinear,
   solarDangerTriangleLinear,
   solarLinkLinear,
+  solarPen2Linear,
 } from '@ng-icons/solar-icons/linear';
 
 @Component({
@@ -80,6 +81,7 @@ import {
       solarShieldLinear,
       solarDangerTriangleLinear,
       solarLinkLinear,
+      solarPen2Linear,
     }),
   ],
   templateUrl: './settings.component.html',
@@ -172,12 +174,13 @@ import {
       }
 
       .tag-item-modern {
-        @apply flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all duration-200;
+        @apply grid items-center gap-x-3 p-3 rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all duration-200;
         @apply bg-gray-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm;
+        grid-template-columns: auto 1fr auto;
       }
 
       .tag-content {
-        @apply flex-1 min-w-0;
+        @apply min-w-0;
       }
 
       .tag-user-info {
@@ -197,6 +200,45 @@ import {
       .tag-badge {
         @apply px-3 py-1 text-xs font-medium text-white text-center rounded-full shadow-sm;
         @apply max-w-32 truncate inline-flex items-center justify-center;
+      }
+
+      .tag-notes {
+        @apply text-sm italic text-gray-500 dark:text-gray-400 mt-1;
+      }
+
+      .tag-notes-btn {
+        @apply flex items-center justify-center w-9 h-9 rounded-full text-gray-500 dark:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-500/20;
+        @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer;
+        @apply flex-shrink-0;
+      }
+
+      .tag-notes-editor {
+        @apply mt-2 space-y-2;
+      }
+
+      .tag-notes-input {
+        @apply w-full text-sm px-3 py-2 rounded-lg resize-none;
+        @apply border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800;
+        @apply text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+      }
+
+      .tag-notes-actions {
+        @apply flex items-center gap-2;
+      }
+
+      .tag-notes-save {
+        @apply text-xs font-medium text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 cursor-pointer transition-colors duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 rounded px-2 py-1;
+      }
+
+      .tag-notes-cancel {
+        @apply text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer transition-colors duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 rounded px-2 py-1;
+      }
+
+      .tag-actions {
+        @apply flex items-center gap-1 flex-shrink-0;
       }
 
       .tag-remove-modern {
@@ -391,6 +433,9 @@ export class SettingsComponent implements OnInit {
     currentPage: number;
   }>({ tags: [], totalCount: 0, totalPages: 0, currentPage: 1 });
 
+  editingNotesFor = signal<string | null>(null);
+  editingNotesValue = signal('');
+
   private searchSubject = new Subject<string>();
 
   // Cache management signals
@@ -573,6 +618,23 @@ export class SettingsComponent implements OnInit {
     this.tagsService.removeTag(username);
     this.loadTags();
     this.showMessage(`Tag removed for ${username}`, false);
+  }
+
+  editTagNotes(tag: UserTag): void {
+    if (this.editingNotesFor() === tag.username) {
+      this.editingNotesFor.set(null);
+      return;
+    }
+    this.editingNotesFor.set(tag.username);
+    this.editingNotesValue.set(tag.notes || '');
+  }
+
+  saveTagNotes(username: string): void {
+    this.tagsService.setNotes(username, this.editingNotesValue());
+    this.editingNotesFor.set(null);
+    this.editingNotesValue.set('');
+    this.loadTags();
+    this.showMessage('Notes updated', false);
   }
 
   clearAll(): void {
