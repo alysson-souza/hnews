@@ -38,3 +38,11 @@ const contents = {
   commitShaShort: shortCommitSha,
 };
 writeFileSync(outputPath, JSON.stringify(contents, null, 2) + '\n', 'utf8');
+
+const versionTsPath = join(rootDir, 'src', 'app', 'version.ts');
+const versionTs = `export const VERSION = '${version}';
+export const BUILD_TIME = '${buildTime}';
+export const COMMIT_SHA = '${commitSha}';
+export const COMMIT_SHA_SHORT = '${shortCommitSha}';
+`;
+writeFileSync(versionTsPath, versionTs, 'utf8');
