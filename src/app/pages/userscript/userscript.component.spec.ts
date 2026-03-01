@@ -98,3 +98,12 @@ describe('UserscriptComponent', () => {
     expect(global.fetch).toHaveBeenCalledWith(component.installUrl());
   });
 });
+
+describe('generated userscript file', () => {
+  it('should not use placeholder version 0.0.0', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const content = readFileSync(join(process.cwd(), 'public/hnews-redirect.user.js'), 'utf8');
+    expect(content).not.toContain('@version      0.0.0');
+  });
+});
