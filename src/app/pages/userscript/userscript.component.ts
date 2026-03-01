@@ -146,78 +146,30 @@ export class UserscriptComponent {
     return 'https://alysson-souza.github.io/hnews';
   });
 
-  readonly userscriptContent = computed(() => {
-    const baseUrl = this.baseUrl();
-    return `// ==UserScript==
-// @name         HNews Redirect
-// @namespace    https://github.com/alysson-souza/hnews
-// @version      1.0.0
-// @description  Automatically redirect Hacker News to HNews alternative frontend
-// @author       Alysson Souza
-// @match        https://news.ycombinator.com/*
-// @icon         https://news.ycombinator.com/favicon.ico
-// @grant        none
-// @run-at       document-start
-// ==/UserScript==
-
-(function() {
-    'use strict';
-
-    const BASE_URL = '${baseUrl}';
-    const currentUrl = window.location.href;
-    const hnUrl = 'https://news.ycombinator.com';
-
-    // Parse the current HN URL and convert to HNews URL
-    const url = new URL(currentUrl);
-    const pathname = url.pathname;
-    const search = url.search;
-
-    // Map HN routes to HNews routes
-    let newPath = pathname;
-    let newSearch = '';
-
-    // Handle item pages: /item?id=123 -> /item/123
-    if (pathname === '/item' && search) {
-        const params = new URLSearchParams(search);
-        const id = params.get('id');
-        if (id) {
-            newPath = \`/item/\${id}\`;
-        }
-    }
-    // Handle user pages: /user?id=username -> /user/username
-    else if (pathname === '/user' && search) {
-        const params = new URLSearchParams(search);
-        const id = params.get('id');
-        if (id) {
-            newPath = \`/user/\${id}\`;
-        }
-    }
-    // Handle story list pages
-    else if (pathname === '/news' || pathname === '/') {
-        newPath = '/top';
-    } else if (pathname === '/newest') {
-        newPath = '/newest';
-    } else if (pathname === '/best') {
-        newPath = '/best';
-    } else if (pathname === '/ask') {
-        newPath = '/ask';
-    } else if (pathname === '/show') {
-        newPath = '/show';
-    } else if (pathname === '/jobs') {
-        newPath = '/jobs';
-    }
-
-    // Redirect to HNews
-    const hnewsUrl = \`\${BASE_URL}\${newPath}\${newSearch}\`;
-    window.location.replace(hnewsUrl);
-})();`;
+  readonly installUrl = computed(() => {
+    return `${this.baseUrl()}/hnews-redirect.user.js`;
   });
 
+  readonly isLoading = signal(true);
+  readonly userscriptContent = signal('');
   readonly highlightedUserscript = signal<SafeHtml>('');
 
   constructor() {
+    // Fetch the actual generated file so preview and clipboard always match the download
+    fetch(this.installUrl())
+      .then((res) => res.text())
+      .then((content) => {
+        this.userscriptContent.set(content);
+        this.isLoading.set(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load userscript:', err);
+        this.isLoading.set(false);
+      });
+
     effect(() => {
       const code = this.userscriptContent();
+      if (!code) return;
       const html = `<pre><code class="language-javascript">${code}</code></pre>`;
 
       // Show unhighlighted code immediately
@@ -229,10 +181,6 @@ export class UserscriptComponent {
       });
     });
   }
-
-  readonly installUrl = computed(() => {
-    return `${this.baseUrl()}/hnews-redirect.user.js`;
-  });
 
   async copyToClipboard(): Promise<void> {
     try {
