@@ -32,7 +32,7 @@ import { Component, output, input } from '@angular/core';
       }
 
       button.enabled {
-        @apply bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700;
+        background-color: var(--app-brand);
       }
 
       button:disabled {
