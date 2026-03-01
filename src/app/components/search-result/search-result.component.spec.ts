@@ -755,6 +755,132 @@ describe('SearchResultComponent', () => {
     });
   });
 
+  describe('XSS sanitization', () => {
+    it('should sanitize script tags from highlighted title', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123',
+        title: 'Test',
+        url: '',
+        author: 'test',
+        points: 0,
+        num_comments: 0,
+        created_at: '',
+        _highlightResult: {
+          title: { value: '<em>Test</em><script>alert("xss")</script>' },
+        },
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+
+      const result = component.getHighlightedTitle();
+      expect(result).not.toContain('<script>');
+      expect(result).toContain('<em>Test</em>');
+    });
+
+    it('should sanitize event handlers from highlighted title', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123',
+        title: 'Test',
+        url: '',
+        author: 'test',
+        points: 0,
+        num_comments: 0,
+        created_at: '',
+        _highlightResult: {
+          title: { value: '<em onmouseover="alert(1)">Test</em>' },
+        },
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+
+      const result = component.getHighlightedTitle();
+      expect(result).not.toContain('onmouseover');
+      expect(result).toContain('<em>Test</em>');
+    });
+
+    it('should sanitize script tags from highlighted story text', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123',
+        title: 'Test',
+        url: '',
+        author: 'test',
+        points: 0,
+        num_comments: 0,
+        created_at: '',
+        story_text: 'Some text',
+        _highlightResult: {
+          story_text: { value: '<em>Some</em> text<script>alert("xss")</script>' },
+        },
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+
+      const result = component.getHighlightedStoryText();
+      expect(result).not.toContain('<script>');
+      expect(result).toContain('Some');
+    });
+
+    it('should sanitize img tags with onerror from highlighted story text', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123',
+        title: 'Test',
+        url: '',
+        author: 'test',
+        points: 0,
+        num_comments: 0,
+        created_at: '',
+        story_text: 'Some text',
+        _highlightResult: {
+          story_text: { value: '<img src=x onerror=alert(1)><em>text</em>' },
+        },
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+
+      const result = component.getHighlightedStoryText();
+      expect(result).not.toContain('<img');
+      expect(result).not.toContain('onerror');
+    });
+
+    it('should sanitize script tags from highlighted comment text', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123',
+        title: '',
+        url: '',
+        author: 'test',
+        points: 0,
+        num_comments: 0,
+        created_at: '',
+        comment_text: 'A comment',
+        _highlightResult: {
+          comment_text: { value: '<em>A</em> comment<script>alert("xss")</script>' },
+        },
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+
+      const result = component.getHighlightedCommentText();
+      expect(result).not.toContain('<script>');
+      expect(result).toContain('<em>A</em>');
+    });
+
+    it('should sanitize iframe from highlighted comment text', () => {
+      fixture.componentRef.setInput('item', {
+        objectID: '123',
+        title: '',
+        url: '',
+        author: 'test',
+        points: 0,
+        num_comments: 0,
+        created_at: '',
+        comment_text: 'A comment',
+        _highlightResult: {
+          comment_text: { value: '<iframe src="https://evil.com"></iframe><em>text</em>' },
+        },
+      });
+      fixture.componentRef.setInput('isSearchResult', true);
+
+      const result = component.getHighlightedCommentText();
+      expect(result).not.toContain('<iframe');
+      expect(result).toContain('<em>text</em>');
+    });
+  });
+
   describe('external link rendering', () => {
     it('should render external links with target="_blank" for search results', () => {
       fixture.componentRef.setInput('item', {

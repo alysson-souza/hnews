@@ -10,6 +10,7 @@ import {
 import { HNItem } from '../../models/hn';
 import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
+import { sanitizeHtml } from '../comment-text/sanitize';
 import { EnhanceLinksDirective } from '../comment-text/enhance-links.directive';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
 
@@ -172,7 +173,7 @@ export class SearchResultComponent {
 
     if (this.isSearchResult()) {
       const searchHit = item as SearchHit;
-      return searchHit._highlightResult?.['title']?.value || searchHit.title || '';
+      return sanitizeHtml(searchHit._highlightResult?.['title']?.value || searchHit.title || '');
     }
 
     return (item as HNItem).title || '[untitled]';
@@ -230,7 +231,7 @@ export class SearchResultComponent {
       const searchHit = item as SearchHit;
       const rawHtml =
         searchHit._highlightResult?.['story_text']?.value || searchHit.story_text || '';
-      return transformQuotesHtml(rawHtml);
+      return sanitizeHtml(transformQuotesHtml(rawHtml));
     }
 
     return (item as HNItem).text || '';
@@ -244,7 +245,7 @@ export class SearchResultComponent {
       const searchHit = item as SearchHit;
       const rawHtml =
         searchHit._highlightResult?.['comment_text']?.value || searchHit.comment_text || '';
-      return transformQuotesHtml(rawHtml);
+      return sanitizeHtml(transformQuotesHtml(rawHtml));
     }
 
     return (item as HNItem).text || '';

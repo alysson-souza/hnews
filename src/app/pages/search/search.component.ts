@@ -22,6 +22,7 @@ import { UserTagComponent } from '../../components/user-tag/user-tag.component';
 import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
 import { getDomain } from '../../services/domain.utils';
 import { StoryLinkComponent } from '../../components/shared/story-link/story-link.component';
+import { sanitizeHtml } from '../../components/comment-text/sanitize';
 
 interface HighlightField {
   value: string;
@@ -482,8 +483,11 @@ export class SearchComponent implements OnInit {
 
   getHighlightedText(hit: SearchHit, field: string): string {
     const result = hit._highlightResult?.[field]?.value;
-    if (typeof result === 'string') return result;
-    return ((hit as unknown as Record<string, unknown>)[field] as string) || '';
+    const raw =
+      typeof result === 'string'
+        ? result
+        : ((hit as unknown as Record<string, unknown>)[field] as string) || '';
+    return sanitizeHtml(raw);
   }
 
   getTimeAgo(dateString: string): string {

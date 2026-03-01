@@ -3,21 +3,12 @@
 import { Component, inject, ChangeDetectionStrategy, input, signal, effect } from '@angular/core';
 
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import DOMPurify from 'dompurify';
 import { provideIcons } from '@ng-icons/core';
 import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
 import { transformQuotesHtml } from './quote.transform';
 import { highlightCodeBlocks } from './code-highlight.transform';
 import { EnhanceLinksDirective } from './enhance-links.directive';
-
-/** Sanitize HTML to prevent XSS attacks while preserving formatting */
-function sanitize(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'blockquote', 'a', 'pre', 'code', 'br', 'i', 'em', 'b', 'strong', 'span'],
-    ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class'],
-    KEEP_CONTENT: true,
-  });
-}
+import { sanitizeHtml } from './sanitize';
 
 @Component({
   selector: 'app-comment-text',
@@ -75,11 +66,11 @@ export class CommentTextComponent {
       const withQuotes = transformQuotesHtml(rawHtml);
 
       // Render sanitized HTML immediately (without syntax highlighting)
-      this.processedHtml.set(this.sanitizer.bypassSecurityTrustHtml(sanitize(withQuotes)));
+      this.processedHtml.set(this.sanitizer.bypassSecurityTrustHtml(sanitizeHtml(withQuotes)));
 
       // Asynchronously apply syntax highlighting, then re-render
       highlightCodeBlocks(withQuotes).then((withHighlight) => {
-        this.processedHtml.set(this.sanitizer.bypassSecurityTrustHtml(sanitize(withHighlight)));
+        this.processedHtml.set(this.sanitizer.bypassSecurityTrustHtml(sanitizeHtml(withHighlight)));
       });
     });
   }
