@@ -5,35 +5,22 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { highlightCodeBlocks } from '../../components/comment-text/code-highlight.transform';
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
-import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
 import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
-  solarCodeLinear,
   solarCopyLinear,
   solarCheckCircleLinear,
   solarDownloadLinear,
-  solarDocumentLinear,
-  solarLinkLinear,
 } from '@ng-icons/solar-icons/linear';
 
 @Component({
   selector: 'app-userscript',
-  imports: [
-    CardComponent,
-    PageContainerComponent,
-    SectionTitleComponent,
-    AppButtonComponent,
-    NgIconComponent,
-  ],
+  imports: [CardComponent, PageContainerComponent, AppButtonComponent, NgIconComponent],
   viewProviders: [
     provideIcons({
-      solarCodeLinear,
       solarCopyLinear,
       solarCheckCircleLinear,
       solarDownloadLinear,
-      solarDocumentLinear,
-      solarLinkLinear,
     }),
   ],
   templateUrl: './userscript.component.html',
@@ -41,8 +28,37 @@ import {
     `
       @reference '../../../styles.css';
 
-      .setting-section {
-        @apply relative overflow-hidden;
+      /* ── Spacing scale (mirrors settings) ──
+       * Tight:   2 (0.5rem)  — inline gaps, minor spacing
+       * Base:    4 (1rem)    — row padding, standard margins, content gaps
+       * Section: 6 (1.5rem)  — section insets (mobile), label-to-content
+       * Wide:    8 (2rem)    — section insets (desktop)
+       */
+
+      /* Section layout */
+      .us-section {
+        @apply relative px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6;
+      }
+
+      .section-divider {
+        @apply border-t border-gray-200 dark:border-gray-700/60 m-0;
+      }
+
+      .us-category-label {
+        @apply text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-4;
+      }
+
+      /* Code section header with action buttons */
+      .us-code-header {
+        @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4;
+      }
+
+      .us-code-header .us-category-label {
+        @apply mb-0;
+      }
+
+      .us-button-group {
+        @apply flex flex-wrap items-center justify-center sm:justify-end gap-2;
       }
 
       .btn-primary {
@@ -55,16 +71,8 @@ import {
         @apply dark:focus-visible:ring-offset-gray-800;
       }
 
-      .section-header {
-        @apply flex items-center gap-3 mb-6;
-      }
-
-      .section-icon {
-        @apply text-lg text-gray-500 dark:text-gray-400 flex-shrink-0 inline-flex items-center justify-center;
-      }
-
       .info-text {
-        @apply text-sm text-gray-700 dark:text-gray-300 leading-relaxed;
+        @apply text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4;
       }
 
       .instructions-list {
@@ -103,30 +111,8 @@ import {
         }
       }
 
-      .section-header-wrapper {
-        @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
-      }
-
-      .section-header-wrapper .section-header {
-        @apply mb-0;
-      }
-
-      .button-group {
-        @apply flex flex-wrap items-center justify-center gap-2;
-      }
-
-      @media (min-width: 640px) {
-        .button-group {
-          @apply justify-end;
-        }
-      }
-
       .external-link {
         @apply text-blue-600 dark:text-blue-400 hover:underline;
-      }
-
-      .warning-box {
-        @apply p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30 mb-4;
       }
 
       .feature-list {
