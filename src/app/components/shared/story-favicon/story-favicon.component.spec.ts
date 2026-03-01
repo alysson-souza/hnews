@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { StoryFaviconComponent } from './story-favicon.component';
-import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
 
 describe('StoryFaviconComponent', () => {
   let component: StoryFaviconComponent;
@@ -9,14 +8,6 @@ describe('StoryFaviconComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [StoryFaviconComponent],
-      providers: [
-        {
-          provide: IMAGE_LOADER,
-          useValue: (config: ImageLoaderConfig) => {
-            return config.src;
-          },
-        },
-      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StoryFaviconComponent);
@@ -30,12 +21,14 @@ describe('StoryFaviconComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should generate correct Unavatar URL', () => {
+  it('should generate correct Google favicon URL', () => {
     fixture.componentRef.setInput('url', 'https://www.google.com/some/path');
     fixture.componentRef.setInput('altText', 'Google');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('https://unavatar.io/google.com?fallback=false');
+    expect(component.faviconUrl()).toBe(
+      'https://www.google.com/s2/favicons?domain=google.com&sz=64',
+    );
   });
 
   it('should strip subdomains for favicon lookup', () => {
@@ -43,7 +36,7 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'CNN');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('https://unavatar.io/cnn.com?fallback=false');
+    expect(component.faviconUrl()).toBe('https://www.google.com/s2/favicons?domain=cnn.com&sz=64');
   });
 
   it('should preserve compound country-code TLDs (co.uk)', () => {
@@ -51,7 +44,9 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'BBC');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('https://unavatar.io/bbc.co.uk?fallback=false');
+    expect(component.faviconUrl()).toBe(
+      'https://www.google.com/s2/favicons?domain=bbc.co.uk&sz=64',
+    );
   });
 
   it('should return default asset if no domain found', () => {
@@ -117,6 +112,30 @@ describe('StoryFaviconComponent', () => {
 
     expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
     expect(fixture.nativeElement.querySelector('div')).toBeTruthy();
+  });
+
+  it('should show letter fallback when Google returns a 16x16 globe', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    component.handleLoad({ target: { naturalWidth: 16, naturalHeight: 16 } } as unknown as Event);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('div')).toBeTruthy();
+  });
+
+  it('should keep image visible when a properly sized favicon loads', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    component.handleLoad({ target: { naturalWidth: 64, naturalHeight: 64 } } as unknown as Event);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
   });
 
   it('should reset error state when url input changes', () => {

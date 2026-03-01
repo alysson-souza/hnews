@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { Component, input, linkedSignal, computed } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-story-favicon',
-  imports: [NgOptimizedImage],
+  imports: [],
   template: `
     @if (!hasError()) {
       <img
-        [ngSrc]="faviconUrl()"
+        [src]="faviconUrl()"
         width="64"
         height="64"
         [alt]="altText()"
         class="w-full h-full object-contain"
         decoding="async"
         (error)="handleError()"
+        (load)="handleLoad($event)"
       />
     } @else {
       <div
@@ -51,9 +51,9 @@ export class StoryFaviconComponent {
   readonly faviconUrl = computed(() => {
     const domain = this.getDomain(this.url());
     if (!domain) return '/assets/default-thumb.svg';
-    // Unavatar aggregates multiple providers (Clearbit, DDG, Google) to find the best icon.
-    // fallback=false ensures 404 on miss, triggering our letter fallback instead of unavatar's smiley.
-    return `https://unavatar.io/${domain}?fallback=false`;
+    // Google favicon API uses Google's crawl data and has the broadest site coverage.
+    // Returns a generic icon (not a 404) when no favicon exists.
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
   });
 
   readonly domainLetter = computed(() => {
@@ -69,6 +69,15 @@ export class StoryFaviconComponent {
 
   handleError(): void {
     this.hasError.set(true);
+  }
+
+  handleLoad(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    // Google returns a 16×16 globe for domains with no favicon, even when sz=64 is
+    // requested. Real favicons come back at the requested size. Treat tiny images as missing.
+    if (img.naturalWidth <= 16 && img.naturalHeight <= 16) {
+      this.hasError.set(true);
+    }
   }
 
   private getDomain(url?: string): string {
