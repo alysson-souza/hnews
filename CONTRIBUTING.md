@@ -24,22 +24,26 @@ npm start  # http://localhost:4200
 ## Scripts
 
 ```bash
-npm start            # Run dev server (http://localhost:4200)
-npm run watch        # Watch mode build
-npm run build        # Build (development)
-npm run build:prod   # Build (production)
-npm test             # Unit tests (Vitest)
-npm run lint         # ESLint (fails on warnings)
-npm run lint:fix     # ESLint with autofix (fails on warnings)
-npm run format       # Prettier write
-npm run format:check # Prettier check only
-npm run deploy       # Deploy to GitHub Pages (gh-pages)
-npm run deploy:ci    # CI-friendly deploy
+npm start              # Run dev server (http://localhost:4200)
+npm run watch          # Watch mode build
+npm run build          # Build (development)
+npm run build:prod     # Build (production)
+npm test               # Unit tests (Vitest)
+npm run test:functions # Functions tests (Vitest)
+npm run lint           # ESLint (fails on warnings)
+npm run lint:fix       # ESLint with autofix (fails on warnings)
+npm run format         # Prettier write
+npm run format:check   # Prettier check only
+npm run e2e            # Playwright e2e tests
+npm run e2e:ui         # Interactive e2e UI mode
+npm run deploy:cf      # Deploy to Cloudflare Pages
 ```
 
 ## Testing
 
-- Run tests: `npm test`
+- Unit tests: `npm test` (Vitest via Angular)
+- Functions tests: `npm run test:functions`
+- E2E tests: `npm run e2e` (Playwright — requires `npx playwright install` first)
 - Coverage: `npm run test:coverage` (outputs to `coverage/hnews`)
 - Prefer focused service specs and shallow component tests; mock network calls
 
@@ -55,8 +59,14 @@ npm run deploy:ci    # CI-friendly deploy
 
 - `src/app/components`: Reusable UI (story list/item, comments, shared widgets)
 - `src/app/pages`: Route-level features (top/best/newest, item, user, search, settings)
-- `src/app/services`: Data and caching services
-- `src/app/config`: API configuration providers
+- `src/app/services`: Data fetching, caching, navigation services
+- `src/app/stores`: Signal-based state management
+- `src/app/data`: API clients (Algolia, HN API, LibreRedirect)
+- `src/app/models`: TypeScript interfaces
+- `src/app/pipes`: Angular pipes (relative time)
+- `src/app/config`: Configuration providers (cache config)
+- `e2e/`: Playwright tests, page objects, and fixtures
+- `functions/`: Cloudflare Pages functions
 - `public/`: PWA manifest, icons, static assets
 - Tests live next to code as `*.spec.ts`
 

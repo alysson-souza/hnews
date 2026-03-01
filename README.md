@@ -40,7 +40,7 @@ Shortcuts are contextual: different sets apply on the story list, comments sideb
 ## Tech Stack
 
 - Angular 21 (standalone components, signals)
-- Tailwind CSS v4 (with @tailwind/postcss)
+- Tailwind CSS v4 (with @tailwindcss/postcss)
 - TypeScript 5.9, RxJS 7.8
 - highlight.js (syntax highlighting with auto-detection)
 - Angular Service Worker (PWA)
@@ -83,4 +83,4 @@ See `CONTRIBUTING.md` for development scripts, testing, and code style.
 
 MIT — see `LICENSE`.
 
-© 2025 Alysson Souza
+© 2025–2026 Alysson Souza

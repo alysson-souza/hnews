@@ -29,9 +29,11 @@ Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.9.
 - `src/app/pages/` — Route-level features (top/best/newest, item, user, search, settings)
 - `src/app/services/` — Data fetching, caching, navigation services
 - `src/app/stores/` — Signal-based state management
-- `src/app/data/` — API clients (Algolia, HN API)
+- `src/app/data/` — API clients (Algolia, HN API, LibreRedirect)
 - `src/app/models/` — TypeScript interfaces
-- `e2e/` — Playwright tests with page objects in `e2e/page-objects/` and fixtures in `e2e/fixtures/`
+- `src/app/pipes/` — Angular pipes (relative time)
+- `src/app/config/` — Configuration providers (cache config)
+- `e2e/` — Playwright tests in `e2e/tests/`, page objects in `e2e/page-objects/`, fixtures in `e2e/fixtures/`
 - `functions/` — Cloudflare Pages functions
 
 ### Key Services
