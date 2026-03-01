@@ -26,7 +26,8 @@ const shortCommitSha =
     ? resolveSha('git rev-parse --short HEAD') || commitSha.slice(0, 7)
     : 'unknown';
 const buildTime = new Date().toISOString();
-const version = packageJson.version ?? '0.0.0';
+const npmVersion = packageJson.version ?? '0.0.0';
+const version = shortCommitSha !== 'unknown' ? `${npmVersion}-${shortCommitSha}` : npmVersion;
 
 const outputDir = join(rootDir, 'public');
 mkdirSync(outputDir, { recursive: true });
