@@ -87,60 +87,70 @@
         </div>
       }
 
-      <div class="space-y-6">
-        <div class="setting-group">
-          <div
-            class="modern-toggle-container cursor-pointer"
-            [class.opacity-60]="privacyRedirectState().loading"
-            (click)="togglePrivacyRedirect()"
-            role="button"
-            tabindex="0"
-            (keydown.enter)="togglePrivacyRedirect()"
-            (keydown.space)="togglePrivacyRedirect()"
-            [attr.aria-label]="
-              'Toggle privacy redirects. Currently ' +
-              (privacyRedirectEnabled() ? 'enabled' : 'disabled')
-            "
-          >
-            <div class="setting-info">
-              <label class="setting-title" for="privacy-toggle">
-                Redirect links to privacy frontends
-              </label>
-              <p class="setting-description" id="privacy-toggle-description">
-                When enabled, links to sites like Twitter/X will redirect to privacy-respecting
-                alternatives (e.g., Nitter). The original URL is still displayed.
-              </p>
-            </div>
-            <div (click)="$event.stopPropagation()" aria-hidden="true">
-              <app-toggle-switch
-                id="privacy-toggle"
-                [checked]="privacyRedirectEnabled()"
-                (checkedChange)="togglePrivacyRedirect()"
-                ariaLabel="Toggle privacy redirects"
-                descriptionId="privacy-toggle-description"
-              />
-            </div>
+      <div class="privacy-panel">
+        <div
+          class="privacy-panel-header cursor-pointer"
+          [class.opacity-60]="privacyRedirectState().loading"
+          (click)="togglePrivacyRedirect()"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="togglePrivacyRedirect()"
+          (keydown.space)="togglePrivacyRedirect()"
+          [attr.aria-label]="
+            'Toggle privacy redirects. Currently ' +
+            (privacyRedirectEnabled() ? 'enabled' : 'disabled')
+          "
+        >
+          <div class="setting-info">
+            <label class="setting-title" for="privacy-toggle">
+              Redirect links to privacy frontends
+            </label>
+            <p class="setting-description" id="privacy-toggle-description">
+              When enabled, links to sites like Twitter/X will redirect to privacy-respecting
+              alternatives (e.g., Nitter). The original URL is still displayed.
+            </p>
           </div>
+          <div (click)="$event.stopPropagation()" aria-hidden="true">
+            <app-toggle-switch
+              id="privacy-toggle"
+              [checked]="privacyRedirectEnabled()"
+              (checkedChange)="togglePrivacyRedirect()"
+              ariaLabel="Toggle privacy redirects"
+              descriptionId="privacy-toggle-description"
+            />
+          </div>
+        </div>
 
-          <!-- Service list when enabled -->
-          @if (privacyRedirectEnabled()) {
-            <div class="service-list">
-              @for (config of privacyRedirectRegistry; track config.service) {
-                <div class="service-item">
-                  <div class="service-info">
-                    <ng-icon name="solarLinkLinear" class="service-icon" />
-                    <span class="service-name">{{ config.displayName }}</span>
-                  </div>
+        <!-- Service toggles — nested inside the same panel -->
+        @if (privacyRedirectEnabled()) {
+          <div class="privacy-panel-services">
+            @for (config of privacyRedirectRegistry; track config.service) {
+              <div
+                class="privacy-service-item cursor-pointer"
+                (click)="togglePrivacyService(config.service)"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="togglePrivacyService(config.service)"
+                (keydown.space)="togglePrivacyService(config.service)"
+                [attr.aria-label]="
+                  'Toggle ' +
+                  config.displayName +
+                  ' redirect. Currently ' +
+                  (isServiceEnabled(config.service) ? 'enabled' : 'disabled')
+                "
+              >
+                <span class="privacy-service-name">{{ config.displayName }}</span>
+                <div (click)="$event.stopPropagation()" aria-hidden="true">
                   <app-toggle-switch
                     [checked]="isServiceEnabled(config.service)"
                     (checkedChange)="togglePrivacyService(config.service)"
                     [ariaLabel]="'Toggle ' + config.displayName + ' redirect'"
                   />
                 </div>
-              }
-            </div>
-          }
-        </div>
+              </div>
+            }
+          </div>
+        }
       </div>
 
       <!-- Attribution footer -->

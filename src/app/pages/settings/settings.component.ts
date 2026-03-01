@@ -43,7 +43,6 @@ import {
   solarMagniferLinear,
   solarShieldLinear,
   solarDangerTriangleLinear,
-  solarLinkLinear,
   solarPen2Linear,
 } from '@ng-icons/solar-icons/linear';
 
@@ -80,7 +79,6 @@ import {
       solarMagniferLinear,
       solarShieldLinear,
       solarDangerTriangleLinear,
-      solarLinkLinear,
       solarPen2Linear,
     }),
   ],
@@ -120,16 +118,22 @@ import {
       }
 
       .modern-toggle-container {
-        @apply flex items-start justify-between gap-6 p-6 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
+        @apply flex items-start justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
         @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm;
       }
 
+      @media (min-width: 640px) {
+        .modern-toggle-container {
+          @apply gap-6 p-6;
+        }
+      }
+
       .setting-info {
-        @apply flex-1;
+        @apply flex-1 space-y-2;
       }
 
       .setting-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block cursor-pointer;
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100 block cursor-pointer;
       }
 
       .setting-description {
@@ -194,7 +198,13 @@ import {
       .tag-username {
         @apply font-semibold text-gray-900 dark:text-gray-100 no-underline;
         @apply hover:underline focus-visible:underline;
-        @apply max-w-40 truncate inline-flex items-center;
+        @apply max-w-24 truncate inline-flex items-center;
+      }
+
+      @media (min-width: 640px) {
+        .tag-username {
+          @apply max-w-40;
+        }
       }
 
       .tag-badge {
@@ -266,7 +276,7 @@ import {
 
       /* Tag Action Buttons */
       .tag-action-buttons {
-        @apply flex justify-center pt-4 gap-2;
+        @apply flex flex-wrap justify-center pt-4 gap-2;
       }
 
       @media (min-width: 640px) {
@@ -281,7 +291,7 @@ import {
       }
 
       .stats-header {
-        @apply flex items-center justify-between mb-3;
+        @apply flex flex-wrap items-center justify-between gap-2 mb-3;
       }
 
       .stats-title {
@@ -293,12 +303,24 @@ import {
       }
 
       .stat-card-modern {
-        @apply flex items-center gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200;
+        @apply flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200;
         @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
       }
 
+      @media (min-width: 640px) {
+        .stat-card-modern {
+          @apply gap-4 p-6;
+        }
+      }
+
       .stat-icon {
-        @apply flex items-center justify-center w-12 h-12 rounded-full text-white text-xl shadow-lg;
+        @apply flex items-center justify-center w-10 h-10 rounded-full text-white text-lg shadow-lg;
+      }
+
+      @media (min-width: 640px) {
+        .stat-icon {
+          @apply w-12 h-12 text-xl;
+        }
       }
 
       .stat-icon.indexeddb {
@@ -355,7 +377,46 @@ import {
         }
       }
 
-      /* Privacy Redirect Section */
+      /* Privacy Redirect Panel */
+      .privacy-panel {
+        @apply rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden;
+        @apply bg-white dark:bg-gray-800;
+      }
+
+      .privacy-panel-header {
+        @apply flex items-start justify-between gap-3 p-4 transition-all duration-200;
+        @apply hover:bg-gray-50 dark:hover:bg-gray-700;
+      }
+
+      @media (min-width: 640px) {
+        .privacy-panel-header {
+          @apply gap-6 p-6;
+        }
+      }
+
+      .privacy-panel-services {
+        @apply border-t border-gray-200 dark:border-gray-700;
+      }
+
+      .privacy-service-item {
+        @apply flex items-center justify-between gap-3 py-3 px-4 pl-6 transition-colors duration-200;
+        @apply bg-gray-50/80 dark:bg-gray-900/60 hover:bg-gray-100 dark:hover:bg-gray-900/80;
+      }
+
+      .privacy-service-item + .privacy-service-item {
+        @apply border-t border-gray-100 dark:border-gray-700/50;
+      }
+
+      @media (min-width: 640px) {
+        .privacy-service-item {
+          @apply py-3.5 px-6 pl-8;
+        }
+      }
+
+      .privacy-service-name {
+        @apply text-sm font-medium text-gray-700 dark:text-gray-300;
+      }
+
       .privacy-warning {
         @apply p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30 mb-4;
         @apply flex items-start gap-3;
@@ -375,26 +436,6 @@ import {
 
       .privacy-warning-text {
         @apply text-sm opacity-90;
-      }
-
-      .service-list {
-        @apply space-y-3 mt-4;
-      }
-
-      .service-item {
-        @apply flex items-center justify-between gap-4 p-4 rounded-lg bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/60;
-      }
-
-      .service-info {
-        @apply flex items-center gap-3;
-      }
-
-      .service-icon {
-        @apply text-gray-500 dark:text-gray-400;
-      }
-
-      .service-name {
-        @apply font-medium text-gray-900 dark:text-gray-100;
       }
 
       .attribution-footer {
