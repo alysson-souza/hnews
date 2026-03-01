@@ -170,7 +170,7 @@ import {
       }
 
       .tags-overview {
-        @apply space-y-6;
+        @apply space-y-4;
       }
 
       .tags-list {

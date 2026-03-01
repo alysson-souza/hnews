@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, output, input } from '@angular/core';
 
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -11,68 +11,58 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
   viewProviders: [provideIcons({ solarAltArrowLeftLinear, solarAltArrowRightLinear })],
   template: `
     <nav class="pagination-container" role="navigation" aria-label="Pagination navigation">
-      <div class="pagination-info hidden sm:block" role="status" aria-live="polite">
-        <span class="text-sm text-gray-600 dark:text-gray-400">
-          Showing {{ startItem }}-{{ endItem }} of {{ totalCount() }} items
-        </span>
+      <button
+        type="button"
+        (click)="previousPage()"
+        [disabled]="currentPage() <= 1"
+        [attr.aria-disabled]="currentPage() <= 1"
+        class="nav-button"
+        aria-label="Previous page"
+      >
+        <ng-icon name="solarAltArrowLeftLinear" aria-hidden="true" />
+      </button>
+
+      <div class="page-numbers" role="group" aria-label="Page numbers">
+        @for (page of visiblePages; track page) {
+          <button
+            type="button"
+            (click)="goToPage(page)"
+            [class]="page === currentPage() ? 'page-button active' : 'page-button'"
+            [attr.aria-label]="'Page ' + page"
+            [attr.aria-current]="page === currentPage() ? 'page' : null"
+            [attr.aria-disabled]="page === currentPage()"
+          >
+            {{ page }}
+          </button>
+        }
       </div>
 
-      <div class="pagination-controls">
-        <button
-          type="button"
-          (click)="previousPage()"
-          [disabled]="currentPage() <= 1"
-          [attr.aria-disabled]="currentPage() <= 1"
-          class="pagination-button"
-          aria-label="Previous page"
-        >
-          <ng-icon name="solarAltArrowLeftLinear" aria-hidden="true" />
-          Previous
-        </button>
+      <button
+        type="button"
+        (click)="nextPage()"
+        [disabled]="currentPage() >= totalPages()"
+        [attr.aria-disabled]="currentPage() >= totalPages()"
+        class="nav-button"
+        aria-label="Next page"
+      >
+        <ng-icon name="solarAltArrowRightLinear" aria-hidden="true" />
+      </button>
 
-        <div class="page-numbers" role="group" aria-label="Page numbers">
-          @for (page of visiblePages; track page) {
-            <button
-              type="button"
-              (click)="goToPage(page)"
-              [class]="page === currentPage() ? 'page-button active' : 'page-button'"
-              [attr.aria-label]="'Page ' + page"
-              [attr.aria-current]="page === currentPage() ? 'page' : null"
-              [attr.aria-disabled]="page === currentPage()"
-            >
-              {{ page }}
-            </button>
-          }
-        </div>
-
-        <button
-          type="button"
-          (click)="nextPage()"
-          [disabled]="currentPage() >= totalPages()"
-          [attr.aria-disabled]="currentPage() >= totalPages()"
-          class="pagination-button"
-          aria-label="Next page"
-        >
-          Next
-          <ng-icon name="solarAltArrowRightLinear" aria-hidden="true" />
-        </button>
-      </div>
+      <span class="page-info" role="status" aria-live="polite">
+        {{ startItem }}&ndash;{{ endItem }} of {{ totalCount() }}
+      </span>
 
       <div class="items-per-page hidden sm:flex">
-        <label for="items-per-page" class="text-sm text-gray-600 dark:text-gray-400">
-          Items per page
-        </label>
         <select
           id="items-per-page"
-          [value]="itemsPerPage()"
           (change)="onItemsPerPageChange($event)"
           class="items-select"
-          aria-label="Select number of items per page"
+          aria-label="Items per page"
         >
-          <option [value]="5">5</option>
-          <option [value]="10">10</option>
-          <option [value]="25">25</option>
-          <option [value]="50">50</option>
+          <option value="5" [selected]="itemsPerPage() === 5">5 / page</option>
+          <option value="10" [selected]="itemsPerPage() === 10">10 / page</option>
+          <option value="25" [selected]="itemsPerPage() === 25">25 / page</option>
+          <option value="50" [selected]="itemsPerPage() === 50">50 / page</option>
         </select>
       </div>
     </nav>
@@ -82,72 +72,46 @@ import { solarAltArrowLeftLinear, solarAltArrowRightLinear } from '@ng-icons/sol
       @reference '../../../../styles.css';
 
       .pagination-container {
-        @apply flex flex-col items-center justify-between;
-        @apply p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700;
+        @apply flex items-center justify-center gap-1;
       }
 
-      @media (min-width: 640px) {
-        .pagination-container {
-          @apply flex-row;
-        }
-      }
-
-      .pagination-info {
-        @apply order-2;
-      }
-
-      @media (min-width: 640px) {
-        .pagination-info {
-          @apply order-1;
-        }
-      }
-
-      .pagination-controls {
-        @apply flex items-center order-1 mx-2 gap-2;
-      }
-
-      @media (min-width: 640px) {
-        .pagination-controls {
-          @apply order-2;
-        }
-      }
-
-      .pagination-button {
-        @apply flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200;
-        @apply w-24 cursor-pointer;
-        @apply hover:bg-gray-50 dark:hover:bg-gray-600;
-        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
-        @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-700;
+      .nav-button {
+        @apply flex items-center justify-center w-8 h-8 rounded-md cursor-pointer;
+        @apply text-gray-400 dark:text-gray-500 transition-colors duration-150;
+        @apply hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50;
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/40;
+        @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-400 dark:disabled:hover:text-gray-500;
       }
 
       .page-numbers {
-        @apply hidden items-center mx-1 gap-0.5;
-      }
-
-      @media (min-width: 640px) {
-        .page-numbers {
-          @apply flex;
-        }
+        @apply flex items-center gap-0.5;
       }
 
       .page-button {
-        @apply w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-all duration-200;
-        @apply cursor-pointer;
-        @apply hover:bg-gray-50 dark:hover:bg-gray-600;
-        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+        @apply w-8 h-8 flex items-center justify-center text-xs font-medium rounded-md cursor-pointer;
+        @apply text-gray-500 dark:text-gray-400 transition-colors duration-150;
+        @apply hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/50;
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/40;
       }
 
       .page-button.active {
-        @apply bg-blue-600 text-white border-blue-600 cursor-default;
-        @apply hover:bg-blue-700 focus:ring-blue-500;
+        @apply text-gray-900 dark:text-gray-100 font-semibold bg-gray-100 dark:bg-gray-700/60 cursor-default;
+      }
+
+      .page-info {
+        @apply text-xs text-gray-400 dark:text-gray-500 ml-3 tabular-nums text-right;
+        width: 5.5rem;
       }
 
       .items-per-page {
-        @apply items-center order-3 mx-2 gap-2;
+        @apply items-center ml-3 pl-3 border-l border-gray-200 dark:border-gray-700;
       }
 
       .items-select {
-        @apply px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer;
+        @apply text-xs text-gray-500 dark:text-gray-400 cursor-pointer py-1 px-2 rounded-md;
+        @apply bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-0;
+        @apply hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600/50;
       }
     `,
   ],
