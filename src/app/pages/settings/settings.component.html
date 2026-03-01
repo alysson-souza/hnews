@@ -2,64 +2,55 @@
   [class.lg:w-[60vw]]="sidebarService.isOpen()"
   class="lg:transition-[width] lg:duration-300"
 >
-  <div class="space-y-2 sm:space-y-3">
-    <!-- Theme Settings Section -->
-    <app-card class="block setting-section" role="region" aria-label="Theme Settings">
-      <div class="section-header">
-        <ng-icon name="solarPaletteLinear" class="section-icon" />
-        <app-section-title variant="subtitle">Appearance</app-section-title>
-      </div>
+  <app-card class="block" [noPadding]="true">
+    <!-- Appearance -->
+    <section class="setting-section" role="region" aria-label="Theme Settings">
+      <h2 class="settings-category-label">Appearance</h2>
       <app-theme-selector />
-    </app-card>
+    </section>
+
+    <hr class="section-divider" />
 
     <!-- Reading Preferences -->
-    <app-card class="block setting-section" role="region" aria-label="Reading Preferences">
-      <div class="section-header">
-        <ng-icon name="solarBookLinear" class="section-icon" />
-        <app-section-title variant="subtitle">Reading Preferences</app-section-title>
-      </div>
-      <div class="space-y-6">
-        <div class="setting-group">
-          <div
-            class="modern-toggle-container cursor-pointer"
-            (click)="toggleSidebarPreference()"
-            role="button"
-            tabindex="0"
-            (keydown.enter)="toggleSidebarPreference()"
-            (keydown.space)="toggleSidebarPreference()"
-            [attr.aria-label]="
-              'Toggle open comments in sidebar on desktop. Currently ' +
-              (openCommentsInSidebar() ? 'enabled' : 'disabled')
-            "
-          >
-            <div class="setting-info">
-              <label class="setting-title" for="sidebar-toggle">
-                Open comments in sidebar on desktop
-              </label>
-              <p class="setting-description" id="sidebar-toggle-description">
-                When enabled, comments will open in a sidebar instead of navigating to a new page
-              </p>
-            </div>
-            <div (click)="$event.stopPropagation()" aria-hidden="true">
-              <app-toggle-switch
-                id="sidebar-toggle"
-                [checked]="openCommentsInSidebar()"
-                (checkedChange)="toggleSidebarPreference()"
-                ariaLabel="Toggle sidebar preference"
-                descriptionId="sidebar-toggle-description"
-              />
-            </div>
-          </div>
+    <section class="setting-section" role="region" aria-label="Reading Preferences">
+      <h2 class="settings-category-label">Reading Preferences</h2>
+      <div
+        class="setting-row cursor-pointer"
+        (click)="toggleSidebarPreference()"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="toggleSidebarPreference()"
+        (keydown.space)="toggleSidebarPreference()"
+        [attr.aria-label]="
+          'Toggle open comments in sidebar on desktop. Currently ' +
+          (openCommentsInSidebar() ? 'enabled' : 'disabled')
+        "
+      >
+        <div class="setting-info">
+          <label class="setting-title" for="sidebar-toggle">
+            Open comments in sidebar on desktop
+          </label>
+          <p class="setting-description" id="sidebar-toggle-description">
+            When enabled, comments will open in a sidebar instead of navigating to a new page
+          </p>
+        </div>
+        <div (click)="$event.stopPropagation()" aria-hidden="true">
+          <app-toggle-switch
+            id="sidebar-toggle"
+            [checked]="openCommentsInSidebar()"
+            (checkedChange)="toggleSidebarPreference()"
+            ariaLabel="Toggle sidebar preference"
+            descriptionId="sidebar-toggle-description"
+          />
         </div>
       </div>
-    </app-card>
+    </section>
 
-    <!-- Privacy Redirects Section -->
-    <app-card class="block setting-section" role="region" aria-label="Privacy Redirects">
-      <div class="section-header">
-        <ng-icon name="solarShieldLinear" class="section-icon" />
-        <app-section-title variant="subtitle">Privacy Redirects</app-section-title>
-      </div>
+    <hr class="section-divider" />
+
+    <!-- Privacy Redirects -->
+    <section class="setting-section" role="region" aria-label="Privacy Redirects">
+      <h2 class="settings-category-label">Privacy Redirects</h2>
 
       <!-- Warning when instances not loaded -->
       @if (privacyRedirectEnabled() && privacyRedirectState().error) {
@@ -87,71 +78,69 @@
         </div>
       }
 
-      <div class="privacy-panel">
-        <div
-          class="privacy-panel-header cursor-pointer"
-          [class.opacity-60]="privacyRedirectState().loading"
-          (click)="togglePrivacyRedirect()"
-          role="button"
-          tabindex="0"
-          (keydown.enter)="togglePrivacyRedirect()"
-          (keydown.space)="togglePrivacyRedirect()"
-          [attr.aria-label]="
-            'Toggle privacy redirects. Currently ' +
-            (privacyRedirectEnabled() ? 'enabled' : 'disabled')
-          "
-        >
-          <div class="setting-info">
-            <label class="setting-title" for="privacy-toggle">
-              Redirect links to privacy frontends
-            </label>
-            <p class="setting-description" id="privacy-toggle-description">
-              When enabled, links to sites like Twitter/X will redirect to privacy-respecting
-              alternatives (e.g., Nitter). The original URL is still displayed.
-            </p>
-          </div>
-          <div (click)="$event.stopPropagation()" aria-hidden="true">
-            <app-toggle-switch
-              id="privacy-toggle"
-              [checked]="privacyRedirectEnabled()"
-              (checkedChange)="togglePrivacyRedirect()"
-              ariaLabel="Toggle privacy redirects"
-              descriptionId="privacy-toggle-description"
-            />
-          </div>
+      <div
+        class="setting-row cursor-pointer"
+        [class.opacity-60]="privacyRedirectState().loading"
+        (click)="togglePrivacyRedirect()"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="togglePrivacyRedirect()"
+        (keydown.space)="togglePrivacyRedirect()"
+        [attr.aria-label]="
+          'Toggle privacy redirects. Currently ' +
+          (privacyRedirectEnabled() ? 'enabled' : 'disabled')
+        "
+      >
+        <div class="setting-info">
+          <label class="setting-title" for="privacy-toggle">
+            Redirect links to privacy frontends
+          </label>
+          <p class="setting-description" id="privacy-toggle-description">
+            When enabled, links to sites like Twitter/X will redirect to privacy-respecting
+            alternatives (e.g., Nitter). The original URL is still displayed.
+          </p>
         </div>
-
-        <!-- Service toggles — nested inside the same panel -->
-        @if (privacyRedirectEnabled()) {
-          <div class="privacy-panel-services">
-            @for (config of privacyRedirectRegistry; track config.service) {
-              <div
-                class="privacy-service-item cursor-pointer"
-                (click)="togglePrivacyService(config.service)"
-                role="button"
-                tabindex="0"
-                (keydown.enter)="togglePrivacyService(config.service)"
-                (keydown.space)="togglePrivacyService(config.service)"
-                [attr.aria-label]="
-                  'Toggle ' +
-                  config.displayName +
-                  ' redirect. Currently ' +
-                  (isServiceEnabled(config.service) ? 'enabled' : 'disabled')
-                "
-              >
-                <span class="privacy-service-name">{{ config.displayName }}</span>
-                <div (click)="$event.stopPropagation()" aria-hidden="true">
-                  <app-toggle-switch
-                    [checked]="isServiceEnabled(config.service)"
-                    (checkedChange)="togglePrivacyService(config.service)"
-                    [ariaLabel]="'Toggle ' + config.displayName + ' redirect'"
-                  />
-                </div>
-              </div>
-            }
-          </div>
-        }
+        <div (click)="$event.stopPropagation()" aria-hidden="true">
+          <app-toggle-switch
+            id="privacy-toggle"
+            [checked]="privacyRedirectEnabled()"
+            (checkedChange)="togglePrivacyRedirect()"
+            ariaLabel="Toggle privacy redirects"
+            descriptionId="privacy-toggle-description"
+          />
+        </div>
       </div>
+
+      <!-- Service toggles — nested with left border indent -->
+      @if (privacyRedirectEnabled()) {
+        <div class="sub-settings">
+          @for (config of privacyRedirectRegistry; track config.service) {
+            <div
+              class="privacy-service-item cursor-pointer"
+              (click)="togglePrivacyService(config.service)"
+              role="button"
+              tabindex="0"
+              (keydown.enter)="togglePrivacyService(config.service)"
+              (keydown.space)="togglePrivacyService(config.service)"
+              [attr.aria-label]="
+                'Toggle ' +
+                config.displayName +
+                ' redirect. Currently ' +
+                (isServiceEnabled(config.service) ? 'enabled' : 'disabled')
+              "
+            >
+              <span class="privacy-service-name">{{ config.displayName }}</span>
+              <div (click)="$event.stopPropagation()" aria-hidden="true">
+                <app-toggle-switch
+                  [checked]="isServiceEnabled(config.service)"
+                  (checkedChange)="togglePrivacyService(config.service)"
+                  [ariaLabel]="'Toggle ' + config.displayName + ' redirect'"
+                />
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       <!-- Attribution footer -->
       <div class="attribution-footer">
@@ -165,14 +154,13 @@
           LibRedirect
         </a>
       </div>
-    </app-card>
+    </section>
 
-    <!-- User Tags Section -->
-    <app-card class="block setting-section" role="region" aria-label="User Tags Management">
-      <div class="section-header">
-        <ng-icon name="solarTagLinear" class="section-icon" />
-        <app-section-title variant="subtitle">User Tags</app-section-title>
-      </div>
+    <hr class="section-divider" />
+
+    <!-- User Tags -->
+    <section class="setting-section" role="region" aria-label="User Tags Management">
+      <h2 class="settings-category-label">User Tags</h2>
 
       @if (message()) {
         <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
@@ -211,284 +199,256 @@
       </div>
 
       <!-- Tags Overview -->
-      <div class="tags-overview">
-        @if (paginatedTags().tags.length > 0) {
-          <div class="tags-list">
-            @for (tag of paginatedTags().tags; track tag.username) {
-              <div class="tag-item-modern">
-                <ng-icon name="solarUserLinear" class="user-icon" />
-                <div class="tag-content">
-                  <div class="tag-user-info">
-                    <a
-                      class="tag-username"
-                      [routerLink]="['/user', tag.username]"
-                      [attr.aria-label]="'View profile for ' + tag.username"
-                      [title]="tag.username"
-                    >
-                      {{ tag.username }}
-                    </a>
-                    <span class="tag-badge" [style.background-color]="tag.color" [title]="tag.tag">
-                      {{ tag.tag }}
-                    </span>
-                  </div>
-                  @if (tag.notes && editingNotesFor() !== tag.username) {
-                    <p class="tag-notes">{{ tag.notes }}</p>
-                  }
-                  @if (editingNotesFor() === tag.username) {
-                    <div class="tag-notes-editor">
-                      <textarea
-                        [value]="editingNotesValue()"
-                        (input)="editingNotesValue.set($any($event.target).value)"
-                        (keyup.escape)="editingNotesFor.set(null)"
-                        class="tag-notes-input app-input app-input-xs"
-                        rows="2"
-                        placeholder="Add a note..."
-                        [attr.aria-label]="'Notes for ' + tag.username"
-                      ></textarea>
-                      <div class="tag-notes-actions">
-                        <button
-                          (click)="saveTagNotes(tag.username)"
-                          class="tag-notes-save"
-                          type="button"
-                        >
-                          Save
-                        </button>
-                        <button
-                          (click)="editingNotesFor.set(null)"
-                          class="tag-notes-cancel"
-                          type="button"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+      @if (paginatedTags().tags.length > 0) {
+        <div class="tags-list">
+          @for (tag of paginatedTags().tags; track tag.username) {
+            <div class="tag-item-modern">
+              <ng-icon name="solarUserLinear" class="user-icon" />
+              <div class="tag-content">
+                <div class="tag-user-info">
+                  <a
+                    class="tag-username"
+                    [routerLink]="['/user', tag.username]"
+                    [attr.aria-label]="'View profile for ' + tag.username"
+                    [title]="tag.username"
+                  >
+                    {{ tag.username }}
+                  </a>
+                  <span class="tag-badge" [style.background-color]="tag.color" [title]="tag.tag">
+                    {{ tag.tag }}
+                  </span>
+                </div>
+                @if (tag.notes && editingNotesFor() !== tag.username) {
+                  <p class="tag-notes">{{ tag.notes }}</p>
+                }
+                @if (editingNotesFor() === tag.username) {
+                  <div class="tag-notes-editor">
+                    <textarea
+                      [value]="editingNotesValue()"
+                      (input)="editingNotesValue.set($any($event.target).value)"
+                      (keyup.escape)="editingNotesFor.set(null)"
+                      class="tag-notes-input app-input app-input-xs"
+                      rows="2"
+                      placeholder="Add a note..."
+                      [attr.aria-label]="'Notes for ' + tag.username"
+                    ></textarea>
+                    <div class="tag-notes-actions">
+                      <button
+                        (click)="saveTagNotes(tag.username)"
+                        class="tag-notes-save"
+                        type="button"
+                      >
+                        Save
+                      </button>
+                      <button
+                        (click)="editingNotesFor.set(null)"
+                        class="tag-notes-cancel"
+                        type="button"
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  }
-                </div>
-                <div class="tag-actions">
-                  <button
-                    (click)="editTagNotes(tag)"
-                    class="tag-notes-btn"
-                    type="button"
-                    [title]="'Edit notes for ' + tag.username"
-                    [attr.aria-label]="'Edit notes for ' + tag.username"
-                  >
-                    <ng-icon name="solarPen2Linear" />
-                  </button>
-                  <button
-                    (click)="removeTag(tag.username)"
-                    class="tag-remove-modern"
-                    type="button"
-                    [title]="'Remove tag for ' + tag.username"
-                    [attr.aria-label]="'Remove tag for ' + tag.username"
-                    (keydown.enter)="removeTag(tag.username)"
-                    (keydown.space)="removeTag(tag.username)"
-                  >
-                    <ng-icon name="solarCloseCircleLinear" />
-                  </button>
-                </div>
+                  </div>
+                }
               </div>
-            }
-          </div>
-
-          <!-- Pagination -->
-          @if (paginatedTags().totalPages > 1) {
-            <app-pagination
-              [currentPage]="paginatedTags().currentPage"
-              [totalPages]="paginatedTags().totalPages"
-              [totalCount]="paginatedTags().totalCount"
-              [itemsPerPage]="itemsPerPage()"
-              (pageChange)="onPageChange($event)"
-              (itemsPerPageChange)="onItemsPerPageChange($event)"
-            />
+              <div class="tag-actions">
+                <button
+                  (click)="editTagNotes(tag)"
+                  class="tag-notes-btn"
+                  type="button"
+                  [title]="'Edit notes for ' + tag.username"
+                  [attr.aria-label]="'Edit notes for ' + tag.username"
+                >
+                  <ng-icon name="solarPen2Linear" />
+                </button>
+                <button
+                  (click)="removeTag(tag.username)"
+                  class="tag-remove-modern"
+                  type="button"
+                  [title]="'Remove tag for ' + tag.username"
+                  [attr.aria-label]="'Remove tag for ' + tag.username"
+                  (keydown.enter)="removeTag(tag.username)"
+                  (keydown.space)="removeTag(tag.username)"
+                >
+                  <ng-icon name="solarCloseCircleLinear" />
+                </button>
+              </div>
+            </div>
           }
-        } @else if (searchQuery()) {
-          <div class="empty-state">
-            <ng-icon name="solarMagniferLinear" class="empty-icon" />
-            <h4 class="empty-title">No tags found</h4>
-            <p class="empty-description">
-              No tags match "{{ searchQuery() }}". Try a different search term or clear the search
-              to see all tags.
-            </p>
-            <app-button
-              (clicked)="clearSearch()"
-              variant="secondary"
-              size="sm"
-              ariaLabel="Clear search"
-            >
-              <ng-icon name="solarCloseCircleLinear" class="mr-2" />
-              Clear Search
-            </app-button>
-          </div>
-        } @else {
-          <div class="empty-state">
-            <ng-icon name="solarTagLinear" class="empty-icon" />
-            <h4 class="empty-title">No tags yet</h4>
-            <p class="empty-description">
-              Start tagging users while browsing stories and comments. Your tags will help you
-              remember interesting contributors.
-            </p>
-          </div>
-        }
+        </div>
 
-        <!-- Import/Export and Clear All Actions -->
-        <div class="tag-action-buttons">
-          <app-button
-            (clicked)="exportTags()"
-            variant="secondary"
-            size="sm"
-            ariaLabel="Export user tags"
-            [disabled]="tags().length === 0"
-          >
-            <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
-            Export
-          </app-button>
-          <app-button
-            (clicked)="fileInput.click()"
-            variant="secondary"
-            size="sm"
-            ariaLabel="Import user tags"
-          >
-            <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
-            Import
-          </app-button>
-          <input
-            #fileInput
-            type="file"
-            accept=".json"
-            (change)="importTags($event)"
-            class="hidden"
-            aria-hidden="true"
+        <!-- Pagination -->
+        @if (paginatedTags().totalPages > 1) {
+          <app-pagination
+            [currentPage]="paginatedTags().currentPage"
+            [totalPages]="paginatedTags().totalPages"
+            [totalCount]="paginatedTags().totalCount"
+            [itemsPerPage]="itemsPerPage()"
+            (pageChange)="onPageChange($event)"
+            (itemsPerPageChange)="onItemsPerPageChange($event)"
           />
-          @if (tags().length > 0) {
-            <app-button
-              (clicked)="clearAll()"
-              variant="danger"
-              size="sm"
-              ariaLabel="Clear all user tags"
-            >
-              <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
-              Clear Tags
-            </app-button>
-          }
-        </div>
-      </div>
-    </app-card>
-
-    <!-- Cache Management Section -->
-    <app-card class="block setting-section" role="region" aria-label="Cache Management">
-      <div class="section-header">
-        <ng-icon name="solarDatabaseLinear" class="section-icon" />
-        <app-section-title variant="subtitle">Cache Management</app-section-title>
-      </div>
-
-      <div class="space-y-8">
-        <!-- Cache Statistics -->
-        <div class="cache-stats-section">
-          <div class="stats-header">
-            <h3 class="stats-title">
-              <ng-icon name="solarChartLinear" class="mr-2" />
-              Storage Statistics
-            </h3>
-            <app-button
-              (clicked)="refreshStats()"
-              variant="secondary"
-              size="sm"
-              ariaLabel="Refresh cache statistics"
-            >
-              <ng-icon name="solarRefreshLinear" class="mr-2" />
-              Refresh
-            </app-button>
-          </div>
-
-          <div class="stats-grid">
-            <div class="stat-card-modern">
-              <div class="stat-icon indexeddb">
-                <ng-icon name="solarSSDRoundLinear" />
-              </div>
-              <div class="stat-content">
-                <div class="stat-label">IndexedDB Storage</div>
-                <div class="stat-value">{{ formatBytes(cacheStats().indexedDB) }}</div>
-              </div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-icon sw-cache">
-                <ng-icon name="solarGalleryLinear" />
-              </div>
-              <div class="stat-content">
-                <div class="stat-label">Service Worker Cache</div>
-                <div class="stat-value">{{ formatBytes(cacheStats().swCache) }}</div>
-              </div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-icon items">
-                <ng-icon name="solarDatabaseLinear" />
-              </div>
-              <div class="stat-content">
-                <div class="stat-label">Cached Items</div>
-                <div class="stat-value">{{ cacheStats().itemCount }}</div>
-              </div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-icon memory">
-                <ng-icon name="solarCPULinear" />
-              </div>
-              <div class="stat-content">
-                <div class="stat-label">Memory Cache</div>
-                <div class="stat-value">{{ cacheStats().memoryItems }} items</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cache Actions -->
-        <div class="cache-actions-section">
-          <div class="cache-actions-header">
-            <h3 class="actions-title">
-              <ng-icon name="solarTrashBinTrashLinear" class="mr-2" />
-              Clear Cache Data
-            </h3>
-          </div>
-          <p class="actions-description">
-            Free up storage space by clearing cached data. The app will re-download content as
-            needed.
+        }
+      } @else if (searchQuery()) {
+        <div class="empty-state">
+          <ng-icon name="solarMagniferLinear" class="empty-icon" />
+          <h4 class="empty-title">No tags found</h4>
+          <p class="empty-description">
+            No tags match "{{ searchQuery() }}". Try a different search term or clear the search to
+            see all tags.
           </p>
-          <div class="action-buttons">
-            <app-button
-              (clicked)="clearCache('stories')"
-              variant="secondary"
-              size="sm"
-              ariaLabel="Clear story cache"
-            >
-              Clear Stories
-            </app-button>
-            <app-button
-              (clicked)="clearCache('images')"
-              variant="secondary"
-              size="sm"
-              ariaLabel="Clear image cache"
-            >
-              Clear Images
-            </app-button>
-            <app-button
-              (clicked)="clearCache('all')"
-              variant="danger"
-              size="sm"
-              ariaLabel="Clear all cached data"
-            >
-              Clear All Cache
-            </app-button>
-          </div>
+          <app-button
+            (clicked)="clearSearch()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Clear search"
+          >
+            <ng-icon name="solarCloseCircleLinear" class="mr-2" />
+            Clear Search
+          </app-button>
         </div>
+      } @else {
+        <div class="empty-state">
+          <ng-icon name="solarTagLinear" class="empty-icon" />
+          <h4 class="empty-title">No tags yet</h4>
+          <p class="empty-description">
+            Start tagging users while browsing stories and comments. Your tags will help you
+            remember interesting contributors.
+          </p>
+        </div>
+      }
 
-        @if (cacheMessage()) {
-          <div [class]="cacheError() ? 'alert-danger' : 'alert-success'">
-            {{ cacheMessage() }}
-          </div>
+      <!-- Import/Export and Clear All Actions -->
+      <div class="tag-action-buttons">
+        <app-button
+          (clicked)="exportTags()"
+          variant="secondary"
+          size="sm"
+          ariaLabel="Export user tags"
+          [disabled]="tags().length === 0"
+        >
+          <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
+          Export
+        </app-button>
+        <app-button
+          (clicked)="fileInput.click()"
+          variant="secondary"
+          size="sm"
+          ariaLabel="Import user tags"
+        >
+          <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
+          Import
+        </app-button>
+        <input
+          #fileInput
+          type="file"
+          accept=".json"
+          (change)="importTags($event)"
+          class="hidden"
+          aria-hidden="true"
+        />
+        @if (tags().length > 0) {
+          <app-button
+            (clicked)="clearAll()"
+            variant="danger"
+            size="sm"
+            ariaLabel="Clear all user tags"
+          >
+            <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
+            Clear Tags
+          </app-button>
         }
       </div>
-    </app-card>
-  </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- Cache Management -->
+    <section class="setting-section" role="region" aria-label="Cache Management">
+      <h2 class="settings-category-label">Cache</h2>
+
+      <!-- Cache Statistics -->
+      <div class="stats-header">
+        <span class="stats-title">Storage</span>
+        <app-button
+          (clicked)="refreshStats()"
+          variant="secondary"
+          size="sm"
+          ariaLabel="Refresh cache statistics"
+        >
+          <ng-icon name="solarRefreshLinear" class="mr-2" />
+          Refresh
+        </app-button>
+      </div>
+
+      <div class="stats-list">
+        <div class="stat-row">
+          <span class="stat-row-label">
+            <ng-icon name="solarSSDRoundLinear" class="stat-row-icon" />
+            IndexedDB Storage
+          </span>
+          <span class="stat-row-value">{{ formatBytes(cacheStats().indexedDB) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-row-label">
+            <ng-icon name="solarGalleryLinear" class="stat-row-icon" />
+            Service Worker Cache
+          </span>
+          <span class="stat-row-value">{{ formatBytes(cacheStats().swCache) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-row-label">
+            <ng-icon name="solarDatabaseLinear" class="stat-row-icon" />
+            Cached Items
+          </span>
+          <span class="stat-row-value">{{ cacheStats().itemCount }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-row-label">
+            <ng-icon name="solarCPULinear" class="stat-row-icon" />
+            Memory Cache
+          </span>
+          <span class="stat-row-value">{{ cacheStats().memoryItems }} items</span>
+        </div>
+      </div>
+
+      <!-- Cache Actions -->
+      <div class="cache-actions-section">
+        <p class="actions-description">
+          Free up storage space by clearing cached data. The app will re-download content as needed.
+        </p>
+        <div class="action-buttons">
+          <app-button
+            (clicked)="clearCache('stories')"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Clear story cache"
+          >
+            Clear Stories
+          </app-button>
+          <app-button
+            (clicked)="clearCache('images')"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Clear image cache"
+          >
+            Clear Images
+          </app-button>
+          <app-button
+            (clicked)="clearCache('all')"
+            variant="danger"
+            size="sm"
+            ariaLabel="Clear all cached data"
+          >
+            Clear All Cache
+          </app-button>
+        </div>
+      </div>
+
+      @if (cacheMessage()) {
+        <div [class]="cacheError() ? 'alert-danger' : 'alert-success'" class="mt-4">
+          {{ cacheMessage() }}
+        </div>
+      }
+    </section>
+  </app-card>
 </app-page-container>

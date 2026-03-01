@@ -18,7 +18,6 @@ import { AppButtonComponent } from '../../components/shared/app-button/app-butto
 import { CardComponent } from '../../components/shared/card/card.component';
 import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
 import { ThemeSelectorComponent } from '../../components/shared/theme-selector/theme-selector.component';
-import { SectionTitleComponent } from '../../components/shared/section-title/section-title.component';
 import { ToggleSwitchComponent } from '../../components/shared/toggle-switch/toggle-switch.component';
 import { PaginationComponent } from '../../components/shared/pagination/pagination.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -26,22 +25,18 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  solarPaletteLinear,
-  solarBookLinear,
   solarTagLinear,
   solarExportLinear,
   solarImportLinear,
   solarTrashBinTrashLinear,
   solarCloseCircleLinear,
   solarDatabaseLinear,
-  solarChartLinear,
   solarRefreshLinear,
   solarUserLinear,
   solarSSDRoundLinear,
   solarCPULinear,
   solarGalleryLinear,
   solarMagniferLinear,
-  solarShieldLinear,
   solarDangerTriangleLinear,
   solarPen2Linear,
 } from '@ng-icons/solar-icons/linear';
@@ -55,29 +50,24 @@ import {
     CardComponent,
     PageContainerComponent,
     ThemeSelectorComponent,
-    SectionTitleComponent,
     ToggleSwitchComponent,
     PaginationComponent,
     NgIconComponent,
   ],
   viewProviders: [
     provideIcons({
-      solarPaletteLinear,
-      solarBookLinear,
       solarTagLinear,
       solarExportLinear,
       solarImportLinear,
       solarTrashBinTrashLinear,
       solarCloseCircleLinear,
       solarDatabaseLinear,
-      solarChartLinear,
       solarRefreshLinear,
       solarUserLinear,
       solarSSDRoundLinear,
       solarCPULinear,
       solarGalleryLinear,
       solarMagniferLinear,
-      solarShieldLinear,
       solarDangerTriangleLinear,
       solarPen2Linear,
     }),
@@ -87,339 +77,69 @@ import {
     `
       @reference '../../../styles.css';
 
-      /* Section Styling */
+      /* ── Spacing scale ──
+       * Tight:   2 (0.5rem)  — inline gaps, minor spacing
+       * Base:    4 (1rem)    — row padding, standard margins, content gaps
+       * Section: 6 (1.5rem)  — section insets (mobile), label-to-content
+       * Wide:    8 (2rem)    — section insets (desktop)
+       */
+
+      /* Section layout */
       .setting-section {
-        @apply relative overflow-hidden;
+        @apply relative px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6;
       }
 
-      .section-header {
-        @apply flex items-center gap-3 mb-6;
+      .section-divider {
+        @apply border-t border-gray-200 dark:border-gray-700/60 m-0;
       }
 
-      .section-header app-section-title {
-        @apply flex items-center;
+      .settings-category-label {
+        @apply text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-4;
       }
 
-      .section-icon {
-        @apply text-lg text-gray-500 dark:text-gray-400 flex-shrink-0 inline-flex items-center justify-center;
+      /* Shared interactive row — used for toggles, tag items, privacy services, stat rows */
+      .setting-row {
+        @apply flex items-start justify-between gap-4 py-3 px-4 -mx-4 rounded-xl;
+        @apply hover:bg-gray-50 dark:hover:bg-white/[0.03];
+      }
+
+      .setting-info {
+        @apply flex-1 space-y-1;
+      }
+
+      .setting-title {
+        @apply text-sm font-medium text-gray-900 dark:text-gray-100 block cursor-pointer;
+      }
+
+      .setting-description {
+        @apply text-sm text-gray-500 dark:text-gray-400 leading-relaxed;
       }
 
       /* Alert Messages */
       .alert-success {
-        @apply p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800/30 mb-6;
+        @apply p-4 rounded-lg mb-4 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800/30;
       }
       .alert-danger {
-        @apply p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/30 mb-6;
+        @apply p-4 rounded-lg mb-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/30;
       }
 
-      /* Modern Toggle Switch */
-      .setting-group {
-        @apply space-y-6;
-      }
-
-      .modern-toggle-container {
-        @apply flex items-start justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-200;
-        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm;
-      }
-
-      @media (min-width: 640px) {
-        .modern-toggle-container {
-          @apply gap-6 p-6;
-        }
-      }
-
-      .setting-info {
-        @apply flex-1 space-y-2;
-      }
-
-      .setting-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100 block cursor-pointer;
-      }
-
-      .setting-description {
-        @apply text-sm text-gray-600 dark:text-gray-400 leading-relaxed;
-      }
-
-      /* Tag Management */
-      .action-buttons {
-        @apply flex flex-wrap items-center gap-3;
-      }
-
-      .tags-search-section {
-        @apply mb-3;
-      }
-
-      .search-container {
-        @apply space-y-2;
-      }
-
-      .search-input {
-        @apply w-full pl-10 pr-10 py-3 rounded-xl border-0 ring-1 ring-gray-200 dark:ring-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200;
-      }
-
-      .search-icon {
-        @apply absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500;
-      }
-
-      .clear-search {
-        @apply absolute right-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200;
-      }
-
-      .search-results-info {
-        @apply text-sm text-gray-600 dark:text-gray-400 px-1;
-      }
-
-      .tags-overview {
-        @apply space-y-4;
-      }
-
-      .tags-list {
-        @apply space-y-2 mb-3;
-      }
-
-      .tag-item-modern {
-        @apply grid items-center gap-x-3 p-3 rounded-xl border border-gray-200 dark:border-slate-700/60 transition-all duration-200;
-        @apply bg-gray-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700/50 hover:shadow-sm;
-        grid-template-columns: auto 1fr auto;
-      }
-
-      .tag-content {
-        @apply min-w-0;
-      }
-
-      .tag-user-info {
-        @apply flex items-center gap-3 min-w-0;
-      }
-
-      .user-icon {
-        @apply text-gray-500 dark:text-gray-400 flex-shrink-0 inline-flex items-center justify-center;
-      }
-
-      .tag-username {
-        @apply font-semibold text-gray-900 dark:text-gray-100 no-underline;
-        @apply hover:underline focus-visible:underline;
-        @apply max-w-24 truncate inline-flex items-center;
-      }
-
-      @media (min-width: 640px) {
-        .tag-username {
-          @apply max-w-40;
-        }
-      }
-
-      .tag-badge {
-        @apply px-3 py-1 text-xs font-medium text-white text-center rounded-full shadow-sm;
-        @apply max-w-32 truncate inline-flex items-center justify-center;
-      }
-
-      .tag-notes {
-        @apply text-sm italic text-gray-500 dark:text-gray-400 mt-1;
-      }
-
-      .tag-notes-btn {
-        @apply flex items-center justify-center w-9 h-9 rounded-full text-gray-500 dark:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-500/20;
-        @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer;
-        @apply flex-shrink-0;
-      }
-
-      .tag-notes-editor {
-        @apply mt-2 space-y-2;
-      }
-
-      .tag-notes-input {
-        @apply w-full text-sm px-3 py-2 rounded-lg resize-none;
-        @apply border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800;
-        @apply text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500;
-        @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
-      }
-
-      .tag-notes-actions {
-        @apply flex items-center gap-2;
-      }
-
-      .tag-notes-save {
-        @apply text-xs font-medium text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 cursor-pointer transition-colors duration-200;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 rounded px-2 py-1;
-      }
-
-      .tag-notes-cancel {
-        @apply text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer transition-colors duration-200;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 rounded px-2 py-1;
-      }
-
-      .tag-actions {
-        @apply flex items-center gap-1 flex-shrink-0;
-      }
-
-      .tag-remove-modern {
-        @apply flex items-center justify-center w-9 h-9 rounded-full text-red-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-500/20;
-        @apply bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer;
-        @apply flex-shrink-0;
-      }
-
-      /* Empty State */
-      .empty-state {
-        @apply text-center py-8 space-y-4;
-      }
-
-      .empty-icon {
-        @apply text-5xl text-gray-300 dark:text-slate-700 mx-auto mb-4;
-      }
-
-      .empty-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100;
-      }
-
-      .empty-description {
-        @apply text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed;
-      }
-
-      /* Tag Action Buttons */
-      .tag-action-buttons {
-        @apply flex flex-wrap justify-center pt-4 gap-2;
-      }
-
-      @media (min-width: 640px) {
-        .tag-action-buttons {
-          @apply justify-end;
-        }
-      }
-
-      /* Cache Management */
-      .cache-stats-section {
-        @apply space-y-6 mb-8;
-      }
-
-      .stats-header {
-        @apply flex flex-wrap items-center justify-between gap-2 mb-3;
-      }
-
-      .stats-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center;
-      }
-
-      .stats-grid {
-        @apply grid grid-cols-1 md:grid-cols-2 gap-3;
-      }
-
-      .stat-card-modern {
-        @apply flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200;
-        @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700;
-      }
-
-      @media (min-width: 640px) {
-        .stat-card-modern {
-          @apply gap-4 p-6;
-        }
-      }
-
-      .stat-icon {
-        @apply flex items-center justify-center w-10 h-10 rounded-full text-white text-lg shadow-lg;
-      }
-
-      @media (min-width: 640px) {
-        .stat-icon {
-          @apply w-12 h-12 text-xl;
-        }
-      }
-
-      .stat-icon.indexeddb {
-        @apply bg-gradient-to-br from-violet-600 to-violet-700;
-      }
-
-      .stat-icon.sw-cache {
-        @apply bg-gradient-to-br from-teal-600 to-teal-700;
-      }
-
-      .stat-icon.items {
-        @apply bg-gradient-to-br from-sky-600 to-sky-700;
-      }
-
-      .stat-icon.memory {
-        @apply bg-gradient-to-br from-amber-600 to-amber-700;
-      }
-
-      .stat-content {
-        @apply flex-1;
-      }
-
-      .stat-label {
-        @apply text-sm font-medium text-gray-600 dark:text-gray-400 mb-1;
-      }
-
-      .stat-value {
-        @apply text-xl font-bold text-gray-900 dark:text-gray-100;
-      }
-
-      .cache-actions-section {
-        @apply space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700;
-      }
-
-      .cache-actions-header {
-        @apply flex items-center justify-between mb-4;
-      }
-
-      .actions-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center;
-      }
-
-      .actions-description {
-        @apply text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4;
-      }
-
-      .action-buttons {
-        @apply flex flex-wrap items-center justify-center gap-2;
-      }
-
-      @media (min-width: 640px) {
-        .action-buttons {
-          @apply justify-end;
-        }
-      }
-
-      /* Privacy Redirect Panel */
-      .privacy-panel {
-        @apply rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden;
-        @apply bg-white dark:bg-gray-800;
-      }
-
-      .privacy-panel-header {
-        @apply flex items-start justify-between gap-3 p-4 transition-all duration-200;
-        @apply hover:bg-gray-50 dark:hover:bg-gray-700;
-      }
-
-      @media (min-width: 640px) {
-        .privacy-panel-header {
-          @apply gap-6 p-6;
-        }
-      }
-
-      .privacy-panel-services {
-        @apply border-t border-gray-200 dark:border-gray-700;
+      /* Privacy sub-settings */
+      .sub-settings {
+        @apply mt-1 divide-y divide-gray-100 dark:divide-gray-700/40;
       }
 
       .privacy-service-item {
-        @apply flex items-center justify-between gap-3 py-3 px-4 pl-6 transition-colors duration-200;
-        @apply bg-gray-50/80 dark:bg-gray-900/60 hover:bg-gray-100 dark:hover:bg-gray-900/80;
-      }
-
-      .privacy-service-item + .privacy-service-item {
-        @apply border-t border-gray-100 dark:border-gray-700/50;
-      }
-
-      @media (min-width: 640px) {
-        .privacy-service-item {
-          @apply py-3.5 px-6 pl-8;
-        }
+        @apply flex items-center justify-between gap-4 py-3 pl-6 pr-4 -mx-4;
+        @apply hover:bg-gray-50 dark:hover:bg-white/[0.03];
       }
 
       .privacy-service-name {
-        @apply text-sm font-medium text-gray-700 dark:text-gray-300;
+        @apply text-sm text-gray-600 dark:text-gray-400;
       }
 
       .privacy-warning {
-        @apply p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30 mb-4;
-        @apply flex items-start gap-3;
+        @apply flex items-start gap-4 p-4 rounded-lg mb-4;
+        @apply bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30;
       }
 
       .privacy-warning-icon {
@@ -439,11 +159,181 @@ import {
       }
 
       .attribution-footer {
-        @apply mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400;
+        @apply mt-2 text-xs text-gray-400 dark:text-gray-500;
       }
 
       .attribution-link {
         @apply text-blue-600 dark:text-blue-400 hover:underline;
+      }
+
+      /* Tag Management */
+      .tags-search-section {
+        @apply mb-4;
+      }
+
+      .search-container {
+        @apply space-y-2;
+      }
+
+      .search-input {
+        @apply w-full pl-10 pr-10 py-3 rounded-xl border-0 ring-1 ring-gray-200 dark:ring-slate-700;
+        @apply bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-gray-100;
+        @apply placeholder-gray-500 dark:placeholder-gray-400;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900;
+      }
+
+      .search-icon {
+        @apply absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500;
+      }
+
+      .clear-search {
+        @apply absolute right-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300;
+      }
+
+      .search-results-info {
+        @apply text-sm text-gray-600 dark:text-gray-400;
+      }
+
+      .tags-list {
+        @apply mb-4 divide-y divide-gray-100 dark:divide-gray-700/40;
+      }
+
+      .tag-item-modern {
+        @apply grid items-center gap-x-4 py-3 px-4 -mx-4;
+        @apply hover:bg-gray-50 dark:hover:bg-white/[0.03];
+        grid-template-columns: auto 1fr auto;
+      }
+
+      .tag-content {
+        @apply min-w-0;
+      }
+
+      .tag-user-info {
+        @apply flex items-center gap-4 min-w-0;
+      }
+
+      .user-icon {
+        @apply text-gray-400 dark:text-gray-500 flex-shrink-0 inline-flex items-center justify-center;
+      }
+
+      .tag-username {
+        @apply font-semibold text-gray-900 dark:text-gray-100 no-underline;
+        @apply hover:underline focus-visible:underline;
+        @apply max-w-24 sm:max-w-40 truncate inline-flex items-center;
+      }
+
+      .tag-badge {
+        @apply px-3 py-1 text-xs font-medium text-white text-center rounded-full shadow-sm;
+        @apply max-w-32 truncate inline-flex items-center justify-center;
+      }
+
+      .tag-notes {
+        @apply text-sm italic text-gray-500 dark:text-gray-400 mt-1;
+      }
+
+      .tag-notes-btn {
+        @apply flex items-center justify-center w-9 h-9 rounded-full cursor-pointer flex-shrink-0;
+        @apply text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700;
+        @apply focus:outline-none focus:ring-4 focus:ring-gray-500/20;
+      }
+
+      .tag-notes-editor {
+        @apply mt-2 space-y-2;
+      }
+
+      .tag-notes-input {
+        @apply w-full text-sm px-4 py-2 rounded-lg resize-none;
+        @apply border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800;
+        @apply text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
+      }
+
+      .tag-notes-actions {
+        @apply flex items-center gap-2;
+      }
+
+      .tag-notes-save {
+        @apply text-xs font-medium cursor-pointer rounded px-2 py-1;
+        @apply text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500;
+      }
+
+      .tag-notes-cancel {
+        @apply text-xs font-medium cursor-pointer rounded px-2 py-1;
+        @apply text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500;
+      }
+
+      .tag-actions {
+        @apply flex items-center gap-2 flex-shrink-0;
+      }
+
+      .tag-remove-modern {
+        @apply flex items-center justify-center w-9 h-9 rounded-full cursor-pointer flex-shrink-0;
+        @apply text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40;
+        @apply focus:outline-none focus:ring-4 focus:ring-red-500/20;
+      }
+
+      /* Empty State */
+      .empty-state {
+        @apply text-center py-6 space-y-2;
+      }
+
+      .empty-icon {
+        @apply text-5xl text-gray-300 dark:text-slate-700 mx-auto mb-2;
+      }
+
+      .empty-title {
+        @apply text-base font-semibold text-gray-900 dark:text-gray-100;
+      }
+
+      .empty-description {
+        @apply text-gray-600 dark:text-gray-400 max-w-md mx-auto leading-relaxed;
+      }
+
+      .tag-action-buttons {
+        @apply flex flex-wrap justify-center sm:justify-end pt-4 gap-2;
+      }
+
+      /* Cache Management */
+      .stats-header {
+        @apply flex flex-wrap items-center justify-between gap-4 mb-4;
+      }
+
+      .stats-title {
+        @apply text-sm font-medium text-gray-700 dark:text-gray-300;
+      }
+
+      .stats-list {
+        @apply rounded-xl bg-gray-50 dark:bg-gray-800/50 divide-y divide-gray-200 dark:divide-gray-700/50 mb-4;
+      }
+
+      .stat-row {
+        @apply flex items-center justify-between px-4 py-3;
+      }
+
+      .stat-row-label {
+        @apply flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400;
+      }
+
+      .stat-row-icon {
+        @apply text-base text-gray-400 dark:text-gray-500;
+      }
+
+      .stat-row-value {
+        @apply text-sm font-semibold text-gray-900 dark:text-gray-100 font-mono tabular-nums;
+      }
+
+      .cache-actions-section {
+        @apply space-y-4;
+      }
+
+      .actions-description {
+        @apply text-sm text-gray-500 dark:text-gray-400 leading-relaxed;
+      }
+
+      .action-buttons {
+        @apply flex flex-wrap items-center justify-center sm:justify-end gap-2;
       }
     `,
   ],
