@@ -34,7 +34,8 @@ export interface SegmentOption {
 
       .segmented-control-container {
         @apply inline-flex max-w-full items-center gap-1 p-1 rounded-xl w-full sm:w-auto;
-        @apply border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/70 shadow-inner;
+        @apply border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/70;
+        @apply shadow-[inset_0_1px_3px_rgb(0_0_0/0.06)] dark:shadow-[inset_0_1px_3px_rgb(0_0_0/0.3)];
       }
 
       .segment-button {

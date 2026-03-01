@@ -79,7 +79,8 @@ import {
       @reference '../../../../styles.css';
 
       .theme-segmented {
-        @apply inline-flex max-w-full gap-1 p-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 shadow-inner;
+        @apply inline-flex max-w-full gap-1 p-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800;
+        @apply shadow-[inset_0_1px_3px_rgb(0_0_0/0.06)] dark:shadow-[inset_0_1px_3px_rgb(0_0_0/0.3)];
       }
 
       .theme-segment {

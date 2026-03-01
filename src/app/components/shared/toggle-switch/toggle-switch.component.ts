@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, output, input } from '@angular/core';
 
 @Component({
@@ -40,7 +40,8 @@ import { Component, output, input } from '@angular/core';
       }
 
       .slider {
-        @apply pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow-md transform transition ease-in-out duration-200 dark:bg-gray-100;
+        @apply pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white transform transition ease-in-out duration-200 dark:bg-gray-100;
+        @apply shadow-md dark:shadow-[0_2px_6px_rgb(0_0_0/0.4)];
       }
 
       .slider.translate-x-5 {
