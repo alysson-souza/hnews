@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, inject, input } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
@@ -10,7 +10,12 @@ import { ScrollService } from '../../../../services/scroll.service';
   imports: [RouterLink],
   template: `
     <div class="flex items-center">
-      <a routerLink="/" (click)="scrollToTop()" class="flex items-center gap-2 sm:gap-3 p-2 lg:p-0">
+      <a
+        routerLink="/"
+        (click)="scrollToTop()"
+        tabindex="0"
+        class="flex items-center gap-2 sm:gap-3 p-2 lg:p-0 rounded-xl focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+      >
         <div class="app-logo-container">
           <svg class="app-logo-icon" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />

@@ -113,7 +113,11 @@
 
 .story-title {
   font-family: var(--font-sans);
-  @apply text-lg sm:text-xl font-semibold break-words leading-tight tracking-tight line-clamp-2;
+  @apply text-lg sm:text-xl font-semibold break-words leading-tight tracking-tight line-clamp-2 rounded;
+
+  &:has(:focus-visible) {
+    @apply outline-2 outline-blue-500 dark:outline-blue-400 outline-offset-2;
+  }
 }
 
 .story-title-unread {

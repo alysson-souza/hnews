@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, inject, input } from '@angular/core';
 
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -13,6 +13,7 @@ import { ScrollService } from '../../../services/scroll.service';
       [routerLink]="route()"
       routerLinkActive="nav-link-active"
       [class]="getLinkClasses()"
+      tabindex="0"
       [attr.aria-current]="isActive() ? 'page' : null"
       (click)="handleClick()"
     >

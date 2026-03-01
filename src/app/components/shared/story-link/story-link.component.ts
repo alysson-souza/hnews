@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, ChangeDetectionStrategy, input, computed, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PrivacyRedirectDirective } from '../privacy-redirect/privacy-redirect.directive';
@@ -25,7 +25,13 @@ import { isHnLink, translateHnLink } from '../../comment-text/hn-link.utils';
   imports: [RouterLink, PrivacyRedirectDirective],
   template: `
     @if (hnRoute()) {
-      <a [routerLink]="hnRoute()" [attr.title]="linkTitle()" (click)="clicked.emit()">
+      <a
+        [routerLink]="hnRoute()"
+        [attr.title]="linkTitle()"
+        tabindex="0"
+        class="story-link"
+        (click)="clicked.emit()"
+      >
         @if (htmlContent()) {
           <span [innerHTML]="htmlContent()"></span>
         } @else {
@@ -38,6 +44,8 @@ import { isHnLink, translateHnLink } from '../../comment-text/hn-link.utils';
         target="_blank"
         rel="noopener noreferrer nofollow"
         [attr.title]="linkTitle()"
+        tabindex="0"
+        class="story-link"
         appPrivacyRedirect
         (click)="clicked.emit()"
       >
@@ -59,6 +67,10 @@ import { isHnLink, translateHnLink } from '../../comment-text/hn-link.utils';
     `
       :host {
         display: contents;
+      }
+
+      .story-link:focus-visible {
+        outline: none;
       }
     `,
   ],

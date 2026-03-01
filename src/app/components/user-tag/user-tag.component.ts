@@ -28,6 +28,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
       <a
         [routerLink]="['/user', username()]"
         class="username-link"
+        tabindex="0"
         [attr.aria-label]="'View Profile Of ' + username()"
       >
         {{ username() }}
@@ -147,7 +148,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
 
       .username-link {
         @apply text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors duration-200;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 rounded;
+        @apply rounded focus-visible:outline-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 focus-visible:outline-offset-1;
       }
 
       .tag-chip {
