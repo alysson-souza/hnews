@@ -99,10 +99,15 @@
         <h2 class="us-category-label">Userscript Code</h2>
 
         <div class="us-button-group">
-          <a [href]="installUrl()" class="btn-primary" aria-label="Install userscript">
+          <app-button
+            (clicked)="install()"
+            variant="primary"
+            size="sm"
+            ariaLabel="Install userscript"
+          >
             <ng-icon name="solarDownloadLinear" class="mr-2" />
             Install Script
-          </a>
+          </app-button>
 
           <app-button
             (clicked)="copyToClipboard()"

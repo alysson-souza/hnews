@@ -61,16 +61,6 @@ import {
         @apply flex flex-wrap items-center justify-center sm:justify-end gap-2;
       }
 
-      .btn-primary {
-        @apply inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap border border-transparent;
-        @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm;
-        @apply hover:from-blue-700 hover:to-blue-800 hover:shadow-md;
-        @apply dark:from-blue-500 dark:to-blue-600;
-        @apply dark:hover:from-blue-600 dark:hover:to-blue-700;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500;
-        @apply dark:focus-visible:ring-offset-gray-800;
-      }
-
       .info-text {
         @apply text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4;
       }
@@ -180,6 +170,10 @@ export class UserscriptComponent {
         this.highlightedUserscript.set(this.sanitizer.bypassSecurityTrustHtml(highlighted));
       });
     });
+  }
+
+  install(): void {
+    window.open(this.installUrl(), '_blank', 'noopener,noreferrer');
   }
 
   async copyToClipboard(): Promise<void> {
