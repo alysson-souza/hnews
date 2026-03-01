@@ -1,14 +1,24 @@
 <app-page-container>
   @if (loading()) {
-    <!-- Loading skeleton -->
-    <div class="skeleton-card">
-      <div class="skel-title mb-4"></div>
-      <div class="skel-subtitle mb-8"></div>
-      <div class="space-y-4">
-        <div class="skel-block"></div>
-        <div class="skel-block"></div>
+    <!-- Card 1: Story summary skeleton -->
+    <app-card class="block mb-6">
+      <div class="skel-title mb-2 skeleton"></div>
+      <div class="skel-domain mb-3 skeleton"></div>
+      <div class="skel-meta skeleton"></div>
+    </app-card>
+
+    <!-- Card 2: Comments skeleton -->
+    <app-card class="block">
+      <div class="flex items-center justify-between mb-4">
+        <div class="skel-comments-title skeleton"></div>
+        <div class="skel-sort skeleton"></div>
       </div>
-    </div>
+      <div class="space-y-4">
+        <div class="skel-comment skeleton"></div>
+        <div class="skel-comment skeleton"></div>
+        <div class="skel-comment skeleton"></div>
+      </div>
+    </app-card>
   } @else if (item()) {
     <!-- Story Details -->
     <app-card class="block mb-6" id="submission-title">
