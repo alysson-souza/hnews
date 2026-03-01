@@ -109,7 +109,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   // For non-crawlers, just return the index.html (SPA routing).
   if (!isCrawler || !meta) {
-    return response;
+    const headers = new Headers(response.headers);
+    headers.set('cache-control', 'no-cache');
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }
 
   const html = await response.text();

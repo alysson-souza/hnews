@@ -533,6 +533,86 @@ describe('PwaUpdateService', () => {
     });
   });
 
+  describe('visibilitychange update check', () => {
+    let visibilityState: 'visible' | 'hidden';
+    let listeners: Map<string, EventListenerOrEventListenerObject[]>;
+
+    beforeEach(() => {
+      visibilityState = 'hidden';
+      listeners = new Map();
+
+      vi.spyOn(document, 'addEventListener').mockImplementation(
+        (type: string, listener: EventListenerOrEventListenerObject) => {
+          const existing = listeners.get(type) ?? [];
+          existing.push(listener);
+          listeners.set(type, existing);
+        },
+      );
+
+      Object.defineProperty(document, 'visibilityState', {
+        get: () => visibilityState,
+        configurable: true,
+      });
+
+      // Re-create service so the mock addEventListener captures the listener
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          PwaUpdateService,
+          provideZonelessChangeDetection(),
+          { provide: SwUpdate, useValue: mockSwUpdate },
+          { provide: ApplicationRef, useValue: mockApplicationRef },
+        ],
+      });
+      mockSwUpdate.checkForUpdate.mockReturnValue(Promise.resolve(false));
+      service = TestBed.inject(PwaUpdateService);
+      // Clear call count from initial setup
+      mockSwUpdate.checkForUpdate.mockClear();
+      mockSwUpdate.checkForUpdate.mockReturnValue(Promise.resolve(false));
+    });
+
+    function fireVisibilityChange() {
+      const handlers = listeners.get('visibilitychange') ?? [];
+      for (const handler of handlers) {
+        if (typeof handler === 'function') handler(new Event('visibilitychange'));
+        else handler.handleEvent(new Event('visibilitychange'));
+      }
+    }
+
+    it('should call checkForUpdate when tab becomes visible', () => {
+      visibilityState = 'visible';
+      fireVisibilityChange();
+
+      expect(mockSwUpdate.checkForUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not call checkForUpdate when tab becomes hidden', () => {
+      visibilityState = 'hidden';
+      fireVisibilityChange();
+
+      expect(mockSwUpdate.checkForUpdate).not.toHaveBeenCalled();
+    });
+
+    it('should debounce rapid visibility changes within 30 seconds', () => {
+      visibilityState = 'visible';
+      fireVisibilityChange();
+      fireVisibilityChange();
+      fireVisibilityChange();
+
+      expect(mockSwUpdate.checkForUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('should check again after 30 seconds have elapsed', () => {
+      visibilityState = 'visible';
+      fireVisibilityChange();
+      expect(mockSwUpdate.checkForUpdate).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(30_001);
+      fireVisibilityChange();
+      expect(mockSwUpdate.checkForUpdate).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('when SwUpdate is disabled', () => {
     beforeEach(() => {
       TestBed.resetTestingModule();

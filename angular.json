@@ -20,9 +20,7 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              "src/service-worker.js",
-              "src/manifest.json"
+              }
             ],
             "styles": ["src/styles.css"]
           },

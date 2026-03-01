@@ -16,6 +16,8 @@ export class PwaUpdateService {
   // Signal to store update version information
   updateVersionInfo = signal<{ current: string; available: string } | null>(null);
 
+  private lastVisibilityCheck = 0;
+
   constructor() {
     if (!this.updates.isEnabled) return;
 
@@ -31,6 +33,18 @@ export class PwaUpdateService {
     concat(appIsStable$, every15Min$).subscribe(() => {
       this.updates.checkForUpdate().catch(() => undefined);
     });
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          const now = Date.now();
+          if (now - this.lastVisibilityCheck > 30_000) {
+            this.lastVisibilityCheck = now;
+            this.updates.checkForUpdate().catch(() => undefined);
+          }
+        }
+      });
+    }
 
     this.updates.versionUpdates.subscribe(async (event: VersionEvent) => {
       if (event.type === 'VERSION_READY') {
