@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, output, input } from '@angular/core';
 
 @Component({
@@ -22,32 +22,27 @@ import { Component, output, input } from '@angular/core';
       @reference '../../../../styles.css';
 
       .btn-base {
-        @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 cursor-pointer whitespace-nowrap border border-transparent;
+        @apply inline-flex items-center justify-center font-medium rounded-lg cursor-pointer whitespace-nowrap;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
         @apply dark:focus-visible:ring-offset-gray-800;
       }
 
       .btn-primary {
-        @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm;
-        @apply hover:from-blue-700 hover:to-blue-800 hover:shadow-md;
-        @apply dark:from-blue-500 dark:to-blue-600;
-        @apply dark:hover:from-blue-600 dark:hover:to-blue-700;
+        background-color: var(--app-brand);
+        @apply text-white;
+        @apply hover:brightness-110;
         @apply focus-visible:ring-blue-500;
       }
 
       .btn-secondary {
-        @apply bg-gray-100 text-gray-800 border border-gray-300 shadow-sm;
-        @apply hover:bg-gray-200 hover:shadow-md;
-        @apply dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600;
-        @apply dark:hover:bg-gray-600;
+        @apply text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700;
+        @apply hover:bg-gray-50 dark:hover:bg-gray-800;
         @apply focus-visible:ring-gray-500;
       }
 
       .btn-danger {
-        @apply bg-red-600 text-white border border-red-600 shadow-sm;
-        @apply hover:bg-red-700 hover:border-red-700 hover:shadow-md;
-        @apply dark:bg-red-700 dark:border-red-700 dark:text-white;
-        @apply dark:hover:bg-red-600 dark:hover:border-red-600;
+        @apply text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50;
+        @apply hover:bg-red-50 dark:hover:bg-red-900/20;
         @apply focus-visible:ring-red-500;
       }
 
