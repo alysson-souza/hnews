@@ -1,6 +1,6 @@
 import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -483,6 +483,25 @@ describe('CommentThread', () => {
       expect(mockRepliesLoader.loadNextPage).toHaveBeenCalledTimes(1);
     });
 
+    it('should show reply count when collapsed with children', () => {
+      component.isCollapsed.set(true);
+      fixture.detectChanges();
+
+      const collapsed = fixture.debugElement.query(By.css('.collapsed-text'));
+      expect(collapsed).toBeTruthy();
+      expect(collapsed.nativeElement.textContent).toContain('2 replies');
+    });
+
+    it('should show [collapsed] when collapsed with no children', () => {
+      component.comment.set({ ...mockComment, kids: [] });
+      component.isCollapsed.set(true);
+      fixture.detectChanges();
+
+      const collapsed = fixture.debugElement.query(By.css('.collapsed-text'));
+      expect(collapsed).toBeTruthy();
+      expect(collapsed.nativeElement.textContent).toContain('[collapsed]');
+    });
+
     it('should show loading state and disable the button while fetching more replies', () => {
       mockRepliesLoader.loadingMore.set(true);
       mockRepliesLoader.remainingCount.mockReturnValue(5);
@@ -643,16 +662,36 @@ describe('CommentThread', () => {
       }>;
     });
 
-    it('should toggle collapse when collapse action is received', () => {
-      vi.spyOn(component, 'toggleCollapse');
+    it('should route collapse action to onChevronToggle', () => {
+      vi.spyOn(component, 'onChevronToggle');
       actionSubject.next({ commentId: 123, action: 'collapse' });
-      expect(component.toggleCollapse).toHaveBeenCalled();
+      expect(component.onChevronToggle).toHaveBeenCalled();
     });
 
-    it('should not toggle collapse when action is for another comment', () => {
-      vi.spyOn(component, 'toggleCollapse');
+    it('should not handle collapse action for another comment', () => {
+      vi.spyOn(component, 'onChevronToggle');
       actionSubject.next({ commentId: 999, action: 'collapse' });
-      expect(component.toggleCollapse).not.toHaveBeenCalled();
+      expect(component.onChevronToggle).not.toHaveBeenCalled();
+    });
+
+    it('should load replies via collapse action when replies are unloaded', () => {
+      component.comment.set(mockComment);
+      mockRepliesLoader.repliesLoaded.set(false);
+      mockRepliesLoader.loadingReplies.set(false);
+      mockRepliesLoader.loadFirstPage.mockClear();
+
+      actionSubject.next({ commentId: 123, action: 'collapse' });
+
+      expect(mockRepliesLoader.loadFirstPage).toHaveBeenCalled();
+    });
+
+    it('should toggle collapse via collapse action when replies are loaded', () => {
+      component.comment.set(mockComment);
+      mockRepliesLoader.repliesLoaded.set(true);
+
+      expect(component.isCollapsed()).toBe(false);
+      actionSubject.next({ commentId: 123, action: 'collapse' });
+      expect(component.isCollapsed()).toBe(true);
     });
 
     it('should expand replies when expandReplies action is received', () => {

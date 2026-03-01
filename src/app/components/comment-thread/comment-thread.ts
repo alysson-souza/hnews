@@ -78,7 +78,13 @@ import { Router } from '@angular/router';
           @if (!isCollapsed()) {
             <app-comment-text [html]="comment()!.text || ''" />
           } @else {
-            <span class="collapsed-text">[collapsed]</span>
+            <span class="collapsed-text">
+              @if (totalRepliesCount() > 0) {
+                [{{ totalRepliesCount() }} {{ totalRepliesCount() === 1 ? 'reply' : 'replies' }}]
+              } @else {
+                [collapsed]
+              }
+            </span>
           }
         </div>
         <div children>
@@ -316,7 +322,7 @@ export class CommentThread implements OnInit {
       .subscribe((action) => {
         switch (action.action) {
           case 'collapse':
-            this.toggleCollapse();
+            this.onChevronToggle();
             break;
           case 'expandReplies':
             this.expandReplies();

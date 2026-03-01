@@ -175,7 +175,7 @@ export class KeyboardShortcutConfigService {
     {
       key: 'c',
       contexts: ['sidebar'],
-      description: 'Toggle comment collapse',
+      description: 'Toggle collapse / Load replies',
       category: 'Comment Actions',
       commandId: 'sidebar.toggleExpand',
     },
@@ -234,7 +234,7 @@ export class KeyboardShortcutConfigService {
     {
       key: 'c',
       contexts: ['item-page'],
-      description: 'Toggle comment collapse',
+      description: 'Toggle collapse / Load replies',
       category: 'Comment Actions',
       commandId: 'item.toggleExpand',
     },
