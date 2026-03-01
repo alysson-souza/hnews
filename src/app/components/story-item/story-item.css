@@ -87,7 +87,7 @@
 
 /* Vote Section Skeleton Loaders */
 .vote-skeleton-icon {
-  @apply w-5 h-5 sm:w-8 sm:h-8 bg-gray-200 dark:bg-slate-700 rounded-full;
+  @apply w-8 h-8 sm:w-11 sm:h-11 bg-gray-200 dark:bg-slate-700 rounded-full;
 }
 
 .vote-skeleton-count {
