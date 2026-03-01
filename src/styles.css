@@ -376,36 +376,46 @@ code {
   @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded;
 }
 
-/* Global styling for quotes inside comment bodies (applies to innerHTML content) */
-.comment-body blockquote {
-  border-left-width: 4px;
-  border-left-style: solid;
-  border-left-color: #d1d5db; /* gray-300 */
-  padding-left: 0.75rem; /* pl-3 */
-  margin-top: 0.25rem;
-  margin-bottom: 0;
-  color: var(--tw-prose-quotes, #111827);
-  font-style: italic;
-  @apply text-pretty;
+/* Global styling for quotes inside comment/prose bodies (applies to innerHTML content) */
+.comment-body blockquote,
+.item-prose blockquote,
+.sub-comment blockquote {
+  border-left: 2px solid color-mix(in srgb, var(--app-brand) 30%, transparent);
+  background: color-mix(in srgb, var(--app-brand) 4%, transparent);
+  @apply pl-4 pr-3 py-2 my-2 rounded-r-lg text-pretty;
+  color: #4b5563; /* gray-600 */
 }
-.comment-body blockquote:first-child {
+.comment-body blockquote:first-child,
+.item-prose blockquote:first-child,
+.sub-comment blockquote:first-child {
   margin-top: 0;
 }
-.comment-body blockquote:last-child {
+.comment-body blockquote:last-child,
+.item-prose blockquote:last-child,
+.sub-comment blockquote:last-child {
   margin-bottom: 0;
 }
-.comment-body blockquote + * {
-  margin-top: 0.25rem !important;
+.comment-body blockquote + *,
+.item-prose blockquote + *,
+.sub-comment blockquote + * {
+  margin-top: 0.5rem !important;
 }
-.dark .comment-body blockquote {
-  border-left-color: #4b5563; /* gray-600 */
-  color: #d1d5db; /* gray-300 */
+.dark .comment-body blockquote,
+.dark .item-prose blockquote,
+.dark .sub-comment blockquote {
+  border-left-color: color-mix(in srgb, var(--app-brand) 40%, transparent);
+  background: color-mix(in srgb, var(--app-brand) 5%, transparent);
+  color: #9ca3af; /* gray-400 */
 }
-.comment-body blockquote p {
+.comment-body blockquote p,
+.item-prose blockquote p,
+.sub-comment blockquote p {
   margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
-.comment-body blockquote p:first-child {
+.comment-body blockquote p:first-child,
+.item-prose blockquote p:first-child,
+.sub-comment blockquote p:first-child {
   margin-top: 0;
 }
 /* Comments panel: control bottom spacing via last child margin, not card padding */
