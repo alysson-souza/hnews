@@ -2,7 +2,10 @@
 
 Alternative frontend for Hacker News built with Angular 21.
 
-Live demo: https://alysson-souza.github.io/hnews/
+Live demos:
+
+- https://hnews-8xl.pages.dev/ — Cloudflare Pages (supports link previews when sharing)
+- https://alysson-souza.github.io/hnews/ — GitHub Pages
 
 ## Features
 
