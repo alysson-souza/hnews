@@ -1,10 +1,56 @@
 {
+  // Treat .css files as Tailwind for IntelliSense
   "files.associations": {
     "*.css": "tailwindcss"
   },
+
+  // Formatting: Prettier on save for web files
   "[css,html,json,ts]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
   },
-  "chat.useAgentSkills": true
+
+  // Copilot
+  "chat.useAgentSkills": true,
+
+  // Hide build artifacts and noise from search/quick-open
+  "files.exclude": {
+    "**/.angular": true,
+    "**/dist": true,
+    "**/cf-dist": true,
+    "**/coverage": true,
+    "**/test-results": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.angular": true,
+    "**/dist": true,
+    "**/cf-dist": true,
+    "**/coverage": true,
+    "**/test-results": true,
+    "**/package-lock.json": true
+  },
+
+  // File nesting: collapse related files under their parent
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.html, ${capture}.css, ${capture}.spec.ts",
+    "tsconfig.json": "tsconfig.*.json",
+    "package.json": "package-lock.json, .npmrc, .nvmrc, .prettierrc, .prettierignore, .editorconfig, .gitignore",
+    "angular.json": "ngsw-config.json, tailwind.config.js, vitest.config.ts, vitest.*.config.ts, playwright.config.ts, wrangler.toml",
+    "README.md": "CONTRIBUTING.md, DEPLOYMENT.md, LICENSE, COPYRIGHT, AGENTS.md, CLAUDE.md"
+  },
+
+  // Editor improvements for Angular + Tailwind
+  "editor.linkedEditing": true,
+  "editor.stickyScroll.enabled": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+
+  // TypeScript
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.suggest.autoImports": true,
+
+  // Tailwind
+  "tailwindCSS.emmetCompletions": true
 }

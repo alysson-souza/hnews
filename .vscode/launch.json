@@ -10,11 +10,25 @@
       "url": "http://localhost:4200/"
     },
     {
-      "name": "ng test",
-      "type": "chrome",
+      "name": "Debug Vitest",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "program": "${workspaceRoot}/node_modules/.bin/ng",
+      "args": ["test", "--", "--no-coverage", "--inspect-brk"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Playwright",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/.bin/playwright",
+      "args": ["test", "--headed", "--debug"],
+      "console": "integratedTerminal",
+      "env": {
+        "PWDEBUG": "1"
+      }
     }
   ]
 }

@@ -8,6 +8,7 @@
     "esbenp.prettier-vscode",
     "github.vscode-github-actions",
     "idered.npm",
+    "ms-playwright.playwright",
     "sanaajani.taskrunnercode"
   ]
 }
