@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { CacheManagerService } from './cache-manager.service';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
-import { HNItem, HNUser } from '../models/hn';
+import { HNItem, HNUser } from '@models/hn';
 
 class IndexedDBServiceStub {
   private storage = new Map<string, unknown>();

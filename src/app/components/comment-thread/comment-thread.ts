@@ -12,20 +12,20 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
-import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
+import { SidebarCommentsInteractionService } from '@services/sidebar-comments-interaction.service';
 
-import { HackernewsService } from '../../services/hackernews.service';
-import { HNItem } from '../../models/hn';
+import { HackernewsService } from '@services/hackernews.service';
+import { HNItem } from '@models/hn';
 import { ThreadGutterComponent } from '../thread-gutter/thread-gutter.component';
 import { CommentHeaderComponent } from '../comment-header/comment-header.component';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { LazyLoadCardComponent } from '../lazy-load-card/lazy-load-card.component';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
-import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
-import { CommentStateService } from '../../services/comment-state.service';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
+import { CommentRepliesLoaderService } from '@services/comment-replies-loader.service';
+import { CommentStateService } from '@services/comment-state.service';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
 import { Router } from '@angular/router';
 
 @Component({

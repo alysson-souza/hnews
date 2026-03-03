@@ -6,11 +6,11 @@ import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { SidebarCommentsComponent } from './sidebar-comments.component';
-import { SidebarService } from '../../services/sidebar.service';
-import { HackernewsService } from '../../services/hackernews.service';
-import { VisitedService } from '../../services/visited.service';
-import { CommentSortService } from '../../services/comment-sort.service';
-import { HNItem } from '../../models/hn';
+import { SidebarService } from '@services/sidebar.service';
+import { HackernewsService } from '@services/hackernews.service';
+import { VisitedService } from '@services/visited.service';
+import { CommentSortService } from '@services/comment-sort.service';
+import { HNItem } from '@models/hn';
 
 describe('SidebarCommentsComponent', () => {
   let component: SidebarCommentsComponent;

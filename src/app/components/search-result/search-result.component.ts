@@ -3,11 +3,8 @@
 import { Component, computed, input } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
-import {
-  formatRelativeTime,
-  formatRelativeTimeFromSeconds,
-} from '../../services/relative-time.util';
-import { HNItem } from '../../models/hn';
+import { formatRelativeTime, formatRelativeTimeFromSeconds } from '@services/relative-time.util';
+import { HNItem } from '@models/hn';
 import { ResultMetaComponent } from '../result-meta/result-meta.component';
 import { transformQuotesHtml } from '../comment-text/quote.transform';
 import { sanitizeHtml } from '../comment-text/sanitize';

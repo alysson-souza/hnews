@@ -8,12 +8,12 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
-import { CacheManagerService } from '../../services/cache-manager.service';
-import { HackernewsService } from '../../services/hackernews.service';
-import { HNItem } from '../../models/hn';
-import { CommentRepliesLoaderService } from '../../services/comment-replies-loader.service';
-import { CommentStateService, CommentStateEntry } from '../../services/comment-state.service';
-import { SidebarCommentsInteractionService } from '../../services/sidebar-comments-interaction.service';
+import { CacheManagerService } from '@services/cache-manager.service';
+import { HackernewsService } from '@services/hackernews.service';
+import { HNItem } from '@models/hn';
+import { CommentRepliesLoaderService } from '@services/comment-replies-loader.service';
+import { CommentStateService, CommentStateEntry } from '@services/comment-state.service';
+import { SidebarCommentsInteractionService } from '@services/sidebar-comments-interaction.service';
 import { Subject } from 'rxjs';
 
 import { CommentThread } from './comment-thread';

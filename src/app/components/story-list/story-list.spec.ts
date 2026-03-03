@@ -2,12 +2,12 @@
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { StoryList } from './story-list';
-import { StoryListStore } from '../../stores/story-list.store';
-import { HackernewsService } from '../../services/hackernews.service';
-import { StoryListStateService } from '../../services/story-list-state.service';
-import { KeyboardNavigationService } from '../../services/keyboard-navigation.service';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
+import { StoryListStore } from '@stores/story-list.store';
+import { HackernewsService } from '@services/hackernews.service';
+import { StoryListStateService } from '@services/story-list-state.service';
+import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
 import { of } from 'rxjs';
 
 interface TestItem {

@@ -3,7 +3,7 @@
 import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserTagComponent } from './user-tag.component';
-import { UserTagsService } from '../../services/user-tags.service';
+import { UserTagsService } from '@services/user-tags.service';
 import { provideRouter } from '@angular/router';
 import { provideLocationMocks } from '@angular/common/testing';
 import { Component } from '@angular/core';

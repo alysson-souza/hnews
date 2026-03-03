@@ -3,7 +3,7 @@
 import { Component, inject, ChangeDetectionStrategy, input } from '@angular/core';
 
 import { Router } from '@angular/router';
-import { HNItem } from '../../models/hn';
+import { HNItem } from '@models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';

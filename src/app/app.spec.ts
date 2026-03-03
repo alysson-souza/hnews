@@ -9,8 +9,8 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { App } from './app';
-import { PwaUpdateService } from './services/pwa-update.service';
-import { KeyboardContextService } from './services/keyboard-context.service';
+import { PwaUpdateService } from '@services/pwa-update.service';
+import { KeyboardContextService } from '@services/keyboard-context.service';
 
 describe('App', () => {
   let mockPwaUpdateService: MockedObject<PwaUpdateService>;

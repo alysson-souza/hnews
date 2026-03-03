@@ -5,8 +5,8 @@ import { of, throwError } from 'rxjs';
 import type { Mock, MockedObject } from 'vitest';
 import { BatchedItemLoaderService } from './batched-item-loader.service';
 import { CacheManagerService } from './cache-manager.service';
-import { HnApiClient } from '../data/hn-api.client';
-import { HNItem } from '../models/hn';
+import { HnApiClient } from '@data/hn-api.client';
+import { HNItem } from '@models/hn';
 
 describe('BatchedItemLoaderService', () => {
   let service: BatchedItemLoaderService;

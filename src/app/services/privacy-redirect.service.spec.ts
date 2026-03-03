@@ -4,8 +4,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { PrivacyRedirectService } from './privacy-redirect.service';
-import { LibreDirectApiClient } from '../data/libredirect-api.client';
-import { LibreDirectInstances } from '../models/privacy-redirect';
+import { LibreDirectApiClient } from '@data/libredirect-api.client';
+import { LibreDirectInstances } from '@models/privacy-redirect';
 
 describe('PrivacyRedirectService', () => {
   let service: PrivacyRedirectService;

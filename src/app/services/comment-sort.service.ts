@@ -4,7 +4,7 @@ import { Injectable, signal } from '@angular/core';
 import {
   COMMENT_SORT_ORDERS,
   CommentSortOrder,
-} from '../components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
+} from '@components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
 
 @Injectable({
   providedIn: 'root',

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Pipe, PipeTransform } from '@angular/core';
-import { formatRelativeTime } from '../services/relative-time.util';
+import { formatRelativeTime } from '@services/relative-time.util';
 
 @Pipe({
   name: 'relativeTime',

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 
 import { StoryFilterPreferencesService } from './story-filter-preferences.service';
-import { StoryFilterMode } from '../models/story-filter';
+import { StoryFilterMode } from '@models/story-filter';
 
 // Use sequential to avoid race conditions with localStorage in parallel test environment
 describe.sequential('StoryFilterPreferencesService', () => {

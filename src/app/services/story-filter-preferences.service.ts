@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 
 import { Injectable, signal } from '@angular/core';
-import { StoryFilterMode } from '../models/story-filter';
+import { StoryFilterMode } from '@models/story-filter';
 
 const STORAGE_KEY = 'hnews-story-filter-mode';
 

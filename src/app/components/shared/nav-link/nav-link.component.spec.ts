@@ -4,7 +4,7 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NavLinkComponent } from './nav-link.component';
-import { ScrollService } from '../../../services/scroll.service';
+import { ScrollService } from '@services/scroll.service';
 import { By } from '@angular/platform-browser';
 
 describe('NavLinkComponent', () => {

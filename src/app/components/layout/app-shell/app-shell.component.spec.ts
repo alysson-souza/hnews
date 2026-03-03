@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { AppShellComponent } from './app-shell.component';
-import { AppHeaderComponent } from '../header/header.component';
+import { AppHeaderComponent } from '@components/layout/header/header.component';
 
 @Component({
   imports: [AppShellComponent],

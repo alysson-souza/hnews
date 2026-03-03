@@ -4,8 +4,8 @@ import type { Mock, MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { KeyboardShortcutsComponent } from './keyboard-shortcuts.component';
-import { KeyboardShortcutConfigService } from '../../services/keyboard-shortcut-config.service';
-import { KeyboardContextService } from '../../services/keyboard-context.service';
+import { KeyboardShortcutConfigService } from '@services/keyboard-shortcut-config.service';
+import { KeyboardContextService } from '@services/keyboard-context.service';
 
 describe('KeyboardShortcutsComponent', () => {
   let component: KeyboardShortcutsComponent;

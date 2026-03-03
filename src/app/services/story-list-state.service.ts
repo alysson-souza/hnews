@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable } from '@angular/core';
-import { HNItem } from '../models/hn';
+import { HNItem } from '@models/hn';
 
 interface SerializedStoryListState {
   storyIds: number[];

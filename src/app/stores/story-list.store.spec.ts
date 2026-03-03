@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { StoryListStore } from './story-list.store';
-import { HackernewsService } from '../services/hackernews.service';
-import { StoryListStateService, StoryListState } from '../services/story-list-state.service';
-import { StoryFilterPreferencesService } from '../services/story-filter-preferences.service';
+import { HackernewsService } from '@services/hackernews.service';
+import { StoryListStateService, StoryListState } from '@services/story-list-state.service';
+import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
 import { of, Subject, Observable } from 'rxjs';
-import { HNItem } from '../models/hn';
-import { getFilterCutoffTimestamp } from '../models/story-filter';
+import { HNItem } from '@models/hn';
+import { getFilterCutoffTimestamp } from '@models/story-filter';
 
 /** Test double for HackernewsService */
 class MockHNService {

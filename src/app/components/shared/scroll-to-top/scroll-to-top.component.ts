@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, HostListener, signal, inject } from '@angular/core';
 
-import { ScrollService } from '../../../services/scroll.service';
+import { ScrollService } from '@services/scroll.service';
 
 @Component({
   selector: 'app-scroll-to-top',

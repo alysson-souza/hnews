@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, Signal, computed, inject, signal, effect, DestroyRef } from '@angular/core';
-import { HNItem } from '../models/hn';
-import { StoryFilterMode, applyStoryFilter } from '../models/story-filter';
-import { HackernewsService } from '../services/hackernews.service';
-import { StoryListStateService } from '../services/story-list-state.service';
-import { StoryFilterPreferencesService } from '../services/story-filter-preferences.service';
+import { HNItem } from '@models/hn';
+import { StoryFilterMode, applyStoryFilter } from '@models/story-filter';
+import { HackernewsService } from '@services/hackernews.service';
+import { StoryListStateService } from '@services/story-list-state.service';
+import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
 import { map, switchMap, take } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 

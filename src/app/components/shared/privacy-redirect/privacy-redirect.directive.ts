@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Directive, HostListener, ElementRef, inject, OnInit, OnDestroy } from '@angular/core';
-import { PrivacyRedirectService } from '../../../services/privacy-redirect.service';
+import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 
 /**
  * Directive that intercepts link clicks and redirects matching URLs

@@ -5,8 +5,8 @@ import { By } from '@angular/platform-browser';
 import { CommentHeaderComponent } from './comment-header.component';
 
 import { provideRouter } from '@angular/router';
-import { SidebarThreadNavigationService } from '../../services/sidebar-thread-navigation.service';
-import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
+import { SidebarThreadNavigationService } from '@services/sidebar-thread-navigation.service';
+import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 
 describe('CommentHeaderComponent', () => {
   let fixture: ComponentFixture<CommentHeaderComponent>;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
-import { HNItem } from '../models/hn';
+import { HNItem } from '@models/hn';
 import { CommentDisplayStrategyService } from './comment-display-strategy.service';
 
 describe('CommentDisplayStrategyService', () => {

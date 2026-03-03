@@ -3,9 +3,9 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError, firstValueFrom } from 'rxjs';
 import { AlgoliaCommentLoaderService } from './algolia-comment-loader.service';
-import { AlgoliaApiClient } from '../data/algolia-api.client';
+import { AlgoliaApiClient } from '@data/algolia-api.client';
 import { CacheManagerService } from './cache-manager.service';
-import { AlgoliaItemResponse } from '../models/algolia';
+import { AlgoliaItemResponse } from '@models/algolia';
 
 describe('AlgoliaCommentLoaderService', () => {
   let service: AlgoliaCommentLoaderService;

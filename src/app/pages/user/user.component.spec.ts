@@ -5,11 +5,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ActivatedRouteSnapshot, Params } from '@angular/router';
 import { of, BehaviorSubject, Subject } from 'rxjs';
 import { UserComponent } from './user.component';
-import { HackernewsService } from '../../services/hackernews.service';
-import { ScrollService } from '../../services/scroll.service';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
-import { HNUser, HNItem } from '../../models/hn';
+import { HackernewsService } from '@services/hackernews.service';
+import { ScrollService } from '@services/scroll.service';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
+import { HNUser, HNItem } from '@models/hn';
 
 describe('UserComponent', () => {
   let component: UserComponent;

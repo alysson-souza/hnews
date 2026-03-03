@@ -2,17 +2,17 @@
 // Copyright (C) 2026 Alysson Souza
 import { Component, inject, signal, effect, computed, ElementRef, viewChild } from '@angular/core';
 
-import { SidebarService } from '../../services/sidebar.service';
-import { SidebarThreadNavigationService } from '../../services/sidebar-thread-navigation.service';
-import { HackernewsService } from '../../services/hackernews.service';
-import { HNItem } from '../../models/hn';
+import { SidebarService } from '@services/sidebar.service';
+import { SidebarThreadNavigationService } from '@services/sidebar-thread-navigation.service';
+import { HackernewsService } from '@services/hackernews.service';
+import { HNItem } from '@models/hn';
 import { CommentThread } from '../comment-thread/comment-thread';
 import { SidebarCommentsHeaderComponent } from './sidebar-comments-header.component';
 import { SidebarStorySummaryComponent } from './sidebar-story-summary.component';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
-import { VisitedService } from '../../services/visited.service';
-import { CommentSortService } from '../../services/comment-sort.service';
-import { CommentDisplayStrategyService } from '../../services/comment-display-strategy.service';
+import { VisitedService } from '@services/visited.service';
+import { CommentSortService } from '@services/comment-sort.service';
+import { CommentDisplayStrategyService } from '@services/comment-display-strategy.service';
 import {
   CommentSortDropdownComponent,
   CommentSortOrder,

@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { LibreDirectApiClient } from './libredirect-api.client';
-import { LIBREDIRECT_INSTANCES_URL, LibreDirectInstances } from '../models/privacy-redirect';
+import { LIBREDIRECT_INSTANCES_URL, LibreDirectInstances } from '@models/privacy-redirect';
 
 describe('LibreDirectApiClient', () => {
   let service: LibreDirectApiClient;

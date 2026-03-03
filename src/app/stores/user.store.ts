@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Injectable, signal } from '@angular/core';
-import { HNUser } from '../models/hn';
+import { HNUser } from '@models/hn';
 
 @Injectable({ providedIn: 'root' })
 export class UserStore {

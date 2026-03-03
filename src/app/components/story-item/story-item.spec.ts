@@ -11,12 +11,12 @@ import { By } from '@angular/platform-browser';
 class DummyComponent {}
 
 import { StoryItem } from './story-item';
-import { VisitedService } from '../../services/visited.service';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
-import { HNItem } from '../../models/hn';
-import { UserSettingsService } from '../../services/user-settings.service';
-import { StoryShareService } from '../../services/story-share.service';
+import { VisitedService } from '@services/visited.service';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
+import { HNItem } from '@models/hn';
+import { UserSettingsService } from '@services/user-settings.service';
+import { StoryShareService } from '@services/story-share.service';
 
 class MockDeviceService {
   private desktop = true;

@@ -3,7 +3,7 @@
 import { Component, inject, OnInit, viewChild } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
-import { StoryList } from '../../components/story-list/story-list';
+import { StoryList } from '@components/story-list/story-list';
 
 @Component({
   selector: 'app-stories',

@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, computed, output, input } from '@angular/core';
 
-import { SidebarKeyboardNavigationService } from '../../services/sidebar-keyboard-navigation.service';
-import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
+import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-navigation.service';
+import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-thread-gutter',

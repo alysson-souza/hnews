@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { getDomain } from '../../services/domain.utils';
+import { getDomain } from '@services/domain.utils';
 
 /**
  * Format a URL for display by extracting the domain and truncating the path.

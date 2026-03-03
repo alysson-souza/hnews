@@ -13,12 +13,12 @@ import {
 } from '@angular/router';
 import { of, throwError, BehaviorSubject, Subject } from 'rxjs';
 import { ItemComponent } from './item.component';
-import { HackernewsService } from '../../services/hackernews.service';
-import { BulkLoadResult } from '../../services/algolia-comment-loader.service';
-import { VisitedService } from '../../services/visited.service';
-import { ScrollService } from '../../services/scroll.service';
-import { CommentSortService } from '../../services/comment-sort.service';
-import { HNItem } from '../../models/hn';
+import { HackernewsService } from '@services/hackernews.service';
+import { BulkLoadResult } from '@services/algolia-comment-loader.service';
+import { VisitedService } from '@services/visited.service';
+import { ScrollService } from '@services/scroll.service';
+import { CommentSortService } from '@services/comment-sort.service';
+import { HNItem } from '@models/hn';
 
 describe('ItemComponent', () => {
   let component: ItemComponent;

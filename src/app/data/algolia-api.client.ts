@@ -3,8 +3,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AlgoliaSearchResponse, AlgoliaItemResponse } from '../models/algolia';
-import { SearchOptions } from '../models/search';
+import { AlgoliaSearchResponse, AlgoliaItemResponse } from '@models/algolia';
+import { SearchOptions } from '@models/search';
 
 /**
  * Thin client for Algolia HN Search API.

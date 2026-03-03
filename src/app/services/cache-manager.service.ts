@@ -5,7 +5,7 @@ import { Observable, Subject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
-import { HNItem, HNUser } from '../models/hn';
+import { HNItem, HNUser } from '@models/hn';
 import {
   CACHE_TTL_STORIES,
   CACHE_TTL_ITEM,

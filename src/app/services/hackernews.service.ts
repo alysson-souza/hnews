@@ -6,11 +6,11 @@ import { catchError, switchMap, shareReplay, map, take, finalize } from 'rxjs/op
 import { CacheManagerService } from './cache-manager.service';
 import { BatchedItemLoaderService } from './batched-item-loader.service';
 import { AlgoliaCommentLoaderService, BulkLoadResult } from './algolia-comment-loader.service';
-import { HNItem, HNUser } from '../models/hn';
-import { AlgoliaSearchResponse } from '../models/algolia';
-import { HnApiClient } from '../data/hn-api.client';
-import { AlgoliaApiClient } from '../data/algolia-api.client';
-import { SearchOptions } from '../models/search';
+import { HNItem, HNUser } from '@models/hn';
+import { AlgoliaSearchResponse } from '@models/algolia';
+import { HnApiClient } from '@data/hn-api.client';
+import { AlgoliaApiClient } from '@data/algolia-api.client';
+import { SearchOptions } from '@models/search';
 
 @Injectable({
   providedIn: 'root',

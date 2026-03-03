@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { IndexedDBService } from './indexed-db.service';
-import { HNItem, HNUser } from '../models/hn';
+import { HNItem, HNUser } from '@models/hn';
 
 describe('IndexedDBService', () => {
   let service: IndexedDBService;

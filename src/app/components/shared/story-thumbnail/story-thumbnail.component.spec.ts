@@ -3,9 +3,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
 import { StoryThumbnailComponent } from './story-thumbnail.component';
-import { OgImageService } from '../../../services/og-image.service';
-import { PrivacyRedirectService } from '../../../services/privacy-redirect.service';
-import type { OgImageResult } from '../../../services/og-image.service';
+import { OgImageService } from '@services/og-image.service';
+import { PrivacyRedirectService } from '@services/privacy-redirect.service';
+import type { OgImageResult } from '@services/og-image.service';
 
 // ---------------------------------------------------------------------------
 // Stubs

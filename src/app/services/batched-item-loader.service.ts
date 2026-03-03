@@ -2,9 +2,9 @@
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Observable, Subject, firstValueFrom, from } from 'rxjs';
-import { HnApiClient } from '../data/hn-api.client';
+import { HnApiClient } from '@data/hn-api.client';
 import { CacheManagerService } from './cache-manager.service';
-import { HNItem } from '../models/hn';
+import { HNItem } from '@models/hn';
 
 interface PendingRequest {
   id: number;

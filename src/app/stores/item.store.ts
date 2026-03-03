@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Minimal shell for item details and comments store
 import { Injectable, signal } from '@angular/core';
-import { HNItem } from '../models/hn';
+import { HNItem } from '@models/hn';
 
 @Injectable({ providedIn: 'root' })
 export class ItemStore {

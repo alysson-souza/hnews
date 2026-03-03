@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { formatRelativeTime } from '../../services/relative-time.util';
+import { formatRelativeTime } from '@services/relative-time.util';
 import { DecimalPipe } from '@angular/common';
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { HackernewsService } from '../../services/hackernews.service';
-import { NetworkStateService } from '../../services/network-state.service';
-import { SearchOptions } from '../../models/search';
+import { HackernewsService } from '@services/hackernews.service';
+import { NetworkStateService } from '@services/network-state.service';
+import { SearchOptions } from '@models/search';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
-import { CardComponent } from '../../components/shared/card/card.component';
-import { ResultListComponent } from '../../components/result-list/result-list.component';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
+import { PageContainerComponent } from '@components/shared/page-container/page-container.component';
+import { CardComponent } from '@components/shared/card/card.component';
+import { ResultListComponent } from '@components/result-list/result-list.component';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarMagniferLinear } from '@ng-icons/solar-icons/linear';
-import { UserTagComponent } from '../../components/user-tag/user-tag.component';
-import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
-import { getDomain } from '../../services/domain.utils';
-import { StoryLinkComponent } from '../../components/shared/story-link/story-link.component';
-import { sanitizeHtml } from '../../components/comment-text/sanitize';
+import { UserTagComponent } from '@components/user-tag/user-tag.component';
+import { CommentTextComponent } from '@components/comment-text/comment-text.component';
+import { getDomain } from '@services/domain.utils';
+import { StoryLinkComponent } from '@components/shared/story-link/story-link.component';
+import { sanitizeHtml } from '@components/comment-text/sanitize';
 
 interface HighlightField {
   value: string;

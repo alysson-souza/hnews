@@ -13,8 +13,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { StoryFaviconComponent } from '../story-favicon/story-favicon.component';
-import { PrivacyRedirectService } from '../../../services/privacy-redirect.service';
-import { OgImageService, OgImageResult } from '../../../services/og-image.service';
+import { PrivacyRedirectService } from '@services/privacy-redirect.service';
+import { OgImageService, OgImageResult } from '@services/og-image.service';
 
 @Component({
   selector: 'app-story-thumbnail',

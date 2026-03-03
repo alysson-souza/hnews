@@ -5,7 +5,7 @@ import { Component, inject, output, model } from '@angular/core';
 import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarMagniferLinear, solarKeyboardLinear } from '@ng-icons/solar-icons/linear';
-import { CommandRegistryService } from '../../../../services/command-registry.service';
+import { CommandRegistryService } from '@services/command-registry.service';
 
 @Component({
   selector: 'app-header-desktop-search',

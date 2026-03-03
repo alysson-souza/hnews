@@ -8,10 +8,10 @@ import { Observable, firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { HackernewsService } from './hackernews.service';
 import { CacheManagerService } from './cache-manager.service';
 import { BatchedItemLoaderService } from './batched-item-loader.service';
-import { HnApiClient } from '../data/hn-api.client';
-import { AlgoliaApiClient } from '../data/algolia-api.client';
-import { HNItem, HNUser } from '../models/hn';
-import { AlgoliaSearchResponse } from '../models/algolia';
+import { HnApiClient } from '@data/hn-api.client';
+import { AlgoliaApiClient } from '@data/algolia-api.client';
+import { HNItem, HNUser } from '@models/hn';
+import { AlgoliaSearchResponse } from '@models/algolia';
 
 class MockCacheManagerService {
   get() {

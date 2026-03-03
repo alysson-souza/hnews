@@ -2,10 +2,10 @@
 // Copyright (C) 2026 Alysson Souza
 import { Component, computed, signal, inject, effect } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { highlightCodeBlocks } from '../../components/comment-text/code-highlight.transform';
-import { CardComponent } from '../../components/shared/card/card.component';
-import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
-import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import { highlightCodeBlocks } from '@components/comment-text/code-highlight.transform';
+import { CardComponent } from '@components/shared/card/card.component';
+import { PageContainerComponent } from '@components/shared/page-container/page-container.component';
+import { AppButtonComponent } from '@components/shared/app-button/app-button.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   solarCopyLinear,

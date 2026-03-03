@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject } from '@angular/core';
 
-import { ThemeService } from '../../../services/theme.service';
+import { ThemeService } from '@services/theme.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   solarSunLinear,

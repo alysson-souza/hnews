@@ -3,7 +3,7 @@
 import { Injectable, inject, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { timer, Subscription } from 'rxjs';
-import { LibreDirectApiClient } from '../data/libredirect-api.client';
+import { LibreDirectApiClient } from '@data/libredirect-api.client';
 import {
   LibreDirectInstances,
   PrivacyRedirectConfig,
@@ -13,7 +13,7 @@ import {
   PRIVACY_REDIRECT_REGISTRY,
   DEFAULT_PRIVACY_SETTINGS,
   RETRY_CONFIG,
-} from '../models/privacy-redirect';
+} from '@models/privacy-redirect';
 
 const SETTINGS_STORAGE_KEY = 'privacy.redirect.settings.v1';
 

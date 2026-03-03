@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
 import { StoryListStateService } from './story-list-state.service';
-import { HNItem } from '../models/hn';
+import { HNItem } from '@models/hn';
 
 describe('StoryListStateService', () => {
   let service: StoryListStateService;

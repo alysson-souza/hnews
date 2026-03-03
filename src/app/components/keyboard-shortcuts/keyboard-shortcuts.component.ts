@@ -4,8 +4,8 @@ import { Component, signal, HostListener, inject, computed } from '@angular/core
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarCloseCircleLinear } from '@ng-icons/solar-icons/linear';
 
-import { KeyboardShortcutConfigService } from '../../services/keyboard-shortcut-config.service';
-import { KeyboardContextService } from '../../services/keyboard-context.service';
+import { KeyboardShortcutConfigService } from '@services/keyboard-shortcut-config.service';
+import { KeyboardContextService } from '@services/keyboard-context.service';
 
 @Component({
   selector: 'app-keyboard-shortcuts',

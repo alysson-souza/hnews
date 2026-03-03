@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { formatRelativeTimeFromSeconds } from '../../services/relative-time.util';
+import { formatRelativeTimeFromSeconds } from '@services/relative-time.util';
 import { DecimalPipe } from '@angular/common';
 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { HackernewsService } from '../../services/hackernews.service';
-import { HNUser, HNItem, isStory, isComment } from '../../models/hn';
+import { HackernewsService } from '@services/hackernews.service';
+import { HNUser, HNItem, isStory, isComment } from '@models/hn';
 
-import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
-import { CardComponent } from '../../components/shared/card/card.component';
-import { UserTagComponent } from '../../components/user-tag/user-tag.component';
-import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
-import { ScrollService } from '../../services/scroll.service';
-import { UserTagsService } from '../../services/user-tags.service';
-import { CommentTextComponent } from '../../components/comment-text/comment-text.component';
-import { getDomain } from '../../services/domain.utils';
+import { PageContainerComponent } from '@components/shared/page-container/page-container.component';
+import { CardComponent } from '@components/shared/card/card.component';
+import { UserTagComponent } from '@components/user-tag/user-tag.component';
+import { AppButtonComponent } from '@components/shared/app-button/app-button.component';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
+import { ScrollService } from '@services/scroll.service';
+import { UserTagsService } from '@services/user-tags.service';
+import { CommentTextComponent } from '@components/comment-text/comment-text.component';
+import { getDomain } from '@services/domain.utils';
 import {
   SegmentedControlComponent,
   SegmentOption,
-} from '../../components/shared/segmented-control/segmented-control.component';
-import { StoryLinkComponent } from '../../components/shared/story-link/story-link.component';
+} from '@components/shared/segmented-control/segmented-control.component';
+import { StoryLinkComponent } from '@components/shared/story-link/story-link.component';
 
 @Component({
   selector: 'app-user',

@@ -11,22 +11,22 @@ import {
   computed,
   input,
 } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 
 import { StoryItem } from '../story-item/story-item';
 import { interval, filter, takeUntil, Subject } from 'rxjs';
-import { SidebarService } from '../../services/sidebar.service';
-import { DeviceService } from '../../services/device.service';
-import { KeyboardNavigationService } from '../../services/keyboard-navigation.service';
-import { NetworkStateService } from '../../services/network-state.service';
-import { StoryListStore } from '../../stores/story-list.store';
+import { SidebarService } from '@services/sidebar.service';
+import { DeviceService } from '@services/device.service';
+import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
+import { NetworkStateService } from '@services/network-state.service';
+import { StoryListStore } from '@stores/story-list.store';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
 import {
   SegmentedControlComponent,
   SegmentOption,
 } from '../shared/segmented-control/segmented-control.component';
-import { StoryFilterMode, FILTER_MODE_LABELS } from '../../models/story-filter';
+import { StoryFilterMode, FILTER_MODE_LABELS } from '@models/story-filter';
 
 @Component({
   selector: 'app-story-list',

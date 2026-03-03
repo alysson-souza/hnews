@@ -16,7 +16,7 @@ import { Router } from '@angular/router';
 import { NgIconComponent } from '@ng-icons/core';
 import { formatUrlForDisplay } from './link.utils';
 import { isHnLink, translateHnLink } from './hn-link.utils';
-import { PrivacyRedirectService } from '../../services/privacy-redirect.service';
+import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 
 /**
  * Directive that enhances anchor tags within its host element by:

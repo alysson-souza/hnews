@@ -3,7 +3,7 @@
 import { Component, inject, input } from '@angular/core';
 
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { ScrollService } from '../../../services/scroll.service';
+import { ScrollService } from '@services/scroll.service';
 
 @Component({
   selector: 'app-nav-link',

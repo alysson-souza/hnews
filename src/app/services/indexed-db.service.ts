@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
-import { HNItem, HNUser } from '../models/hn';
+import { HNItem, HNUser } from '@models/hn';
 import { CACHE_TTL_STORIES, CACHE_TTL_ITEM, CACHE_TTL_USER } from '../config/cache.config';
 
 export interface CachedItem<T> {

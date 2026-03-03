@@ -8,9 +8,9 @@ import { UserTagComponent } from '../user-tag/user-tag.component';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { RepliesCounterComponent } from '../replies-counter/replies-counter.component';
 import { OPBadgeComponent } from '../shared/op-badge/op-badge.component';
-import { SidebarThreadNavigationService } from '../../services/sidebar-thread-navigation.service';
-import { DeviceService } from '../../services/device.service';
-import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
+import { SidebarThreadNavigationService } from '@services/sidebar-thread-navigation.service';
+import { DeviceService } from '@services/device.service';
+import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-comment-header',

@@ -16,7 +16,7 @@ import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@a
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
-import { NetworkStatusInterceptor } from './services/network-status.interceptor';
+import { NetworkStatusInterceptor } from '@services/network-status.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [

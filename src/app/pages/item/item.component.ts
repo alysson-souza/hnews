@@ -5,23 +5,23 @@ import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angula
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
-import { HackernewsService } from '../../services/hackernews.service';
-import { BulkLoadResult } from '../../services/algolia-comment-loader.service';
-import { HNItem } from '../../models/hn';
-import { CommentThread } from '../../components/comment-thread/comment-thread';
-import { VisitedService } from '../../services/visited.service';
-import { ScrollService } from '../../services/scroll.service';
-import { CommentSortService } from '../../services/comment-sort.service';
-import { CommentDisplayStrategyService } from '../../services/comment-display-strategy.service';
-import { PageContainerComponent } from '../../components/shared/page-container/page-container.component';
-import { CardComponent } from '../../components/shared/card/card.component';
-import { SidebarStorySummaryComponent } from '../../components/sidebar-comments/sidebar-story-summary.component';
-import { AppButtonComponent } from '../../components/shared/app-button/app-button.component';
+import { HackernewsService } from '@services/hackernews.service';
+import { BulkLoadResult } from '@services/algolia-comment-loader.service';
+import { HNItem } from '@models/hn';
+import { CommentThread } from '@components/comment-thread/comment-thread';
+import { VisitedService } from '@services/visited.service';
+import { ScrollService } from '@services/scroll.service';
+import { CommentSortService } from '@services/comment-sort.service';
+import { CommentDisplayStrategyService } from '@services/comment-display-strategy.service';
+import { PageContainerComponent } from '@components/shared/page-container/page-container.component';
+import { CardComponent } from '@components/shared/card/card.component';
+import { SidebarStorySummaryComponent } from '@components/sidebar-comments/sidebar-story-summary.component';
+import { AppButtonComponent } from '@components/shared/app-button/app-button.component';
 import {
   CommentSortDropdownComponent,
   CommentSortOrder,
-} from '../../components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
-import { ItemKeyboardNavigationService } from '../../services/item-keyboard-navigation.service';
+} from '@components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
+import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 
 @Component({
   selector: 'app-item',

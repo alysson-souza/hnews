@@ -4,7 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { HNItem, HNUser, mapToHNItem } from '../models/hn';
+import { HNItem, HNUser, mapToHNItem } from '@models/hn';
 
 /**
  * Thin client for Hacker News Firebase API.

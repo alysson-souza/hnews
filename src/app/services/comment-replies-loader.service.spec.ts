@@ -4,7 +4,7 @@ import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
-import { HNItem } from '../models/hn';
+import { HNItem } from '@models/hn';
 import { HackernewsService } from './hackernews.service';
 import { CommentRepliesLoaderService } from './comment-replies-loader.service';
 

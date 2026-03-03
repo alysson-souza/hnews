@@ -3,10 +3,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, firstValueFrom } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-import { AlgoliaApiClient } from '../data/algolia-api.client';
+import { AlgoliaApiClient } from '@data/algolia-api.client';
 import { CacheManagerService } from './cache-manager.service';
-import { HNItem } from '../models/hn';
-import { AlgoliaItemResponse, flattenAlgoliaItemTree } from '../models/algolia';
+import { HNItem } from '@models/hn';
+import { AlgoliaItemResponse, flattenAlgoliaItemTree } from '@models/algolia';
 
 /**
  * Result of bulk loading a story with all its comments.

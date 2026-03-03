@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
-import { UserTagsService, UserTag } from '../../services/user-tags.service';
+import { UserTagsService, UserTag } from '@services/user-tags.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarTagLinear } from '@ng-icons/solar-icons/linear';
 

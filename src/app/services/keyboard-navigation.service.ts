@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
 import { NavigationHistoryService } from './navigation-history.service';
-import { StoryListStore } from '../stores/story-list.store';
+import { StoryListStore } from '@stores/story-list.store';
 
 @Injectable({
   providedIn: 'root',

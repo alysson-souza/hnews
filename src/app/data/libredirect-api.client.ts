@@ -9,7 +9,7 @@ import {
   LIBREDIRECT_INSTANCES_URL,
   INSTANCES_CACHE_TTL,
   PrivacyFrontend,
-} from '../models/privacy-redirect';
+} from '@models/privacy-redirect';
 
 interface CachedInstances {
   data: LibreDirectInstances;
