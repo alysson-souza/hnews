@@ -45,6 +45,15 @@
         "maxAge": "5m",
         "timeout": "10s"
       }
+    },
+    {
+      "name": "favicon-proxy",
+      "urls": ["/api/favicons?*"],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 200,
+        "maxAge": "30d"
+      }
     }
   ]
 }

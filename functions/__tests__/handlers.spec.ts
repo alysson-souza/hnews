@@ -1,4 +1,4 @@
-import { handleOgImageApi, handleOgImageProxy, injectMeta } from '../[[path]]';
+import { handleFavicons, handleOgImageApi, handleOgImageProxy, injectMeta } from '../[[path]]';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -498,6 +498,173 @@ describe('handleOgImageProxy', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('image/webp');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleFavicons
+// ---------------------------------------------------------------------------
+
+describe('handleFavicons', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('returns 400 when domain param is missing', async () => {
+    const res = await handleFavicons(makeUrl('/api/favicons'));
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('Missing domain parameter');
+  });
+
+  it('returns 400 for invalid domain (has protocol)', async () => {
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'https://example.com' }));
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('Invalid domain');
+  });
+
+  it('returns 400 for invalid domain (IP address)', async () => {
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: '192.168.1.1' }));
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('Invalid domain');
+  });
+
+  it('returns 400 for invalid domain (bare hostname)', async () => {
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'localhost' }));
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('Invalid domain');
+  });
+
+  it('proxies a valid favicon successfully', async () => {
+    const imageData = new Uint8Array([0x00, 0x00, 0x01, 0x00]); // ICO magic
+    const stream = bodyStream(imageData);
+    const imageResponse = new Response(stream, {
+      status: 200,
+      headers: {
+        'content-type': 'image/x-icon',
+        'content-length': String(imageData.length),
+      },
+    });
+    vi.stubGlobal('fetch', mockFetch(imageResponse));
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('image/x-icon');
+    expect(res.headers.get('cache-control')).toBe('public, max-age=2592000');
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+
+    const body = new Uint8Array(await res.arrayBuffer());
+    expect(body).toEqual(imageData);
+  });
+
+  it('passes domain and sz=64 to Google favicon API', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(
+      new Response(bodyStream(new Uint8Array([0x89, 0x50, 0x4e, 0x47])), {
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchSpy);
+
+    await handleFavicons(makeUrl('/api/favicons', { domain: 'github.com' }));
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const calledUrl = fetchSpy.mock.calls[0][0];
+    expect(calledUrl).toBe('https://www.google.com/s2/favicons?domain=github.com&sz=64');
+  });
+
+  it('returns 502 for non-ok upstream response', async () => {
+    vi.stubGlobal('fetch', mockFetch(new Response('Not Found', { status: 404 })));
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.status).toBe(502);
+    expect(await res.text()).toBe('Upstream error');
+  });
+
+  it('returns 502 when fetch throws', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Connection refused')));
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.status).toBe(502);
+    expect(await res.text()).toBe('Proxy error');
+  });
+
+  it('returns 400 for non-image content type', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response('not an image', {
+          status: 200,
+          headers: { 'content-type': 'text/html' },
+        }),
+      ),
+    );
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('Not an image');
+  });
+
+  it('allows image/x-icon content type', async () => {
+    const imageData = new Uint8Array([0x00, 0x00, 0x01, 0x00]);
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response(bodyStream(imageData), {
+          status: 200,
+          headers: { 'content-type': 'image/x-icon' },
+        }),
+      ),
+    );
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('image/x-icon');
+  });
+
+  it('blocks SVG content type', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response('<svg></svg>', {
+          status: 200,
+          headers: { 'content-type': 'image/svg+xml' },
+        }),
+      ),
+    );
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('SVG not allowed');
+  });
+
+  it('sets 30-day cache header', async () => {
+    const imageData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response(bodyStream(imageData), {
+          status: 200,
+          headers: { 'content-type': 'image/png' },
+        }),
+      ),
+    );
+
+    const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
+
+    expect(res.headers.get('cache-control')).toBe('public, max-age=2592000');
+  });
+
+  it('sets CORS headers on error responses', async () => {
+    const res = await handleFavicons(makeUrl('/api/favicons'));
+    expect(res.headers.get('access-control-allow-origin')).toBe('*');
   });
 });
 

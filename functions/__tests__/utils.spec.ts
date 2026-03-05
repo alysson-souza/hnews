@@ -8,6 +8,7 @@ import {
   isAssetPath,
   isRecord,
   isSafePublicUrl,
+  isValidDomain,
   jsonResponse,
   matchHtmlTitle,
   matchMetaContent,
@@ -180,6 +181,88 @@ describe('isSafePublicUrl', () => {
 
     it('allows default port 443 (implicit)', () => {
       expect(isSafePublicUrl('https://example.com')).not.toBeNull();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isValidDomain
+// ---------------------------------------------------------------------------
+
+describe('isValidDomain', () => {
+  describe('valid domains', () => {
+    it('accepts simple domain', () => {
+      expect(isValidDomain('example.com')).toBe(true);
+    });
+
+    it('accepts subdomain', () => {
+      expect(isValidDomain('blog.example.com')).toBe(true);
+    });
+
+    it('accepts country-code TLD', () => {
+      expect(isValidDomain('bbc.co.uk')).toBe(true);
+    });
+
+    it('accepts hyphenated domain', () => {
+      expect(isValidDomain('my-site.example.com')).toBe(true);
+    });
+  });
+
+  describe('invalid domains', () => {
+    it('rejects empty string', () => {
+      expect(isValidDomain('')).toBe(false);
+    });
+
+    it('rejects domain with protocol', () => {
+      expect(isValidDomain('https://example.com')).toBe(false);
+    });
+
+    it('rejects domain with path', () => {
+      expect(isValidDomain('example.com/page')).toBe(false);
+    });
+
+    it('rejects domain with query string', () => {
+      expect(isValidDomain('example.com?q=1')).toBe(false);
+    });
+
+    it('rejects domain with port', () => {
+      expect(isValidDomain('example.com:8080')).toBe(false);
+    });
+
+    it('rejects IPv4 address', () => {
+      expect(isValidDomain('192.168.1.1')).toBe(false);
+    });
+
+    it('rejects IPv6 address', () => {
+      expect(isValidDomain('[::1]')).toBe(false);
+    });
+
+    it('rejects bare hostname (no dot)', () => {
+      expect(isValidDomain('localhost')).toBe(false);
+    });
+
+    it('rejects domain with spaces', () => {
+      expect(isValidDomain('example .com')).toBe(false);
+    });
+
+    it('rejects domain with special characters', () => {
+      expect(isValidDomain('exam<ple.com')).toBe(false);
+    });
+
+    it('rejects domain starting with dot', () => {
+      expect(isValidDomain('.example.com')).toBe(false);
+    });
+
+    it('rejects domain ending with dot', () => {
+      expect(isValidDomain('example.com.')).toBe(false);
+    });
+
+    it('rejects domain with consecutive dots', () => {
+      expect(isValidDomain('example..com')).toBe(false);
+    });
+
+    it('rejects domain with fragment', () => {
+      expect(isValidDomain('example.com#section')).toBe(false);
     });
   });
 });

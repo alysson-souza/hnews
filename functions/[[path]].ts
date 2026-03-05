@@ -8,6 +8,7 @@ import {
   isAssetPath,
   isRecord,
   isSafePublicUrl,
+  isValidDomain,
   jsonResponse,
   matchHtmlTitle,
   matchMetaContent,
@@ -72,6 +73,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
   if (pathname === '/api/og-image-proxy') {
     return handleOgImageProxy(url);
+  }
+  if (pathname === '/api/favicons') {
+    return handleFavicons(url);
   }
 
   // Serve static assets directly via ASSETS binding.
@@ -519,6 +523,70 @@ export async function handleOgImageProxy(reqUrl: URL): Promise<Response> {
         'content-length': String(totalBytes),
         'cache-control': 'public, max-age=604800', // 7 days
         // Security: prevent content sniffing and framing
+        'x-content-type-options': 'nosniff',
+        'content-disposition': 'inline',
+        ...CORS_HEADERS,
+      },
+    });
+  } catch {
+    return new Response('Proxy error', { status: 502, headers: CORS_HEADERS });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Favicon proxy handler
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/favicons?domain=<domain>
+ * Proxies favicon requests through Google's favicon service to avoid
+ * rate-limiting and content blocker issues.
+ */
+export async function handleFavicons(reqUrl: URL): Promise<Response> {
+  const domain = reqUrl.searchParams.get('domain');
+  if (!domain) {
+    return new Response('Missing domain parameter', { status: 400, headers: CORS_HEADERS });
+  }
+
+  if (!isValidDomain(domain)) {
+    return new Response('Invalid domain', { status: 400, headers: CORS_HEADERS });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(
+      `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`,
+      {
+        signal: controller.signal,
+        headers: { accept: 'image/*' },
+      },
+    );
+
+    if (!res.ok || !res.body) {
+      return new Response('Upstream error', { status: 502, headers: CORS_HEADERS });
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/') && contentType !== 'image/x-icon') {
+      return new Response('Not an image', { status: 400, headers: CORS_HEADERS });
+    }
+
+    if (contentType.includes('svg')) {
+      return new Response('SVG not allowed', { status: 400, headers: CORS_HEADERS });
+    }
+
+    const body = await res.arrayBuffer();
+
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'content-type': contentType,
+        'content-length': String(body.byteLength),
+        'cache-control': 'public, max-age=2592000', // 30 days
         'x-content-type-options': 'nosniff',
         'content-disposition': 'inline',
         ...CORS_HEADERS,

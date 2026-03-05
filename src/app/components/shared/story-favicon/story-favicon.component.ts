@@ -51,9 +51,7 @@ export class StoryFaviconComponent {
   readonly faviconUrl = computed(() => {
     const domain = this.getDomain(this.url());
     if (!domain) return '/assets/default-thumb.svg';
-    // Google favicon API uses Google's crawl data and has the broadest site coverage.
-    // Returns a generic icon (not a 404) when no favicon exists.
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    return `/api/favicons?domain=${domain}`;
   });
 
   readonly domainLetter = computed(() => {

@@ -26,9 +26,7 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'Google');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe(
-      'https://www.google.com/s2/favicons?domain=google.com&sz=64',
-    );
+    expect(component.faviconUrl()).toBe('/api/favicons?domain=google.com');
   });
 
   it('should strip subdomains for favicon lookup', () => {
@@ -36,7 +34,7 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'CNN');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('https://www.google.com/s2/favicons?domain=cnn.com&sz=64');
+    expect(component.faviconUrl()).toBe('/api/favicons?domain=cnn.com');
   });
 
   it('should preserve compound country-code TLDs (co.uk)', () => {
@@ -44,9 +42,7 @@ describe('StoryFaviconComponent', () => {
     fixture.componentRef.setInput('altText', 'BBC');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe(
-      'https://www.google.com/s2/favicons?domain=bbc.co.uk&sz=64',
-    );
+    expect(component.faviconUrl()).toBe('/api/favicons?domain=bbc.co.uk');
   });
 
   it('should return default asset if no domain found', () => {

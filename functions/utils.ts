@@ -12,6 +12,38 @@ export const CORS_HEADERS: Record<string, string> = {
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 // ---------------------------------------------------------------------------
+// Domain validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate that a string is a bare domain (no protocol, path, query, or port).
+ * Rejects IPs, bare hostnames, and injection attempts.
+ */
+export function isValidDomain(domain: string): boolean {
+  if (!domain || typeof domain !== 'string') return false;
+
+  // Reject anything with protocol, path, query, fragment, port, or whitespace
+  if (/[/:?#@\s]/.test(domain)) return false;
+
+  // Reject IPv4 addresses
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(domain)) return false;
+
+  // Reject IPv6
+  if (domain.startsWith('[') || domain.includes(':')) return false;
+
+  // Must have at least one dot (no bare hostnames)
+  if (!domain.includes('.')) return false;
+
+  // No leading/trailing/consecutive dots
+  if (domain.startsWith('.') || domain.endsWith('.') || domain.includes('..')) return false;
+
+  // Only allow valid domain characters: alphanumeric, hyphens, dots
+  if (!/^[a-zA-Z0-9.-]+$/.test(domain)) return false;
+
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // URL / SSRF validation
 // ---------------------------------------------------------------------------
 
