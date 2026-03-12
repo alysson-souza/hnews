@@ -528,7 +528,7 @@ describe('StoryItem comments link behaviour', () => {
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
       expect(domainBtn).toBeTruthy();
       expect(domainBtn.nativeElement.textContent.trim()).toBe('news.ycombinator.com');
-      const spacer = fixture.debugElement.query(By.css('.h-4'));
+      const spacer = fixture.debugElement.query(By.css('.domain-placeholder'));
       expect(spacer).toBeFalsy();
     });
 
@@ -540,9 +540,9 @@ describe('StoryItem comments link behaviour', () => {
       });
       fixture.detectChanges();
 
-      const spacer = fixture.debugElement.query(By.css('.h-4'));
+      const spacer = fixture.debugElement.query(By.css('.domain-placeholder'));
       expect(spacer).toBeTruthy();
-      const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
+      const domainBtn = fixture.debugElement.query(By.css('.domain-btn:not(.domain-placeholder)'));
       expect(domainBtn).toBeFalsy();
     });
 
@@ -555,7 +555,7 @@ describe('StoryItem comments link behaviour', () => {
 
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
       expect(domainBtn).toBeTruthy();
-      const spacer = fixture.debugElement.query(By.css('.h-4'));
+      const spacer = fixture.debugElement.query(By.css('.domain-placeholder'));
       expect(spacer).toBeFalsy();
     });
   });
