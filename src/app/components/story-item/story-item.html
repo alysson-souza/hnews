@@ -79,10 +79,10 @@
           </h2>
         }
 
-        <!-- Domain - Now clickable (hidden for HN links) -->
+        <!-- Domain - clickable -->
         @if (isLoading()) {
           <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded w-32 mb-1 skeleton"></div>
-        } @else if (story()!.url && getDomain(story()!.url) && !isHnUrl(story()!.url!)) {
+        } @else if (story()!.url && getDomain(story()!.url)) {
           <button
             type="button"
             (click)="searchByDomain($event)"
@@ -94,6 +94,8 @@
           >
             {{ getDomain(story()!.url) }}
           </button>
+        } @else {
+          <div class="h-4"></div>
         }
 
         <!-- Metadata -->

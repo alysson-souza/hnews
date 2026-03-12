@@ -15,7 +15,6 @@ import { StoryShareService } from '@services/story-share.service';
 import { getDomain } from '@services/domain.utils';
 import { StoryActionsMenuComponent } from './story-actions-menu.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
-import { isHnLink } from '../comment-text/hn-link.utils';
 
 @Component({
   selector: 'app-story-item',
@@ -66,10 +65,6 @@ export class StoryItem {
   // Expose utilities for template
   getDomain(url?: string): string {
     return getDomain(url);
-  }
-
-  isHnUrl(url: string): boolean {
-    return isHnLink(url);
   }
 
   private static async prefetchItemComponent(): Promise<void> {

@@ -517,6 +517,49 @@ describe('StoryItem comments link behaviour', () => {
     });
   });
 
+  describe('Domain row spacer', () => {
+    it('should render domain button for HN URL stories', () => {
+      fixture.componentRef.setInput('story', {
+        ...story,
+        url: 'https://news.ycombinator.com/newsguidelines.html#generated',
+      });
+      fixture.detectChanges();
+
+      const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
+      expect(domainBtn).toBeTruthy();
+      expect(domainBtn.nativeElement.textContent.trim()).toBe('news.ycombinator.com');
+      const spacer = fixture.debugElement.query(By.css('.h-4'));
+      expect(spacer).toBeFalsy();
+    });
+
+    it('should render a spacer when story has no URL (text post)', () => {
+      fixture.componentRef.setInput('story', {
+        ...story,
+        url: undefined,
+        title: 'Ask HN: How to test?',
+      });
+      fixture.detectChanges();
+
+      const spacer = fixture.debugElement.query(By.css('.h-4'));
+      expect(spacer).toBeTruthy();
+      const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
+      expect(domainBtn).toBeFalsy();
+    });
+
+    it('should render domain button instead of spacer for non-HN URLs', () => {
+      fixture.componentRef.setInput('story', {
+        ...story,
+        url: 'https://example.com/article',
+      });
+      fixture.detectChanges();
+
+      const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
+      expect(domainBtn).toBeTruthy();
+      const spacer = fixture.debugElement.query(By.css('.h-4'));
+      expect(spacer).toBeFalsy();
+    });
+  });
+
   describe('Computed properties', () => {
     it('should detect loading state when loading is true', () => {
       fixture.componentRef.setInput('loading', true);

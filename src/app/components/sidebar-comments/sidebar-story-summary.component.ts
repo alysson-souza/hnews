@@ -8,7 +8,6 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
-import { isHnLink } from '../comment-text/hn-link.utils';
 
 @Component({
   selector: 'app-sidebar-story-summary',
@@ -25,8 +24,8 @@ import { isHnLink } from '../comment-text/hn-link.utils';
         />
       </h3>
 
-      <!-- Domain - clickable (hidden for HN links) -->
-      @if (item().url && getDomain(item().url) && !isHnUrl(item().url!)) {
+      <!-- Domain - clickable -->
+      @if (item().url && getDomain(item().url)) {
         <button
           type="button"
           role="button"
@@ -99,11 +98,6 @@ export class SidebarStorySummaryComponent {
 
   hasMetaPrefix(): boolean {
     return this.item().score != null || !!this.item().by;
-  }
-
-  // Expose for template
-  isHnUrl(url: string): boolean {
-    return isHnLink(url);
   }
 
   getDomain(url?: string): string {
