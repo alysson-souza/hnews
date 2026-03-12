@@ -21,6 +21,21 @@ const MOCK_SCRIPT = `// ==UserScript==
     window.location.replace(BASE_URL);
 })();`;
 
+function runGeneratedUserscript(script: string, href: string): string | null {
+  const replace = vi.fn();
+  const mockWindow = {
+    location: {
+      href,
+      replace,
+    },
+  };
+
+  const execute = new Function('window', script);
+  execute(mockWindow);
+
+  return replace.mock.calls[0]?.[0] ?? null;
+}
+
 describe('UserscriptComponent', () => {
   let component: UserscriptComponent;
   let fixture: ComponentFixture<UserscriptComponent>;
@@ -100,10 +115,52 @@ describe('UserscriptComponent', () => {
 });
 
 describe('generated userscript file', () => {
-  it('should not use placeholder version 0.0.0', async () => {
+  async function readGeneratedUserscript(): Promise<string> {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
-    const content = readFileSync(join(process.cwd(), 'public/hnews-redirect.user.js'), 'utf8');
+    return readFileSync(join(process.cwd(), 'public/hnews-redirect.user.js'), 'utf8');
+  }
+
+  it('should not use placeholder version 0.0.0', async () => {
+    const content = await readGeneratedUserscript();
     expect(content).not.toContain('@version      0.0.0');
+  });
+
+  it('should redirect supported HN item URLs to HNews item routes', async () => {
+    const content = await readGeneratedUserscript();
+
+    const redirectedUrl = runGeneratedUserscript(
+      content,
+      'https://news.ycombinator.com/item?id=12345',
+    );
+
+    expect(redirectedUrl).toBe('https://alysson-souza.github.io/hnews/item/12345');
+  });
+
+  it('should redirect supported HN list URLs to HNews list routes', async () => {
+    const content = await readGeneratedUserscript();
+
+    const redirectedUrl = runGeneratedUserscript(content, 'https://news.ycombinator.com/news');
+
+    expect(redirectedUrl).toBe('https://alysson-souza.github.io/hnews/top');
+  });
+
+  it('should not redirect unsupported HN documentation URLs', async () => {
+    const content = await readGeneratedUserscript();
+
+    const redirectedUrl = runGeneratedUserscript(
+      content,
+      'https://news.ycombinator.com/newsguidelines.html#generated',
+    );
+
+    expect(redirectedUrl).toBeNull();
+  });
+
+  it('should not redirect unsupported HN submit URLs', async () => {
+    const content = await readGeneratedUserscript();
+
+    const redirectedUrl = runGeneratedUserscript(content, 'https://news.ycombinator.com/submit');
+
+    expect(redirectedUrl).toBeNull();
   });
 });

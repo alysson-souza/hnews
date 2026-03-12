@@ -76,6 +76,18 @@ describe('StoryLinkComponent', () => {
     expect(link?.getAttribute('href')).toBe('/user/pg');
   });
 
+  it('should render external link for unsupported HN URLs', () => {
+    component.url.set('https://news.ycombinator.com/newsguidelines.html#generated');
+    fixture.detectChanges();
+
+    const link = element.querySelector('a');
+    expect(link).toBeTruthy();
+    expect(link?.getAttribute('href')).toBe(
+      'https://news.ycombinator.com/newsguidelines.html#generated',
+    );
+    expect(link?.getAttribute('target')).toBe('_blank');
+  });
+
   it('should set title attribute', () => {
     component.url.set('https://example.com');
     component.title.set('Test Title');

@@ -34,7 +34,17 @@ const content = `// ==UserScript==
 
     const BASE_URL = '${BASE_URL}';
     const currentUrl = window.location.href;
-    const hnUrl = 'https://news.ycombinator.com';
+    const STORY_TYPE_PATHS = {
+        '/': '/top',
+        '/news': '/top',
+        '/front': '/top',
+        '/newest': '/newest',
+        '/new': '/newest',
+        '/best': '/best',
+        '/ask': '/ask',
+        '/show': '/show',
+        '/jobs': '/jobs',
+    };
 
     // Parse the current HN URL and convert to HNews URL
     const url = new URL(currentUrl);
@@ -42,8 +52,7 @@ const content = `// ==UserScript==
     const search = url.search;
 
     // Map HN routes to HNews routes
-    let newPath = pathname;
-    let newSearch = '';
+    let newPath = null;
 
     // Handle item pages: /item?id=123 -> /item/123
     if (pathname === '/item' && search) {
@@ -62,22 +71,17 @@ const content = `// ==UserScript==
         }
     }
     // Handle story list pages
-    else if (pathname === '/news' || pathname === '/') {
-        newPath = '/top';
-    } else if (pathname === '/newest') {
-        newPath = '/newest';
-    } else if (pathname === '/best') {
-        newPath = '/best';
-    } else if (pathname === '/ask') {
-        newPath = '/ask';
-    } else if (pathname === '/show') {
-        newPath = '/show';
-    } else if (pathname === '/jobs') {
-        newPath = '/jobs';
+    else if (Object.hasOwn(STORY_TYPE_PATHS, pathname)) {
+        newPath = STORY_TYPE_PATHS[pathname];
+    }
+
+    // Unsupported HN pages should stay on Hacker News.
+    if (!newPath) {
+        return;
     }
 
     // Redirect to HNews
-    const hnewsUrl = \`\${BASE_URL}\${newPath}\${newSearch}\`;
+    const hnewsUrl = \`\${BASE_URL}\${newPath}\`;
     window.location.replace(hnewsUrl);
 })();
 `;
