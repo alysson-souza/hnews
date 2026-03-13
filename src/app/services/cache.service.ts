@@ -14,12 +14,7 @@ export interface CacheEntry<T> {
 export class CacheService {
   private readonly STORAGE_PREFIX = 'hnews_cache_';
 
-  private readonly DEFAULT_TTL = {
-    STORY_LIST: 5 * 60 * 1000, // 5 minutes
-    STORY_ITEM: 30 * 60 * 1000, // 30 minutes
-    USER_PROFILE: 60 * 60 * 1000, // 1 hour
-    OPEN_GRAPH: 24 * 60 * 60 * 1000, // 24 hours
-  };
+  private readonly DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
   constructor() {
     this.cleanupOldEntries();
@@ -35,7 +30,7 @@ export class CacheService {
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
-      ttl: ttl || this.DEFAULT_TTL.STORY_ITEM,
+      ttl: ttl || this.DEFAULT_TTL_MS,
     };
 
     try {
@@ -114,9 +109,5 @@ export class CacheService {
         }
       }
     });
-  }
-
-  getTTL(type: keyof typeof this.DEFAULT_TTL): number {
-    return this.DEFAULT_TTL[type];
   }
 }

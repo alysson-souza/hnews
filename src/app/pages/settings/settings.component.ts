@@ -614,8 +614,8 @@ export class SettingsComponent implements OnInit {
         await this.cacheService.clearAll();
         this.showCacheMessage('All cache cleared successfully', false);
       } else if (type === 'stories') {
-        await this.cacheService.clearType('stories');
-        await this.cacheService.clearType('storyLists');
+        await this.cacheService.clear('story');
+        await this.cacheService.clear('storyList');
         this.showCacheMessage('Story cache cleared successfully', false);
       } else if (type === 'images') {
         // Clear service worker image cache

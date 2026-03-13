@@ -393,8 +393,8 @@ export class IndexedDBService {
 
   // Count items in a store
   async count(storeName: string): Promise<number> {
-    await this.initDB();
-    const tx = this.db!.transaction([storeName], 'readonly');
+    const db = await this.ensureDB();
+    const tx = db.transaction([storeName], 'readonly');
     const store = tx.objectStore(storeName);
     const request = store.count();
 

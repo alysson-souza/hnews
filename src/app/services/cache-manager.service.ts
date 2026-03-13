@@ -300,29 +300,28 @@ export class CacheManagerService {
     const memoryKey = `${type}:${key}`;
 
     try {
-      // Set in primary storage first
+      // Try primary storage first
       await this.setInStorage(config.storageType, type, key, data, finalTTL);
-
-      // Set in fallback storage (best effort)
+    } catch (primaryError) {
+      // Primary failed — try fallback if configured
       if (config.fallback) {
         try {
           await this.setInStorage(config.fallback, type, key, data, finalTTL);
-        } catch (error) {
-          console.warn(`Failed to set fallback storage for ${memoryKey}:`, error);
-          // Continue - primary storage succeeded
+        } catch (fallbackError) {
+          console.error(`Failed to set both primary and fallback for ${memoryKey}:`, fallbackError);
+          throw primaryError;
         }
+      } else {
+        console.error(`Failed to set cache for ${memoryKey}:`, primaryError);
+        throw primaryError;
       }
-
-      // Only update memory cache after successful storage writes
-      this.setInMemory(memoryKey, data, finalTTL);
-
-      // Notify subscribers of successful update
-      this.emitUpdate<T>(type, key, data);
-    } catch (error) {
-      console.error(`Failed to set cache for ${memoryKey}:`, error);
-      // Don't update memory or notify subscribers if storage failed
-      throw error;
     }
+
+    // Only update memory cache after at least one storage write succeeded
+    this.setInMemory(memoryKey, data, finalTTL);
+
+    // Notify subscribers of successful update
+    this.emitUpdate<T>(type, key, data);
   }
 
   async delete(type: string, key: string): Promise<void> {
@@ -366,6 +365,9 @@ export class CacheManagerService {
           story: 'stories',
           storyList: 'storyLists',
           user: 'users',
+          search: 'apiCache',
+          metadata: 'apiCache',
+          ogImage: 'apiCache',
         };
         const storeName = storeMap[type];
         if (storeName) {
@@ -614,27 +616,6 @@ export class CacheManagerService {
       const cacheNames = await window.caches.keys();
       await Promise.all(cacheNames.map((name) => window.caches.delete(name)));
     }
-  }
-
-  // Clear a specific cache type
-  async clearType(type: string): Promise<void> {
-    for (const key of this.memoryCache.keys()) {
-      if (key.startsWith(`${type}:`)) {
-        this.memoryCache.delete(key);
-      }
-    }
-    const storeMap: Record<string, string> = {
-      stories: 'stories',
-      storyLists: 'storyLists',
-      users: 'users',
-      apiCache: 'apiCache',
-    };
-
-    const storeName = storeMap[type];
-    if (storeName) {
-      await this.indexedDB.clear(storeName);
-    }
-    this.legacyCache.clear(type);
   }
 
   // Get cache statistics

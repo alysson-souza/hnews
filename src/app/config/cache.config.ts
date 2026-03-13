@@ -31,9 +31,3 @@ export const CACHE_TTL_OG_IMAGE = new InjectionToken<number>('CACHE_TTL_OG_IMAGE
   providedIn: 'root',
   factory: () => 7 * 24 * 60 * 60 * 1000, // 7 days (OG images rarely change)
 });
-
-// Versioned cache namespace to allow seamless invalidation on schema changes
-export const CACHE_NAMESPACE_VERSION = new InjectionToken<string>('CACHE_NAMESPACE_VERSION', {
-  providedIn: 'root',
-  factory: () => 'v1',
-});

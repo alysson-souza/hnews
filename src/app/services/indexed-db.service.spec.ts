@@ -285,6 +285,13 @@ describe('IndexedDBService', () => {
       const count = await service.count('apiCache');
       expect(count).toBe(0);
     });
+
+    it('should use ensureDB instead of initDB', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ensureDBSpy = vi.spyOn(service as any, 'ensureDB');
+      await service.count('apiCache');
+      expect(ensureDBSpy).toHaveBeenCalled();
+    });
   });
 
   describe('Migration from localStorage', () => {

@@ -318,16 +318,17 @@ describe('CacheManagerService', () => {
       expect(service).toBeTruthy();
     });
 
-    it('clears type-specific cache', async () => {
+    it('clears type-specific cache via clear()', async () => {
       await service.set('story', '1', { id: 1 });
       await service.set('story', '2', { id: 2 });
 
-      await service.clearType('stories');
+      await service.clear('story');
+
+      service.clearMemoryCache();
+      cacheService.clear();
 
       const result1 = await service.get('story', '1');
-
-      // Memory cache might still have them, but DB should be clear
-      expect(result1).toBeDefined();
+      expect(result1).toBeNull();
     });
   });
 
@@ -543,6 +544,65 @@ describe('CacheManagerService', () => {
     });
   });
 
+  describe('Issue: localStorage dual-write', () => {
+    it('should not write to localStorage fallback when IndexedDB succeeds', async () => {
+      const cacheSetSpy = vi.spyOn(cacheService, 'set');
+      await service.set('story', '1', { id: 1, title: 'Test' });
+      expect(cacheSetSpy).not.toHaveBeenCalled();
+    });
+
+    it('should write to localStorage fallback when IndexedDB fails', async () => {
+      vi.spyOn(indexedDBService, 'setStory').mockRejectedValue(new Error('DB unavailable'));
+      const cacheSetSpy = vi.spyOn(cacheService, 'set');
+
+      await service.set('story', '1', { id: 1, title: 'Fallback' });
+
+      expect(cacheSetSpy).toHaveBeenCalled();
+    });
+
+    it('should throw when both primary and fallback storage fail', async () => {
+      vi.spyOn(indexedDBService, 'setStory').mockRejectedValue(new Error('DB unavailable'));
+      vi.spyOn(cacheService, 'set').mockImplementation(() => {
+        throw new Error('localStorage full');
+      });
+
+      await expect(service.set('story', '1', { id: 1 })).rejects.toThrow();
+    });
+  });
+
+  describe('Issue: clear(type) for apiCache types', () => {
+    it('should clear IndexedDB apiCache store when clearing search type', async () => {
+      const clearSpy = vi.spyOn(indexedDBService, 'clear');
+      await service.clear('search');
+      expect(clearSpy).toHaveBeenCalledWith('apiCache');
+    });
+
+    it('should clear IndexedDB apiCache store when clearing metadata type', async () => {
+      const clearSpy = vi.spyOn(indexedDBService, 'clear');
+      await service.clear('metadata');
+      expect(clearSpy).toHaveBeenCalledWith('apiCache');
+    });
+
+    it('should clear IndexedDB apiCache store when clearing ogImage type', async () => {
+      const clearSpy = vi.spyOn(indexedDBService, 'clear');
+      await service.clear('ogImage');
+      expect(clearSpy).toHaveBeenCalledWith('apiCache');
+    });
+  });
+
+  describe('Issue: clearType/clear API unification', () => {
+    it('should clear stories via clear("story") using logical type', async () => {
+      await service.set('story', '1', { id: 1 });
+      await service.set('story', '2', { id: 2 });
+
+      await service.clear('story');
+
+      service.clearMemoryCache();
+      const result = await service.get('story', '1');
+      expect(result).toBeNull();
+    });
+  });
+
   describe('Phase 1 Fixes: Race Conditions & Data Integrity', () => {
     describe('Issue #1 & #2: Request Deduplication and Error Handling', () => {
       it('should deduplicate concurrent getWithSWR calls', async () => {
@@ -661,11 +721,14 @@ describe('CacheManagerService', () => {
     });
 
     describe('Issue #4: Memory/Storage Write Synchronization', () => {
-      it('should not update memory cache if storage write fails', async () => {
+      it('should not update memory cache if all storage writes fail', async () => {
         const data = [1, 2, 3];
 
-        // Mock storage failure
+        // Mock both primary and fallback storage failure
         vi.spyOn(indexedDBService, 'setStoryList').mockRejectedValue(new Error('Storage full'));
+        vi.spyOn(cacheService, 'set').mockImplementation(() => {
+          throw new Error('localStorage full');
+        });
 
         await expect(service.set('storyList', 'test', data)).rejects.toThrow('Storage full');
 
@@ -699,8 +762,11 @@ describe('CacheManagerService', () => {
           updateEmitted = true;
         });
 
-        // Mock storage failure
+        // Mock both primary and fallback storage failure
         vi.spyOn(indexedDBService, 'setStoryList').mockRejectedValue(new Error('Storage full'));
+        vi.spyOn(cacheService, 'set').mockImplementation(() => {
+          throw new Error('localStorage full');
+        });
 
         await expect(service.set('storyList', 'test', data)).rejects.toThrow();
 
