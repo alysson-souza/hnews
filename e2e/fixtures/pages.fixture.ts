@@ -4,6 +4,8 @@ import { ItemPage } from '../page-objects/item.page';
 import { UserPage } from '../page-objects/user.page';
 import { SearchPage } from '../page-objects/search.page';
 import { SettingsPage } from '../page-objects/settings.page';
+import { SidebarPage } from '../page-objects/sidebar.page';
+import { UserscriptPage } from '../page-objects/userscript.page';
 
 type PageFixtures = {
   storiesPage: StoriesPage;
@@ -11,6 +13,8 @@ type PageFixtures = {
   userPage: UserPage;
   searchPage: SearchPage;
   settingsPage: SettingsPage;
+  sidebarPage: SidebarPage;
+  userscriptPage: UserscriptPage;
 };
 
 export const test = base.extend<PageFixtures>({
@@ -33,6 +37,14 @@ export const test = base.extend<PageFixtures>({
   settingsPage: async ({ page }, use) => {
     const settingsPage = new SettingsPage(page);
     await use(settingsPage);
+  },
+  sidebarPage: async ({ page }, use) => {
+    const sidebarPage = new SidebarPage(page);
+    await use(sidebarPage);
+  },
+  userscriptPage: async ({ page }, use) => {
+    const userscriptPage = new UserscriptPage(page);
+    await use(userscriptPage);
   },
 });
 
