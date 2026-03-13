@@ -16,6 +16,7 @@ import {
   viewProviders: [provideIcons({ solarSunLinear, solarMoonLinear, solarMonitorSmartphoneLinear })],
   template: `
     <button
+      tabindex="0"
       (click)="themeService.toggleTheme()"
       class="theme-toggle"
       [attr.aria-label]="'Switch to ' + themeService.getNextThemeLabel() + ' mode'"
@@ -39,6 +40,7 @@ import {
         @apply text-gray-500 hover:bg-gray-100 hover:text-gray-900;
         @apply dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-200;
         @apply cursor-pointer;
+        @apply focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2;
       }
     `,
   ],

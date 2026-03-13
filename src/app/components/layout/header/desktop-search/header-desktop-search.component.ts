@@ -15,6 +15,7 @@ import { CommandRegistryService } from '@services/command-registry.service';
     <div class="hidden lg:flex items-center gap-4">
       <div class="keyboard-hint-only">
         <button
+          tabindex="0"
           (click)="commandRegistry.execute('global.showHelp')"
           class="shortcuts-button"
           aria-label="Show keyboard shortcuts"
@@ -68,6 +69,7 @@ import { CommandRegistryService } from '@services/command-registry.service';
         @apply text-gray-500 hover:bg-gray-100 hover:text-gray-900;
         @apply dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-200;
         @apply cursor-pointer;
+        @apply focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2;
       }
 
       .search-button {

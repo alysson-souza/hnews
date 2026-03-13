@@ -15,6 +15,7 @@ export interface SegmentOption {
       @for (option of options(); track option) {
         <button
           type="button"
+          tabindex="0"
           [class.active]="value() === option.value"
           [attr.role]="'tab'"
           [attr.aria-selected]="value() === option.value"
@@ -43,7 +44,7 @@ export interface SegmentOption {
         @apply text-gray-500 dark:text-gray-400;
         @apply cursor-pointer rounded-lg select-none;
         @apply hover:text-gray-700 dark:hover:text-gray-300;
-        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2;
         @apply flex-1 sm:flex-initial;
       }
 

@@ -13,10 +13,9 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
     <div class="story-actions-container">
       <button
         #actionsBtn
+        tabindex="0"
         class="story-actions-btn"
         (click)="toggleMenu($event)"
-        (keyup.enter)="toggleMenu($event)"
-        (keyup.space)="toggleMenu($event)"
         [attr.aria-label]="'Actions for story'"
         [attr.aria-haspopup]="'menu'"
         [attr.aria-expanded]="isOpen()"
@@ -45,8 +44,6 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             role="menuitem"
             [attr.data-index]="0"
             (click)="shareStory.emit()"
-            (keyup.enter)="shareStory.emit()"
-            (keyup.space)="shareStory.emit()"
           >
             {{ shareStoryText() }}
           </button>
@@ -55,8 +52,6 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             role="menuitem"
             [attr.data-index]="1"
             (click)="shareComments.emit()"
-            (keyup.enter)="shareComments.emit()"
-            (keyup.space)="shareComments.emit()"
           >
             {{ shareCommentsText() }}
           </button>
@@ -66,8 +61,6 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             role="menuitem"
             [attr.data-index]="2"
             (click)="openInNewTab.emit()"
-            (keyup.enter)="openInNewTab.emit()"
-            (keyup.space)="openInNewTab.emit()"
           >
             Open Comments in New Tab
           </button>
@@ -85,7 +78,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
 
       /* Actions Button */
       .story-actions-btn {
-        @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+        @apply p-1 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2;
       }
 
       /* Actions Menu */
@@ -154,7 +147,7 @@ export class StoryActionsMenuComponent implements OnInit {
     if (newState) {
       this.positionMenu();
       this.setupClickOutside();
-      this.focusFirstItem();
+      setTimeout(() => this.focusFirstItem(), 0);
     }
   }
 
