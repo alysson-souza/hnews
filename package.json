@@ -40,7 +40,7 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "generate:version": "node ./scripts/generate-version.mjs",
-    "generate:userscript": "node ./scripts/generate-userscript.mjs"
+    "generate:userscript": "node --experimental-strip-types ./scripts/generate-userscript.ts"
   },
   "private": true,
   "engines": {

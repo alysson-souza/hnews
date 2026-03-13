@@ -12,6 +12,8 @@ import {
   solarCheckCircleLinear,
   solarDownloadLinear,
 } from '@ng-icons/solar-icons/linear';
+import { APP_VERSION } from '../../config/version.config';
+import { generateUserscript } from './userscript-template';
 
 @Component({
   selector: 'app-userscript',
@@ -121,6 +123,7 @@ import {
 })
 export class UserscriptComponent {
   private sanitizer = inject(DomSanitizer);
+  private version = inject(APP_VERSION);
   private copiedSignal = signal(false);
   isCopied = computed(() => this.copiedSignal());
 
@@ -136,27 +139,10 @@ export class UserscriptComponent {
     return 'https://alysson-souza.github.io/hnews';
   });
 
-  readonly installUrl = computed(() => {
-    return `${this.baseUrl()}/hnews-redirect.user.js`;
-  });
-
-  readonly isLoading = signal(true);
-  readonly userscriptContent = signal('');
+  readonly userscriptContent = computed(() => generateUserscript(this.baseUrl(), this.version));
   readonly highlightedUserscript = signal<SafeHtml>('');
 
   constructor() {
-    // Fetch the actual generated file so preview and clipboard always match the download
-    fetch(this.installUrl())
-      .then((res) => res.text())
-      .then((content) => {
-        this.userscriptContent.set(content);
-        this.isLoading.set(false);
-      })
-      .catch((err) => {
-        console.error('Failed to load userscript:', err);
-        this.isLoading.set(false);
-      });
-
     effect(() => {
       const code = this.userscriptContent();
       if (!code) return;
@@ -173,7 +159,13 @@ export class UserscriptComponent {
   }
 
   install(): void {
-    window.open(this.installUrl(), '_blank', 'noopener,noreferrer');
+    const blob = new Blob([this.userscriptContent()], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'hnews-redirect.user.js';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async copyToClipboard(): Promise<void> {

@@ -1,23 +1,12 @@
-#!/usr/bin/env node
-import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2026 Alysson Souza
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const rootDir = join(__dirname, '..');
-
-// Configuration
-const DEFAULT_BASE_URL = 'https://alysson-souza.github.io/hnews';
-const BASE_URL = process.env.BASE_URL || DEFAULT_BASE_URL;
-const OUTPUT_FILE = 'hnews-redirect.user.js';
-
-// Read package.json for version
-const packageJson = JSON.parse(readFileSync(join(rootDir, 'package.json'), 'utf8'));
-const version = packageJson.version ?? '1.0.0';
-
-// Generate content
-const content = `// ==UserScript==
+/**
+ * Generates the HNews redirect userscript content.
+ * Pure function with no Angular or Node dependencies — just a template string.
+ */
+export function generateUserscript(baseUrl: string, version: string): string {
+  return `// ==UserScript==
 // @name         HNews Redirect
 // @namespace    https://github.com/alysson-souza/hnews
 // @version      ${version}
@@ -32,7 +21,7 @@ const content = `// ==UserScript==
 (function() {
     'use strict';
 
-    const BASE_URL = '${BASE_URL}';
+    const BASE_URL = '${baseUrl}';
     const currentUrl = window.location.href;
     const STORY_TYPE_PATHS = {
         '/': '/top',
@@ -85,10 +74,4 @@ const content = `// ==UserScript==
     window.location.replace(hnewsUrl);
 })();
 `;
-
-// Write file
-const publicDir = join(rootDir, 'public');
-mkdirSync(publicDir, { recursive: true });
-writeFileSync(join(publicDir, OUTPUT_FILE), content, 'utf8');
-
-console.log(`Generated ${OUTPUT_FILE} with BASE_URL=${BASE_URL} and version=${version}`);
+}

@@ -122,11 +122,7 @@
       </div>
 
       <div class="code-block">
-        @if (isLoading()) {
-          <p class="p-4 text-sm text-gray-500 dark:text-gray-400">Loading...</p>
-        } @else {
-          <div [innerHTML]="highlightedUserscript()"></div>
-        }
+        <div [innerHTML]="highlightedUserscript()"></div>
       </div>
     </section>
   </app-card>
