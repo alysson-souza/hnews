@@ -1,13 +1,26 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { StoryFaviconComponent } from './story-favicon.component';
+import { PageLifecycleService } from '@services/page-lifecycle.service';
+
+class PageLifecycleServiceStub {
+  hiddenSince = signal<number | null>(null);
+  isVisible = signal(true);
+  resumeCount = signal(0);
+  wasDiscarded = false;
+}
 
 describe('StoryFaviconComponent', () => {
   let component: StoryFaviconComponent;
   let fixture: ComponentFixture<StoryFaviconComponent>;
+  let pageLifecycleStub: PageLifecycleServiceStub;
 
   beforeEach(async () => {
+    pageLifecycleStub = new PageLifecycleServiceStub();
+
     await TestBed.configureTestingModule({
       imports: [StoryFaviconComponent],
+      providers: [{ provide: PageLifecycleService, useValue: pageLifecycleStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StoryFaviconComponent);
@@ -175,5 +188,40 @@ describe('StoryFaviconComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
+  });
+
+  it('should reset error state on tab resume', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    // Trigger an error
+    component.handleError();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+
+    // Simulate resume
+    pageLifecycleStub.resumeCount.set(1);
+    fixture.detectChanges();
+
+    // Error should be cleared — favicon img should re-appear
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
+  });
+
+  it('should not change state on resume when no error', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    // No error — img should be showing
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+
+    // Simulate resume
+    pageLifecycleStub.resumeCount.set(1);
+    fixture.detectChanges();
+
+    // Should still be showing img
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
   });
 });

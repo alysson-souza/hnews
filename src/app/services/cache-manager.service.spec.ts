@@ -487,6 +487,30 @@ describe('CacheManagerService', () => {
     });
   });
 
+  describe('clearInflightFetches', () => {
+    it('allows a new fetch for the same key after clearing', async () => {
+      let callCount = 0;
+      const fetcher = async () => {
+        callCount++;
+        return [1, 2, 3];
+      };
+
+      // First fetch populates cache
+      await service.getWithSWR<number[]>('storyList', 'inflight-test', fetcher);
+      expect(callCount).toBe(1);
+
+      // Second fetch would normally deduplicate the background SWR refresh
+      // if one was already in-flight. Clear in-flight to force a new one.
+      service.clearInflightFetches();
+
+      // Third fetch: now the SWR background refresh should fire again
+      await service.getWithSWR<number[]>('storyList', 'inflight-test', fetcher);
+
+      // The fetcher should have been called again for the background refresh
+      expect(callCount).toBeGreaterThanOrEqual(2);
+    });
+  });
+
   describe('Fallback storage', () => {
     it('falls back to localStorage when IndexedDB fails', async () => {
       // Set data in cache service (localStorage stub)

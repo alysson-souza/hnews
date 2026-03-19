@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
-import { NgZone } from '@angular/core';
+import { signal } from '@angular/core';
 import { OgImageService } from './og-image.service';
 import { CacheManagerService } from './cache-manager.service';
+import { PageLifecycleService } from './page-lifecycle.service';
 
 // ---------------------------------------------------------------------------
 // Mock IntersectionObserver
@@ -60,6 +61,14 @@ class CacheManagerServiceStub {
       return fetcher();
     },
   );
+  clearInflightFetches = vi.fn();
+}
+
+class PageLifecycleServiceStub {
+  hiddenSince = signal<number | null>(null);
+  isVisible = signal(true);
+  resumeCount = signal(0);
+  wasDiscarded = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -89,6 +98,7 @@ async function flush(): Promise<void> {
 describe('OgImageService', () => {
   let service: OgImageService;
   let cacheStub: CacheManagerServiceStub;
+  let pageLifecycleStub: PageLifecycleServiceStub;
   let fetchSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -102,15 +112,13 @@ describe('OgImageService', () => {
     vi.stubGlobal('fetch', fetchSpy);
 
     cacheStub = new CacheManagerServiceStub();
+    pageLifecycleStub = new PageLifecycleServiceStub();
 
     TestBed.configureTestingModule({
       providers: [
         OgImageService,
         { provide: CacheManagerService, useValue: cacheStub },
-        {
-          provide: NgZone,
-          useValue: { run: (fn: () => void) => fn() },
-        },
+        { provide: PageLifecycleService, useValue: pageLifecycleStub },
       ],
     });
 
@@ -737,6 +745,60 @@ describe('OgImageService', () => {
       await flush();
 
       // Only one additional fetch for the deduped URL
+      expect(resolvers.length).toBe(6);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Resume handling
+  // -----------------------------------------------------------------------
+
+  describe('resume handling', () => {
+    it('clears inflight fetches on resume', () => {
+      TestBed.flushEffects();
+      cacheStub.clearInflightFetches.mockClear();
+
+      pageLifecycleStub.resumeCount.set(1);
+      TestBed.flushEffects();
+
+      expect(cacheStub.clearInflightFetches).toHaveBeenCalled();
+    });
+
+    it('resets activeRequests to 0 on resume', async () => {
+      const resolvers: Array<() => void> = [];
+      fetchSpy.mockImplementation(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolvers.push(() =>
+              resolve(makeFetchResponse({ imageUrl: null, title: null, description: null })),
+            );
+          }),
+      );
+
+      // Start 5 concurrent requests to fill the concurrency limit
+      const elements: HTMLElement[] = [];
+      for (let i = 0; i < 5; i++) {
+        const el = document.createElement('div');
+        elements.push(el);
+        service.observe(el, `https://example.com/resume-${i}`, vi.fn());
+      }
+      MockIntersectionObserver.instances[0].triggerEntries(
+        elements.map((el) => ({ target: el, isIntersecting: true })),
+      );
+      await flush();
+      expect(resolvers.length).toBe(5);
+
+      // Simulate resume — should reset activeRequests
+      pageLifecycleStub.resumeCount.set(1);
+      TestBed.flushEffects();
+
+      // Now a 6th request should be processable (not blocked by concurrency)
+      const el6 = document.createElement('div');
+      service.observe(el6, 'https://example.com/resume-new', vi.fn());
+      MockIntersectionObserver.instances[0].triggerEntry(el6, true);
+      await flush();
+
+      // The new fetch should have started (resolvers.length increased)
       expect(resolvers.length).toBe(6);
     });
   });

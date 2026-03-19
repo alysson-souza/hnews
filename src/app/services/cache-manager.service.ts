@@ -602,6 +602,14 @@ export class CacheManagerService {
     };
   }
 
+  /**
+   * Clear all in-flight fetch promises.
+   * Used on tab resume to discard stale promises from before freeze/discard.
+   */
+  clearInflightFetches(): void {
+    this.inflightFetches.clear();
+  }
+
   // Helper method to clear memory cache
   clearMemoryCache(): void {
     this.memoryCache.clear();

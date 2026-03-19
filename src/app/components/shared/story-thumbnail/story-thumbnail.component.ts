@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   computed,
+  effect,
   OnInit,
   OnDestroy,
   ElementRef,
@@ -15,6 +16,7 @@ import {
 import { StoryFaviconComponent } from '../story-favicon/story-favicon.component';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 import { OgImageService, OgImageResult } from '@services/og-image.service';
+import { PageLifecycleService } from '@services/page-lifecycle.service';
 
 @Component({
   selector: 'app-story-thumbnail',
@@ -97,6 +99,7 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   private redirectService = inject(PrivacyRedirectService);
   private ogImageService = inject(OgImageService);
+  private pageLifecycle = inject(PageLifecycleService);
 
   /** The resolved OG image URL (proxied), or null to show favicon. */
   readonly ogImageUrl = signal<string | null>(null);
@@ -121,6 +124,30 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   private readonly thumbEl = viewChild<ElementRef<HTMLElement>>('thumbEl');
   private cleanupObserver: (() => void) | null = null;
+
+  constructor() {
+    // Re-validate OG images after tab resume (browser may have evicted decoded data)
+    effect(() => {
+      const count = this.pageLifecycle.resumeCount();
+      if (count === 0) return;
+
+      const url = this.ogImageUrl();
+      if (!url) return;
+
+      // Temporarily hide the image, then check if it's still decoded
+      this.ogImageLoaded.set(false);
+      queueMicrotask(() => {
+        const img = this.thumbEl()?.nativeElement.querySelector(
+          'img.og-image',
+        ) as HTMLImageElement | null;
+        if (img?.complete && img.naturalWidth > 0) {
+          // Image is still decoded — restore immediately (no flicker)
+          this.ogImageLoaded.set(true);
+        }
+        // Otherwise: browser will re-fetch, (load) event fires naturally
+      });
+    });
+  }
 
   ngOnInit(): void {
     const url = this.storyUrl();

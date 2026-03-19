@@ -8,6 +8,8 @@ import { StoryListStateService } from '@services/story-list-state.service';
 import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
 import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
+import { PageLifecycleService } from '@services/page-lifecycle.service';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
 
 interface TestItem {
@@ -89,6 +91,14 @@ class MockDeviceService {
   isDesktop = vi.fn().mockReturnValue(false);
 }
 
+/** Test double for PageLifecycleService */
+class MockPageLifecycleService {
+  hiddenSince = signal<number | null>(null);
+  isVisible = signal(true);
+  resumeCount = signal(0);
+  wasDiscarded = false;
+}
+
 describe('StoryList', () => {
   let component: StoryList;
   let store: StoryListStore;
@@ -106,6 +116,7 @@ describe('StoryList', () => {
         { provide: KeyboardNavigationService, useClass: MockKeyboardNavigationService },
         { provide: SidebarService, useClass: MockSidebarService },
         { provide: DeviceService, useClass: MockDeviceService },
+        { provide: PageLifecycleService, useClass: MockPageLifecycleService },
       ],
     });
     component = TestBed.inject(StoryList);

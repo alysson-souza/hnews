@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, input, linkedSignal, computed } from '@angular/core';
+import { Component, input, linkedSignal, computed, inject, effect } from '@angular/core';
+import { PageLifecycleService } from '@services/page-lifecycle.service';
 
 @Component({
   selector: 'app-story-favicon',
@@ -42,11 +43,22 @@ import { Component, input, linkedSignal, computed } from '@angular/core';
 export class StoryFaviconComponent {
   readonly url = input<string>();
   readonly altText = input.required<string>();
+  private pageLifecycle = inject(PageLifecycleService);
 
   readonly hasError = linkedSignal(() => {
     this.url(); // track url input — reset on change
     return false;
   });
+
+  constructor() {
+    // Reset favicon error state on tab resume so the browser re-attempts loading from SW cache
+    effect(() => {
+      const count = this.pageLifecycle.resumeCount();
+      if (count > 0 && this.hasError()) {
+        this.hasError.set(false);
+      }
+    });
+  }
 
   readonly faviconUrl = computed(() => {
     const domain = this.getDomain(this.url());

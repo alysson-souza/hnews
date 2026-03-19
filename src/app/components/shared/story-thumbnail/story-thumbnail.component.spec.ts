@@ -2,9 +2,11 @@
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IMAGE_LOADER, ImageLoaderConfig } from '@angular/common';
+import { signal } from '@angular/core';
 import { StoryThumbnailComponent } from './story-thumbnail.component';
 import { OgImageService } from '@services/og-image.service';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
+import { PageLifecycleService } from '@services/page-lifecycle.service';
 import type { OgImageResult } from '@services/og-image.service';
 
 // ---------------------------------------------------------------------------
@@ -38,6 +40,13 @@ class PrivacyRedirectServiceStub {
   transformUrl = vi.fn((url: string) => url);
 }
 
+class PageLifecycleServiceStub {
+  hiddenSince = signal<number | null>(null);
+  isVisible = signal(true);
+  resumeCount = signal(0);
+  wasDiscarded = false;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -47,10 +56,12 @@ describe('StoryThumbnailComponent', () => {
   let fixture: ComponentFixture<StoryThumbnailComponent>;
   let ogImageStub: OgImageServiceStub;
   let redirectStub: PrivacyRedirectServiceStub;
+  let pageLifecycleStub: PageLifecycleServiceStub;
 
   beforeEach(async () => {
     ogImageStub = new OgImageServiceStub();
     redirectStub = new PrivacyRedirectServiceStub();
+    pageLifecycleStub = new PageLifecycleServiceStub();
 
     await TestBed.configureTestingModule({
       imports: [StoryThumbnailComponent],
@@ -61,6 +72,7 @@ describe('StoryThumbnailComponent', () => {
         },
         { provide: OgImageService, useValue: ogImageStub },
         { provide: PrivacyRedirectService, useValue: redirectStub },
+        { provide: PageLifecycleService, useValue: pageLifecycleStub },
       ],
     }).compileComponents();
 
@@ -375,6 +387,51 @@ describe('StoryThumbnailComponent', () => {
       link.click();
 
       expect(emitted).toBe(true);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Resume re-validation
+  // -----------------------------------------------------------------------
+
+  describe('resume re-validation', () => {
+    it('sets ogImageLoaded to false on resume when OG image is set', async () => {
+      const url = 'https://example.com/article';
+      fixture.componentRef.setInput('storyTitle', 'Test');
+      fixture.componentRef.setInput('storyUrl', url);
+      fixture.detectChanges();
+      await Promise.resolve();
+
+      // Deliver OG image and mark it as loaded
+      ogImageStub.resolve(url, {
+        imageUrl: '/api/og-image-proxy?url=https%3A%2F%2Fexample.com%2Fog.jpg',
+        title: null,
+        description: null,
+      });
+      component.handleOgImageLoad();
+      expect(component.ogImageLoaded()).toBe(true);
+
+      // Simulate resume
+      pageLifecycleStub.resumeCount.set(1);
+      fixture.detectChanges();
+
+      // ogImageLoaded should be reset to false
+      expect(component.ogImageLoaded()).toBe(false);
+    });
+
+    it('does not touch ogImageLoaded on resume when no OG image is set', async () => {
+      fixture.componentRef.setInput('storyTitle', 'Test');
+      fixture.componentRef.setInput('storyUrl', 'https://example.com');
+      fixture.detectChanges();
+      await Promise.resolve();
+
+      // No OG image resolved — ogImageLoaded should stay false
+      expect(component.ogImageLoaded()).toBe(false);
+
+      pageLifecycleStub.resumeCount.set(1);
+      fixture.detectChanges();
+
+      expect(component.ogImageLoaded()).toBe(false);
     });
   });
 });

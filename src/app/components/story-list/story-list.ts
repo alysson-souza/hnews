@@ -19,6 +19,7 @@ import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
 import { NetworkStateService } from '@services/network-state.service';
+import { PageLifecycleService } from '@services/page-lifecycle.service';
 import { StoryListStore } from '@stores/story-list.store';
 import { PageContainerComponent } from '../shared/page-container/page-container.component';
 import { AppButtonComponent } from '../shared/app-button/app-button.component';
@@ -108,6 +109,7 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   deviceService = inject(DeviceService);
   keyboardNavService = inject(KeyboardNavigationService);
   networkState = inject(NetworkStateService);
+  private pageLifecycle = inject(PageLifecycleService);
 
   stories = this.store.stories;
   loading = this.store.loading;
@@ -139,8 +141,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   private destroy$ = new Subject<void>();
   private autoRefreshInterval = environment.autoRefreshInterval;
   private maxBackgroundRefreshTime = environment.maxBackgroundRefreshTime;
-  private tabHiddenTime: number | null = null;
-  private backgroundRefreshEnabled = true;
 
   constructor() {
     effect(() => {
@@ -155,9 +155,6 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
     // Start auto-refresh timer
     this.startAutoRefresh();
-
-    // Track tab visibility for background refresh
-    this.setupVisibilityTracking();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -208,43 +205,24 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   private shouldRefresh(): boolean {
     // Always refresh if tab is visible
-    if (document.visibilityState === 'visible') {
+    if (this.pageLifecycle.isVisible()) {
       return true;
     }
 
-    // For hidden tabs, check if background refresh is enabled and within time limit
-    if (!this.backgroundRefreshEnabled || this.tabHiddenTime === null) {
+    // For hidden tabs, check if within time limit
+    const hiddenSince = this.pageLifecycle.hiddenSince();
+    if (hiddenSince === null) {
       return false;
     }
 
-    const hiddenDuration = Date.now() - this.tabHiddenTime;
+    const hiddenDuration = Date.now() - hiddenSince;
     return hiddenDuration < this.maxBackgroundRefreshTime;
-  }
-
-  private setupVisibilityTracking(): void {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // Tab became hidden - start tracking
-        this.tabHiddenTime = Date.now();
-      } else {
-        // Tab became visible - reset tracking and re-enable background refresh
-        this.tabHiddenTime = null;
-        this.backgroundRefreshEnabled = true;
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Clean up listener on destroy
-    this.destroy$.subscribe(() => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    });
   }
 
   private isUserInteracting(): boolean {
     // Only check user interaction if tab is visible
     // When tab is hidden, user interaction doesn't matter
-    if (document.visibilityState === 'hidden') {
+    if (!this.pageLifecycle.isVisible()) {
       return false;
     }
 

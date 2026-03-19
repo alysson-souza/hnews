@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, inject, NgZone } from '@angular/core';
+import { Injectable, inject, NgZone, effect } from '@angular/core';
 import { CacheManagerService } from './cache-manager.service';
+import { PageLifecycleService } from './page-lifecycle.service';
 
 /** Result stored in the cache for each article URL. */
 interface OgImageCacheEntry {
@@ -50,6 +51,7 @@ function isValidArticleUrl(raw: string): boolean {
 export class OgImageService {
   private cacheManager = inject(CacheManagerService);
   private ngZone = inject(NgZone);
+  private pageLifecycle = inject(PageLifecycleService);
 
   /** Maximum concurrent OG image API requests. */
   private readonly MAX_CONCURRENCY = 5;
@@ -58,6 +60,18 @@ export class OgImageService {
     articleUrl: string;
     resolve: (url: string | null) => void;
   }> = [];
+
+  constructor() {
+    // Reset state on tab resume — frozen fetches are dead
+    effect(() => {
+      const count = this.pageLifecycle.resumeCount();
+      if (count > 0) {
+        this.cacheManager.clearInflightFetches();
+        this.activeRequests = 0;
+        this.queue = [];
+      }
+    });
+  }
 
   /** IntersectionObserver shared across all thumbnail elements. */
   private observer: IntersectionObserver | null = null;

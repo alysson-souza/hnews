@@ -54,6 +54,15 @@
         "maxSize": 200,
         "maxAge": "30d"
       }
+    },
+    {
+      "name": "og-image-proxy",
+      "urls": ["/api/og-image-proxy?*"],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 100,
+        "maxAge": "7d"
+      }
     }
   ]
 }
