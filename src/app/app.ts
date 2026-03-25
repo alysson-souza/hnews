@@ -73,9 +73,9 @@ export class App implements OnInit {
   // Expose PWA update signals to template
   updateAvailable = this.pwaUpdate.updateAvailable;
   updateVersionInfo = this.pwaUpdate.updateVersionInfo;
-  version = VERSION;
-  commitSha = COMMIT_SHA;
-  commitShaShort = COMMIT_SHA_SHORT;
+  version = VERSION ?? 'development';
+  commitSha = COMMIT_SHA ?? 'unknown';
+  commitShaShort = COMMIT_SHA_SHORT ?? 'unknown';
   commitUrl =
     this.commitSha !== 'unknown'
       ? `https://github.com/alysson-souza/hnews/commit/${this.commitSha}`
