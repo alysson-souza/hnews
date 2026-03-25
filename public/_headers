@@ -14,6 +14,9 @@
 /ngsw-worker.js
   Cache-Control: no-cache
 
+/safety-worker.js
+  Cache-Control: no-cache
+
 /ngsw.json
   Cache-Control: no-cache
 

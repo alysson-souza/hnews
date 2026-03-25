@@ -42,6 +42,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: NetworkStatusInterceptor, multi: true },
     { provide: APP_VERSION, useValue: VERSION },
-    provideServiceWorker('ngsw-worker.js', serviceWorkerOptions),
+    provideServiceWorker('safety-worker.js', serviceWorkerOptions),
   ],
 };
