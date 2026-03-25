@@ -12,6 +12,7 @@
     "prebuild": "npm run generate:version && npm run generate:userscript",
     "build:prod": "ng build --configuration production",
     "prebuild:prod": "npm run generate:version && npm run generate:userscript",
+    "postbuild:prod": "node ./scripts/patch-ngsw.mjs",
     "watch": "ng build --watch --configuration development",
     "prewatch": "npm run generate:version && npm run generate:userscript",
     "test": "ng test --watch=false --no-progress",

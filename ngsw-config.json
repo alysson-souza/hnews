@@ -3,17 +3,17 @@
   "index": "/index.html",
   "assetGroups": [
     {
+      "name": "shell",
+      "installMode": "prefetch",
+      "resources": {
+        "files": ["/index.html", "/*.css"]
+      }
+    },
+    {
       "name": "app",
       "installMode": "prefetch",
       "resources": {
-        "files": [
-          "/favicon.ico",
-          "/index.csr.html",
-          "/index.html",
-          "/manifest.webmanifest",
-          "/*.css",
-          "/*.js"
-        ]
+        "files": ["/favicon.ico", "/index.csr.html", "/manifest.webmanifest", "/*.js"]
       }
     },
     {
