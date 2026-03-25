@@ -21,6 +21,10 @@ export class PwaUpdateService {
   constructor() {
     if (!this.updates.isEnabled) return;
 
+    // Request persistent storage so the browser won't evict the SW cache
+    // (prevents offline breakage when iOS Safari clears Cache Storage under pressure)
+    navigator.storage?.persist?.().catch(() => undefined);
+
     // Enable navigation preload to speed up initial navigations
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready
