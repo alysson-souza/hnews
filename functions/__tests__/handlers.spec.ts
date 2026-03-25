@@ -1,4 +1,10 @@
-import { handleFavicons, handleOgImageApi, handleOgImageProxy, injectMeta } from '../[[path]]';
+import {
+  handleFavicons,
+  handleOgImageApi,
+  handleOgImageProxy,
+  injectMeta,
+  onRequest,
+} from '../[[path]]';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -12,6 +18,30 @@ function makeUrl(path: string, params?: Record<string, string>): URL {
     }
   }
   return url;
+}
+
+function makeContext(
+  path: string,
+  env: { ASSETS: Fetcher; HN_API_BASE?: string; SITE_URL?: string; DEFAULT_OG_IMAGE?: string },
+  headers?: HeadersInit,
+): EventContext<
+  { ASSETS: Fetcher; HN_API_BASE: string; SITE_URL: string; DEFAULT_OG_IMAGE: string },
+  string,
+  unknown
+> {
+  return {
+    request: new Request(makeUrl(path), { headers }),
+    env: {
+      HN_API_BASE: 'https://hacker-news.firebaseio.com/v0',
+      SITE_URL: 'https://hnews.test',
+      DEFAULT_OG_IMAGE: '/icons/android-chrome-512x512.png',
+      ...env,
+    },
+  } as EventContext<
+    { ASSETS: Fetcher; HN_API_BASE: string; SITE_URL: string; DEFAULT_OG_IMAGE: string },
+    string,
+    unknown
+  >;
 }
 
 /**
@@ -57,6 +87,31 @@ function ogHtml(opts: {
 // ---------------------------------------------------------------------------
 // handleOgImageApi
 // ---------------------------------------------------------------------------
+
+describe('onRequest', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('serves /index.html as HTML instead of passing through a redirecting asset request', async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response('<!doctype html><title>HNews</title>', {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      }),
+    );
+
+    const response = await onRequest(makeContext('/index.html', { ASSETS: { fetch } as Fetcher }));
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const assetRequest = fetch.mock.calls[0][0] as Request;
+    expect(assetRequest.url).toBe('https://hnews.test/index.html');
+    expect(assetRequest.headers.get('accept-encoding')).toBe('identity');
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
+    expect(await response.text()).toContain('<title>HNews</title>');
+  });
+});
 
 describe('handleOgImageApi', () => {
   afterEach(() => {

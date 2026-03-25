@@ -6,6 +6,7 @@
     "ng": "ng",
     "start": "ng serve",
     "start:cf": "trap 'kill 0' EXIT; ng build --watch --output-path dist/hnews-cf & wrangler pages dev dist/hnews-cf/browser --live-reload --port 8788",
+    "start:cf:offline": "trap 'kill 0' EXIT; ng build --watch --output-path dist/hnews-cf & wrangler pages dev dist/hnews-cf/browser --port 8788",
     "prestart": "BASE_URL=http://localhost:4200 npm run generate:version && BASE_URL=http://localhost:4200 npm run generate:userscript",
     "build": "ng build",
     "prebuild": "npm run generate:version && npm run generate:userscript",

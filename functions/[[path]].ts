@@ -61,6 +61,24 @@ const FEED_ROUTES: Record<string, { title: string; description: string }> = {
   },
 };
 
+async function fetchIndexHtml(url: URL, env: Env): Promise<Response> {
+  const indexRequest = new Request(new URL('/index.html', url), {
+    method: 'GET',
+    headers: { 'accept-encoding': 'identity' },
+  });
+
+  const response = await env.ASSETS.fetch(indexRequest);
+  const headers = new Headers(response.headers);
+  headers.set('cache-control', 'no-cache');
+  headers.set('content-type', 'text/html; charset=utf-8');
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -76,6 +94,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
   if (pathname === '/api/favicons') {
     return handleFavicons(url);
+  }
+  if (pathname === '/index.html') {
+    return fetchIndexHtml(url, env);
   }
 
   // Serve static assets directly via ASSETS binding.
@@ -101,11 +122,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   // Fetch index.html directly via ASSETS binding for SPA routing.
-  const indexRequest = new Request(new URL('/index.html', url), {
-    method: 'GET',
-    headers: { 'accept-encoding': 'identity' },
-  });
-  const response = await env.ASSETS.fetch(indexRequest);
+  const response = await fetchIndexHtml(url, env);
 
   if (!response.ok) {
     return response;
@@ -113,12 +130,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   // For non-crawlers, just return the index.html (SPA routing).
   if (!isCrawler || !meta) {
-    const headers = new Headers(response.headers);
-    headers.set('cache-control', 'no-cache');
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers,
+      headers: response.headers,
     });
   }
 
