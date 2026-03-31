@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { AppHeaderComponent } from './header.component';
 
 describe('AppHeaderComponent', () => {
@@ -41,6 +41,7 @@ describe('AppHeaderComponent', () => {
 
   it('shows the mobile menu and emits close events from menu links', () => {
     const closeSpy = vi.fn();
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     fixture.componentRef.setInput('mobileMenuOpen', true);
     component.closeMenuRequested.subscribe(closeSpy);
 

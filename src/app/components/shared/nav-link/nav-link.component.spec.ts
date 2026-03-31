@@ -2,7 +2,7 @@ import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { NavLinkComponent } from './nav-link.component';
 import { ScrollService } from '@services/scroll.service';
 import { By } from '@angular/platform-browser';
@@ -127,6 +127,7 @@ describe('NavLinkComponent', () => {
   describe('click event binding', () => {
     it('should call handleClick when anchor is clicked', () => {
       // Arrange
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
       vi.spyOn(component, 'handleClick');
       fixture.componentRef.setInput('route', '/test');
       fixture.detectChanges();
