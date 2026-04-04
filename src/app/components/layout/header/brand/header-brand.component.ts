@@ -36,7 +36,7 @@ import { ScrollService } from '@services/scroll.service';
       @reference '../../../../../styles.css';
 
       .app-logo-container {
-        @apply bg-gradient-to-br from-digg-blue-light to-digg-blue-dark rounded-xl p-2;
+        @apply bg-gradient-to-br from-brand-muted-light to-brand-muted-dark rounded-xl p-2;
         box-shadow: 0 10px 24px rgba(21, 93, 252, 0.22);
         position: relative;
       }

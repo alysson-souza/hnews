@@ -33,6 +33,9 @@
   /* === App palette (Neo blue, not blue-washed) === */
   --app-brand: #155dfc;
   --app-brand-2: #3b5998;
+  --app-accent: #3b5998;
+  --app-accent-hover: #2d4373;
+  --app-accent-contrast: #ffffff;
 
   --app-bg: #f8fafc;
   --app-surface: #ffffff;
@@ -91,6 +94,9 @@ html.dark {
   --app-surface-2: #0a1020;
   --app-text: #e6edf7;
   --app-muted: #94a3b8;
+  --app-accent: #4e6cad;
+  --app-accent-hover: #3b5998;
+  --app-accent-contrast: #ffffff;
   --app-border: rgba(148, 163, 184, 0.18);
   --app-border-strong: rgba(148, 163, 184, 0.28);
   --app-shadow: 0 1px 0 rgba(2, 6, 23, 0.55), 0 18px 58px rgba(0, 0, 0, 0.55);

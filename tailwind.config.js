@@ -6,10 +6,9 @@ module.exports = {
     extend: {
       colors: {
         brand: '#155dfc',
-        'brand-dark': '#3B5998',
-        'digg-blue': '#3B5998',
-        'digg-blue-dark': '#2D4373',
-        'digg-blue-light': '#4E6CAD',
+        'brand-muted': '#3B5998',
+        'brand-muted-dark': '#2D4373',
+        'brand-muted-light': '#4E6CAD',
         link: '#1E6DA8',
         'link-hover': '#155080',
       },

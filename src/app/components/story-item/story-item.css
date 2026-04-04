@@ -61,16 +61,21 @@
 
 .vote-button {
   @apply hover:scale-110 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full p-1.5;
-  @apply text-gray-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400;
-  @apply hover:bg-blue-50 dark:hover:bg-blue-900/30;
+  color: var(--app-muted);
+}
+
+.vote-button:hover:not(:disabled) {
+  color: var(--app-accent);
+  background-color: color-mix(in srgb, var(--app-accent) 12%, transparent);
 }
 
 .vote-button-active {
-  @apply text-blue-600 dark:text-blue-400;
+  color: var(--app-accent);
 }
 
 .vote-button-voted {
-  @apply text-blue-600 dark:text-blue-400 opacity-100;
+  color: var(--app-accent);
+  @apply opacity-100;
 }
 
 .vote-count {
@@ -78,11 +83,11 @@
 }
 
 .vote-count-active {
-  @apply text-blue-600 dark:text-blue-400;
+  color: var(--app-accent);
 }
 
 .vote-count-voted {
-  @apply text-blue-600 dark:text-blue-400;
+  color: var(--app-accent);
 }
 
 /* Vote Section Skeleton Loaders */

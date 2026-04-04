@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { StoryList } from './story-list';
 import { StoryListStore } from '@stores/story-list.store';
 import { HackernewsService } from '@services/hackernews.service';
@@ -56,6 +57,10 @@ class MockHNService {
     return of(items);
   }
 
+  getItemUpdates(id: number) {
+    return of({ id, type: 'story', title: `Story ${id}` });
+  }
+
   setStoryIds(ids: number[]) {
     this.storyIds = ids;
   }
@@ -73,10 +78,7 @@ class MockStateService {
 
 /** Test double for KeyboardNavigationService */
 class MockKeyboardNavigationService {
-  selectedIndex = {
-    set: vi.fn(),
-    update: vi.fn(),
-  };
+  selectedIndex = signal<number | null>(null);
   clearSelection = vi.fn();
   setTotalItems = vi.fn();
 }
@@ -101,14 +103,16 @@ class MockPageLifecycleService {
 
 describe('StoryList', () => {
   let component: StoryList;
+  let fixture: ComponentFixture<StoryList>;
   let store: StoryListStore;
   let keyboardNavService: MockKeyboardNavigationService;
   let mockHNService: MockHNService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockHNService = new MockHNService();
 
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
+      imports: [StoryList],
       providers: [
         StoryList,
         { provide: HackernewsService, useValue: mockHNService },
@@ -118,7 +122,7 @@ describe('StoryList', () => {
         { provide: DeviceService, useClass: MockDeviceService },
         { provide: PageLifecycleService, useClass: MockPageLifecycleService },
       ],
-    });
+    }).compileComponents();
     component = TestBed.inject(StoryList);
     store = TestBed.inject(StoryListStore);
     keyboardNavService = TestBed.inject(
@@ -275,6 +279,28 @@ describe('StoryList', () => {
       component.loadMore();
 
       expect(store.loadMore).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('template', () => {
+    it('renders the load more button as a primary shared action', () => {
+      fixture = TestBed.createComponent(StoryList);
+      const rendered = fixture.componentInstance;
+
+      rendered.loading = signal(false);
+      rendered.refreshing = signal(false);
+      rendered.error = signal<string | null>(null);
+      rendered.stories = signal([]);
+      rendered.newStoriesAvailable = signal(0);
+      rendered.isFilteredEmpty = signal(false);
+
+      vi.spyOn(rendered, 'hasMore').mockReturnValue(true);
+
+      fixture.detectChanges();
+
+      const button = fixture.debugElement.query(By.css('.load-more-btn button'));
+      expect(button).toBeTruthy();
+      expect(button.nativeElement.classList).toContain('btn-primary');
     });
   });
 
