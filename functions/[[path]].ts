@@ -282,14 +282,20 @@ async function fetchJSON(url: string) {
   return (await res.json()) as unknown;
 }
 
-export async function fetchArticleOgMeta(articleUrl: string): Promise<OgMeta> {
+type ArticleOgMetaResult = { kind: 'stable'; meta: OgMeta } | { kind: 'transientFailure' };
+
+function isTransientArticleFetchStatus(status: number): boolean {
+  return status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+export async function fetchArticleOgMeta(articleUrl: string): Promise<ArticleOgMetaResult> {
   const empty: OgMeta = { imageUrl: null, title: null, description: null };
 
   let parsed: URL;
   try {
     parsed = new URL(articleUrl);
   } catch {
-    return empty;
+    return { kind: 'stable', meta: empty };
   }
 
   const controller = new AbortController();
@@ -306,7 +312,15 @@ export async function fetchArticleOgMeta(articleUrl: string): Promise<OgMeta> {
       },
     });
 
-    if (!res.ok || !res.body) return empty;
+    if (!res.ok) {
+      return isTransientArticleFetchStatus(res.status)
+        ? { kind: 'transientFailure' }
+        : { kind: 'stable', meta: empty };
+    }
+
+    if (!res.body) {
+      return { kind: 'stable', meta: empty };
+    }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -340,12 +354,15 @@ export async function fetchArticleOgMeta(articleUrl: string): Promise<OgMeta> {
       matchMetaContent(htmlChunk, 'description');
 
     return {
-      imageUrl: candidate ? resolveImageUrl(candidate, parsed) : null,
-      title: ogTitle ? truncate(decodeEntities(ogTitle), 200) : null,
-      description: ogDesc ? truncate(decodeEntities(ogDesc), 300) : null,
+      kind: 'stable',
+      meta: {
+        imageUrl: candidate ? resolveImageUrl(candidate, parsed) : null,
+        title: ogTitle ? truncate(decodeEntities(ogTitle), 200) : null,
+        description: ogDesc ? truncate(decodeEntities(ogDesc), 300) : null,
+      },
     };
   } catch {
-    return empty;
+    return { kind: 'transientFailure' };
   } finally {
     clearTimeout(timeout);
   }
@@ -353,8 +370,8 @@ export async function fetchArticleOgMeta(articleUrl: string): Promise<OgMeta> {
 
 /** Legacy wrapper used by buildMetaForPath — returns only the image URL. */
 async function fetchArticleImage(articleUrl: string): Promise<string | null> {
-  const meta = await fetchArticleOgMeta(articleUrl);
-  return meta.imageUrl;
+  const result = await fetchArticleOgMeta(articleUrl);
+  return result.kind === 'stable' ? result.meta.imageUrl : null;
 }
 
 export function injectMeta(
@@ -429,7 +446,14 @@ export async function handleOgImageApi(reqUrl: URL): Promise<Response> {
   }
 
   try {
-    const ogMeta = await fetchArticleOgMeta(articleUrl);
+    const result = await fetchArticleOgMeta(articleUrl);
+    if (result.kind === 'transientFailure') {
+      return jsonResponse({ imageUrl: null, title: null, description: null }, 503, {
+        'cache-control': 'no-store',
+      });
+    }
+
+    const ogMeta = result.meta;
 
     // Validate that the discovered image URL is also a safe public URL
     if (ogMeta.imageUrl && !isSafePublicUrl(ogMeta.imageUrl)) {
@@ -440,8 +464,8 @@ export async function handleOgImageApi(reqUrl: URL): Promise<Response> {
       'cache-control': 'public, max-age=604800', // 7 days
     });
   } catch {
-    return jsonResponse({ imageUrl: null, title: null, description: null }, 200, {
-      'cache-control': 'public, max-age=3600', // cache failures for 1 hour
+    return jsonResponse({ imageUrl: null, title: null, description: null }, 503, {
+      'cache-control': 'no-store',
     });
   }
 }

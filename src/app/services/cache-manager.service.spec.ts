@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { CacheManagerService } from './cache-manager.service';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
+import { PageLifecycleService } from './page-lifecycle.service';
 import { HNItem, HNUser } from '@models/hn';
 
 class IndexedDBServiceStub {
@@ -122,20 +124,30 @@ class CacheServiceStub {
   };
 }
 
+class PageLifecycleServiceStub {
+  hiddenSince = signal<number | null>(null);
+  isVisible = signal(true);
+  resumeCount = signal(0);
+  wasDiscarded = false;
+}
+
 describe('CacheManagerService', () => {
   let service: CacheManagerService;
   let indexedDBService: IndexedDBServiceStub;
   let cacheService: CacheServiceStub;
+  let pageLifecycleService: PageLifecycleServiceStub;
 
   beforeEach(async () => {
     indexedDBService = new IndexedDBServiceStub();
     cacheService = new CacheServiceStub();
+    pageLifecycleService = new PageLifecycleServiceStub();
 
     TestBed.configureTestingModule({
       providers: [
         CacheManagerService,
         { provide: IndexedDBService, useValue: indexedDBService },
         { provide: CacheService, useValue: cacheService },
+        { provide: PageLifecycleService, useValue: pageLifecycleService },
       ],
     });
     service = TestBed.inject(CacheManagerService);
@@ -508,6 +520,15 @@ describe('CacheManagerService', () => {
 
       // The fetcher should have been called again for the background refresh
       expect(callCount).toBeGreaterThanOrEqual(2);
+    });
+
+    it('clears inflight fetches on resume', () => {
+      const spy = vi.spyOn(service, 'clearInflightFetches');
+
+      pageLifecycleService.resumeCount.set(1);
+      TestBed.flushEffects();
+
+      expect(spy).toHaveBeenCalled();
     });
   });
 

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
-import { Injectable, inject } from '@angular/core';
+// Copyright (C) 2026 Alysson Souza
+import { Injectable, inject, effect } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { IndexedDBService } from './indexed-db.service';
 import { CacheService } from './cache.service';
+import { PageLifecycleService } from './page-lifecycle.service';
 import { HNItem, HNUser } from '@models/hn';
 import {
   CACHE_TTL_STORIES,
@@ -46,6 +47,7 @@ export class CacheManagerService {
   private ttlSearch = inject(CACHE_TTL_SEARCH);
   private ttlMetadata = inject(CACHE_TTL_METADATA);
   private ttlOgImage = inject(CACHE_TTL_OG_IMAGE);
+  private pageLifecycle = inject(PageLifecycleService);
 
   // Memory cache for frequently accessed items
   private memoryCache = new Map<string, MemoryCacheItem<unknown>>();
@@ -131,6 +133,13 @@ export class CacheManagerService {
       console.warn('Cache migration failed, continuing with fresh cache:', error);
     });
     this.startMemoryCacheCleanup();
+
+    effect(() => {
+      const count = this.pageLifecycle.resumeCount();
+      if (count > 0) {
+        this.clearInflightFetches();
+      }
+    });
   }
 
   private async initServiceWorker(): Promise<void> {

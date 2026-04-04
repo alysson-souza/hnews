@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { StoryFaviconComponent } from './story-favicon.component';
 import { PageLifecycleService } from '@services/page-lifecycle.service';
+import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
 
 class PageLifecycleServiceStub {
   hiddenSince = signal<number | null>(null);
@@ -10,17 +11,26 @@ class PageLifecycleServiceStub {
   wasDiscarded = false;
 }
 
+class ThumbnailRecoveryServiceStub {
+  recoveryVersion = signal(0);
+}
+
 describe('StoryFaviconComponent', () => {
   let component: StoryFaviconComponent;
   let fixture: ComponentFixture<StoryFaviconComponent>;
   let pageLifecycleStub: PageLifecycleServiceStub;
+  let thumbnailRecoveryStub: ThumbnailRecoveryServiceStub;
 
   beforeEach(async () => {
     pageLifecycleStub = new PageLifecycleServiceStub();
+    thumbnailRecoveryStub = new ThumbnailRecoveryServiceStub();
 
     await TestBed.configureTestingModule({
       imports: [StoryFaviconComponent],
-      providers: [{ provide: PageLifecycleService, useValue: pageLifecycleStub }],
+      providers: [
+        { provide: PageLifecycleService, useValue: pageLifecycleStub },
+        { provide: ThumbnailRecoveryService, useValue: thumbnailRecoveryStub },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StoryFaviconComponent);
@@ -190,7 +200,7 @@ describe('StoryFaviconComponent', () => {
     expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
   });
 
-  it('should reset error state on tab resume', () => {
+  it('should reset error state on recovery trigger', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
     fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
@@ -200,8 +210,8 @@ describe('StoryFaviconComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
 
-    // Simulate resume
-    pageLifecycleStub.resumeCount.set(1);
+    // Simulate a shared thumbnail recovery trigger
+    thumbnailRecoveryStub.recoveryVersion.set(1);
     fixture.detectChanges();
 
     // Error should be cleared — favicon img should re-appear
@@ -209,7 +219,42 @@ describe('StoryFaviconComponent', () => {
     expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
   });
 
-  it('should not change state on resume when no error', () => {
+  it('should remount a restored broken favicon image on recovery', async () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    const imgBefore = fixture.nativeElement.querySelector('img') as HTMLImageElement;
+    Object.defineProperty(imgBefore, 'complete', { configurable: true, value: true });
+    Object.defineProperty(imgBefore, 'naturalWidth', { configurable: true, value: 0 });
+    Object.defineProperty(imgBefore, 'naturalHeight', { configurable: true, value: 0 });
+
+    thumbnailRecoveryStub.recoveryVersion.set(1);
+    fixture.detectChanges();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    const imgAfter = fixture.nativeElement.querySelector('img');
+    expect(imgAfter).toBeTruthy();
+    expect(imgAfter).not.toBe(imgBefore);
+  });
+
+  it('should not auto-clear a new error without a new recovery trigger', () => {
+    fixture.componentRef.setInput('url', 'https://example.com');
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    thumbnailRecoveryStub.recoveryVersion.set(1);
+    fixture.detectChanges();
+
+    component.handleError();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('div')).toBeTruthy();
+  });
+
+  it('should not change state on recovery when no error', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
     fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
@@ -217,8 +262,8 @@ describe('StoryFaviconComponent', () => {
     // No error — img should be showing
     expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
 
-    // Simulate resume
-    pageLifecycleStub.resumeCount.set(1);
+    // Simulate a shared thumbnail recovery trigger
+    thumbnailRecoveryStub.recoveryVersion.set(1);
     fixture.detectChanges();
 
     // Should still be showing img

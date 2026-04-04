@@ -16,7 +16,7 @@ import {
 import { StoryFaviconComponent } from '../story-favicon/story-favicon.component';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 import { OgImageService, OgImageResult } from '@services/og-image.service';
-import { PageLifecycleService } from '@services/page-lifecycle.service';
+import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
 
 @Component({
   selector: 'app-story-thumbnail',
@@ -43,20 +43,22 @@ import { PageLifecycleService } from '@services/page-lifecycle.service';
           (click)="handleLinkClick($event)"
           class="thumb-link"
         >
-          @if (ogImageUrl()) {
+          @if (showOgImage()) {
             <!-- OG preview image -->
-            <img
-              [src]="ogImageUrl()"
-              [alt]="'Preview for ' + storyTitle()"
-              [attr.title]="ogTooltip()"
-              class="og-image"
-              [class.og-image-loaded]="ogImageLoaded()"
-              [class.object-left-top]="isGithubImage()"
-              decoding="async"
-              loading="lazy"
-              (load)="handleOgImageLoad()"
-              (error)="handleOgImageError()"
-            />
+            @if (ogImageMounted()) {
+              <img
+                [src]="ogImageUrl()"
+                [alt]="'Preview for ' + storyTitle()"
+                [attr.title]="ogTooltip()"
+                class="og-image"
+                [class.og-image-loaded]="ogImageLoaded()"
+                [class.object-left-top]="isGithubImage()"
+                decoding="async"
+                loading="lazy"
+                (load)="handleOgImageLoad()"
+                (error)="handleOgImageError()"
+              />
+            }
           } @else {
             <!-- Favicon fallback -->
             <app-story-favicon [url]="storyUrl()" [altText]="'Favicon for ' + storyTitle()" />
@@ -99,7 +101,7 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   private redirectService = inject(PrivacyRedirectService);
   private ogImageService = inject(OgImageService);
-  private pageLifecycle = inject(PageLifecycleService);
+  private recovery = inject(ThumbnailRecoveryService);
 
   /** The resolved OG image URL (proxied), or null to show favicon. */
   readonly ogImageUrl = signal<string | null>(null);
@@ -109,11 +111,17 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
   readonly ogTitle = signal<string | null>(null);
   /** The og:description from the article. */
   readonly ogDescription = signal<string | null>(null);
+  /** Tracks whether the proxied OG image element failed to load and is waiting for recovery. */
+  readonly ogImageLoadFailed = signal(false);
+  /** Toggles the OG image element to force a fresh browser load when needed. */
+  readonly ogImageMounted = signal(true);
   /** Tooltip text built from og:title + og:description, falls back to story title. */
   readonly ogTooltip = computed(() => {
     const parts = [this.ogTitle(), this.ogDescription()].filter(Boolean);
     return parts.join('\n') || this.storyTitle() || null;
   });
+  /** Whether the OG image should be rendered instead of the favicon fallback. */
+  readonly showOgImage = computed(() => !!this.ogImageUrl() && !this.ogImageLoadFailed());
 
   /** Whether the image is from GitHub (used to anchor the crop to the left). */
   readonly isGithubImage = computed(() => {
@@ -124,18 +132,26 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   private readonly thumbEl = viewChild<ElementRef<HTMLElement>>('thumbEl');
   private cleanupObserver: (() => void) | null = null;
+  private lastHandledRecoveryVersion = 0;
 
   constructor() {
-    // Re-validate OG images after tab resume (browser may have evicted decoded data)
+    // Retry or re-validate thumbnails after shared recovery events.
     effect(() => {
-      const count = this.pageLifecycle.resumeCount();
-      if (count === 0) return;
+      const version = this.recovery.recoveryVersion();
+      if (version === 0 || version <= this.lastHandledRecoveryVersion) return;
 
       const url = this.ogImageUrl();
       if (!url) return;
 
-      // Temporarily hide the image, then check if it's still decoded
-      this.ogImageLoaded.set(false);
+      this.lastHandledRecoveryVersion = version;
+
+      if (this.ogImageLoadFailed()) {
+        this.ogImageLoadFailed.set(false);
+        this.ogImageLoaded.set(false);
+        return;
+      }
+
+      // Only remount the element if the restored node is broken or undecoded.
       queueMicrotask(() => {
         const img = this.thumbEl()?.nativeElement.querySelector(
           'img.og-image',
@@ -143,8 +159,11 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
         if (img?.complete && img.naturalWidth > 0) {
           // Image is still decoded — restore immediately (no flicker)
           this.ogImageLoaded.set(true);
+          this.ogImageMounted.set(true);
+          return;
         }
-        // Otherwise: browser will re-fetch, (load) event fires naturally
+        this.ogImageLoaded.set(false);
+        this.remountOgImage();
       });
     });
   }
@@ -159,7 +178,13 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
       if (!el) return;
 
       this.cleanupObserver = this.ogImageService.observe(el, url, (result: OgImageResult) => {
-        this.ogImageLoaded.set(false);
+        const previousUrl = this.ogImageUrl();
+        const shouldResetLoadState = this.ogImageLoadFailed() || previousUrl !== result.imageUrl;
+
+        this.ogImageLoadFailed.set(false);
+        if (shouldResetLoadState) {
+          this.ogImageLoaded.set(false);
+        }
         this.ogImageUrl.set(result.imageUrl);
         this.ogTitle.set(result.title);
         this.ogDescription.set(result.description);
@@ -177,10 +202,8 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   handleOgImageError(): void {
     // OG image failed to load — fall back to favicon
-    this.ogImageUrl.set(null);
+    this.ogImageLoadFailed.set(true);
     this.ogImageLoaded.set(false);
-    this.ogTitle.set(null);
-    this.ogDescription.set(null);
   }
 
   handleLinkClick(event: MouseEvent): void {
@@ -200,5 +223,10 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
       // Let the link work normally, just emit the event
       this.linkClicked.emit();
     }
+  }
+
+  private remountOgImage(): void {
+    this.ogImageMounted.set(false);
+    queueMicrotask(() => this.ogImageMounted.set(true));
   }
 }

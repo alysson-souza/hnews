@@ -5,6 +5,7 @@ import { signal } from '@angular/core';
 import { OgImageService } from './og-image.service';
 import { CacheManagerService } from './cache-manager.service';
 import { PageLifecycleService } from './page-lifecycle.service';
+import { ThumbnailRecoveryService } from './thumbnail-recovery.service';
 
 // ---------------------------------------------------------------------------
 // Mock IntersectionObserver
@@ -52,6 +53,17 @@ class MockIntersectionObserver {
 // ---------------------------------------------------------------------------
 
 class CacheManagerServiceStub {
+  get = vi.fn(async <T>(scope: string, key: string): Promise<T | null> => {
+    void scope;
+    void key;
+    return null;
+  });
+  set = vi.fn(async <T>(scope: string, key: string, data: T, ttl?: number): Promise<void> => {
+    void scope;
+    void key;
+    void data;
+    void ttl;
+  });
   /**
    * Pass-through to the fetcher by default.
    * Tests can override to simulate cached data.
@@ -71,16 +83,25 @@ class PageLifecycleServiceStub {
   wasDiscarded = false;
 }
 
+class ThumbnailRecoveryServiceStub {
+  recoveryVersion = signal(0);
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function makeFetchResponse(
   body: unknown,
-  { ok = true, contentType = 'application/json' }: { ok?: boolean; contentType?: string } = {},
+  {
+    ok = true,
+    status = ok ? 200 : 500,
+    contentType = 'application/json',
+  }: { ok?: boolean; status?: number; contentType?: string } = {},
 ): Response {
   return {
     ok,
+    status,
     headers: { get: (h: string) => (h === 'content-type' ? contentType : null) },
     json: () => Promise.resolve(body),
   } as unknown as Response;
@@ -99,6 +120,7 @@ describe('OgImageService', () => {
   let service: OgImageService;
   let cacheStub: CacheManagerServiceStub;
   let pageLifecycleStub: PageLifecycleServiceStub;
+  let thumbnailRecoveryStub: ThumbnailRecoveryServiceStub;
   let fetchSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -113,12 +135,14 @@ describe('OgImageService', () => {
 
     cacheStub = new CacheManagerServiceStub();
     pageLifecycleStub = new PageLifecycleServiceStub();
+    thumbnailRecoveryStub = new ThumbnailRecoveryServiceStub();
 
     TestBed.configureTestingModule({
       providers: [
         OgImageService,
         { provide: CacheManagerService, useValue: cacheStub },
         { provide: PageLifecycleService, useValue: pageLifecycleStub },
+        { provide: ThumbnailRecoveryService, useValue: thumbnailRecoveryStub },
       ],
     });
 
@@ -225,6 +249,26 @@ describe('OgImageService', () => {
       });
     });
 
+    it('rejects URLs on non-standard ports', () => {
+      const cb = vi.fn();
+      service.observe(document.createElement('div'), 'https://example.com:3000/page', cb);
+      expect(cb).toHaveBeenCalledWith({
+        imageUrl: null,
+        title: null,
+        description: null,
+      });
+    });
+
+    it('rejects metadata hostnames blocked by the worker', () => {
+      const cb = vi.fn();
+      service.observe(document.createElement('div'), 'https://metadata.google.internal/page', cb);
+      expect(cb).toHaveBeenCalledWith({
+        imageUrl: null,
+        title: null,
+        description: null,
+      });
+    });
+
     it('accepts valid HTTPS URLs', () => {
       const cb = vi.fn();
       const cleanup = service.observe(
@@ -260,6 +304,17 @@ describe('OgImageService', () => {
         title: null,
         description: null,
       });
+    });
+
+    it('accepts valid URLs on allowed alternate ports', () => {
+      const cb = vi.fn();
+      const cleanup = service.observe(
+        document.createElement('div'),
+        'https://example.com:8443/page',
+        cb,
+      );
+      expect(cb).not.toHaveBeenCalled();
+      cleanup();
     });
   });
 
@@ -416,11 +471,13 @@ describe('OgImageService', () => {
       MockIntersectionObserver.instances[0].triggerEntry(el, true);
       await flush();
 
-      expect(cacheStub.getWithSWR).toHaveBeenCalledWith(
-        'ogImage',
-        `og:${url}`,
-        expect.any(Function),
-      );
+      expect(cacheStub.get).toHaveBeenCalledWith('ogImage', `og:${url}`);
+      expect(cacheStub.set).toHaveBeenCalledWith('ogImage', `og:${url}`, {
+        imageUrl:
+          '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/img.png'),
+        title: 'Article Title',
+        description: 'Article Description',
+      });
       expect(cb).toHaveBeenCalledWith({
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/img.png'),
@@ -439,7 +496,7 @@ describe('OgImageService', () => {
       MockIntersectionObserver.instances[0].triggerEntry(el, false);
       await flush();
 
-      expect(cacheStub.getWithSWR).not.toHaveBeenCalled();
+      expect(cacheStub.get).not.toHaveBeenCalled();
       expect(cb).not.toHaveBeenCalled();
     });
 
@@ -475,15 +532,14 @@ describe('OgImageService', () => {
       await flush();
 
       // Reset the spy count
-      cacheStub.getWithSWR.mockClear();
+      cacheStub.get.mockClear();
 
       // Second element with same URL intersects
       service.observe(el2, url, vi.fn());
       MockIntersectionObserver.instances[0].triggerEntry(el2, true);
       await flush();
 
-      // Should not trigger another fetch
-      expect(cacheStub.getWithSWR).not.toHaveBeenCalled();
+      expect(cacheStub.get).not.toHaveBeenCalled();
     });
 
     it('notifies all listeners for the same URL', async () => {
@@ -570,7 +626,7 @@ describe('OgImageService', () => {
       });
     });
 
-    it('handles non-JSON response (GitHub Pages fallback)', async () => {
+    it('treats non-JSON responses as a stable favicon fallback result', async () => {
       const el = document.createElement('div');
       const url = 'https://example.com/article';
 
@@ -588,13 +644,29 @@ describe('OgImageService', () => {
         title: null,
         description: null,
       });
+      expect(cacheStub.set).toHaveBeenCalledWith(
+        'ogImage',
+        `og:${url}`,
+        {
+          imageUrl: null,
+          title: null,
+          description: null,
+        },
+        60 * 60 * 1000,
+      );
     });
 
-    it('handles non-ok response', async () => {
+    it('treats non-ok HTML 404 responses as a stable favicon fallback result', async () => {
       const el = document.createElement('div');
       const url = 'https://example.com/article';
 
-      fetchSpy.mockResolvedValueOnce(makeFetchResponse({ error: 'bad' }, { ok: false }));
+      fetchSpy.mockResolvedValueOnce(
+        makeFetchResponse('<html>SPA fallback</html>', {
+          ok: false,
+          status: 404,
+          contentType: 'text/html',
+        }),
+      );
 
       const cb = vi.fn();
       service.observe(el, url, cb);
@@ -606,23 +678,80 @@ describe('OgImageService', () => {
         title: null,
         description: null,
       });
+      expect(cacheStub.set).toHaveBeenCalledWith(
+        'ogImage',
+        `og:${url}`,
+        {
+          imageUrl: null,
+          title: null,
+          description: null,
+        },
+        60 * 60 * 1000,
+      );
     });
 
-    it('handles null result from cacheManager.getWithSWR', async () => {
+    it('does not cache non-ok responses as a stable null result', async () => {
       const el = document.createElement('div');
       const url = 'https://example.com/article';
 
-      cacheStub.getWithSWR.mockResolvedValueOnce(null);
+      fetchSpy.mockResolvedValueOnce(makeFetchResponse({ error: 'bad' }, { ok: false }));
 
       const cb = vi.fn();
       service.observe(el, url, cb);
       MockIntersectionObserver.instances[0].triggerEntry(el, true);
       await flush();
 
+      expect(cb).not.toHaveBeenCalled();
+      expect(cacheStub.set).not.toHaveBeenCalled();
+    });
+
+    it('treats non-ok HTML 5xx responses as transient failures', async () => {
+      const el = document.createElement('div');
+      const url = 'https://example.com/article';
+
+      fetchSpy.mockResolvedValueOnce(
+        makeFetchResponse('<html>error</html>', { ok: false, contentType: 'text/html' }),
+      );
+
+      const cb = vi.fn();
+      service.observe(el, url, cb);
+      MockIntersectionObserver.instances[0].triggerEntry(el, true);
+      await flush();
+
+      expect(cb).not.toHaveBeenCalled();
+      expect(cacheStub.set).not.toHaveBeenCalled();
+    });
+
+    it('retries transient failures on recovery triggers', async () => {
+      const el = document.createElement('div');
+      const url = 'https://example.com/article';
+
+      fetchSpy.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(
+        makeFetchResponse({
+          imageUrl: 'https://cdn.example.com/after-recovery.jpg',
+          title: 'Recovered',
+          description: 'Recovered description',
+        }),
+      );
+
+      const cb = vi.fn();
+      service.observe(el, url, cb);
+      MockIntersectionObserver.instances[0].triggerEntry(el, true);
+      await flush();
+
+      expect(cb).not.toHaveBeenCalled();
+      expect(cacheStub.set).not.toHaveBeenCalled();
+
+      thumbnailRecoveryStub.recoveryVersion.set(1);
+      TestBed.flushEffects();
+      await flush();
+
       expect(cb).toHaveBeenCalledWith({
-        imageUrl: null,
-        title: null,
-        description: null,
+        imageUrl:
+          '/api/og-image-proxy?url=' +
+          encodeURIComponent('https://cdn.example.com/after-recovery.jpg'),
+        title: 'Recovered',
+        description: 'Recovered description',
       });
     });
 
@@ -638,11 +767,7 @@ describe('OgImageService', () => {
       MockIntersectionObserver.instances[0].triggerEntry(el, true);
       await flush();
 
-      expect(cacheStub.getWithSWR).toHaveBeenCalledWith(
-        'ogImage',
-        'og:https://example.com/article',
-        expect.any(Function),
-      );
+      expect(cacheStub.get).toHaveBeenCalledWith('ogImage', 'og:https://example.com/article');
     });
 
     it('calls fetch with correct API URL', async () => {
@@ -747,24 +872,66 @@ describe('OgImageService', () => {
       // Only one additional fetch for the deduped URL
       expect(resolvers.length).toBe(6);
     });
+
+    it('dedupes concurrent in-flight fetches for the same URL', async () => {
+      const resolvers: Array<() => void> = [];
+
+      fetchSpy.mockImplementation(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolvers.push(() =>
+              resolve(
+                makeFetchResponse({
+                  imageUrl: 'https://cdn.example.com/shared.jpg',
+                  title: 'Shared',
+                  description: null,
+                }),
+              ),
+            );
+          }),
+      );
+
+      const el1 = document.createElement('div');
+      const el2 = document.createElement('div');
+      const url = 'https://example.com/shared';
+      const cb1 = vi.fn();
+      const cb2 = vi.fn();
+
+      service.observe(el1, url, cb1);
+      service.observe(el2, url, cb2);
+
+      MockIntersectionObserver.instances[0].triggerEntries([
+        { target: el1, isIntersecting: true },
+        { target: el2, isIntersecting: true },
+      ]);
+      await flush();
+
+      expect(resolvers.length).toBe(1);
+
+      resolvers[0]();
+      await flush();
+
+      expect(cb1).toHaveBeenCalledWith({
+        imageUrl:
+          '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/shared.jpg'),
+        title: 'Shared',
+        description: null,
+      });
+      expect(cb2).toHaveBeenCalledWith({
+        imageUrl:
+          '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/shared.jpg'),
+        title: 'Shared',
+        description: null,
+      });
+    });
   });
 
   // -----------------------------------------------------------------------
-  // Resume handling
+  // Recovery handling
   // -----------------------------------------------------------------------
 
-  describe('resume handling', () => {
-    it('clears inflight fetches on resume', () => {
-      TestBed.flushEffects();
-      cacheStub.clearInflightFetches.mockClear();
-
-      pageLifecycleStub.resumeCount.set(1);
-      TestBed.flushEffects();
-
-      expect(cacheStub.clearInflightFetches).toHaveBeenCalled();
-    });
-
-    it('resets activeRequests to 0 on resume', async () => {
+  describe('recovery handling', () => {
+    it('resets activeRequests to 0 on recovery', async () => {
       const resolvers: Array<() => void> = [];
       fetchSpy.mockImplementation(
         () =>
@@ -788,8 +955,8 @@ describe('OgImageService', () => {
       await flush();
       expect(resolvers.length).toBe(5);
 
-      // Simulate resume — should reset activeRequests
-      pageLifecycleStub.resumeCount.set(1);
+      // Simulate recovery — should reset activeRequests
+      thumbnailRecoveryStub.recoveryVersion.set(1);
       TestBed.flushEffects();
 
       // Now a 6th request should be processable (not blocked by concurrency)
@@ -800,6 +967,54 @@ describe('OgImageService', () => {
 
       // The new fetch should have started (resolvers.length increased)
       expect(resolvers.length).toBe(6);
+    });
+
+    it('preserves queued URLs across recovery', async () => {
+      const resolvers: Array<() => void> = [];
+      fetchSpy.mockImplementation(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolvers.push(() =>
+              resolve(
+                makeFetchResponse({
+                  imageUrl: 'https://cdn.example.com/recovered.jpg',
+                  title: 'Recovered',
+                  description: null,
+                }),
+              ),
+            );
+          }),
+      );
+
+      const callbacks = Array.from({ length: 6 }, () => vi.fn());
+      const elements = Array.from({ length: 6 }, () => document.createElement('div'));
+
+      for (let i = 0; i < 6; i++) {
+        service.observe(elements[i], `https://example.com/queued-${i}`, callbacks[i]);
+      }
+
+      MockIntersectionObserver.instances[0].triggerEntries(
+        elements.map((el) => ({ target: el, isIntersecting: true })),
+      );
+      await flush();
+
+      expect(resolvers.length).toBe(5);
+
+      thumbnailRecoveryStub.recoveryVersion.set(1);
+      TestBed.flushEffects();
+      await flush();
+
+      expect(resolvers.length).toBe(6);
+
+      resolvers[5]();
+      await flush();
+
+      expect(callbacks[5]).toHaveBeenCalledWith({
+        imageUrl:
+          '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/recovered.jpg'),
+        title: 'Recovered',
+        description: null,
+      });
     });
   });
 });

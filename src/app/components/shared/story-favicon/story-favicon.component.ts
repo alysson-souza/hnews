@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, input, linkedSignal, computed, inject, effect } from '@angular/core';
-import { PageLifecycleService } from '@services/page-lifecycle.service';
+import {
+  Component,
+  input,
+  linkedSignal,
+  computed,
+  inject,
+  effect,
+  ElementRef,
+  signal,
+} from '@angular/core';
+import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
 
 @Component({
   selector: 'app-story-favicon',
   imports: [],
   template: `
-    @if (!hasError()) {
+    @if (!hasError() && imageMounted()) {
       <img
         [src]="faviconUrl()"
         width="64"
@@ -43,7 +52,10 @@ import { PageLifecycleService } from '@services/page-lifecycle.service';
 export class StoryFaviconComponent {
   readonly url = input<string>();
   readonly altText = input.required<string>();
-  private pageLifecycle = inject(PageLifecycleService);
+  private recovery = inject(ThumbnailRecoveryService);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private lastHandledRecoveryVersion = 0;
+  readonly imageMounted = signal(true);
 
   readonly hasError = linkedSignal(() => {
     this.url(); // track url input — reset on change
@@ -51,11 +63,27 @@ export class StoryFaviconComponent {
   });
 
   constructor() {
-    // Reset favicon error state on tab resume so the browser re-attempts loading from SW cache
+    // Re-render the favicon image on shared recovery events so the browser can retry it.
     effect(() => {
-      const count = this.pageLifecycle.resumeCount();
-      if (count > 0 && this.hasError()) {
+      const version = this.recovery.recoveryVersion();
+      if (version <= this.lastHandledRecoveryVersion) {
+        return;
+      }
+
+      this.lastHandledRecoveryVersion = version;
+
+      if (version === 0) {
+        return;
+      }
+
+      if (this.hasError()) {
         this.hasError.set(false);
+        return;
+      }
+
+      const img = this.host.nativeElement.querySelector('img');
+      if (!img || !img.complete || img.naturalWidth <= 16 || img.naturalHeight <= 16) {
+        this.remountImage();
       }
     });
   }
@@ -108,5 +136,10 @@ export class StoryFaviconComponent {
     } catch {
       return '';
     }
+  }
+
+  private remountImage(): void {
+    this.imageMounted.set(false);
+    queueMicrotask(() => this.imageMounted.set(true));
   }
 }

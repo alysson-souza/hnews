@@ -240,24 +240,22 @@ describe('handleOgImageApi', () => {
     expect(res.headers.get('access-control-allow-origin')).toBe('*');
   });
 
-  it('returns 200 with null values when fetch throws', async () => {
+  it('returns a retryable failure when fetch throws', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
 
     const res = await handleOgImageApi(
       makeUrl('/api/og-image', { url: 'https://example.com/article' }),
     );
 
-    // fetchArticleOgMeta catches errors internally and returns empty OgMeta,
-    // so handleOgImageApi's try branch succeeds with null values (7-day cache).
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.imageUrl).toBeNull();
     expect(body.title).toBeNull();
     expect(body.description).toBeNull();
-    expect(res.headers.get('cache-control')).toBe('public, max-age=604800');
+    expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
-  it('returns null for non-ok upstream response', async () => {
+  it('returns null for a stable 404 upstream response', async () => {
     vi.stubGlobal('fetch', mockFetch(new Response('Not Found', { status: 404 })));
 
     const res = await handleOgImageApi(
@@ -267,6 +265,21 @@ describe('handleOgImageApi', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.imageUrl).toBeNull();
+  });
+
+  it('returns a retryable failure for transient upstream HTTP errors', async () => {
+    vi.stubGlobal('fetch', mockFetch(new Response('Try again later', { status: 429 })));
+
+    const res = await handleOgImageApi(
+      makeUrl('/api/og-image', { url: 'https://example.com/rate-limited' }),
+    );
+
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.imageUrl).toBeNull();
+    expect(body.title).toBeNull();
+    expect(body.description).toBeNull();
+    expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
   it('resolves relative OG image URLs against article URL', async () => {

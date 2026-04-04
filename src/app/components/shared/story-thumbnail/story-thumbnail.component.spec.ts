@@ -7,6 +7,7 @@ import { StoryThumbnailComponent } from './story-thumbnail.component';
 import { OgImageService } from '@services/og-image.service';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 import { PageLifecycleService } from '@services/page-lifecycle.service';
+import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
 import type { OgImageResult } from '@services/og-image.service';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +48,10 @@ class PageLifecycleServiceStub {
   wasDiscarded = false;
 }
 
+class ThumbnailRecoveryServiceStub {
+  recoveryVersion = signal(0);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -57,11 +62,13 @@ describe('StoryThumbnailComponent', () => {
   let ogImageStub: OgImageServiceStub;
   let redirectStub: PrivacyRedirectServiceStub;
   let pageLifecycleStub: PageLifecycleServiceStub;
+  let thumbnailRecoveryStub: ThumbnailRecoveryServiceStub;
 
   beforeEach(async () => {
     ogImageStub = new OgImageServiceStub();
     redirectStub = new PrivacyRedirectServiceStub();
     pageLifecycleStub = new PageLifecycleServiceStub();
+    thumbnailRecoveryStub = new ThumbnailRecoveryServiceStub();
 
     await TestBed.configureTestingModule({
       imports: [StoryThumbnailComponent],
@@ -73,6 +80,7 @@ describe('StoryThumbnailComponent', () => {
         { provide: OgImageService, useValue: ogImageStub },
         { provide: PrivacyRedirectService, useValue: redirectStub },
         { provide: PageLifecycleService, useValue: pageLifecycleStub },
+        { provide: ThumbnailRecoveryService, useValue: thumbnailRecoveryStub },
       ],
     }).compileComponents();
 
@@ -293,10 +301,91 @@ describe('StoryThumbnailComponent', () => {
       component.handleOgImageError();
       fixture.detectChanges();
 
-      expect(component.ogImageUrl()).toBeNull();
-      expect(component.ogTitle()).toBeNull();
-      expect(component.ogDescription()).toBeNull();
       expect(component.ogImageLoaded()).toBe(false);
+
+      expect(fixture.nativeElement.querySelector('img.og-image')).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('app-story-favicon')).toBeTruthy();
+    });
+
+    it('retries the OG image after a recovery trigger', async () => {
+      const url = 'https://example.com/article';
+      fixture.componentRef.setInput('storyTitle', 'Test');
+      fixture.componentRef.setInput('storyUrl', url);
+      fixture.detectChanges();
+
+      await Promise.resolve();
+
+      ogImageStub.resolve(url, {
+        imageUrl: '/api/og-image-proxy?url=broken',
+        title: 'OG Title',
+        description: 'OG Desc',
+      });
+      fixture.detectChanges();
+
+      component.handleOgImageError();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('img.og-image')).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('app-story-favicon')).toBeTruthy();
+
+      thumbnailRecoveryStub.recoveryVersion.set(1);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('img.og-image')).toBeTruthy();
+    });
+
+    it('remounts a restored broken OG image on recovery', async () => {
+      const url = 'https://example.com/article';
+      fixture.componentRef.setInput('storyTitle', 'Test');
+      fixture.componentRef.setInput('storyUrl', url);
+      fixture.detectChanges();
+
+      await Promise.resolve();
+
+      ogImageStub.resolve(url, {
+        imageUrl: '/api/og-image-proxy?url=broken',
+        title: 'OG Title',
+        description: 'OG Desc',
+      });
+      fixture.detectChanges();
+
+      const imgBefore = fixture.nativeElement.querySelector('img.og-image') as HTMLImageElement;
+      Object.defineProperty(imgBefore, 'complete', { configurable: true, value: true });
+      Object.defineProperty(imgBefore, 'naturalWidth', { configurable: true, value: 0 });
+      Object.defineProperty(imgBefore, 'naturalHeight', { configurable: true, value: 0 });
+
+      thumbnailRecoveryStub.recoveryVersion.set(1);
+      fixture.detectChanges();
+      await Promise.resolve();
+      fixture.detectChanges();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      const imgAfter = fixture.nativeElement.querySelector('img.og-image');
+      expect(imgAfter).toBeTruthy();
+      expect(imgAfter).not.toBe(imgBefore);
+    });
+
+    it('does not auto-retry a later OG image failure without a new recovery trigger', async () => {
+      const url = 'https://example.com/article';
+      fixture.componentRef.setInput('storyTitle', 'Test');
+      fixture.componentRef.setInput('storyUrl', url);
+      fixture.detectChanges();
+
+      await Promise.resolve();
+
+      ogImageStub.resolve(url, {
+        imageUrl: '/api/og-image-proxy?url=broken',
+        title: 'OG Title',
+        description: 'OG Desc',
+      });
+      fixture.detectChanges();
+
+      thumbnailRecoveryStub.recoveryVersion.set(1);
+      fixture.detectChanges();
+
+      component.handleOgImageError();
+      fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('img.og-image')).toBeFalsy();
       expect(fixture.nativeElement.querySelector('app-story-favicon')).toBeTruthy();
@@ -391,11 +480,11 @@ describe('StoryThumbnailComponent', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Resume re-validation
+  // Recovery re-validation
   // -----------------------------------------------------------------------
 
-  describe('resume re-validation', () => {
-    it('sets ogImageLoaded to false on resume when OG image is set', async () => {
+  describe('recovery re-validation', () => {
+    it('keeps a healthy decoded OG image visible on recovery', async () => {
       const url = 'https://example.com/article';
       fixture.componentRef.setInput('storyTitle', 'Test');
       fixture.componentRef.setInput('storyUrl', url);
@@ -408,18 +497,25 @@ describe('StoryThumbnailComponent', () => {
         title: null,
         description: null,
       });
+      fixture.detectChanges();
+
+      const img = fixture.nativeElement.querySelector('img.og-image') as HTMLImageElement;
+      Object.defineProperty(img, 'complete', { configurable: true, value: true });
+      Object.defineProperty(img, 'naturalWidth', { configurable: true, value: 640 });
+      Object.defineProperty(img, 'naturalHeight', { configurable: true, value: 360 });
+
       component.handleOgImageLoad();
       expect(component.ogImageLoaded()).toBe(true);
 
-      // Simulate resume
-      pageLifecycleStub.resumeCount.set(1);
+      thumbnailRecoveryStub.recoveryVersion.set(1);
+      fixture.detectChanges();
+      await Promise.resolve();
       fixture.detectChanges();
 
-      // ogImageLoaded should be reset to false
-      expect(component.ogImageLoaded()).toBe(false);
+      expect(component.ogImageLoaded()).toBe(true);
     });
 
-    it('does not touch ogImageLoaded on resume when no OG image is set', async () => {
+    it('does not touch ogImageLoaded on recovery when no OG image is set', async () => {
       fixture.componentRef.setInput('storyTitle', 'Test');
       fixture.componentRef.setInput('storyUrl', 'https://example.com');
       fixture.detectChanges();
@@ -428,7 +524,7 @@ describe('StoryThumbnailComponent', () => {
       // No OG image resolved — ogImageLoaded should stay false
       expect(component.ogImageLoaded()).toBe(false);
 
-      pageLifecycleStub.resumeCount.set(1);
+      thumbnailRecoveryStub.recoveryVersion.set(1);
       fixture.detectChanges();
 
       expect(component.ogImageLoaded()).toBe(false);
