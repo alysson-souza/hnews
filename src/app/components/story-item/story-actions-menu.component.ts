@@ -56,10 +56,20 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             {{ shareCommentsText() }}
           </button>
           <div class="story-actions-divider"></div>
+          @if (showArchiveAction()) {
+            <button
+              class="story-actions-item"
+              role="menuitem"
+              [attr.data-index]="2"
+              (click)="openOnArchive.emit()"
+            >
+              Open in Internet Archive
+            </button>
+          }
           <button
             class="story-actions-item story-actions-item-bottom"
             role="menuitem"
-            [attr.data-index]="2"
+            [attr.data-index]="showArchiveAction() ? 3 : 2"
             (click)="openInNewTab.emit()"
           >
             Open Comments in New Tab
@@ -110,9 +120,11 @@ export class StoryActionsMenuComponent implements OnInit {
   readonly storyId = input(0);
   readonly shareStoryText = input('Copy Story Link');
   readonly shareCommentsText = input('Copy Comments Link');
+  readonly showArchiveAction = input(false);
 
   readonly shareStory = output<void>();
   readonly shareComments = output<void>();
+  readonly openOnArchive = output<void>();
   readonly openInNewTab = output<void>();
 
   readonly actionsBtn = viewChild<ElementRef<HTMLButtonElement>>('actionsBtn');

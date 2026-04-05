@@ -56,5 +56,18 @@ describe('StoryActionsMenuComponent', () => {
         expect(item.nativeElement.tagName).toBe('BUTTON');
       }
     });
+
+    it('should render the archive action when enabled', () => {
+      fixture.componentRef.setInput('showArchiveAction', true);
+      fixture.detectChanges();
+
+      const btn = fixture.debugElement.query(By.css('button.story-actions-btn'));
+      btn.nativeElement.click();
+      fixture.detectChanges();
+
+      const menuItems = fixture.debugElement.queryAll(By.css('[role="menuitem"]'));
+      expect(menuItems.length).toBe(4);
+      expect(menuItems[2].nativeElement.textContent.trim()).toBe('Open in Internet Archive');
+    });
   });
 });

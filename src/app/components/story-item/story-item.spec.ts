@@ -389,6 +389,25 @@ describe('StoryItem comments link behaviour', () => {
 
       expect(component.actionsMenu()?.storyId()).toBe(story.id);
     });
+
+    it('should enable the archive action when the story has an external URL', () => {
+      fixture.componentRef.setInput('story', {
+        ...story,
+        url: 'https://example.com/article',
+      });
+      fixture.detectChanges();
+
+      expect(component.hasArchiveUrl()).toBe(true);
+      expect(component.actionsMenu()?.showArchiveAction()).toBe(true);
+    });
+
+    it('should hide the archive action when the story has no external URL', () => {
+      fixture.componentRef.setInput('story', story);
+      fixture.detectChanges();
+
+      expect(component.hasArchiveUrl()).toBe(false);
+      expect(component.actionsMenu()?.showArchiveAction()).toBe(false);
+    });
   });
 
   describe('Sharing functionality', () => {
@@ -450,11 +469,47 @@ describe('StoryItem comments link behaviour', () => {
     it('should open comments in new tab', () => {
       fixture.componentRef.setInput('story', story);
       fixture.detectChanges();
-      vi.spyOn(window, 'open');
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      openSpy.mockClear();
 
       component.openCommentsInNewTab();
 
-      expect(window.open).toHaveBeenCalled();
+      expect(openSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Open story in archive', () => {
+    it('should open the story in Internet Archive when a URL exists', () => {
+      fixture.componentRef.setInput('story', {
+        ...story,
+        url: 'https://example.com/article',
+      });
+      fixture.detectChanges();
+
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      openSpy.mockClear();
+      const closeMenuSpy = vi.spyOn(component.actionsMenu()!, 'closeMenu');
+
+      component.openStoryInArchive();
+
+      expect(openSpy).toHaveBeenCalledWith(
+        'https://web.archive.org/web/*/https://example.com/article',
+        '_blank',
+        'noopener,noreferrer',
+      );
+      expect(closeMenuSpy).toHaveBeenCalled();
+    });
+
+    it('should do nothing when the story has no external URL', () => {
+      fixture.componentRef.setInput('story', story);
+      fixture.detectChanges();
+
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      openSpy.mockClear();
+
+      component.openStoryInArchive();
+
+      expect(openSpy).not.toHaveBeenCalled();
     });
   });
 

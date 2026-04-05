@@ -166,8 +166,10 @@
             [storyId]="story()!.id"
             [shareStoryText]="getStoryActionText()"
             [shareCommentsText]="getCommentsActionText()"
+            [showArchiveAction]="hasArchiveUrl()"
             (shareStory)="shareStory()"
             (shareComments)="shareComments()"
+            (openOnArchive)="openStoryInArchive()"
             (openInNewTab)="openCommentsInNewTab()"
           />
         }

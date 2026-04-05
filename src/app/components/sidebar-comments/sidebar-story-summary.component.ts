@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, computed } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { HNItem } from '@models/hn';
@@ -8,6 +8,7 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
+import { StoryArchiveService } from '@services/story-archive.service';
 
 @Component({
   selector: 'app-sidebar-story-summary',
@@ -54,6 +55,18 @@ import { StoryLinkComponent } from '../shared/story-link/story-link.component';
           <span>•</span>
         }
         <span class="time-text">{{ item().time | relativeTime }}</span>
+        @if (archiveUrl()) {
+          <span>•</span>
+          <a
+            class="open-link"
+            [href]="archiveUrl()!"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            aria-label="Open story in Internet Archive"
+          >
+            Open in Internet Archive
+          </a>
+        }
       </div>
 
       @if (item().text) {
@@ -86,11 +99,9 @@ import { StoryLinkComponent } from '../shared/story-link/story-link.component';
       .meta {
         @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
       }
-      .actions {
-        @apply flex gap-3 mt-3;
-      }
       .open-link {
-        @apply inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
+        @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors duration-200;
+        @apply rounded focus-visible:outline-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 focus-visible:outline-offset-1;
       }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;
@@ -102,6 +113,8 @@ export class SidebarStorySummaryComponent {
   readonly item = input.required<HNItem>();
   readonly boxedText = input(false);
   private router = inject(Router);
+  private storyArchive = inject(StoryArchiveService);
+  readonly archiveUrl = computed(() => this.storyArchive.getArchiveUrl(this.item()));
 
   hasMetaPrefix(): boolean {
     return this.item().score != null || !!this.item().by;

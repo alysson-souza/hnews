@@ -136,6 +136,17 @@ describe('SidebarStorySummaryComponent', () => {
       expect(domainBtn.nativeElement.textContent.trim()).toBe('example.com');
     });
 
+    it('should render an Internet Archive action when URL exists', () => {
+      const meta = fixture.debugElement.query(By.css('.meta'));
+      const archiveLink = fixture.debugElement.query(By.css('.open-link'));
+      expect(archiveLink).toBeTruthy();
+      expect(meta.nativeElement.contains(archiveLink.nativeElement)).toBe(true);
+      expect(archiveLink.nativeElement.getAttribute('href')).toBe(
+        'https://web.archive.org/web/*/https://example.com/article',
+      );
+      expect(archiveLink.nativeElement.textContent.trim()).toBe('Open in Internet Archive');
+    });
+
     it('should not render domain button when no URL', () => {
       fixture.componentRef.setInput('item', {
         id: 123,
@@ -147,6 +158,7 @@ describe('SidebarStorySummaryComponent', () => {
 
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
       expect(domainBtn).toBeFalsy();
+      expect(fixture.debugElement.query(By.css('.open-link'))).toBeFalsy();
     });
 
     it('should render meta information', () => {
