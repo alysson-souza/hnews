@@ -4,6 +4,7 @@ import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { Location } from '@angular/common';
+import { By } from '@angular/platform-browser';
 import {
   ActivatedRoute,
   ActivatedRouteSnapshot,
@@ -19,6 +20,7 @@ import { VisitedService } from '@services/visited.service';
 import { ScrollService } from '@services/scroll.service';
 import { CommentSortService } from '@services/comment-sort.service';
 import { HNItem } from '@models/hn';
+import { SidebarStorySummaryComponent } from '@components/sidebar-comments/sidebar-story-summary.component';
 
 describe('ItemComponent', () => {
   let component: ItemComponent;
@@ -91,6 +93,7 @@ describe('ItemComponent', () => {
 
     mockHnService = {
       getItem: vi.fn(),
+      getItemsPage: vi.fn(),
       getStoryTopLevelComments: vi.fn(),
       getStoryWithAllComments: vi.fn(),
     } as unknown as MockedObject<HackernewsService>;
@@ -139,6 +142,7 @@ describe('ItemComponent', () => {
       of(createBulkLoadResult(mockItem, mockComments)),
     );
     mockHnService.getItem.mockReturnValue(of(mockItem));
+    mockHnService.getItemsPage.mockReturnValue(of([]));
     mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
 
     fixture = TestBed.createComponent(ItemComponent);
@@ -225,6 +229,22 @@ describe('ItemComponent', () => {
   });
 
   describe('Integration', () => {
+    it('should render the story summary with boxed text styling', () => {
+      component.item.set({
+        ...mockItem,
+        text: 'Story body',
+        descendants: 0,
+        kids: [],
+      });
+      component.loading.set(false);
+
+      fixture.detectChanges();
+
+      const summary = fixture.debugElement.query(By.directive(SidebarStorySummaryComponent));
+      expect(summary).toBeTruthy();
+      expect((summary.componentInstance as SidebarStorySummaryComponent).boxedText()).toBe(true);
+    });
+
     it('should update visibleCommentIds when sort changes', () => {
       component.item.set(mockItem);
       component.allComments.set(mockComments);
