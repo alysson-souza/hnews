@@ -159,13 +159,41 @@ describe('SidebarStorySummaryComponent', () => {
 
     it('should render text content when present', () => {
       fixture.componentRef.setInput('item', {
-        ...component.item,
+        id: 123,
+        type: 'story',
+        by: 'testuser',
+        time: 1708099200,
+        title: 'Test Story',
+        score: 100,
+        url: 'https://example.com/article',
         text: 'This is the story text',
       });
       fixture.detectChanges();
 
       const commentText = fixture.debugElement.query(By.css('app-comment-text'));
       expect(commentText).toBeTruthy();
+
+      const shell = fixture.debugElement.query(By.css('.quote-surface-shell'));
+      expect(shell).toBeFalsy();
+    });
+
+    it('should wrap text in a quote surface shell when boxedText is enabled', () => {
+      fixture.componentRef.setInput('boxedText', true);
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'story',
+        by: 'testuser',
+        time: 1708099200,
+        title: 'Test Story',
+        score: 100,
+        url: 'https://example.com/article',
+        text: 'This is the story text',
+      });
+      fixture.detectChanges();
+
+      const shell = fixture.debugElement.query(By.css('.quote-surface-shell'));
+      expect(shell).toBeTruthy();
+      expect(shell.query(By.css('app-comment-text'))).toBeTruthy();
     });
 
     it('should handle item without author', () => {

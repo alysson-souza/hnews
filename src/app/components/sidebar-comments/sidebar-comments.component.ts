@@ -99,7 +99,7 @@ import {
                 </div>
               } @else if (item()) {
                 <!-- Story Details -->
-                <app-sidebar-story-summary [item]="item()!" />
+                <app-sidebar-story-summary [item]="item()!" [boxedText]="true" />
 
                 <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
 

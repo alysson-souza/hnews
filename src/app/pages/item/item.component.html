@@ -1,14 +1,14 @@
 <app-page-container>
   @if (loading()) {
     <!-- Card 1: Story summary skeleton -->
-    <app-card class="block mb-6">
+    <app-card class="block mb-6" [radius]="'lg'">
       <div class="skel-title mb-2 skeleton"></div>
       <div class="skel-domain mb-3 skeleton"></div>
       <div class="skel-meta skeleton"></div>
     </app-card>
 
     <!-- Card 2: Comments skeleton -->
-    <app-card class="block">
+    <app-card class="block" [radius]="'lg'">
       <div class="flex items-center justify-between mb-4">
         <div class="skel-comments-title skeleton"></div>
         <div class="skel-sort skeleton"></div>
@@ -21,7 +21,7 @@
     </app-card>
   } @else if (item()) {
     <!-- Story Details -->
-    <app-card class="block mb-6" id="submission-title">
+    <app-card class="block mb-6" id="submission-title" [radius]="'lg'">
       @if (item()!.type === 'comment') {
         <!-- Discussion title for comment threads -->
         <h1 class="story-title mb-4">Discussion</h1>
@@ -32,7 +32,7 @@
     </app-card>
 
     <!-- Comments Section -->
-    <app-card class="block comments-card">
+    <app-card class="block comments-card" [radius]="'lg'">
       <div class="flex items-center justify-between mb-4">
         <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
         <app-comment-sort-dropdown

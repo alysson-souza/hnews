@@ -2,6 +2,8 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, input } from '@angular/core';
 
+type CardRadius = 'lg' | 'xl';
+
 @Component({
   selector: 'app-card',
   imports: [],
@@ -11,6 +13,8 @@ import { Component, input } from '@angular/core';
       [class.card-padding]="!noPadding()"
       [class.card-hoverable]="hoverable()"
       [class.card-clickable]="clickable()"
+      [class.card-radius-lg]="radius() === 'lg'"
+      [class.card-radius-xl]="radius() === 'xl'"
     >
       <ng-content />
     </div>
@@ -27,8 +31,16 @@ import { Component, input } from '@angular/core';
         background-color: var(--app-surface);
         border: 1px solid var(--app-border);
         box-shadow: var(--app-shadow);
-        @apply rounded-xl overflow-hidden;
+        @apply overflow-hidden;
         @apply transition-[box-shadow,background-color] duration-200;
+      }
+
+      .card-radius-lg {
+        @apply rounded-lg;
+      }
+
+      .card-radius-xl {
+        @apply rounded-xl;
       }
 
       .card-hoverable {
@@ -54,4 +66,5 @@ export class CardComponent {
   readonly noPadding = input(false);
   readonly hoverable = input(false);
   readonly clickable = input(false);
+  readonly radius = input<CardRadius>('xl');
 }

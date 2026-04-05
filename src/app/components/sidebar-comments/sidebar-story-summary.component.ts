@@ -57,7 +57,13 @@ import { StoryLinkComponent } from '../shared/story-link/story-link.component';
       </div>
 
       @if (item().text) {
-        <app-comment-text [html]="item().text!" />
+        @if (boxedText()) {
+          <div class="quote-surface-shell mt-3">
+            <app-comment-text [html]="item().text!" />
+          </div>
+        } @else {
+          <app-comment-text [html]="item().text!" />
+        }
       }
     </section>
   `,
@@ -94,6 +100,7 @@ import { StoryLinkComponent } from '../shared/story-link/story-link.component';
 })
 export class SidebarStorySummaryComponent {
   readonly item = input.required<HNItem>();
+  readonly boxedText = input(false);
   private router = inject(Router);
 
   hasMetaPrefix(): boolean {

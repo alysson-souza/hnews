@@ -44,7 +44,7 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
     >
       <div class="space-y-3 sm:space-y-4">
         @if (loading()) {
-          <app-card class="block">
+          <app-card class="block" [radius]="'lg'">
             <div class="skeleton space-y-5">
               <div class="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -56,7 +56,7 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
               <div class="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
             </div>
           </app-card>
-          <app-card class="block">
+          <app-card class="block" [radius]="'lg'">
             <div class="skeleton space-y-4">
               <div class="flex items-center justify-between gap-3">
                 <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
@@ -64,7 +64,7 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
               </div>
               @for (row of [0, 1, 2]; track row) {
                 <div
-                  class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 p-4 space-y-3"
+                  class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 p-4 space-y-3"
                 >
                   <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                   <div class="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
@@ -74,7 +74,7 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
             </div>
           </app-card>
         } @else if (user()) {
-          <app-card class="block profile-card" id="user-profile">
+          <app-card class="block profile-card" id="user-profile" [radius]="'lg'">
             <div class="space-y-1 mb-4">
               <p class="eyebrow">User</p>
               <h1 class="page-title">
@@ -111,7 +111,7 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
             }
           </app-card>
 
-          <app-card class="block activity-card">
+          <app-card class="block activity-card" [radius]="'lg'">
             <div class="activity-header">
               <div>
                 <p class="section-label">Recent activity</p>
@@ -188,7 +188,7 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
                         </a>
                       </div>
                     } @else {
-                      <div class="comment-shell">
+                      <div class="comment-shell quote-surface-shell">
                         <app-comment-text [html]="item.text || ''" />
                       </div>
                       <div class="item-meta">
@@ -311,11 +311,8 @@ import { StoryLinkComponent } from '@components/shared/story-link/story-link.com
       .meta-link {
         @apply text-blue-600 dark:text-blue-300 hover:underline decoration-2 underline-offset-2;
       }
-      .comment-shell {
-        @apply rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-800/70 p-3 sm:p-4;
-      }
       .activity-skeleton {
-        @apply rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 p-4;
+        @apply rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 p-4;
       }
 
       /* Empty */

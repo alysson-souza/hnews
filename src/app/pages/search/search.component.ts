@@ -232,7 +232,7 @@ interface SearchHit {
                     </a>
                   </div>
                 } @else {
-                  <div class="comment-shell">
+                  <div class="comment-shell quote-surface-shell">
                     <app-comment-text [html]="getHighlightedText(hit, 'comment_text')" />
                   </div>
                   <div class="item-meta">
@@ -342,10 +342,6 @@ interface SearchHit {
       .meta-link {
         @apply text-blue-600 dark:text-blue-300 hover:underline decoration-2 underline-offset-2;
       }
-      .comment-shell {
-        @apply rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-800/70 p-3 sm:p-4;
-      }
-
       /* Skeleton Styles */
       .activity-skeleton {
         @apply py-4;

@@ -228,6 +228,10 @@ button.tree-connector {
     border-color 200ms ease;
 }
 
+.quote-surface-shell {
+  @apply rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-800/70 p-3 sm:p-4;
+}
+
 .comment-card.collapsed {
   background-color: rgba(15, 23, 42, 0.03);
 }
@@ -388,7 +392,7 @@ code {
 .sub-comment blockquote {
   border-left: 2px solid color-mix(in srgb, var(--app-brand) 30%, transparent);
   background: color-mix(in srgb, var(--app-brand) 4%, transparent);
-  @apply pl-4 pr-3 py-2 my-2 rounded-r-lg text-pretty;
+  @apply pl-4 pr-3 py-2 my-2 rounded-lg text-pretty;
   color: #4b5563; /* gray-600 */
 }
 .comment-body blockquote:first-child,
