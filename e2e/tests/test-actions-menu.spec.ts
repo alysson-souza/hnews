@@ -67,7 +67,7 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     expect(backToFirst).toBe(firstItemText);
   });
 
-  test('should close menu with Escape and return focus to button', async ({ page }) => {
+  test('should close menu with Escape and return focus to the story item', async ({ page }) => {
     const actionsBtn = page.locator('button.story-actions-btn').first();
     await actionsBtn.click();
     await page.waitForTimeout(300);
@@ -80,8 +80,7 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
 
     await expect(menu).not.toBeVisible();
 
-    // Focus should return to the actions button
-    const focusedClass = await page.evaluate(() => document.activeElement?.className);
-    expect(focusedClass).toContain('story-actions-btn');
+    const storyCard = page.locator('app-story-item').first().locator('article.story-card');
+    await expect(storyCard).toBeFocused();
   });
 });

@@ -69,5 +69,23 @@ describe('StoryActionsMenuComponent', () => {
       expect(menuItems.length).toBe(4);
       expect(menuItems[2].nativeElement.textContent.trim()).toBe('Open in Internet Archive');
     });
+
+    it('should focus the story card when closing the menu', () => {
+      const storyItem = document.createElement('app-story-item');
+      const storyCard = document.createElement('article');
+      storyCard.className = 'story-card';
+      storyCard.tabIndex = -1;
+      document.body.appendChild(storyItem);
+      storyItem.appendChild(storyCard);
+      storyItem.appendChild(fixture.nativeElement);
+      fixture.detectChanges();
+
+      const focusSpy = vi.spyOn(storyCard, 'focus').mockImplementation(() => {});
+
+      fixture.componentInstance.closeMenu();
+
+      expect(focusSpy).toHaveBeenCalled();
+      storyItem.remove();
+    });
   });
 });

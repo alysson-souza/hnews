@@ -142,5 +142,52 @@ describe('KeyboardNavigationService', () => {
 
       expect(openSpy).toHaveBeenCalledWith('https://example.com/story', '_blank', 'noopener');
     });
+
+    it('should click the nested load more button on the last story', () => {
+      document.body.innerHTML = `
+        <app-button class="load-more-btn">
+          <button type="button">Load More Stories</button>
+        </app-button>
+      `;
+
+      service.setTotalItems(1);
+      service.setSelectedIndex(0);
+
+      const host = document.querySelector('.load-more-btn') as HTMLElement;
+      const hostClickSpy = vi.spyOn(host, 'click').mockImplementation(() => {});
+      const innerButton = host.querySelector('button') as HTMLButtonElement;
+      const innerClickSpy = vi.spyOn(innerButton, 'click').mockImplementation(() => {});
+
+      registeredCommands['story.next']();
+
+      expect(innerClickSpy).toHaveBeenCalled();
+      expect(hostClickSpy).not.toHaveBeenCalled();
+    });
+
+    it('should click the actions button when closing the actions menu', () => {
+      document.body.innerHTML = `
+        <div data-story-index="0" data-story-id="123">
+          <h2 class="story-title">
+            <app-story-link class="story-title-link story-link-trigger cursor-pointer">
+              <a href="https://example.com/story" target="_blank" class="story-link">Story</a>
+            </app-story-link>
+          </h2>
+          <div class="story-actions-container">
+            <button type="button" class="story-actions-btn">More</button>
+            <div class="story-actions-menu">Menu</div>
+          </div>
+        </div>
+      `;
+
+      service.setTotalItems(1);
+      service.setSelectedIndex(0);
+
+      const actionsButton = document.querySelector('.story-actions-btn') as HTMLButtonElement;
+      const actionsClickSpy = vi.spyOn(actionsButton, 'click').mockImplementation(() => {});
+
+      registeredCommands['story.actions.toggle']();
+
+      expect(actionsClickSpy).toHaveBeenCalled();
+    });
   });
 });

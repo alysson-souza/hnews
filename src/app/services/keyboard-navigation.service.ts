@@ -154,11 +154,24 @@ export class KeyboardNavigationService {
     return linkTrigger.querySelector('a') as HTMLAnchorElement | null;
   }
 
+  private clickLoadMoreStoriesButton(): void {
+    const loadMoreTrigger = document.querySelector('.load-more-btn') as HTMLElement | null;
+    if (!loadMoreTrigger) {
+      return;
+    }
+
+    const button =
+      loadMoreTrigger.tagName === 'BUTTON'
+        ? (loadMoreTrigger as HTMLButtonElement)
+        : (loadMoreTrigger.querySelector('button') as HTMLButtonElement | null);
+
+    button?.click();
+  }
+
   private selectNextStory(): void {
     this.blurActiveElement();
     if (this.isAtLastItem()) {
-      const loadMoreBtn = document.querySelector('.load-more-btn') as HTMLElement;
-      loadMoreBtn?.click();
+      this.clickLoadMoreStoriesButton();
     } else {
       this.selectNext();
       this.scrollSelectedStoryIntoView();
@@ -274,7 +287,7 @@ export class KeyboardNavigationService {
   /**
    * Toggle the actions ("More") menu for the selected story. If no story is selected,
    * selects the first story automatically. When opening, focuses the first menu item
-   * for immediate keyboard navigation. When closing, refocuses the story title link.
+   * for immediate keyboard navigation. When closing, returns focus to the actions button.
    */
   private toggleSelectedStoryActionsMenu(): void {
     // Ensure we have a selected index
@@ -302,9 +315,6 @@ export class KeyboardNavigationService {
     // If menu exists, toggle (close) via button click to reuse existing logic
     if (existingMenu) {
       actionsButton.click();
-      // Refocus story title for continuity
-      const titleLink = storyElement.querySelector('.story-title-link') as HTMLElement | null;
-      titleLink?.focus();
       return;
     }
 

@@ -154,12 +154,14 @@ export class StoryActionsMenuComponent implements OnInit {
       event.stopPropagation();
     }
     const newState = !this.isOpen();
-    this.isOpen.set(newState);
 
     if (newState) {
+      this.isOpen.set(true);
       this.positionMenu();
       this.setupClickOutside();
       setTimeout(() => this.focusFirstItem(), 0);
+    } else {
+      this.closeMenu();
     }
   }
 
@@ -192,12 +194,10 @@ export class StoryActionsMenuComponent implements OnInit {
     window.setTimeout(() => {
       const closeMenu = (e: MouseEvent) => {
         if (!(e.target as HTMLElement).closest('.story-actions-container')) {
-          this.isOpen.set(false);
           if (typeof window !== 'undefined') {
             window.document.removeEventListener('click', closeMenu);
           }
-          // Restore focus to the actions button for continuity
-          this.actionsBtn()?.nativeElement?.focus();
+          this.closeMenu();
         }
       };
       if (typeof window !== 'undefined') {
@@ -208,8 +208,7 @@ export class StoryActionsMenuComponent implements OnInit {
 
   closeMenu(): void {
     this.isOpen.set(false);
-    // Restore focus to the toggle button
-    this.actionsBtn()?.nativeElement?.focus();
+    this.focusStoryCard();
   }
 
   // =============================
@@ -233,6 +232,12 @@ export class StoryActionsMenuComponent implements OnInit {
     if (items[index]) {
       items[index].focus();
     }
+  }
+
+  private focusStoryCard(): void {
+    const storyItem = this.actionsBtn()?.nativeElement.closest('app-story-item');
+    const storyCard = storyItem?.querySelector('article.story-card') as HTMLElement | null;
+    storyCard?.focus();
   }
 
   private moveFocus(delta: number): void {
