@@ -14,14 +14,18 @@ describe('KeyboardNavigationService', () => {
   let mockCommandRegistry: MockedObject<CommandRegistryService>;
   let mockScrollService: MockedObject<ScrollService>;
   let mockNavigationHistory: MockedObject<NavigationHistoryService>;
+  let registeredCommands: Record<string, () => void | Promise<void>>;
 
   beforeEach(() => {
+    registeredCommands = {};
     mockRouter = {
       navigate: vi.fn(),
       url: '/top',
     } as unknown as MockedObject<Router>;
     mockCommandRegistry = {
-      register: vi.fn(),
+      register: vi.fn((commandId: string, handler: () => void | Promise<void>) => {
+        registeredCommands[commandId] = handler;
+      }),
     } as unknown as MockedObject<CommandRegistryService>;
     mockScrollService = {
       scrollElementIntoView: vi.fn(),
@@ -41,6 +45,11 @@ describe('KeyboardNavigationService', () => {
     });
 
     service = TestBed.inject(KeyboardNavigationService);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.innerHTML = '';
   });
 
   it('should be created', () => {
@@ -88,6 +97,50 @@ describe('KeyboardNavigationService', () => {
       service['navigateToTab']('next');
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/settings']);
+    });
+  });
+
+  describe('Story opening', () => {
+    it('should click the nested link when opening a story', () => {
+      document.body.innerHTML = `
+        <div data-story-index="0" data-story-id="123">
+          <app-story-link class="story-link-trigger">
+            <a href="https://example.com/story" target="_blank">Story</a>
+          </app-story-link>
+        </div>
+      `;
+
+      service.setTotalItems(1);
+      service.setSelectedIndex(0);
+
+      const host = document.querySelector('app-story-link') as HTMLElement;
+      const hostClickSpy = vi.spyOn(host, 'click').mockImplementation(() => {});
+      const anchor = host.querySelector('a') as HTMLAnchorElement;
+      const anchorClickSpy = vi.spyOn(anchor, 'click').mockImplementation(() => {});
+
+      registeredCommands['story.open']();
+
+      expect(anchorClickSpy).toHaveBeenCalled();
+      expect(hostClickSpy).not.toHaveBeenCalled();
+    });
+
+    it('should open the nested link in a new tab for full page open', () => {
+      document.body.innerHTML = `
+        <div data-story-index="0" data-story-id="123">
+          <app-story-link class="story-link-trigger">
+            <a href="https://example.com/story" target="_blank">Story</a>
+          </app-story-link>
+        </div>
+      `;
+
+      service.setTotalItems(1);
+      service.setSelectedIndex(0);
+
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+      registeredCommands['story.openFull']();
+
+      expect(openSpy).toHaveBeenCalledWith('https://example.com/story', '_blank', 'noopener');
     });
   });
 });

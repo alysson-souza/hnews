@@ -133,6 +133,27 @@ export class KeyboardNavigationService {
 
   // Command Handlers
 
+  private getSelectedStoryLinkAnchor(): HTMLAnchorElement | null {
+    // `.story-link-trigger` can be a direct <a> or an <app-story-link> host.
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex === null) {
+      return null;
+    }
+
+    const linkTrigger = document.querySelector(
+      `[data-story-index="${selectedIndex}"] .story-link-trigger`,
+    );
+    if (!linkTrigger) {
+      return null;
+    }
+
+    if (linkTrigger.tagName === 'A') {
+      return linkTrigger as HTMLAnchorElement;
+    }
+
+    return linkTrigger.querySelector('a') as HTMLAnchorElement | null;
+  }
+
   private selectNextStory(): void {
     this.blurActiveElement();
     if (this.isAtLastItem()) {
@@ -161,16 +182,15 @@ export class KeyboardNavigationService {
   }
 
   private openSelectedStory(): void {
-    const selectedIndex = this.selectedIndex();
-    if (selectedIndex !== null) {
-      const element = document.querySelector(
-        `[data-story-index="${selectedIndex}"] .story-link-trigger`,
-      ) as HTMLAnchorElement;
-      if (element && element.href && element.href.includes('/item/')) {
-        this.openSelectedComments();
-      } else {
-        element?.click();
-      }
+    const anchor = this.getSelectedStoryLinkAnchor();
+    if (!anchor) {
+      return;
+    }
+
+    if (anchor.href && anchor.href.includes('/item/')) {
+      this.openSelectedComments();
+    } else {
+      anchor.click();
     }
   }
 
@@ -185,21 +205,7 @@ export class KeyboardNavigationService {
   }
 
   private openSelectedStoryFullPage(): void {
-    const selectedIndex = this.selectedIndex();
-    if (selectedIndex === null) return;
-
-    const linkTrigger = document.querySelector(
-      `[data-story-index="${selectedIndex}"] .story-link-trigger`,
-    );
-    if (!linkTrigger) return;
-
-    // .story-link-trigger may be on an <app-story-link> host (display: contents)
-    // or a direct <a> tag — resolve to the actual anchor element
-    const anchor =
-      linkTrigger.tagName === 'A'
-        ? (linkTrigger as HTMLAnchorElement)
-        : (linkTrigger.querySelector('a') as HTMLAnchorElement);
-
+    const anchor = this.getSelectedStoryLinkAnchor();
     if (anchor?.href) {
       window.open(anchor.href, '_blank', 'noopener');
     }

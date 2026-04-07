@@ -1,4 +1,28 @@
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures/pages.fixture';
+
+async function selectStoryWithNestedLink(
+  storiesPage: { storyItems: Locator; getStoryCount(): Promise<number> },
+  page: Page,
+): Promise<{ index: number; nestedLink: Locator }> {
+  const storyCount = await storiesPage.getStoryCount();
+
+  for (let index = 0; index < storyCount; index++) {
+    const storyItem = storiesPage.storyItems.nth(index);
+    const nestedLink = storyItem.locator('.story-link-trigger a').first();
+
+    if ((await nestedLink.count()) > 0) {
+      for (let i = 0; i <= index; i++) {
+        await page.keyboard.press('j');
+        await page.waitForTimeout(150);
+      }
+
+      return { index, nestedLink };
+    }
+  }
+
+  throw new Error('No story with a nested story link found');
+}
 
 test.describe('Keyboard Shortcuts - Story List Context', () => {
   test('should navigate to next tab with l key', async ({ storiesPage, page }, testInfo) => {
@@ -129,26 +153,39 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     await storiesPage.navigateToTop();
     await page.waitForTimeout(500);
 
-    // Select first story
-    await page.keyboard.press('j');
-    await page.waitForTimeout(300);
+    const initialUrl = page.url();
+    await selectStoryWithNestedLink(storiesPage, page);
 
-    // Shift+O opens story full page (new tab)
+    const pagePromise = page.context().waitForEvent('page', { timeout: 5000 });
+    await page.keyboard.press('Shift+O');
+    const newPage = await pagePromise;
+
+    expect(newPage.url()).not.toBe(initialUrl);
+    await newPage.close();
+  });
+
+  test('should open story with o key', async ({ storiesPage, page }, testInfo) => {
+    test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
+
+    await storiesPage.navigateToTop();
+    await page.waitForTimeout(500);
+
+    const initialUrl = page.url();
+    await selectStoryWithNestedLink(storiesPage, page);
+
     const pagePromise = page
       .context()
       .waitForEvent('page', { timeout: 5000 })
       .catch(() => null);
-    await page.keyboard.press('Shift+O');
+    await page.keyboard.press('o');
     const newPage = await pagePromise;
 
     if (newPage) {
-      expect(newPage.url()).toBeTruthy();
+      expect(newPage.url()).not.toBe(initialUrl);
       await newPage.close();
     } else {
-      // If no new tab opened, verify the URL changed (text post navigates in same tab)
       await page.waitForTimeout(500);
-      const hasNavigated = !page.url().includes('/top');
-      expect(hasNavigated || true).toBe(true);
+      expect(page.url()).not.toBe(initialUrl);
     }
   });
 
