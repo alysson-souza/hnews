@@ -141,6 +141,33 @@ describe('PwaUpdateService', () => {
         expect(versionInfo).toBeNull();
       });
     });
+
+    describe('with hash-only updates', () => {
+      const mockVersionEvent: VersionEvent = {
+        type: 'VERSION_READY',
+        currentVersion: { hash: 'abc123' },
+        latestVersion: { hash: 'def456' },
+      };
+
+      beforeEach(() => {
+        versionUpdatesSubject.next(mockVersionEvent);
+      });
+
+      it('should set updateAvailable to true when appData is missing', async () => {
+        vi.advanceTimersByTime(0);
+        await Promise.resolve();
+        expect(service.updateAvailable()).toBe(true);
+      });
+
+      it('should store version information for hash-only updates', async () => {
+        vi.advanceTimersByTime(0);
+        await Promise.resolve();
+        expect(service.updateVersionInfo()).toEqual({
+          current: 'abc123',
+          available: 'def456',
+        });
+      });
+    });
   });
 
   describe('applyUpdate()', () => {
@@ -404,15 +431,15 @@ describe('PwaUpdateService', () => {
     });
 
     describe('missing appData handling', () => {
-      it('should handle missing appData gracefully', async () => {
+      it('should treat missing appData as a meaningful hash change', async () => {
         const current = { hash: 'abc123' };
         const latest = { hash: 'def456' };
 
         const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
-        expect(result).toBe(false); // Should be false since all values will be 'unknown'
+        expect(result).toBe(true);
       });
 
-      it('should handle partial appData gracefully', async () => {
+      it('should treat partial appData as a meaningful hash change', async () => {
         const current = {
           hash: 'abc123',
           appData: { version: '1.0.0' }, // Missing commit and buildTime
@@ -423,12 +450,23 @@ describe('PwaUpdateService', () => {
         };
 
         const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
-        expect(result).toBe(false);
+        expect(result).toBe(true);
+      });
+
+      it('should treat mixed metadata availability as a meaningful hash change', async () => {
+        const current = { hash: 'abc123' };
+        const latest = {
+          hash: 'def456',
+          appData: { version: '1.0.1', commit: 'commit2', buildTime: '2024-01-02' },
+        };
+
+        const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
+        expect(result).toBe(true);
       });
     });
 
     describe('edge cases', () => {
-      it('should handle null/undefined appData values', async () => {
+      it('should treat null/undefined appData values as a meaningful hash change', async () => {
         const current = {
           hash: 'abc123',
           appData: { version: null, commit: undefined, buildTime: '' },
@@ -439,7 +477,7 @@ describe('PwaUpdateService', () => {
         };
 
         const result = await serviceWithAccess.isMeaningfulUpdate(current, latest);
-        expect(result).toBe(false);
+        expect(result).toBe(true);
       });
     });
   });

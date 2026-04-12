@@ -81,12 +81,14 @@ jobs:
 
           echo "Building GitHub Pages bundle with base-href: $GH_BASE_HREF"
           npx ng build --configuration production --base-href "$GH_BASE_HREF" --output-path dist/hnews-gh
+          node ./scripts/patch-ngsw.mjs
 
       - name: Build production bundle for Cloudflare Pages
         if: env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: |
           echo "Building Cloudflare Pages bundle with base-href: /"
           npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
+          node ./scripts/patch-ngsw.mjs
           cp -r functions dist/hnews-cf/
           rm -rf dist/hnews-cf/functions/__tests__
 

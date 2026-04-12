@@ -5,6 +5,12 @@ import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { concat, interval } from 'rxjs';
 import { first } from 'rxjs/operators';
 
+interface VersionMetadata {
+  version: string | null;
+  commit: string | null;
+  buildTime: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PwaUpdateService {
   private readonly appRef = inject(ApplicationRef);
@@ -99,25 +105,21 @@ export class PwaUpdateService {
     }
 
     // Extract version information from appData
-    const currentData = currentVersion.appData || {};
-    const latestData = latestVersion.appData || {};
-
-    const currentVersionInfo = {
-      version: (currentData['version'] as string) || 'unknown',
-      commit: (currentData['commit'] as string) || 'unknown',
-      buildTime: (currentData['buildTime'] as string) || 'unknown',
-    };
-
-    const latestVersionInfo = {
-      version: (latestData['version'] as string) || 'unknown',
-      commit: (latestData['commit'] as string) || 'unknown',
-      buildTime: (latestData['buildTime'] as string) || 'unknown',
-    };
+    const currentVersionInfo = this.extractVersionMetadata(currentVersion.appData);
+    const latestVersionInfo = this.extractVersionMetadata(latestVersion.appData);
 
     console.log('PWA Update: Version comparison', {
       current: currentVersionInfo,
       latest: latestVersionInfo,
     });
+
+    if (
+      !this.hasComparableVersionMetadata(currentVersionInfo) ||
+      !this.hasComparableVersionMetadata(latestVersionInfo)
+    ) {
+      console.log('PWA Update: Missing appData, treating hash change as meaningful');
+      return true;
+    }
 
     // Check if version, commit, or build time has changed
     const versionChanged = currentVersionInfo.version !== latestVersionInfo.version;
@@ -135,6 +137,22 @@ export class PwaUpdateService {
 
     // In production, consider it meaningful if version, commit, or build time changed
     return versionChanged || commitChanged || buildTimeChanged;
+  }
+
+  private extractVersionMetadata(appData?: Record<string, unknown>): VersionMetadata {
+    const version = typeof appData?.['version'] === 'string' ? appData['version'] : null;
+    const commit = typeof appData?.['commit'] === 'string' ? appData['commit'] : null;
+    const buildTime = typeof appData?.['buildTime'] === 'string' ? appData['buildTime'] : null;
+
+    return {
+      version: version || null,
+      commit: commit || null,
+      buildTime: buildTime || null,
+    };
+  }
+
+  private hasComparableVersionMetadata(metadata: VersionMetadata): boolean {
+    return Boolean(metadata.version && metadata.commit && metadata.buildTime);
   }
 
   /**
