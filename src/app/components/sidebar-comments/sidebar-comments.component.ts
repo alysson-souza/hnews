@@ -48,9 +48,8 @@ import {
 
     <!-- Sidebar Panel: always in DOM, slide driven by CSS -->
     <div
-      class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30 will-change-transform translate-x-full"
+      class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
       [class.translate-x-full]="!sidebarService.isOpen()"
-      [class.translate-x-0]="sidebarService.isOpen()"
       [attr.inert]="sidebarService.isOpen() ? null : true"
       [attr.aria-hidden]="!sidebarService.isOpen()"
     >

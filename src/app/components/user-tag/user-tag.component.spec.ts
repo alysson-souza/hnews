@@ -17,6 +17,12 @@ describe('UserTagComponent', () => {
   let fixture: ComponentFixture<UserTagComponent>;
   let tagsService: MockedObject<UserTagsService>;
 
+  afterEach(() => {
+    document.body
+      .querySelectorAll('.popover-backdrop, .tag-popover')
+      .forEach((element) => element.remove());
+  });
+
   beforeEach(async () => {
     const tagsServiceSpy = {
       getTag: vi.fn(),
@@ -141,6 +147,40 @@ describe('UserTagComponent', () => {
       component.startEdit(event);
 
       expect(component.editValue).toBe('');
+    });
+
+    it('should anchor the popover to the trigger element', () => {
+      const triggerRect = {
+        left: 120,
+        top: 80,
+        bottom: 100,
+      } as DOMRect;
+      const childRect = {
+        left: 12,
+        top: 8,
+        bottom: 16,
+      } as DOMRect;
+      const event = {
+        preventDefault: vi.fn(),
+        stopPropagation: vi.fn(),
+        currentTarget: { getBoundingClientRect: () => triggerRect },
+        target: { getBoundingClientRect: () => childRect },
+      } as unknown as Event;
+
+      component.startEdit(event);
+
+      expect(component.popoverLeft()).toBe(120);
+      expect(component.popoverTop()).toBe(108);
+    });
+
+    it('should move the popover overlay to document.body when editing opens', async () => {
+      component.editing.set(true);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(document.body.querySelector('.popover-backdrop')).not.toBeNull();
+      expect(document.body.querySelector('.tag-popover')).not.toBeNull();
     });
   });
 
@@ -469,6 +509,30 @@ describe('UserTagComponent', () => {
       expect(popover).toBeTruthy();
       expect(input).toBeTruthy();
       expect(saveBtn).toBeTruthy();
+    });
+
+    it('should keep the add button visible while editing a new tag', () => {
+      component.tag.set(undefined);
+      component.editing.set(true);
+      fixture.detectChanges();
+
+      const addBtn = fixture.debugElement.query(By.css('.add-btn'));
+      expect(addBtn).toBeTruthy();
+    });
+
+    it('should keep the tag chip visible while editing an existing tag', () => {
+      component.tag.set({
+        username: 'testuser',
+        tag: 'friend',
+        color: '#00ff00',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      component.editing.set(true);
+      fixture.detectChanges();
+
+      const tagChip = fixture.debugElement.query(By.css('.tag-chip'));
+      expect(tagChip).toBeTruthy();
     });
 
     it('should show remove button in popover when tag exists', () => {

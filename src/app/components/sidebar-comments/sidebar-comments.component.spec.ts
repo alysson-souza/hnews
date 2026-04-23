@@ -67,6 +67,7 @@ describe('SidebarCommentsComponent', () => {
     mockHnService = {
       getItem: vi.fn(),
       getStoryTopLevelComments: vi.fn(),
+      getItemsPage: vi.fn(),
     } as unknown as MockedObject<HackernewsService>;
     mockSidebarService = {
       closeSidebar: vi.fn(),
@@ -105,6 +106,7 @@ describe('SidebarCommentsComponent', () => {
 
     mockHnService.getItem.mockReturnValue(of(mockItem));
     mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
+    mockHnService.getItemsPage.mockReturnValue(of([]));
 
     fixture = TestBed.createComponent(SidebarCommentsComponent);
     component = fixture.componentInstance;
@@ -112,6 +114,24 @@ describe('SidebarCommentsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should avoid transform classes on the open panel', () => {
+    fixture.detectChanges();
+
+    const panel: HTMLElement | null = fixture.nativeElement.querySelector('.sidebar-panel');
+    expect(panel).not.toBeNull();
+    expect(panel?.classList.contains('translate-x-full')).toBe(false);
+  });
+
+  it('should keep the panel translated offscreen while closed', () => {
+    (mockSidebarService.isOpen as Mock).mockReturnValue(false);
+
+    fixture.detectChanges();
+
+    const panel: HTMLElement | null = fixture.nativeElement.querySelector('.sidebar-panel');
+    expect(panel).not.toBeNull();
+    expect(panel?.classList.contains('translate-x-full')).toBe(true);
   });
 
   describe('Sorting Logic', () => {

@@ -11,6 +11,7 @@ import {
   input,
   HostListener,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
 import { RouterLink } from '@angular/router';
 import { UserTagsService, UserTag } from '@services/user-tags.service';
@@ -35,15 +36,16 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
       </a>
 
       <!-- Tag display -->
-      @if (tag() && !editing()) {
+      @if (tag()) {
         <button
+          #editTrigger
           type="button"
           class="tag-chip"
           [style.background-color]="tag()!.color"
           [title]="tag()!.notes || ''"
-          (click)="startEdit($event)"
-          (keyup.enter)="startEdit($event)"
-          (keyup.space)="startEdit($event)"
+          (click)="startEdit($event, editTrigger)"
+          (keyup.enter)="startEdit($event, editTrigger)"
+          (keyup.space)="startEdit($event, editTrigger)"
           role="button"
           tabindex="0"
           [attr.aria-label]="'Tag: ' + tag()!.tag + (tag()!.notes ? ' — ' + tag()!.notes : '')"
@@ -53,15 +55,16 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
       }
 
       <!-- Add/Edit tag button -->
-      @if (!tag() && !editing()) {
+      @if (!tag()) {
         <button
-          (click)="startEdit($event)"
+          #addTrigger
+          (click)="startEdit($event, addTrigger)"
           class="add-btn"
           role="button"
           tabindex="0"
           [attr.aria-label]="'Add Tag For ' + username()"
-          (keydown.enter)="startEdit($event)"
-          (keydown.space)="startEdit($event)"
+          (keydown.enter)="startEdit($event, addTrigger)"
+          (keydown.space)="startEdit($event, addTrigger)"
         >
           <ng-icon name="solarTagLinear" class="icon" />
         </button>
@@ -70,13 +73,19 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
       <!-- Popover editor -->
       @if (editing()) {
         <div
+          #popoverBackdrop
           class="popover-backdrop"
           (click)="cancelEdit()"
           role="button"
           tabindex="-1"
           aria-label="Close editor"
         ></div>
-        <div class="tag-popover" [style.top.px]="popoverTop()" [style.left.px]="popoverLeft()">
+        <div
+          #tagPopover
+          class="tag-popover"
+          [style.top.px]="popoverTop()"
+          [style.left.px]="popoverLeft()"
+        >
           <input
             type="text"
             [value]="editValue"
@@ -167,11 +176,11 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
       }
 
       .popover-backdrop {
-        @apply fixed inset-0 z-40;
+        @apply fixed inset-0 z-[60] bg-slate-950/24 dark:bg-black/40;
       }
 
       .tag-popover {
-        @apply fixed z-50 p-3 space-y-2 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700;
+        @apply fixed z-[70] p-3 space-y-2 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700;
         @apply bg-white dark:bg-gray-800;
         @apply min-w-[calc(100vw-2rem)] sm:min-w-0 sm:w-64;
       }
@@ -207,6 +216,7 @@ import { solarTagLinear } from '@ng-icons/solar-icons/linear';
 })
 export class UserTagComponent {
   readonly username = input.required<string>();
+  private readonly document = inject(DOCUMENT);
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
@@ -231,6 +241,16 @@ export class UserTagComponent {
   popoverLeft = signal(0);
 
   private readonly tagInput = viewChild<ElementRef<HTMLInputElement>>('tagInput');
+  private readonly popoverBackdrop = viewChild<ElementRef<HTMLElement>>('popoverBackdrop');
+  private readonly popoverElement = viewChild<ElementRef<HTMLElement>>('tagPopover');
+  private triggerRect: Pick<DOMRect, 'left' | 'top' | 'bottom'> | null = null;
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (this.editing()) {
+      this.updatePopoverPosition();
+    }
+  }
 
   constructor() {
     // Refresh the tag whenever the input username changes
@@ -239,27 +259,38 @@ export class UserTagComponent {
       this.tag.set(this.tagsService.getTag(currentUsername));
     });
 
-    // Focus input when editing becomes true
-    effect(() => {
-      if (this.editing()) {
-        // Use queueMicrotask for more reliable timing after view update
-        queueMicrotask(() => {
-          const input = this.tagInput()?.nativeElement;
-          if (input) {
-            input.focus();
-            input.select();
-          }
-        });
+    effect((onCleanup) => {
+      if (!this.editing()) {
+        return;
       }
+
+      // Wait for the template to render, then move the overlay to the document root
+      // so it is not trapped inside transformed or filtered containers like the sidebar.
+      queueMicrotask(() => {
+        this.moveOverlayToBody();
+        this.updatePopoverPosition();
+
+        const input = this.tagInput()?.nativeElement;
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+
+      onCleanup(() => {
+        this.removeOverlayFromBody(this.popoverBackdrop()?.nativeElement);
+        this.removeOverlayFromBody(this.popoverElement()?.nativeElement);
+      });
     });
   }
 
-  startEdit(event: Event): void {
+  startEdit(event: Event, triggerElement?: HTMLElement): void {
     event.preventDefault();
     event.stopPropagation();
     this.editValue = this.tag()?.tag || '';
     this.editNotes = this.tag()?.notes || '';
-    this.computePopoverPosition(event);
+    this.triggerRect = this.getTriggerRect(triggerElement ?? this.getTriggerElement(event));
+    this.updatePopoverPosition();
     this.editing.set(true);
   }
 
@@ -294,28 +325,78 @@ export class UserTagComponent {
     this.editing.set(false);
     this.editValue = '';
     this.editNotes = '';
+    this.triggerRect = null;
   }
 
-  private computePopoverPosition(event: Event): void {
-    const target = event.target as HTMLElement;
-    if (!target?.getBoundingClientRect) return;
+  private getTriggerElement(event: Event): HTMLElement | null {
+    return (event.currentTarget || event.target) as HTMLElement | null;
+  }
 
-    const rect = target.getBoundingClientRect();
-    const popoverWidth = 256; // sm:w-64 = 16rem = 256px
-    const popoverHeight = 150; // approximate
+  private getTriggerRect(
+    element: HTMLElement | null,
+  ): Pick<DOMRect, 'left' | 'top' | 'bottom'> | null {
+    if (!element?.getBoundingClientRect) {
+      return null;
+    }
 
-    let top = rect.bottom + 4;
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      top: rect.top,
+      bottom: rect.bottom,
+    };
+  }
+
+  private moveOverlayToBody(): void {
+    const body = this.document.body;
+    const backdrop = this.popoverBackdrop()?.nativeElement;
+    const popover = this.popoverElement()?.nativeElement;
+
+    if (!body || !backdrop || !popover) {
+      return;
+    }
+
+    if (backdrop.parentElement !== body) {
+      body.appendChild(backdrop);
+    }
+    if (popover.parentElement !== body) {
+      body.appendChild(popover);
+    }
+  }
+
+  private removeOverlayFromBody(element: HTMLElement | undefined): void {
+    if (element?.parentElement === this.document.body) {
+      element.remove();
+    }
+  }
+
+  private updatePopoverPosition(): void {
+    const rect = this.triggerRect;
+    if (!rect) {
+      return;
+    }
+
+    const popoverRect = this.popoverElement()?.nativeElement.getBoundingClientRect();
+    const popoverWidth = popoverRect?.width || 256;
+    const popoverHeight = popoverRect?.height || 150;
+    const viewportPadding = 16;
+    const offset = 8;
+
+    let top = rect.bottom + offset;
     let left = rect.left;
 
     // Viewport-aware: keep popover within visible area
-    if (left + popoverWidth > window.innerWidth) {
-      left = window.innerWidth - popoverWidth - 16;
+    if (left + popoverWidth > window.innerWidth - viewportPadding) {
+      left = window.innerWidth - popoverWidth - viewportPadding;
     }
-    if (left < 16) {
-      left = 16;
+    if (left < viewportPadding) {
+      left = viewportPadding;
     }
-    if (top + popoverHeight > window.innerHeight) {
-      top = rect.top - popoverHeight - 4;
+    if (top + popoverHeight > window.innerHeight - viewportPadding) {
+      top = rect.top - popoverHeight - offset;
+    }
+    if (top < viewportPadding) {
+      top = viewportPadding;
     }
 
     this.popoverTop.set(top);
