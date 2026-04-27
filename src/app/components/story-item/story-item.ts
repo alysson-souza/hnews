@@ -149,7 +149,7 @@ export class StoryItem {
   markAsVisited(): void {
     const story = this.story();
     if (story) {
-      this.visitedService.markAsVisited(story.id, story.descendants);
+      this.visitedService.markStoryVisited(story.id);
     }
   }
 
@@ -214,9 +214,6 @@ export class StoryItem {
         return;
       }
     }
-
-    // Only mark as visited for regular clicks (non-modifier)
-    this.markAsVisited();
 
     const shouldUseSidebar = this.deviceService.isDesktop() && this.openCommentsInSidebar();
 

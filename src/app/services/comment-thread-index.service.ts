@@ -99,6 +99,14 @@ export class CommentThreadIndexService {
     return !!comment && comment.time * 1000 > state.previousVisitedAt;
   }
 
+  hasComment(context: CommentThreadContext, commentId: number): boolean {
+    return this.states()[context].comments.has(commentId);
+  }
+
+  getPreviousVisitedAt(context: CommentThreadContext): number | null {
+    return this.states()[context].previousVisitedAt;
+  }
+
   isOPReply(context: CommentThreadContext, commentId: number): boolean {
     const state = this.states()[context];
     const comment = state.comments.get(commentId);

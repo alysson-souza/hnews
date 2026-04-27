@@ -147,7 +147,11 @@ export class ItemKeyboardNavigationService
       this.selectFirstVisibleOnNextThreadLoad = true;
     }
     this.saveCurrentState();
-    this.router.navigate(['/item', commentId]);
+    this.router.navigate(['/item', commentId], {
+      state: {
+        __hnewsPreviousCommentsVisitedAt: this.commentIndex.getPreviousVisitedAt('item'),
+      },
+    });
   }
 
   consumeSelectFirstVisibleOnNextThreadLoad(): boolean {

@@ -11,6 +11,7 @@ import { OPBadgeComponent } from '../shared/op-badge/op-badge.component';
 import { SidebarThreadNavigationService } from '@services/sidebar-thread-navigation.service';
 import { DeviceService } from '@services/device.service';
 import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
+import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 
 @Component({
   selector: 'app-comment-header',
@@ -132,6 +133,7 @@ export class CommentHeaderComponent {
   private router = inject(Router);
   private deviceService = inject(DeviceService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
+  private commentIndex = inject(CommentThreadIndexService);
 
   readonly by = input<string>();
   readonly timestamp = input.required<number>();
@@ -177,7 +179,11 @@ export class CommentHeaderComponent {
       }
       this.itemKeyboardNav.navigateToThread(commentId);
     } else if (this.deviceService.isMobile()) {
-      this.router.navigate(['/item', commentId]);
+      this.router.navigate(['/item', commentId], {
+        state: {
+          __hnewsPreviousCommentsVisitedAt: this.commentIndex.getPreviousVisitedAt('sidebar'),
+        },
+      });
     } else {
       this.sidebarThreadNavigation.pushThread(commentId);
     }

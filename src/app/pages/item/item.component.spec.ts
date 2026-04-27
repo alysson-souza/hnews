@@ -98,7 +98,8 @@ describe('ItemComponent', () => {
       getStoryWithAllComments: vi.fn(),
     } as unknown as MockedObject<HackernewsService>;
     mockVisitedService = {
-      markAsVisited: vi.fn(),
+      markCommentsVisited: vi.fn(),
+      getCommentsVisitedData: vi.fn().mockReturnValue(undefined),
     } as unknown as MockedObject<VisitedService>;
     mockScrollService = {
       scrollToElement: vi.fn(),
@@ -382,12 +383,28 @@ describe('ItemComponent', () => {
       expect(component.item()).toEqual(mockItem);
     });
 
-    it('should mark item as visited after bulk load', () => {
+    it('should mark comments as visited after bulk load', () => {
       component.ngOnInit();
 
-      expect(mockVisitedService.markAsVisited).toHaveBeenCalledWith(
+      expect(mockVisitedService.markCommentsVisited).toHaveBeenCalledWith(
         mockItem.id,
         mockItem.descendants,
+      );
+    });
+
+    it('should capture previous comments visit before marking the thread visited', () => {
+      mockVisitedService.getCommentsVisitedData.mockReturnValue({
+        storyId: mockItem.id,
+        visitedAt: 1_600_000_000_000,
+        commentCount: 1,
+      });
+
+      component.ngOnInit();
+
+      expect(component.previousVisitedAt()).toBe(1_600_000_000_000);
+      expect(mockVisitedService.getCommentsVisitedData).toHaveBeenCalledWith(mockItem.id);
+      expect(mockVisitedService.getCommentsVisitedData.mock.invocationCallOrder[0]).toBeLessThan(
+        mockVisitedService.markCommentsVisited.mock.invocationCallOrder[0],
       );
     });
 

@@ -516,6 +516,17 @@ describe('CommentThread', () => {
       expect(button!.disabled).toBe(true);
       expect(button!.textContent?.includes('Loading...')).toBe(true);
     });
+
+    it('should apply unread styling when the comment is newer than the previous visit', () => {
+      fixture.componentRef.setInput('previousVisitedAt', (mockComment.time - 1) * 1000);
+      component.comment.set(mockComment);
+      component.loading.set(false);
+
+      fixture.detectChanges();
+
+      const card = fixture.debugElement.query(By.css('.comment-card'));
+      expect(card.nativeElement.classList.contains('unread')).toBe(true);
+    });
   });
 
   describe('getIndentClass', () => {

@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, signal, effect, computed, ElementRef, viewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  effect,
+  computed,
+  ElementRef,
+  viewChild,
+  untracked,
+} from '@angular/core';
 
 import { SidebarService } from '@services/sidebar.service';
 import { SidebarThreadNavigationService } from '@services/sidebar-thread-navigation.service';
@@ -363,7 +372,7 @@ export class SidebarCommentsComponent {
       const id = this.sidebarService.currentItemId();
       const current = this.item();
       if (id && (!current || current.id !== id)) {
-        this.loadItem(id);
+        untracked(() => this.loadItem(id));
       }
     });
 
@@ -408,6 +417,10 @@ export class SidebarCommentsComponent {
   }
 
   private loadItem(id: number): void {
+    const inheritedPreviousVisitedAt = this.commentIndex.hasComment('sidebar', id)
+      ? this.commentIndex.getPreviousVisitedAt('sidebar')
+      : null;
+
     this.loading.set(true);
     this.error.set(null);
     this.visibleTopLevelCount.set(this.commentsPageSize);
@@ -425,11 +438,12 @@ export class SidebarCommentsComponent {
           this.item.set(item);
           this.applyCommentDisplayStrategy(item);
           const previousVisitedAt =
-            this.visitedService.getVisitedData?.(item.id)?.visitedAt ?? null;
+            this.visitedService.getCommentsVisitedData(item.id)?.visitedAt ??
+            inheritedPreviousVisitedAt ??
+            null;
           this.previousVisitedAt.set(previousVisitedAt);
           this.commentIndex.configureContext('sidebar', item, { previousVisitedAt });
-          // Mark as visited
-          this.visitedService.markAsVisited(item.id, item.descendants);
+          this.visitedService.markCommentsVisited(item.id, item.descendants ?? item.kids?.length);
         } else {
           this.error.set('Item not found');
         }

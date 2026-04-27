@@ -58,7 +58,7 @@ describe('StoryItem comments link behaviour', () => {
 
   beforeEach(() => {
     const visitedServiceMock = {
-      markAsVisited: vi.fn(),
+      markStoryVisited: vi.fn(),
       hasNewComments: vi.fn(),
       getNewCommentCount: vi.fn(),
       isVisited: vi.fn(),
@@ -103,7 +103,7 @@ describe('StoryItem comments link behaviour', () => {
 
     deviceService.setDesktop(true);
 
-    visitedService.markAsVisited.mockClear();
+    visitedService.markStoryVisited.mockClear();
     toggleSidebarSpy.mockClear();
     userSettings.setSetting('openCommentsInSidebar', true);
     (router.navigateByUrl as Mock).mockClear();
@@ -116,10 +116,10 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(toggleSidebarSpy).toHaveBeenCalledWith(story.id);
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
-  it('marks story visited without sidebar on mobile click', () => {
+  it('does not mark story visited before mobile comments navigation', () => {
     deviceService.setDesktop(false);
     const event = createMouseEvent('click', { button: 0 });
 
@@ -127,7 +127,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('allows shift+click to open in new tab without any side effects', () => {
@@ -137,7 +137,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('allows cmd/meta+click to open in new tab without any side effects', () => {
@@ -147,7 +147,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('allows ctrl+click to open in new tab without any side effects', () => {
@@ -157,7 +157,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('allows middle click to open in new tab without any side effects', () => {
@@ -167,7 +167,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('allows auxclick events to open in new tab without any side effects', () => {
@@ -177,7 +177,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(toggleSidebarSpy).not.toHaveBeenCalled();
-    expect(visitedService.markAsVisited).not.toHaveBeenCalled();
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('supports keyboard activation on desktop by opening sidebar', () => {
@@ -187,7 +187,7 @@ describe('StoryItem comments link behaviour', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(toggleSidebarSpy).toHaveBeenCalledWith(story.id);
-    expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+    expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
   it('should not navigate when sidebar preference is enabled and link is clicked', () => {
@@ -221,7 +221,7 @@ describe('StoryItem comments link behaviour', () => {
 
       expect(event.defaultPrevented).toBe(false);
       expect(toggleSidebarSpy).not.toHaveBeenCalled();
-      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+      expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
     });
 
     it('allows keyboard activation to navigate in place', () => {
@@ -231,7 +231,7 @@ describe('StoryItem comments link behaviour', () => {
 
       expect(event.defaultPrevented).toBe(false);
       expect(toggleSidebarSpy).not.toHaveBeenCalled();
-      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+      expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
     });
 
     it('does not toggle sidebar when clicking comments link via template', () => {
@@ -247,7 +247,7 @@ describe('StoryItem comments link behaviour', () => {
       vi.advanceTimersByTime(0);
 
       expect(toggleSidebarSpy).not.toHaveBeenCalled();
-      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+      expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
       expect(sidebarService.isOpen()).toBe(false);
       expect(router.navigateByUrl).toHaveBeenCalled();
       vi.useRealTimers();
@@ -547,7 +547,7 @@ describe('StoryItem comments link behaviour', () => {
 
       component.markAsVisited();
 
-      expect(visitedService.markAsVisited).toHaveBeenCalledWith(story.id, story.descendants);
+      expect(visitedService.markStoryVisited).toHaveBeenCalledWith(story.id);
     });
 
     it('should check if visited', () => {

@@ -86,7 +86,8 @@ describe('SidebarCommentsComponent', () => {
     (mockSidebarService.animationDirection as Mock).mockReturnValue('right');
 
     mockVisitedService = {
-      markAsVisited: vi.fn(),
+      markCommentsVisited: vi.fn(),
+      getCommentsVisitedData: vi.fn().mockReturnValue(undefined),
     } as unknown as MockedObject<VisitedService>;
     mockCommentSortService = {
       setSortOrder: vi.fn(),
@@ -187,6 +188,22 @@ describe('SidebarCommentsComponent', () => {
       expect(mockCommentSortService.sortOrder()).toBe('popular');
       expect(component.allComments()).toEqual([]);
       expect(component.commentsLoading()).toBe(false);
+    });
+
+    it('should capture previous comments visit before marking the thread visited', () => {
+      mockVisitedService.getCommentsVisitedData.mockReturnValue({
+        storyId: mockItem.id,
+        visitedAt: 1_600_000_000_000,
+        commentCount: 1,
+      });
+
+      component['loadItem'](mockItem.id);
+
+      expect(component.previousVisitedAt()).toBe(1_600_000_000_000);
+      expect(mockVisitedService.getCommentsVisitedData).toHaveBeenCalledWith(mockItem.id);
+      expect(mockVisitedService.getCommentsVisitedData.mock.invocationCallOrder[0]).toBeLessThan(
+        mockVisitedService.markCommentsVisited.mock.invocationCallOrder[0],
+      );
     });
 
     it('should load comments only once for non-default sorts', () => {

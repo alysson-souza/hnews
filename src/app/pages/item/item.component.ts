@@ -150,6 +150,8 @@ export class ItemComponent implements OnInit {
       return;
     }
 
+    const inheritedPreviousVisitedAt = this.getInheritedPreviousVisitedAt(itemId);
+
     this.loading.set(true);
     this.error.set(null);
     this.visibleTopLevelCount.set(this.commentsPageSize);
@@ -166,7 +168,7 @@ export class ItemComponent implements OnInit {
 
     // Use Algolia bulk loading for stories with comments
     // This fetches the story AND all comments in a single request
-    this.loadWithAlgoliaBulk(itemId);
+    this.loadWithAlgoliaBulk(itemId, inheritedPreviousVisitedAt);
   }
 
   /**
@@ -176,7 +178,7 @@ export class ItemComponent implements OnInit {
    * The bulk load pre-populates the cache, so subsequent getItem() calls
    * from CommentThread components are instant cache hits.
    */
-  private loadWithAlgoliaBulk(itemId: number) {
+  private loadWithAlgoliaBulk(itemId: number, inheritedPreviousVisitedAt: number | null) {
     this.bulkLoadingComments.set(true);
 
     this.hnService.getStoryWithAllComments(itemId).subscribe({
@@ -191,28 +193,32 @@ export class ItemComponent implements OnInit {
           const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
           this.allComments.set(topLevelComments);
 
-          const previousVisitedAt =
-            this.visitedService.getVisitedData?.(result.story.id)?.visitedAt ?? null;
+          const previousVisitedAt = this.getPreviousCommentsVisitedAt(
+            result.story.id,
+            inheritedPreviousVisitedAt,
+          );
           this.previousVisitedAt.set(previousVisitedAt);
           this.commentIndex.configureContext('item', result.story, {
             comments: Array.from(result.commentsMap.values()),
             previousVisitedAt,
           });
 
-          // Mark as visited
-          this.visitedService.markAsVisited(result.story.id, result.story.descendants);
+          this.visitedService.markCommentsVisited(
+            result.story.id,
+            this.getCommentCountForVisit(result.story),
+          );
 
           this.handleLoadSuccess();
         } else {
           // Algolia failed, fallback to Firebase API
-          this.loadWithFirebaseApi(itemId);
+          this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt);
         }
         this.bulkLoadingComments.set(false);
       },
       error: () => {
         // Algolia failed, fallback to Firebase API
         this.bulkLoadingComments.set(false);
-        this.loadWithFirebaseApi(itemId);
+        this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt);
       },
     });
   }
@@ -221,17 +227,19 @@ export class ItemComponent implements OnInit {
    * Fallback: Load item using Firebase API (original N+1 approach).
    * Used when Algolia bulk load fails.
    */
-  private loadWithFirebaseApi(itemId: number) {
+  private loadWithFirebaseApi(itemId: number, inheritedPreviousVisitedAt: number | null) {
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
         if (item) {
           this.item.set(item);
           this.applyCommentDisplayStrategy(item);
-          const previousVisitedAt =
-            this.visitedService.getVisitedData?.(item.id)?.visitedAt ?? null;
+          const previousVisitedAt = this.getPreviousCommentsVisitedAt(
+            item.id,
+            inheritedPreviousVisitedAt,
+          );
           this.previousVisitedAt.set(previousVisitedAt);
           this.commentIndex.configureContext('item', item, { previousVisitedAt });
-          this.visitedService.markAsVisited(item.id, item.descendants);
+          this.visitedService.markCommentsVisited(item.id, this.getCommentCountForVisit(item));
           this.handleLoadSuccess();
         } else {
           this.error.set('Item not found');
@@ -378,5 +386,33 @@ export class ItemComponent implements OnInit {
 
     const value = window.history.state?.__hnewsThreadReturnScrollY;
     return typeof value === 'number' ? value : null;
+  }
+
+  private getInheritedPreviousVisitedAt(itemId: number): number | null {
+    if (this.commentIndex.hasComment('item', itemId)) {
+      return this.commentIndex.getPreviousVisitedAt('item');
+    }
+
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const value = window.history.state?.__hnewsPreviousCommentsVisitedAt;
+    return typeof value === 'number' ? value : null;
+  }
+
+  private getPreviousCommentsVisitedAt(
+    itemId: number,
+    inheritedPreviousVisitedAt: number | null,
+  ): number | null {
+    return (
+      this.visitedService.getCommentsVisitedData(itemId)?.visitedAt ??
+      inheritedPreviousVisitedAt ??
+      null
+    );
+  }
+
+  private getCommentCountForVisit(item: HNItem): number | undefined {
+    return item.descendants ?? item.kids?.length;
   }
 }
