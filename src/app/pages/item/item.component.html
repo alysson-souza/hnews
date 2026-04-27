@@ -34,18 +34,20 @@
     <!-- Comments Section -->
     <app-card class="block comments-card" [radius]="'lg'">
       <div class="comments-heading">
-        <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
+        <div class="comments-title-row">
+          <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
+          <app-comment-sort-dropdown
+            [sortOrder]="sortOrder()"
+            [loading]="commentsLoading()"
+            (sortChange)="onSortChange($event)"
+          />
+        </div>
         <div class="comments-controls">
           <app-comment-thread-toolbar
             (nextUnread)="jumpToNextUnread()"
             (nextOP)="jumpToNextOP()"
             (expandAll)="expandAllComments()"
             (collapseAll)="collapseAllComments()"
-          />
-          <app-comment-sort-dropdown
-            [sortOrder]="sortOrder()"
-            [loading]="commentsLoading()"
-            (sortChange)="onSortChange($event)"
           />
         </div>
       </div>

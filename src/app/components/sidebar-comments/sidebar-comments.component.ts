@@ -108,9 +108,17 @@ import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-nav
 
                 <!-- Comments Header with Sort -->
                 <div class="comments-heading">
-                  <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Comments ({{ item()!.kids?.length || 0 }})
-                  </h4>
+                  <div class="comments-title-row">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Comments ({{ item()!.kids?.length || 0 }})
+                    </h4>
+
+                    <app-comment-sort-dropdown
+                      [sortOrder]="sortOrder()"
+                      [loading]="commentsLoading()"
+                      (sortChange)="onSortChange($event)"
+                    />
+                  </div>
 
                   <div class="comments-controls">
                     <app-comment-thread-toolbar
@@ -118,11 +126,6 @@ import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-nav
                       (nextOP)="jumpToNextOP()"
                       (expandAll)="expandAllComments()"
                       (collapseAll)="collapseAllComments()"
-                    />
-                    <app-comment-sort-dropdown
-                      [sortOrder]="sortOrder()"
-                      [loading]="commentsLoading()"
-                      (sortChange)="onSortChange($event)"
                     />
                   </div>
                 </div>
@@ -182,15 +185,19 @@ import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-nav
       }
 
       .comments-heading {
-        @apply sticky top-0 z-20 isolate -mx-4 mb-6 flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:-mx-6 sm:px-6;
+        @apply sticky top-0 z-20 isolate -mx-4 mb-6 flex flex-col gap-2 px-4 py-2 sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3;
         @apply pointer-events-auto;
         background-color: var(--app-surface);
         border-bottom: 1px solid var(--app-border);
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
       }
 
+      .comments-title-row {
+        @apply flex min-w-0 items-center justify-between gap-2;
+      }
+
       .comments-controls {
-        @apply flex flex-wrap items-center justify-end gap-2;
+        @apply min-w-0 max-w-full sm:flex sm:items-center sm:justify-end;
       }
 
       /* PWA standalone mode: adjust for safe area insets */

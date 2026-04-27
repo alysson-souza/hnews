@@ -18,13 +18,19 @@ import { ChangeDetectionStrategy, Component, output } from '@angular/core';
       @reference '../../../styles.css';
 
       .comment-tools {
-        @apply flex flex-wrap items-center gap-1;
+        @apply flex max-w-full items-center gap-1 overflow-x-auto overscroll-x-contain;
+        @apply [-webkit-overflow-scrolling:touch] [scrollbar-width:none];
+      }
+
+      .comment-tools::-webkit-scrollbar {
+        display: none;
       }
 
       .tool-btn {
+        @apply flex-shrink-0;
         @apply rounded-lg border border-slate-200 dark:border-slate-700;
         @apply bg-white/70 dark:bg-slate-900/60;
-        @apply px-2.5 py-1 text-xs font-medium;
+        @apply px-2.5 py-1 text-xs font-medium whitespace-nowrap;
         @apply text-slate-600 dark:text-slate-300;
         @apply hover:border-blue-300 dark:hover:border-blue-600;
         @apply hover:text-blue-700 dark:hover:text-blue-300;
