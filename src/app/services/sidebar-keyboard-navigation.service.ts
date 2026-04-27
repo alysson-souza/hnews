@@ -28,6 +28,10 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     return '.sidebar-comments-panel';
   }
 
+  protected get context() {
+    return 'sidebar' as const;
+  }
+
   protected registerCommands(): void {
     this.commandRegistry.register('sidebar.nextComment', () => this.selectNext());
     this.commandRegistry.register('sidebar.previousComment', () => this.selectPrevious());
@@ -38,6 +42,12 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     this.commandRegistry.register('sidebar.close', () => this.closeSidebar());
     this.commandRegistry.register('sidebar.openFullView', () => this.openFullView());
     this.commandRegistry.register('sidebar.backOrClose', () => this.handleBackOrClose());
+    this.commandRegistry.register('sidebar.nextUnreadComment', () =>
+      this.selectNextUnreadComment(),
+    );
+    this.commandRegistry.register('sidebar.nextOPComment', () => this.selectNextOPComment());
+    this.commandRegistry.register('sidebar.expandAllComments', () => this.expandAllComments());
+    this.commandRegistry.register('sidebar.collapseAllComments', () => this.collapseAllComments());
   }
 
   /**
@@ -50,7 +60,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
 
     const element = this.findElementById(selectedId);
     if (element) {
-      element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      element.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   }
 

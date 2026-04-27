@@ -4,21 +4,32 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { SidebarCommentsInteractionService } from './sidebar-comments-interaction.service';
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
+import { CommentThreadContext, CommentThreadIndexService } from './comment-thread-index.service';
+import { CommentStateService } from './comment-state.service';
 
 @Injectable()
 export abstract class BaseCommentNavigationService {
+  private readonly EXPAND_ALL_LIMIT = 100;
+
   // Currently selected comment ID
   selectedCommentId = signal<number | null>(null);
 
   protected interactionService = inject(SidebarCommentsInteractionService);
   protected commandRegistry = inject(CommandRegistryService);
   protected scrollService = inject(ScrollService);
+  protected commentIndex = inject(CommentThreadIndexService);
+  protected commentState = inject(CommentStateService);
 
   /**
    * CSS selector for the container element where comments are located.
    * e.g., '.sidebar-comments-panel' or '.comments-card'
    */
   protected abstract get containerSelector(): string;
+
+  /**
+   * Comment index context used by the concrete page/surface.
+   */
+  protected abstract get context(): CommentThreadContext;
 
   constructor() {
     this.registerCommands();
@@ -228,6 +239,30 @@ export abstract class BaseCommentNavigationService {
     }
   }
 
+  selectNextUnreadComment(): void {
+    this.selectNextMatchingComment((commentId) =>
+      this.commentIndex.isUnread(this.context, commentId),
+    );
+  }
+
+  selectNextOPComment(): void {
+    this.selectNextMatchingComment((commentId) =>
+      this.commentIndex.isOPReply(this.context, commentId),
+    );
+  }
+
+  collapseAllComments(): void {
+    const ids = this.getVisibleCommentIds();
+    this.commentState.setCollapsedMany(ids, true);
+    ids.forEach((id) => this.interactionService.dispatchAction(id, 'collapseAll'));
+  }
+
+  expandAllComments(): void {
+    const ids = this.getVisibleCommentIds().slice(0, this.EXPAND_ALL_LIMIT);
+    this.commentState.setCollapsedMany(ids, false);
+    ids.forEach((id) => this.interactionService.dispatchAction(id, 'expandAll'));
+  }
+
   /**
    * Clear selection
    */
@@ -271,9 +306,51 @@ export abstract class BaseCommentNavigationService {
     const element = this.findElementById(selectedId);
     if (element) {
       // Use scrollToHTMLElement to account for the fixed header
-      // Add a small offset (e.g., 16px) for better visibility
-      await this.scrollService.scrollToHTMLElement(element, { offset: 16, behavior: 'smooth' });
+      // and the sticky comment toolbar.
+      await this.scrollService.scrollToHTMLElement(element, {
+        offset: this.getStickyToolbarHeight() + 16,
+        behavior: 'smooth',
+      });
     }
+  }
+
+  protected getVisibleCommentIds(): number[] {
+    return this.getVisibleCommentElements()
+      .map((element) => this.getCommentId(element))
+      .filter((commentId): commentId is number => commentId !== null);
+  }
+
+  private selectNextMatchingComment(matches: (commentId: number) => boolean): void {
+    const visibleIds = this.getVisibleCommentIds();
+    if (visibleIds.length === 0) {
+      return;
+    }
+
+    const matchingIds = visibleIds.filter(matches);
+    if (matchingIds.length === 0) {
+      return;
+    }
+
+    const currentId = this.selectedCommentId();
+    const currentIndex = currentId === null ? -1 : visibleIds.indexOf(currentId);
+    const nextId =
+      matchingIds.find((commentId) => visibleIds.indexOf(commentId) > currentIndex) ??
+      matchingIds[0];
+
+    for (const ancestorId of this.commentIndex.getParentPath(this.context, nextId)) {
+      this.interactionService.dispatchAction(ancestorId, 'expandAll');
+    }
+
+    this.selectedCommentId.set(nextId);
+    void this.scrollSelectedIntoView();
+  }
+
+  private getStickyToolbarHeight(): number {
+    const toolbar = document.querySelector(
+      `${this.containerSelector} .comments-heading`,
+    ) as HTMLElement | null;
+
+    return toolbar?.getBoundingClientRect().height ?? 0;
   }
 
   private isElementVisibleInViewport(element: HTMLElement): boolean {

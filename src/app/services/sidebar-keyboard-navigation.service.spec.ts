@@ -109,7 +109,7 @@ describe('SidebarKeyboardNavigationService', () => {
       service.selectNext();
 
       expect(service.selectedCommentId()).toBe(2);
-      expect(scrollSpy).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
+      expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
     });
 
     it('should select previous comment', () => {
@@ -122,7 +122,7 @@ describe('SidebarKeyboardNavigationService', () => {
       service.selectPrevious();
 
       expect(service.selectedCommentId()).toBe(1);
-      expect(scrollSpy).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
+      expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
     });
 
     it('should select first comment if none selected on next', () => {

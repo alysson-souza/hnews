@@ -79,6 +79,31 @@ export class CommentStateService {
   }
 
   /**
+   * Set collapsed state for many comments in one localStorage write.
+   */
+  setCollapsedMany(commentIds: number[], collapsed: boolean): void {
+    if (commentIds.length === 0) {
+      return;
+    }
+
+    const now = Date.now();
+    const newMap = new Map(this.statesMap());
+
+    for (const commentId of commentIds) {
+      const current = newMap.get(commentId);
+      newMap.set(commentId, {
+        collapsed,
+        repliesExpanded: current?.repliesExpanded ?? false,
+        loadedPages: current?.loadedPages ?? 0,
+        lastAccessed: now,
+      });
+    }
+
+    this.statesMap.set(newMap);
+    this.save();
+  }
+
+  /**
    * Set replies expanded state for a comment.
    */
   setRepliesExpanded(commentId: number, expanded: boolean): void {

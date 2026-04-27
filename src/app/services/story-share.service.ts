@@ -9,6 +9,7 @@ import { HNItem } from '@models/hn';
 export class StoryShareService {
   private copiedStory = signal(false);
   private copiedComments = signal(false);
+  private copiedCommentId = signal<number | null>(null);
 
   canUseWebShare = computed(() => {
     if (typeof window === 'undefined') {
@@ -29,6 +30,10 @@ export class StoryShareService {
 
   isCopiedStory = computed(() => this.copiedStory());
   isCopiedComments = computed(() => this.copiedComments());
+  isCopiedComment = computed(() => {
+    const copiedCommentId = this.copiedCommentId();
+    return (commentId: number) => copiedCommentId === commentId;
+  });
 
   private canShare(data: ShareData): boolean {
     if (typeof window === 'undefined') {
@@ -105,6 +110,22 @@ export class StoryShareService {
     }, 1500);
   }
 
+  async copyCommentPermalink(commentId: number): Promise<void> {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    await this.copyToClipboard(`${window.location.origin}/item/${commentId}`);
+    this.copiedCommentId.set(commentId);
+    this.copiedStory.set(false);
+    this.copiedComments.set(false);
+    window.setTimeout(() => {
+      if (this.copiedCommentId() === commentId) {
+        this.copiedCommentId.set(null);
+      }
+    }, 1500);
+  }
+
   private async copyToClipboard(text: string): Promise<void> {
     if (typeof window === 'undefined' || !window.navigator.clipboard) {
       console.error('Clipboard API not available');
@@ -121,5 +142,6 @@ export class StoryShareService {
   resetCopyStates(): void {
     this.copiedStory.set(false);
     this.copiedComments.set(false);
+    this.copiedCommentId.set(null);
   }
 }

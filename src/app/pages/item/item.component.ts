@@ -22,6 +22,8 @@ import {
   CommentSortOrder,
 } from '@components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
 import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
+import { CommentThreadIndexService } from '@services/comment-thread-index.service';
+import { CommentThreadToolbarComponent } from '@components/comment-tools/comment-thread-toolbar.component';
 
 @Component({
   selector: 'app-item',
@@ -32,6 +34,7 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
     SidebarStorySummaryComponent,
     AppButtonComponent,
     CommentSortDropdownComponent,
+    CommentThreadToolbarComponent,
   ],
   templateUrl: './item.component.html',
   styleUrl: './item.component.css',
@@ -46,6 +49,7 @@ export class ItemComponent implements OnInit {
   private commentSortService = inject(CommentSortService);
   private commentDisplayStrategy = inject(CommentDisplayStrategyService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
+  private commentIndex = inject(CommentThreadIndexService);
   private lastNavigationWasPopstate = false;
 
   item = signal<HNItem | null>(null);
@@ -56,6 +60,7 @@ export class ItemComponent implements OnInit {
   sortOrder = this.commentSortService.sortOrder;
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
+  previousVisitedAt = signal<number | null>(null);
 
   // Bulk loading state - stores the result from Algolia bulk load
   private bulkLoadResult = signal<BulkLoadResult | null>(null);
@@ -156,6 +161,8 @@ export class ItemComponent implements OnInit {
     this.bulkLoadResult.set(null);
     this.bulkLoadingComments.set(false);
     this.itemKeyboardNav.clearSelection();
+    this.previousVisitedAt.set(null);
+    this.commentIndex.clearContext('item');
 
     // Use Algolia bulk loading for stories with comments
     // This fetches the story AND all comments in a single request
@@ -183,6 +190,14 @@ export class ItemComponent implements OnInit {
           // Pre-populate allComments for sorting (top-level only)
           const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
           this.allComments.set(topLevelComments);
+
+          const previousVisitedAt =
+            this.visitedService.getVisitedData?.(result.story.id)?.visitedAt ?? null;
+          this.previousVisitedAt.set(previousVisitedAt);
+          this.commentIndex.configureContext('item', result.story, {
+            comments: Array.from(result.commentsMap.values()),
+            previousVisitedAt,
+          });
 
           // Mark as visited
           this.visitedService.markAsVisited(result.story.id, result.story.descendants);
@@ -212,6 +227,10 @@ export class ItemComponent implements OnInit {
         if (item) {
           this.item.set(item);
           this.applyCommentDisplayStrategy(item);
+          const previousVisitedAt =
+            this.visitedService.getVisitedData?.(item.id)?.visitedAt ?? null;
+          this.previousVisitedAt.set(previousVisitedAt);
+          this.commentIndex.configureContext('item', item, { previousVisitedAt });
           this.visitedService.markAsVisited(item.id, item.descendants);
           this.handleLoadSuccess();
         } else {
@@ -299,6 +318,22 @@ export class ItemComponent implements OnInit {
     if (newSort !== 'default' && this.allComments().length === 0) {
       this.loadAllComments();
     }
+  }
+
+  jumpToNextUnread(): void {
+    this.itemKeyboardNav.selectNextUnreadComment();
+  }
+
+  jumpToNextOP(): void {
+    this.itemKeyboardNav.selectNextOPComment();
+  }
+
+  expandAllComments(): void {
+    this.itemKeyboardNav.expandAllComments();
+  }
+
+  collapseAllComments(): void {
+    this.itemKeyboardNav.collapseAllComments();
   }
 
   private loadAllComments(): void {

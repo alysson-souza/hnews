@@ -58,6 +58,10 @@ export class ItemKeyboardNavigationService
     return '.comments-card';
   }
 
+  protected get context() {
+    return 'item' as const;
+  }
+
   protected registerCommands(): void {
     this.commandRegistry.register('item.nextComment', () => this.selectNext());
     this.commandRegistry.register('item.previousComment', () => this.selectPrevious());
@@ -65,6 +69,10 @@ export class ItemKeyboardNavigationService
     this.commandRegistry.register('item.expandReplies', () => this.expandRepliesSelected());
     this.commandRegistry.register('item.viewThread', () => this.viewThreadSelected());
     this.commandRegistry.register('item.back', () => this.goBack());
+    this.commandRegistry.register('item.nextUnreadComment', () => this.selectNextUnreadComment());
+    this.commandRegistry.register('item.nextOPComment', () => this.selectNextOPComment());
+    this.commandRegistry.register('item.expandAllComments', () => this.expandAllComments());
+    this.commandRegistry.register('item.collapseAllComments', () => this.collapseAllComments());
   }
 
   /**

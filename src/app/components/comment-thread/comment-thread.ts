@@ -27,6 +27,10 @@ import { CommentStateService } from '@services/comment-state.service';
 import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { Router } from '@angular/router';
+import {
+  CommentThreadContext,
+  CommentThreadIndexService,
+} from '@services/comment-thread-index.service';
 
 @Component({
   selector: 'app-comment-thread',
@@ -55,6 +59,7 @@ import { Router } from '@angular/router';
         [hasChildren]="(comment()?.kids?.length ?? 0) > 0"
         [isLastChild]="isLastChild()"
         [isFirstChild]="isFirstChild()"
+        [unread]="isUnread()"
         (toggleThread)="toggleCollapse()"
       >
         <div header>
@@ -99,6 +104,8 @@ import { Router } from '@angular/router';
                   [initialComment]="reply"
                   [storyAuthor]="storyAuthor()"
                   [isStandalonePage]="isStandalonePage()"
+                  [previousVisitedAt]="previousVisitedAt()"
+                  [threadContext]="threadContext()"
                   [isFirstChild]="isFirst"
                   [isLastChild]="isLast && !hasMoreReplies()"
                 />
@@ -219,6 +226,8 @@ export class CommentThread implements OnInit {
   readonly isStandalonePage = input(false);
   readonly isLastChild = input(true);
   readonly isFirstChild = input(true);
+  readonly previousVisitedAt = input<number | null>(null);
+  readonly threadContext = input<CommentThreadContext>('item');
 
   private hnService = inject(HackernewsService);
   private commentStateService = inject(CommentStateService);
@@ -250,6 +259,12 @@ export class CommentThread implements OnInit {
   // Metadata-based reply count (works even without loading replies)
   metadataReplyCount = computed(() => {
     return this.comment()?.kids?.length || 0;
+  });
+
+  isUnread = computed(() => {
+    const previousVisitedAt = this.previousVisitedAt();
+    const comment = this.comment();
+    return previousVisitedAt !== null && !!comment && comment.time * 1000 > previousVisitedAt;
   });
 
   // Check if we have loaded reply data with participants
@@ -300,6 +315,7 @@ export class CommentThread implements OnInit {
   private sidebarService = inject(SidebarService);
   private deviceService = inject(DeviceService);
   private router = inject(Router);
+  private commentIndex = inject(CommentThreadIndexService);
 
   ngOnInit() {
     // If parent provided the comment, hydrate without fetching
@@ -327,6 +343,12 @@ export class CommentThread implements OnInit {
           case 'expandReplies':
             this.expandReplies();
             break;
+          case 'expandAll':
+            this.expandAll();
+            break;
+          case 'collapseAll':
+            this.collapseAll();
+            break;
           case 'viewThread':
             if (this.deviceService.isMobile()) {
               this.router.navigate(['/item', this.commentId()]);
@@ -342,6 +364,7 @@ export class CommentThread implements OnInit {
     if (item && !item.deleted) {
       this.repliesLoader.configureKids(item.kids);
       this.comment.set(item);
+      this.commentIndex.registerComment(this.threadContext(), item);
       this.commentLoaded.set(true);
       this.loading.set(false);
       this.restoreCommentState();
@@ -360,6 +383,7 @@ export class CommentThread implements OnInit {
         if (item && !item.deleted) {
           this.repliesLoader.configureKids(item.kids);
           this.comment.set(item);
+          this.commentIndex.registerComment(this.threadContext(), item);
           this.commentLoaded.set(true);
           this.loading.set(false);
           this.restoreCommentState();
@@ -418,6 +442,19 @@ export class CommentThread implements OnInit {
       this.commentStateService.setCollapsed(this.commentId(), newValue);
       return newValue;
     });
+  }
+
+  expandAll() {
+    if (this.isCollapsed()) {
+      this.isCollapsed.set(false);
+    }
+    this.commentStateService.setCollapsed(this.commentId(), false);
+    this.expandReplies();
+  }
+
+  collapseAll() {
+    this.isCollapsed.set(true);
+    this.commentStateService.setCollapsed(this.commentId(), true);
   }
 
   private restoreCommentState() {

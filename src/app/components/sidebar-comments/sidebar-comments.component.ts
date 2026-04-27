@@ -17,6 +17,9 @@ import {
   CommentSortDropdownComponent,
   CommentSortOrder,
 } from '../shared/comment-sort-dropdown/comment-sort-dropdown.component';
+import { CommentThreadToolbarComponent } from '../comment-tools/comment-thread-toolbar.component';
+import { CommentThreadIndexService } from '@services/comment-thread-index.service';
+import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-navigation.service';
 
 @Component({
   selector: 'app-sidebar-comments',
@@ -26,6 +29,7 @@ import {
     SidebarStorySummaryComponent,
     AppButtonComponent,
     CommentSortDropdownComponent,
+    CommentThreadToolbarComponent,
   ],
   template: `
     <!-- Sidebar Comments -->
@@ -103,16 +107,24 @@ import {
                 <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
 
                 <!-- Comments Header with Sort -->
-                <div class="flex items-center justify-between mb-6">
+                <div class="comments-heading">
                   <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Comments ({{ item()!.kids?.length || 0 }})
                   </h4>
 
-                  <app-comment-sort-dropdown
-                    [sortOrder]="sortOrder()"
-                    [loading]="commentsLoading()"
-                    (sortChange)="onSortChange($event)"
-                  />
+                  <div class="comments-controls">
+                    <app-comment-thread-toolbar
+                      (nextUnread)="jumpToNextUnread()"
+                      (nextOP)="jumpToNextOP()"
+                      (expandAll)="expandAllComments()"
+                      (collapseAll)="collapseAllComments()"
+                    />
+                    <app-comment-sort-dropdown
+                      [sortOrder]="sortOrder()"
+                      [loading]="commentsLoading()"
+                      (sortChange)="onSortChange($event)"
+                    />
+                  </div>
                 </div>
 
                 @if (item()!.kids && item()!.kids!.length > 0) {
@@ -123,6 +135,8 @@ import {
                         [depth]="0"
                         [autoExpandReplies]="smallThreadMode()"
                         [storyAuthor]="item()?.by"
+                        [previousVisitedAt]="previousVisitedAt()"
+                        [threadContext]="'sidebar'"
                       />
                     }
                   </div>
@@ -165,6 +179,18 @@ import {
       /* Prevent default browser focus outline on programmatic focus */
       .sidebar-comments-panel:focus {
         outline: none;
+      }
+
+      .comments-heading {
+        @apply sticky top-0 z-20 isolate -mx-4 mb-6 flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:-mx-6 sm:px-6;
+        @apply pointer-events-auto;
+        background-color: var(--app-surface);
+        border-bottom: 1px solid var(--app-border);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+      }
+
+      .comments-controls {
+        @apply flex flex-wrap items-center justify-end gap-2;
       }
 
       /* PWA standalone mode: adjust for safe area insets */
@@ -262,6 +288,8 @@ export class SidebarCommentsComponent {
   private visitedService = inject(VisitedService);
   private commentSortService = inject(CommentSortService);
   private commentDisplayStrategy = inject(CommentDisplayStrategyService);
+  private commentIndex = inject(CommentThreadIndexService);
+  private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
 
   item = signal<HNItem | null>(null);
   loading = signal(false);
@@ -271,6 +299,7 @@ export class SidebarCommentsComponent {
   sortOrder = this.commentSortService.sortOrder;
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
+  previousVisitedAt = signal<number | null>(null);
 
   private readonly commentsPageSize = 10;
   private readonly smallThreadDescendantsThreshold = 40;
@@ -380,12 +409,18 @@ export class SidebarCommentsComponent {
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
     this.commentsLoading.set(false);
+    this.previousVisitedAt.set(null);
+    this.commentIndex.clearContext('sidebar');
 
     this.hnService.getItem(id).subscribe({
       next: (item) => {
         if (item) {
           this.item.set(item);
           this.applyCommentDisplayStrategy(item);
+          const previousVisitedAt =
+            this.visitedService.getVisitedData?.(item.id)?.visitedAt ?? null;
+          this.previousVisitedAt.set(previousVisitedAt);
+          this.commentIndex.configureContext('sidebar', item, { previousVisitedAt });
           // Mark as visited
           this.visitedService.markAsVisited(item.id, item.descendants);
         } else {
@@ -459,6 +494,22 @@ export class SidebarCommentsComponent {
     });
     this.smallThreadMode.set(strategy.smallThreadMode);
     this.visibleTopLevelCount.set(strategy.initialVisibleTopLevelCount);
+  }
+
+  jumpToNextUnread(): void {
+    this.sidebarKeyboardNav.selectNextUnreadComment();
+  }
+
+  jumpToNextOP(): void {
+    this.sidebarKeyboardNav.selectNextOPComment();
+  }
+
+  expandAllComments(): void {
+    this.sidebarKeyboardNav.expandAllComments();
+  }
+
+  collapseAllComments(): void {
+    this.sidebarKeyboardNav.collapseAllComments();
   }
 
   onBack(): void {

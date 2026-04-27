@@ -137,6 +137,31 @@ describe('CommentStateService', () => {
       expect(state!.loadedPages).toBe(2);
     });
 
+    it('setCollapsedMany should update many collapsed states with one persistence write', () => {
+      service.setState(111, { repliesExpanded: true, loadedPages: 2 });
+      service.setState(222, { repliesExpanded: false, loadedPages: 1 });
+      (window.localStorage.setItem as Mock).mockClear();
+
+      service.setCollapsedMany([111, 222, 333], true);
+
+      expect(service.getState(111)).toMatchObject({
+        collapsed: true,
+        repliesExpanded: true,
+        loadedPages: 2,
+      });
+      expect(service.getState(222)).toMatchObject({
+        collapsed: true,
+        repliesExpanded: false,
+        loadedPages: 1,
+      });
+      expect(service.getState(333)).toMatchObject({
+        collapsed: true,
+        repliesExpanded: false,
+        loadedPages: 0,
+      });
+      expect(window.localStorage.setItem).toHaveBeenCalledTimes(1);
+    });
+
     it('setRepliesExpanded should update only repliesExpanded state', () => {
       service.setState(12345, { collapsed: true, loadedPages: 2 });
       service.setRepliesExpanded(12345, true);

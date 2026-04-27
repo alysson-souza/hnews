@@ -3,7 +3,13 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
-export type CommentActionType = 'expand' | 'collapse' | 'viewThread' | 'expandReplies';
+export type CommentActionType =
+  | 'expand'
+  | 'collapse'
+  | 'viewThread'
+  | 'expandReplies'
+  | 'expandAll'
+  | 'collapseAll';
 
 export interface CommentAction {
   commentId: number;

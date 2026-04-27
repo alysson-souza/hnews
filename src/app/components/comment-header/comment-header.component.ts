@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { Component, inject, computed, output, input, ChangeDetectionStrategy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarAltArrowDownLinear, solarAltArrowRightLinear } from '@ng-icons/solar-icons/linear';
 import { UserTagComponent } from '../user-tag/user-tag.component';
@@ -21,6 +21,7 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
     RepliesCounterComponent,
     OPBadgeComponent,
     NgIconComponent,
+    RouterLink,
   ],
   viewProviders: [provideIcons({ solarAltArrowDownLinear, solarAltArrowRightLinear })],
   template: `
@@ -47,7 +48,18 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
         }
       }
 
-      <span class="time-text">{{ timestamp() | relativeTime }}</span>
+      @if (commentId()) {
+        <a
+          class="time-text permalink-time"
+          [routerLink]="['/item', commentId()]"
+          [title]="'Permalink for comment ' + commentId()"
+          [attr.aria-label]="'Open permalink for comment ' + commentId()"
+        >
+          {{ timestamp() | relativeTime }}
+        </a>
+      } @else {
+        <span class="time-text">{{ timestamp() | relativeTime }}</span>
+      }
 
       @if (showExpand()) {
         <app-replies-counter
@@ -81,6 +93,11 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
       }
       .time-text {
         @apply text-gray-500 dark:text-slate-500;
+      }
+      .permalink-time {
+        @apply rounded px-1 -mx-1;
+        @apply hover:text-blue-600 dark:hover:text-blue-300 hover:underline;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
       }
       .collapse-toggle {
         @apply inline-flex items-center justify-center;

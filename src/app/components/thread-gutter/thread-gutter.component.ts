@@ -40,6 +40,7 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
         class="comment-card"
         [class.keyboard-focused]="isKeyboardFocused()"
         [class.collapsed]="collapsed()"
+        [class.unread]="unread()"
       >
         <div class="header">
           <ng-content select="[header]" />
@@ -90,6 +91,18 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
         border-color: rgb(59 130 246);
       }
 
+      .comment-card.unread {
+        background:
+          linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent 42%), var(--app-surface);
+        border-color: rgba(37, 99, 235, 0.28);
+      }
+
+      :host-context(.dark) .comment-card.unread {
+        background:
+          linear-gradient(90deg, rgba(96, 165, 250, 0.14), transparent 42%), var(--app-surface);
+        border-color: rgba(96, 165, 250, 0.32);
+      }
+
       :host-context(.dark) .comment-card.keyboard-focused {
         box-shadow:
           0 0 0 2px rgb(96 165 250),
@@ -107,6 +120,7 @@ export class ThreadGutterComponent {
   readonly hasChildren = input(false);
   readonly isLastChild = input(true);
   readonly isFirstChild = input(true);
+  readonly unread = input(false);
   readonly toggleThread = output<void>();
 
   private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);

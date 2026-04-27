@@ -7,6 +7,8 @@ import { SidebarCommentsInteractionService } from './sidebar-comments-interactio
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
 import { Injectable } from '@angular/core';
+import { CommentThreadIndexService } from './comment-thread-index.service';
+import { CommentStateService } from './comment-state.service';
 
 // Mock concrete implementation for testing
 @Injectable({ providedIn: 'root' })
@@ -14,12 +16,16 @@ class TestNavigationService extends BaseCommentNavigationService {
   protected get containerSelector(): string {
     return '.test-container';
   }
+  protected get context() {
+    return 'item' as const;
+  }
   protected registerCommands(): void {}
 }
 
 describe('BaseCommentNavigationService', () => {
   let service: TestNavigationService;
   let interactionServiceSpy: MockedObject<SidebarCommentsInteractionService>;
+  let commentIndex: CommentThreadIndexService;
   beforeEach(() => {
     const interactionSpy = {
       dispatchAction: vi.fn(),
@@ -44,9 +50,14 @@ describe('BaseCommentNavigationService', () => {
     });
 
     service = TestBed.inject(TestNavigationService);
+    commentIndex = TestBed.inject(CommentThreadIndexService);
     interactionServiceSpy = TestBed.inject(
       SidebarCommentsInteractionService,
     ) as MockedObject<SidebarCommentsInteractionService>;
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
   });
 
   it('should be created', () => {
@@ -95,6 +106,55 @@ describe('BaseCommentNavigationService', () => {
       service.expandRepliesSelected();
       service.viewThreadSelected();
       expect(interactionServiceSpy.dispatchAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('thread tools', () => {
+    beforeEach(() => {
+      document.body.innerHTML = `
+        <div class="test-container">
+          <div role="treeitem" data-comment-id="1"></div>
+          <div role="treeitem" data-comment-id="2"></div>
+          <div role="treeitem" data-comment-id="3"></div>
+        </div>
+      `;
+
+      commentIndex.configureContext(
+        'item',
+        { id: 99, type: 'story', by: 'op', time: 100, kids: [1, 2, 3] },
+        {
+          previousVisitedAt: 1500,
+          comments: [
+            { id: 1, type: 'comment', by: 'alice', time: 1 },
+            { id: 2, type: 'comment', by: 'op', time: 2 },
+            { id: 3, type: 'comment', by: 'carol', time: 3 },
+          ],
+        },
+      );
+    });
+
+    it('should select the next unread visible comment', () => {
+      service.selectNextUnreadComment();
+
+      expect(service.selectedCommentId()).toBe(2);
+    });
+
+    it('should select the next OP comment', () => {
+      service.selectNextOPComment();
+
+      expect(service.selectedCommentId()).toBe(2);
+    });
+
+    it('should dispatch collapseAll for visible comments', () => {
+      const commentState = TestBed.inject(CommentStateService);
+      vi.spyOn(commentState, 'setCollapsedMany');
+
+      service.collapseAllComments();
+
+      expect(commentState.setCollapsedMany).toHaveBeenCalledWith([1, 2, 3], true);
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(1, 'collapseAll');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(2, 'collapseAll');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(3, 'collapseAll');
     });
   });
 });

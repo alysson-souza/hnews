@@ -33,13 +33,21 @@
 
     <!-- Comments Section -->
     <app-card class="block comments-card" [radius]="'lg'">
-      <div class="flex items-center justify-between mb-4">
+      <div class="comments-heading">
         <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
-        <app-comment-sort-dropdown
-          [sortOrder]="sortOrder()"
-          [loading]="commentsLoading()"
-          (sortChange)="onSortChange($event)"
-        />
+        <div class="comments-controls">
+          <app-comment-thread-toolbar
+            (nextUnread)="jumpToNextUnread()"
+            (nextOP)="jumpToNextOP()"
+            (expandAll)="expandAllComments()"
+            (collapseAll)="collapseAllComments()"
+          />
+          <app-comment-sort-dropdown
+            [sortOrder]="sortOrder()"
+            [loading]="commentsLoading()"
+            (sortChange)="onSortChange($event)"
+          />
+        </div>
       </div>
 
       @if (item()!.kids && item()!.kids!.length > 0) {
@@ -51,6 +59,8 @@
               [autoExpandReplies]="smallThreadMode()"
               [storyAuthor]="item()?.by"
               [isStandalonePage]="true"
+              [previousVisitedAt]="previousVisitedAt()"
+              [threadContext]="'item'"
               [attr.id]="first ? 'first-comment' : null"
             />
           }
