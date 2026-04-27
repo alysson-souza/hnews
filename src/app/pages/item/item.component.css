@@ -43,10 +43,14 @@
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 .comments-title-row {
-  @apply flex min-w-0 items-center justify-between gap-2;
+  @apply flex min-w-0 items-center justify-between gap-2 sm:flex-shrink-0;
 }
 .comments-controls {
-  @apply min-w-0 max-w-full sm:flex sm:items-center sm:justify-end;
+  @apply flex min-w-0 max-w-full items-center gap-2 overflow-x-auto overscroll-x-contain;
+  @apply [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:justify-end sm:overflow-visible;
+}
+.comments-controls::-webkit-scrollbar {
+  display: none;
 }
 
 @media (display-mode: standalone) {
