@@ -121,4 +121,29 @@ test.describe('Settings Page', () => {
       }
     });
   });
+
+  test.describe('Layout', () => {
+    test('should keep footer at the bottom of the viewport on short pages', async ({
+      settingsPage,
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, 'Desktop-only sticky footer regression check');
+
+      await page.setViewportSize({ width: 1440, height: 2200 });
+      await settingsPage.navigateToSettings();
+
+      const footer = page.getByRole('contentinfo');
+      await expect(footer).toBeVisible();
+
+      const footerBox = await footer.boundingBox();
+      const viewport = page.viewportSize();
+
+      expect(footerBox).not.toBeNull();
+      expect(viewport).not.toBeNull();
+
+      const footerBottom = (footerBox?.y ?? 0) + (footerBox?.height ?? 0);
+      expect(Math.abs(footerBottom - (viewport?.height ?? 0))).toBeLessThanOrEqual(8);
+    });
+  });
 });

@@ -33,9 +33,15 @@ import { AppFooterComponent } from '../footer/footer.component';
     `
       @reference '../../../../styles.css';
 
-      .main-content {
-        /* Use CSS custom property for dynamic viewport height (PWA orientation fix) */
+      :host {
+        display: flex;
+        flex-direction: column;
         min-height: calc(var(--vh, 1vh) * 100);
+      }
+
+      .main-content {
+        flex: 1 0 auto;
+        min-height: 0;
         padding-top: 4rem;
         background: transparent;
       }
