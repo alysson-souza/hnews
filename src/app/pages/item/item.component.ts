@@ -279,7 +279,9 @@ export class ItemComponent implements OnInit {
       if (loadedItem?.type === 'comment') {
         this.scrollService.scrollToElement('submission-title');
       } else if (document.getElementById('first-comment')) {
-        this.scrollService.scrollToElement('first-comment');
+        this.scrollService.scrollToElement('first-comment', {
+          offset: this.getStickyCommentsHeaderOffset(),
+        });
       } else {
         this.scrollService.scrollToElement('submission-title');
       }
@@ -414,5 +416,12 @@ export class ItemComponent implements OnInit {
 
   private getCommentCountForVisit(item: HNItem): number | undefined {
     return item.descendants ?? item.kids?.length;
+  }
+
+  private getStickyCommentsHeaderOffset(): number {
+    const toolbar = document.querySelector(
+      '.comments-card .comments-heading',
+    ) as HTMLElement | null;
+    return (toolbar?.getBoundingClientRect().height ?? 0) + 16;
   }
 }
