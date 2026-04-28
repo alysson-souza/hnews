@@ -615,6 +615,38 @@ describe('StoryItem comments link behaviour', () => {
     });
   });
 
+  describe('Layout structure', () => {
+    it('renders a left header stack for title and domain with meta on its own row', () => {
+      fixture.componentRef.setInput('story', {
+        ...story,
+        url: 'https://example.com/article',
+        by: 'theogravity',
+      });
+      fixture.detectChanges();
+
+      const header = fixture.debugElement.query(By.css('.story-header'));
+      const headerMain = fixture.debugElement.query(By.css('.story-header-main'));
+      const title = fixture.debugElement.query(By.css('.story-header .story-title'));
+      const actions = fixture.debugElement.query(By.css('.story-header .story-actions-slot'));
+      const meta = fixture.debugElement.query(By.css('.story-meta'));
+      const domain = fixture.debugElement.query(By.css('.domain-btn'));
+
+      expect(header).toBeTruthy();
+      expect(headerMain).toBeTruthy();
+      expect(title).toBeTruthy();
+      expect(actions).toBeTruthy();
+      expect(domain).toBeTruthy();
+      expect(meta).toBeTruthy();
+
+      expect(header.nativeElement.contains(headerMain.nativeElement)).toBe(true);
+      expect(headerMain.nativeElement.contains(title.nativeElement)).toBe(true);
+      expect(headerMain.nativeElement.contains(domain.nativeElement)).toBe(true);
+      expect(header.nativeElement.contains(meta.nativeElement)).toBe(false);
+      expect(meta.nativeElement.closest('.story-header')).toBeNull();
+      expect(domain.nativeElement.closest('.story-header-main')).not.toBeNull();
+    });
+  });
+
   describe('Computed properties', () => {
     it('should detect loading state when loading is true', () => {
       fixture.componentRef.setInput('loading', true);

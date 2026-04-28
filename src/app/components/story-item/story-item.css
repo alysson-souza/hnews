@@ -101,7 +101,7 @@
 
 /* Content */
 .story-content {
-  @apply flex-1 p-4 sm:p-5 min-w-0 overflow-hidden relative;
+  @apply flex-1 p-3 min-w-0 overflow-hidden relative;
 }
 
 .story-content::before {
@@ -114,6 +114,21 @@
 
 .story-card:hover .story-content::before {
   opacity: 1;
+}
+
+.story-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.story-header-main {
+  @apply min-w-0;
+}
+
+.story-actions-slot {
+  @apply relative ml-2 sm:ml-0 flex-shrink-0 self-start;
 }
 
 .story-title {
