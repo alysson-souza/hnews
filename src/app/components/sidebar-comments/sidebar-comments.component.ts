@@ -113,14 +113,12 @@ import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-nav
                 <!-- Story Details -->
                 <app-sidebar-story-summary [item]="item()!" [boxedText]="true" />
 
-                <hr class="my-6 border-gray-200 dark:border-slate-700/60" />
+                <hr class="mt-4 border-gray-200 dark:border-slate-700/60" />
 
                 <!-- Comments Header with Sort -->
                 <div class="comments-heading">
                   <div class="comments-title-row">
-                    <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      Comments ({{ item()!.kids?.length || 0 }})
-                    </h4>
+                    <h4 class="comments-title">Comments ({{ item()!.kids?.length || 0 }})</h4>
 
                     <app-comment-sort-dropdown
                       [sortOrder]="sortOrder()"
@@ -193,12 +191,20 @@ import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-nav
         outline: none;
       }
 
+      .sidebar-comments-panel {
+        container-type: inline-size;
+      }
+
       .comments-heading {
-        @apply sticky top-0 z-20 isolate -mx-4 mb-6 flex flex-col gap-2 px-4 py-2 sm:-mx-6 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3;
+        @apply sticky top-0 z-20 isolate -mx-4 mb-6 flex flex-col gap-2 px-4 py-2 sm:-mx-6 sm:px-6 sm:py-3;
         @apply pointer-events-auto;
         background-color: var(--app-surface);
         border-bottom: 1px solid var(--app-border);
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+      }
+
+      .comments-title {
+        @apply whitespace-nowrap text-lg font-semibold text-gray-900 dark:text-gray-100;
       }
 
       .comments-title-row {
@@ -206,7 +212,20 @@ import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-nav
       }
 
       .comments-controls {
-        @apply min-w-0 max-w-full sm:flex sm:items-center sm:justify-end;
+        @apply min-w-0 max-w-full;
+      }
+
+      @container (min-width: 48rem) {
+        .comments-heading {
+          display: grid;
+          grid-template-columns: max-content max-content minmax(0, 1fr);
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .comments-title-row {
+          display: contents;
+        }
       }
 
       /* PWA standalone mode: adjust for safe area insets */
