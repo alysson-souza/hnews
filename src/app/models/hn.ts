@@ -12,6 +12,7 @@ export interface HNItem {
   text?: string;
   dead?: boolean;
   parent?: number;
+  storyId?: number;
   poll?: number;
   kids?: number[];
   url?: string;
@@ -72,6 +73,7 @@ export function mapToHNItem(raw: unknown): HNItem | null {
     dead: obj.dead === true ? true : undefined,
     deleted: obj.deleted === true ? true : undefined,
     parent: typeof obj.parent === 'number' ? obj.parent : undefined,
+    storyId: typeof obj.storyId === 'number' ? obj.storyId : undefined,
     poll: typeof obj.poll === 'number' ? obj.poll : undefined,
     kids,
     parts,

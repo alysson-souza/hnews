@@ -28,7 +28,11 @@
       }
 
       <!-- Story/Comment summary -->
-      <app-sidebar-story-summary [item]="item()!" [boxedText]="true" />
+      <app-sidebar-story-summary
+        [item]="item()!"
+        [boxedText]="true"
+        [parentDiscussionId]="parentDiscussionId()"
+      />
     </app-card>
 
     <!-- Comments Section -->

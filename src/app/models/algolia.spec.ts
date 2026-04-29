@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { mapHitToStory, AlgoliaHitRaw } from './algolia';
+import {
+  mapAlgoliaItemToHNItem,
+  mapHitToStory,
+  AlgoliaHitRaw,
+  AlgoliaItemResponse,
+} from './algolia';
 
 describe('algolia mappers', () => {
   it('maps a basic story hit', () => {
@@ -36,5 +41,24 @@ describe('algolia mappers', () => {
 
     const mapped = mapHitToStory(hit);
     expect(mapped).toBeNull();
+  });
+
+  it('maps Algolia story_id to HNItem storyId for comments', () => {
+    const item: AlgoliaItemResponse = {
+      id: 456,
+      created_at: '2025-01-01T00:00:00Z',
+      created_at_i: 1735689600,
+      type: 'comment',
+      author: 'alice',
+      title: null,
+      url: null,
+      text: 'Hello',
+      points: null,
+      parent_id: 789,
+      story_id: 123,
+      children: [],
+    };
+
+    expect(mapAlgoliaItemToHNItem(item).storyId).toBe(123);
   });
 });

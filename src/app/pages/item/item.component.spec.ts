@@ -111,6 +111,11 @@ describe('ItemComponent', () => {
     mockRouter = {
       events: routerEvents.asObservable(),
       navigate: vi.fn(),
+      createUrlTree: vi.fn(
+        (commands: unknown[]) =>
+          `/${commands.map((command) => String(command).replace(/^\/+/, '')).join('/')}`,
+      ),
+      serializeUrl: vi.fn((url: string) => url),
       url: '/item/123',
     } as unknown as MockedObject<Router>;
     mockLocation = {
@@ -246,6 +251,43 @@ describe('ItemComponent', () => {
       expect((summary.componentInstance as SidebarStorySummaryComponent).boxedText()).toBe(true);
     });
 
+    it('should render parent discussion link for a comment with storyId', () => {
+      fixture.detectChanges();
+
+      component.item.set({
+        id: 456,
+        type: 'comment',
+        by: 'commenter',
+        time: 1234567890,
+        text: 'Comment body',
+        parent: 789,
+        storyId: 123,
+      });
+      component.parentDiscussionId.set(123);
+      component.loading.set(false);
+
+      fixture.detectChanges();
+
+      const link = fixture.nativeElement.querySelector(
+        '.parent-discussion-meta-link',
+      ) as HTMLAnchorElement;
+      expect(link).toBeTruthy();
+      expect(link.textContent?.trim()).toBe('Parent discussion');
+      expect(link.getAttribute('href')).toBe('/item/123');
+    });
+
+    it('should hide parent discussion link for story pages', () => {
+      fixture.detectChanges();
+
+      component.item.set(mockItem);
+      component.parentDiscussionId.set(null);
+      component.loading.set(false);
+
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.parent-discussion-meta-link')).toBeNull();
+    });
+
     it('should update visibleCommentIds when sort changes', () => {
       component.item.set(mockItem);
       component.allComments.set(mockComments);
@@ -350,6 +392,42 @@ describe('ItemComponent', () => {
       // Should have called Algolia first
       expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(123);
       // Then fallback to Firebase API
+      expect(mockHnService.getItem).toHaveBeenCalledWith(123);
+    });
+
+    it('should resolve a Firebase-only nested comment back to the root story', async () => {
+      const childComment: HNItem = {
+        id: 456,
+        type: 'comment',
+        by: 'child',
+        time: 1234567890,
+        text: 'Child comment',
+        parent: 789,
+      };
+      const parentComment: HNItem = {
+        id: 789,
+        type: 'comment',
+        by: 'parent',
+        time: 1234567800,
+        text: 'Parent comment',
+        parent: 123,
+      };
+
+      mockHnService.getStoryWithAllComments.mockReturnValue(of(null));
+      mockHnService.getItem.mockImplementation((id: number) => {
+        if (id === 456) return of(childComment);
+        if (id === 789) return of(parentComment);
+        if (id === 123) return of(mockItem);
+        return of(null);
+      });
+
+      component.loadItem(456);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(component.parentDiscussionId()).toBe(123);
+      expect(mockHnService.getItem).toHaveBeenCalledWith(789);
       expect(mockHnService.getItem).toHaveBeenCalledWith(123);
     });
 

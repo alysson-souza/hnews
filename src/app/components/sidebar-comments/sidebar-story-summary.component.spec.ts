@@ -189,6 +189,34 @@ describe('SidebarStorySummaryComponent', () => {
       expect(shell).toBeFalsy();
     });
 
+    it('should render comment text before meta with parent discussion in meta', () => {
+      fixture.componentRef.setInput('boxedText', true);
+      fixture.componentRef.setInput('parentDiscussionId', 456);
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'comment',
+        by: 'testuser',
+        time: 1708099200,
+        text: 'This is the comment text',
+        parent: 456,
+      });
+      fixture.detectChanges();
+
+      const shell = fixture.debugElement.query(By.css('.quote-surface-shell'));
+      const meta = fixture.debugElement.query(By.css('.meta'));
+      const parentLink = fixture.debugElement.query(By.css('.parent-discussion-meta-link'));
+
+      expect(shell).toBeTruthy();
+      expect(meta).toBeTruthy();
+      expect(parentLink).toBeTruthy();
+      expect(parentLink.nativeElement.getAttribute('href')).toBe('/item/456');
+      expect(parentLink.nativeElement.textContent.trim()).toBe('Parent discussion');
+      expect(
+        shell.nativeElement.compareDocumentPosition(meta.nativeElement) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
     it('should wrap text in a quote surface shell when boxedText is enabled', () => {
       fixture.componentRef.setInput('boxedText', true);
       fixture.componentRef.setInput('item', {

@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, ChangeDetectionStrategy, input, computed } from '@angular/core';
 
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HNItem } from '@models/hn';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
@@ -13,69 +13,107 @@ import { StoryArchiveService } from '@services/story-archive.service';
 @Component({
   selector: 'app-sidebar-story-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RelativeTimePipe, CommentTextComponent, UserTagComponent, StoryLinkComponent],
+  imports: [
+    RelativeTimePipe,
+    CommentTextComponent,
+    UserTagComponent,
+    StoryLinkComponent,
+    RouterLink,
+  ],
   template: `
     <section class="story">
-      <h3 class="story-title">
-        <app-story-link
-          [url]="item().url"
-          [textContent]="item().title"
-          [linkTitle]="item().title || ''"
-          class="story-link"
-        />
-      </h3>
-
-      <!-- Domain - clickable -->
-      @if (item().url && getDomain(item().url)) {
-        <button
-          type="button"
-          role="button"
-          (click)="searchByDomain($event)"
-          (keyup.enter)="searchByDomain($event)"
-          (keyup.space)="searchByDomain($event)"
-          class="domain-btn"
-          [attr.aria-label]="'Search for more stories from ' + getDomain(item().url)"
-          [attr.title]="'Search for more stories from ' + getDomain(item().url)"
-        >
-          {{ getDomain(item().url) }}
-        </button>
-      }
-
-      <div class="meta">
-        @if (item().score !== undefined && item().score !== null) {
-          <span>{{ item().score }} points</span>
+      @if (item().type === 'comment') {
+        @if (item().text) {
+          @if (boxedText()) {
+            <div class="quote-surface-shell">
+              <app-comment-text [html]="item().text!" />
+            </div>
+          } @else {
+            <app-comment-text [html]="item().text!" />
+          }
         }
-        @if (item().by) {
-          @if (item().score !== undefined && item().score !== null) {
+
+        <div class="meta comment-meta">
+          @if (item().by) {
+            <span>by <app-user-tag [username]="item().by!" /></span>
+          }
+          @if (item().by) {
             <span>•</span>
           }
-          <span>by <app-user-tag [username]="item().by!" /></span>
-        }
-        @if (hasMetaPrefix()) {
-          <span>•</span>
-        }
-        <span class="time-text">{{ item().time | relativeTime }}</span>
-        @if (archiveUrl()) {
-          <span>•</span>
-          <a
-            class="open-link"
-            [href]="archiveUrl()!"
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            aria-label="Open story in Internet Archive"
-          >
-            Open in Internet Archive
-          </a>
-        }
-      </div>
+          <span class="time-text">{{ item().time | relativeTime }}</span>
+          @if (parentDiscussionId()) {
+            <span>•</span>
+            <a
+              class="open-link parent-discussion-meta-link"
+              [routerLink]="['/item', parentDiscussionId()]"
+              aria-label="Go to parent discussion"
+            >
+              Parent discussion
+            </a>
+          }
+        </div>
+      } @else {
+        <h3 class="story-title">
+          <app-story-link
+            [url]="item().url"
+            [textContent]="item().title"
+            [linkTitle]="item().title || ''"
+            class="story-link"
+          />
+        </h3>
 
-      @if (item().text) {
-        @if (boxedText()) {
-          <div class="quote-surface-shell mt-3">
+        <!-- Domain - clickable -->
+        @if (item().url && getDomain(item().url)) {
+          <button
+            type="button"
+            role="button"
+            (click)="searchByDomain($event)"
+            (keyup.enter)="searchByDomain($event)"
+            (keyup.space)="searchByDomain($event)"
+            class="domain-btn"
+            [attr.aria-label]="'Search for more stories from ' + getDomain(item().url)"
+            [attr.title]="'Search for more stories from ' + getDomain(item().url)"
+          >
+            {{ getDomain(item().url) }}
+          </button>
+        }
+
+        <div class="meta">
+          @if (item().score !== undefined && item().score !== null) {
+            <span>{{ item().score }} points</span>
+          }
+          @if (item().by) {
+            @if (item().score !== undefined && item().score !== null) {
+              <span>•</span>
+            }
+            <span>by <app-user-tag [username]="item().by!" /></span>
+          }
+          @if (hasMetaPrefix()) {
+            <span>•</span>
+          }
+          <span class="time-text">{{ item().time | relativeTime }}</span>
+          @if (archiveUrl()) {
+            <span>•</span>
+            <a
+              class="open-link"
+              [href]="archiveUrl()!"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              aria-label="Open story in Internet Archive"
+            >
+              Open in Internet Archive
+            </a>
+          }
+        </div>
+
+        @if (item().text) {
+          @if (boxedText()) {
+            <div class="quote-surface-shell mt-3">
+              <app-comment-text [html]="item().text!" />
+            </div>
+          } @else {
             <app-comment-text [html]="item().text!" />
-          </div>
-        } @else {
-          <app-comment-text [html]="item().text!" />
+          }
         }
       }
     </section>
@@ -99,6 +137,9 @@ import { StoryArchiveService } from '@services/story-archive.service';
       .meta {
         @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
       }
+      .comment-meta {
+        @apply mt-3;
+      }
       .open-link {
         @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors duration-200;
         @apply rounded focus-visible:outline-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 focus-visible:outline-offset-1;
@@ -112,6 +153,7 @@ import { StoryArchiveService } from '@services/story-archive.service';
 export class SidebarStorySummaryComponent {
   readonly item = input.required<HNItem>();
   readonly boxedText = input(false);
+  readonly parentDiscussionId = input<number | null>(null);
   private router = inject(Router);
   private storyArchive = inject(StoryArchiveService);
   readonly archiveUrl = computed(() => this.storyArchive.getArchiveUrl(this.item()));

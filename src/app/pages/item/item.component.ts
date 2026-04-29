@@ -5,6 +5,7 @@ import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angula
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 import { HackernewsService } from '@services/hackernews.service';
 import { BulkLoadResult } from '@services/algolia-comment-loader.service';
 import { HNItem } from '@models/hn';
@@ -55,6 +56,7 @@ export class ItemComponent implements OnInit {
   item = signal<HNItem | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
+  parentDiscussionId = signal<number | null>(null);
 
   // Sorting state - use global service
   sortOrder = this.commentSortService.sortOrder;
@@ -164,6 +166,7 @@ export class ItemComponent implements OnInit {
     this.bulkLoadingComments.set(false);
     this.itemKeyboardNav.clearSelection();
     this.previousVisitedAt.set(null);
+    this.parentDiscussionId.set(null);
     this.commentIndex.clearContext('item');
 
     // Use Algolia bulk loading for stories with comments
@@ -187,6 +190,7 @@ export class ItemComponent implements OnInit {
           // Algolia bulk load succeeded
           this.bulkLoadResult.set(result);
           this.item.set(result.story);
+          this.resolveParentDiscussion(result.story, itemId);
           this.applyCommentDisplayStrategy(result.story);
 
           // Pre-populate allComments for sorting (top-level only)
@@ -232,6 +236,7 @@ export class ItemComponent implements OnInit {
       next: (item) => {
         if (item) {
           this.item.set(item);
+          this.resolveParentDiscussion(item, itemId);
           this.applyCommentDisplayStrategy(item);
           const previousVisitedAt = this.getPreviousCommentsVisitedAt(
             item.id,
@@ -379,6 +384,64 @@ export class ItemComponent implements OnInit {
     });
     this.smallThreadMode.set(strategy.smallThreadMode);
     this.visibleTopLevelCount.set(strategy.initialVisibleTopLevelCount);
+  }
+
+  private resolveParentDiscussion(item: HNItem, requestedItemId: number): void {
+    if (item.type !== 'comment') {
+      this.parentDiscussionId.set(null);
+      return;
+    }
+
+    if (item.storyId) {
+      this.parentDiscussionId.set(item.storyId);
+      return;
+    }
+
+    void this.resolveParentDiscussionFromAncestors(item, requestedItemId);
+  }
+
+  private async resolveParentDiscussionFromAncestors(
+    item: HNItem,
+    requestedItemId: number,
+  ): Promise<void> {
+    const visited = new Set<number>([item.id]);
+    let parentId = item.parent;
+
+    while (parentId !== undefined && !visited.has(parentId)) {
+      visited.add(parentId);
+      let parent: HNItem | null;
+      try {
+        parent = await firstValueFrom(this.hnService.getItem(parentId));
+      } catch {
+        if (this.item()?.id === requestedItemId) {
+          this.parentDiscussionId.set(null);
+        }
+        return;
+      }
+
+      if (this.item()?.id !== requestedItemId) {
+        return;
+      }
+
+      if (!parent || parent.deleted) {
+        this.parentDiscussionId.set(null);
+        return;
+      }
+
+      if (parent.type !== 'comment') {
+        this.parentDiscussionId.set(parent.id);
+        return;
+      }
+
+      if (parent.storyId) {
+        this.parentDiscussionId.set(parent.storyId);
+        return;
+      }
+
+      parentId = parent.parent;
+    }
+
+    this.parentDiscussionId.set(null);
   }
 
   private getStoredThreadReturnScrollY(): number | null {

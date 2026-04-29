@@ -97,6 +97,7 @@ interface HNItemShape {
   url?: string;
   score?: number;
   parent?: number;
+  storyId?: number;
   kids?: number[];
   descendants?: number;
   deleted?: boolean;
@@ -118,6 +119,7 @@ export function mapAlgoliaItemToHNItem(item: AlgoliaItemResponse): HNItemShape {
     url: item.url ?? undefined,
     score: item.points ?? undefined,
     parent: item.parent_id ?? undefined,
+    storyId: item.story_id ?? undefined,
     kids: item.children.length > 0 ? item.children.map((c) => c.id) : undefined,
     descendants: countDescendants(item),
   };
