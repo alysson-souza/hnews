@@ -103,26 +103,26 @@ describe('SidebarKeyboardNavigationService', () => {
       createMockComments([1, 2, 3]);
       service.selectedCommentId.set(1);
 
-      const nextElement = document.querySelector('[data-comment-id="2"]') as HTMLElement;
-      const scrollSpy = vi.spyOn(nextElement, 'scrollIntoView');
+      const container = document.querySelector('.sidebar-comments-panel') as HTMLElement;
+      const scrollSpy = vi.spyOn(container, 'scrollTo');
 
       service.selectNext();
 
       expect(service.selectedCommentId()).toBe(2);
-      expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
+      expect(scrollSpy).toHaveBeenCalled();
     });
 
     it('should select previous comment', () => {
       createMockComments([1, 2, 3]);
       service.selectedCommentId.set(2);
 
-      const prevElement = document.querySelector('[data-comment-id="1"]') as HTMLElement;
-      const scrollSpy = vi.spyOn(prevElement, 'scrollIntoView');
+      const container = document.querySelector('.sidebar-comments-panel') as HTMLElement;
+      const scrollSpy = vi.spyOn(container, 'scrollTo');
 
       service.selectPrevious();
 
       expect(service.selectedCommentId()).toBe(1);
-      expect(scrollSpy).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
+      expect(scrollSpy).toHaveBeenCalled();
     });
 
     it('should select first comment if none selected on next', () => {

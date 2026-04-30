@@ -345,7 +345,7 @@ export abstract class BaseCommentNavigationService {
     void this.scrollSelectedIntoView();
   }
 
-  private getStickyToolbarHeight(): number {
+  protected getStickyToolbarHeight(): number {
     const toolbar = document.querySelector(
       `${this.containerSelector} .comments-heading`,
     ) as HTMLElement | null;

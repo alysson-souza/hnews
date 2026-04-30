@@ -277,13 +277,7 @@ export class ItemComponent implements OnInit {
     }
 
     setTimeout(() => {
-      if (this.itemKeyboardNav.consumeSelectFirstVisibleOnNextThreadLoad()) {
-        this.itemKeyboardNav.selectFirstVisibleComment({ scrollIntoView: false });
-      }
-
-      if (loadedItem?.type === 'comment') {
-        this.scrollService.scrollToElement('submission-title');
-      } else if (document.getElementById('first-comment')) {
+      if (document.getElementById('first-comment')) {
         this.scrollService.scrollToElement('first-comment', {
           offset: this.getStickyCommentsHeaderOffset(),
         });

@@ -20,7 +20,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     this.sidebarThreadNavigation.registerSelectionCallbacks({
       captureSelectedCommentId: () => this.selectedCommentId(),
       restoreSelectedCommentId: (commentId) => this.restoreSelectedComment(commentId),
-      selectFirstVisibleComment: () => this.selectFirstVisibleComment({ scrollIntoView: false }),
+      selectFirstVisibleComment: () => this.scrollSidebarToFirstVisible(),
     });
   }
 
@@ -52,16 +52,31 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
 
   /**
    * Scroll selected comment into view
-   * Overridden to use native scrollIntoView since sidebar has its own scroll container
+   * Overridden to use the sidebar's scroll container with toolbar offset
    */
   protected override async scrollSelectedIntoView(): Promise<void> {
     const selectedId = this.selectedCommentId();
     if (selectedId === null) return;
 
     const element = this.findElementById(selectedId);
-    if (element) {
+    if (!element) return;
+
+    const container = document.querySelector(this.containerSelector) as HTMLElement | null;
+    if (!container) {
       element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
     }
+
+    const toolbarHeight = this.getStickyToolbarHeight();
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const targetScrollTop =
+      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
+
+    container.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior: 'smooth',
+    });
   }
 
   /**
@@ -110,6 +125,36 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     } else {
       this.closeSidebar();
     }
+  }
+
+  /**
+   * Scroll sidebar container to the first visible comment, accounting for sticky toolbar.
+   * Retries up to 3 times if comment elements haven't rendered yet.
+   * Does NOT set keyboard selection — only scrolls for visibility.
+   */
+  private scrollSidebarToFirstVisible(retries = 3): void {
+    const container = document.querySelector(this.containerSelector) as HTMLElement | null;
+    if (!container) return;
+
+    const firstComment = container.querySelector('[role="treeitem"]') as HTMLElement | null;
+    if (!firstComment) {
+      if (retries > 0) {
+        setTimeout(() => this.scrollSidebarToFirstVisible(retries - 1), 50);
+      }
+      return;
+    }
+
+    const toolbar = container.querySelector('.comments-heading') as HTMLElement | null;
+    const toolbarHeight = toolbar?.getBoundingClientRect().height ?? 0;
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = firstComment.getBoundingClientRect();
+    const targetScrollTop =
+      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
+
+    container.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior: 'smooth',
+    });
   }
 
   private restoreSelectedComment(commentId: number | null): void {

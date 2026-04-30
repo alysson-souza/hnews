@@ -92,7 +92,10 @@ describe('ItemKeyboardNavigationService', () => {
   it('should save state and navigate to item page when viewing thread', () => {
     service.selectedCommentId.set(456);
     service.viewThreadSelected();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/item', 456]);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(
+      ['/item', 456],
+      expect.objectContaining({ state: expect.any(Object) }),
+    );
   });
 
   it('should not navigate if no comment selected', () => {
@@ -114,7 +117,10 @@ describe('ItemKeyboardNavigationService', () => {
     vi.spyOn(window, 'scrollY', 'get').mockReturnValue(900);
 
     service.navigateToThread(456);
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/item', 456]);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(
+      ['/item', 456],
+      expect.objectContaining({ state: expect.any(Object) }),
+    );
 
     routerEventsSubject.next(new NavigationStart(1, '/item/123', 'popstate'));
     routerEventsSubject.next(new NavigationEnd(2, '/item/123', '/item/123'));

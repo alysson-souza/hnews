@@ -24,7 +24,6 @@ export class ItemKeyboardNavigationService
 
   private stateStack: ItemPageState[] = [];
   private isNavigatingBack = false;
-  private selectFirstVisibleOnNextThreadLoad = false;
   private routerSubscription: Subscription;
   private routerStartSubscription: Subscription;
 
@@ -135,29 +134,22 @@ export class ItemKeyboardNavigationService
   override viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null) {
-      this.navigateToThread(selectedId, { selectFirstVisibleOnNextThreadLoad: true });
+      this.saveCurrentState();
+      this.router.navigate(['/item', selectedId], {
+        state: {
+          __hnewsPreviousCommentsVisitedAt: this.commentIndex.getPreviousVisitedAt('item'),
+        },
+      });
     }
   }
 
-  navigateToThread(
-    commentId: number,
-    options?: { selectFirstVisibleOnNextThreadLoad?: boolean },
-  ): void {
-    if (options?.selectFirstVisibleOnNextThreadLoad) {
-      this.selectFirstVisibleOnNextThreadLoad = true;
-    }
+  navigateToThread(commentId: number): void {
     this.saveCurrentState();
     this.router.navigate(['/item', commentId], {
       state: {
         __hnewsPreviousCommentsVisitedAt: this.commentIndex.getPreviousVisitedAt('item'),
       },
     });
-  }
-
-  consumeSelectFirstVisibleOnNextThreadLoad(): boolean {
-    const shouldSelect = this.selectFirstVisibleOnNextThreadLoad;
-    this.selectFirstVisibleOnNextThreadLoad = false;
-    return shouldSelect;
   }
 
   private isElementVisibleInWindow(element: HTMLElement): boolean {

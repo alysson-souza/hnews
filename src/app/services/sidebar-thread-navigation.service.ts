@@ -58,6 +58,8 @@ export class SidebarThreadNavigationService {
       return;
     }
 
+    this.pendingSelectFirstVisible = false;
+
     const previousState = this.stateStack.pop() ?? null;
     this.sidebarService.goBack();
 
