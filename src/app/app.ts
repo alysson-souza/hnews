@@ -42,7 +42,7 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
     KeyboardShortcutsComponent,
     AppShellComponent,
   ],
-  templateUrl: './app.html',
+  templateUrl: './app.component.html',
   styleUrl: './app.css',
 })
 export class App implements OnInit {

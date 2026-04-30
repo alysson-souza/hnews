@@ -11,6 +11,8 @@ npm test                 # Unit tests (single run, Vitest via Angular)
 npm run test:watch       # Unit tests in watch mode
 npm run lint             # ESLint (fails on warnings)
 npm run lint:fix         # ESLint with autofix
+npm run format           # Format all files with oxfmt
+npm run format:check     # Check formatting without writing
 npm run e2e              # Playwright e2e tests
 npm run e2e:ui           # Interactive e2e UI mode
 ```

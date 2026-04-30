@@ -27,7 +27,7 @@ import { StoryLinkComponent } from '../shared/story-link/story-link.component';
     DecimalPipe,
     StoryLinkComponent,
   ],
-  templateUrl: './story-item.html',
+  templateUrl: './story-item.component.html',
   styleUrls: ['./story-item.css'],
 })
 export class StoryItem {

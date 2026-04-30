@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "singleQuote": true,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "coverage",
+    ".angular",
+    "*.min.*",
+    "package-lock.json",
+    "tmp",
+    "*.log",
+    "public/version.json",
+    "public/hnews-redirect.user.js",
+    "functions/types.d.ts"
+  ]
+}

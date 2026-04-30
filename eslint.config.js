@@ -3,7 +3,7 @@ const { defineConfig } = require('eslint/config');
 const eslint = require('@eslint/js');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
-const eslintPluginPrettier = require('eslint-plugin-prettier/recommended');
+const eslintConfigPrettier = require('eslint-config-prettier');
 const globals = require('globals');
 
 /**
@@ -78,5 +78,5 @@ module.exports = defineConfig([
       globals: globals.node,
     },
   },
-  eslintPluginPrettier,
+  eslintConfigPrettier,
 ]);

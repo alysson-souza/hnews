@@ -32,7 +32,7 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '@models/story-filter';
 @Component({
   selector: 'app-story-list',
   imports: [StoryItem, PageContainerComponent, SegmentedControlComponent, AppButtonComponent],
-  templateUrl: './story-list.html',
+  templateUrl: './story-list.component.html',
   styleUrl: './story-list.css',
   styles: [
     `
