@@ -215,7 +215,7 @@ export class StoryItem {
       }
     }
 
-    const shouldUseSidebar = this.deviceService.isDesktop() && this.openCommentsInSidebar();
+    const shouldUseSidebar = this.openCommentsInSidebar();
 
     if (!shouldUseSidebar) {
       if (this.sidebarService.isOpen()) {

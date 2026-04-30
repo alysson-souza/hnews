@@ -133,7 +133,7 @@ export class ItemKeyboardNavigationService
    */
   override viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
-    if (selectedId !== null) {
+    if (selectedId !== null && this.commentIndex.hasChildren(this.context, selectedId)) {
       this.saveCurrentState();
       this.router.navigate(['/item', selectedId], {
         state: {

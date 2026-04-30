@@ -13,6 +13,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
   private sidebarService = inject(SidebarService);
   private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
   private router = inject(Router);
+  private pendingKeyboardSelect = false;
 
   constructor() {
     super();
@@ -20,7 +21,13 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     this.sidebarThreadNavigation.registerSelectionCallbacks({
       captureSelectedCommentId: () => this.selectedCommentId(),
       restoreSelectedCommentId: (commentId) => this.restoreSelectedComment(commentId),
-      selectFirstVisibleComment: () => this.scrollSidebarToFirstVisible(),
+      selectFirstVisibleComment: () => {
+        this.scrollSidebarToFirstVisible();
+        if (this.pendingKeyboardSelect) {
+          this.pendingKeyboardSelect = false;
+          this.selectFirstVisibleComment({ scrollIntoView: false });
+        }
+      },
     });
   }
 
@@ -67,14 +74,11 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
       return;
     }
 
-    const toolbarHeight = this.getStickyToolbarHeight();
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    const targetScrollTop =
-      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
+    const target = this.computeSidebarScrollTarget(element, container);
+    this.ensureScrollTarget(container, target);
 
     container.scrollTo({
-      top: Math.max(0, targetScrollTop),
+      top: target,
       behavior: 'smooth',
     });
   }
@@ -84,7 +88,8 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
    */
   override viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
-    if (selectedId !== null) {
+    if (selectedId !== null && this.commentIndex.hasChildren(this.context, selectedId)) {
+      this.pendingKeyboardSelect = true;
       this.sidebarThreadNavigation.pushThread(selectedId, { selectFirstVisibleOnOpen: true });
     }
   }
@@ -128,31 +133,77 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
   }
 
   /**
+   * Ensure the sidebar container has enough scrollable space to reach the target.
+   * Adds a temporary spacer if needed, removed after the next scroll.
+   */
+  private ensureScrollTarget(container: HTMLElement, targetScrollTop: number): void {
+    const scrollTop = container.scrollTop;
+    this.cleanupScrollSpacers(container);
+
+    const clientHeight = container.clientHeight;
+
+    let contentHeight = 0;
+    for (const child of Array.from(container.children)) {
+      contentHeight += (child as HTMLElement).offsetHeight;
+    }
+
+    const neededHeight = clientHeight + targetScrollTop;
+    const shortfall = neededHeight - contentHeight;
+
+    if (shortfall > 0) {
+      const spacer = document.createElement('div');
+      spacer.style.height = `${shortfall}px`;
+      spacer.setAttribute('data-scroll-spacer', '');
+      container.appendChild(spacer);
+    }
+
+    container.scrollTop = scrollTop;
+  }
+
+  /**
+   * Clean up any temporary scroll spacers.
+   */
+  private cleanupScrollSpacers(container: HTMLElement): void {
+    container.querySelectorAll('[data-scroll-spacer]').forEach((el) => el.remove());
+  }
+
+  /**
+   * Compute target scrollTop so element is visible below the sticky toolbar.
+   */
+  private computeSidebarScrollTarget(element: HTMLElement, container: HTMLElement): number {
+    const toolbar = container.querySelector('.comments-heading') as HTMLElement | null;
+    const toolbarHeight = toolbar?.getBoundingClientRect().height ?? 0;
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+
+    const targetScrollTop =
+      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
+
+    return Math.max(0, targetScrollTop);
+  }
+
+  /**
    * Scroll sidebar container to the first visible comment, accounting for sticky toolbar.
-   * Retries up to 3 times if comment elements haven't rendered yet.
+   * Retries up to 20 times (2s total) for async comment rendering.
    * Does NOT set keyboard selection — only scrolls for visibility.
    */
-  private scrollSidebarToFirstVisible(retries = 3): void {
+  private scrollSidebarToFirstVisible(retries = 20): void {
     const container = document.querySelector(this.containerSelector) as HTMLElement | null;
     if (!container) return;
 
     const firstComment = container.querySelector('[role="treeitem"]') as HTMLElement | null;
     if (!firstComment) {
       if (retries > 0) {
-        setTimeout(() => this.scrollSidebarToFirstVisible(retries - 1), 50);
+        setTimeout(() => this.scrollSidebarToFirstVisible(retries - 1), 100);
       }
       return;
     }
 
-    const toolbar = container.querySelector('.comments-heading') as HTMLElement | null;
-    const toolbarHeight = toolbar?.getBoundingClientRect().height ?? 0;
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = firstComment.getBoundingClientRect();
-    const targetScrollTop =
-      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
+    const target = this.computeSidebarScrollTarget(firstComment, container);
+    this.ensureScrollTarget(container, target);
 
     container.scrollTo({
-      top: Math.max(0, targetScrollTop),
+      top: target,
       behavior: 'smooth',
     });
   }

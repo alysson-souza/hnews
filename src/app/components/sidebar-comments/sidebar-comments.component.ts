@@ -29,6 +29,7 @@ import {
 import { CommentThreadToolbarComponent } from '../comment-tools/comment-thread-toolbar.component';
 import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-navigation.service';
+import { DeviceService } from '@services/device.service';
 
 @Component({
   selector: 'app-sidebar-comments',
@@ -318,7 +319,7 @@ export class SidebarCommentsComponent {
   private sidebarContentRef = viewChild<ElementRef<HTMLElement>>('sidebarContent');
   sidebarService = inject(SidebarService);
   private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
-  // Intentionally no device-specific behavior here
+  deviceService = inject(DeviceService);
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private commentSortService = inject(CommentSortService);
@@ -431,6 +432,17 @@ export class SidebarCommentsComponent {
         setTimeout(() => {
           this.sidebarContentRef()?.nativeElement?.focus({ preventScroll: true });
         });
+      }
+    });
+
+    // Lock body scroll when sidebar is open on mobile devices
+    effect(() => {
+      const open = this.sidebarService.isOpen();
+      const mobile = this.deviceService.isMobile();
+      if (open && mobile) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
       }
     });
   }

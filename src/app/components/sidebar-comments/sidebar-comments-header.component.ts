@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, output, input, computed } from '@angular/core';
+import { Component, output, input, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -8,6 +8,7 @@ import {
   solarMaximizeSquare3Linear,
   solarCloseCircleLinear,
 } from '@ng-icons/solar-icons/linear';
+import { DeviceService } from '@services/device.service';
 
 @Component({
   selector: 'app-sidebar-comments-header',
@@ -35,7 +36,7 @@ import {
           >
             <ng-icon name="solarCloseCircleLinear" class="icon" />
           </button>
-          @if (itemId()) {
+          @if (itemId() && isDesktop()) {
             <a
               [routerLink]="['/item', itemId()]"
               target="_blank"
@@ -80,7 +81,7 @@ import {
         </div>
         <h2 class="title">Comments</h2>
         <div class="right-controls">
-          @if (itemId()) {
+          @if (itemId() && isDesktop()) {
             <a
               [routerLink]="['/item', itemId()]"
               target="_blank"
@@ -153,10 +154,13 @@ import {
   ],
 })
 export class SidebarCommentsHeaderComponent {
+  private deviceService = inject(DeviceService);
   readonly canGoBack = input(false);
   readonly itemId = input<number | undefined>(undefined);
   readonly dismiss = output<void>();
   readonly back = output<void>();
+
+  isDesktop = computed(() => this.deviceService.isDesktop());
 
   isMac = computed(() => {
     return typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);

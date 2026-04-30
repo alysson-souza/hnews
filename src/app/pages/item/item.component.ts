@@ -277,9 +277,27 @@ export class ItemComponent implements OnInit {
     }
 
     setTimeout(() => {
-      if (document.getElementById('first-comment')) {
-        this.scrollService.scrollToElement('first-comment', {
-          offset: this.getStickyCommentsHeaderOffset(),
+      const firstComment = document.getElementById('first-comment');
+      if (firstComment) {
+        const heading = document.querySelector(
+          '.comments-card .comments-heading',
+        ) as HTMLElement | null;
+        const commentRect = firstComment.getBoundingClientRect();
+        const commentAbsTop = commentRect.top + window.scrollY;
+        const headerHeight = this.scrollService.getHeaderHeight();
+        const toolbarHeight = heading?.getBoundingClientRect().height ?? 0;
+
+        let target = commentAbsTop - headerHeight - toolbarHeight - 16;
+
+        if (heading) {
+          const headingRect = heading.getBoundingClientRect();
+          const headingAbsTop = headingRect.top + window.scrollY;
+          target = Math.max(target, headingAbsTop - headerHeight);
+        }
+
+        window.scrollTo({
+          top: Math.max(0, target),
+          behavior: 'smooth',
         });
       } else {
         this.scrollService.scrollToElement('submission-title');
@@ -473,12 +491,5 @@ export class ItemComponent implements OnInit {
 
   private getCommentCountForVisit(item: HNItem): number | undefined {
     return item.descendants ?? item.kids?.length;
-  }
-
-  private getStickyCommentsHeaderOffset(): number {
-    const toolbar = document.querySelector(
-      '.comments-card .comments-heading',
-    ) as HTMLElement | null;
-    return (toolbar?.getBoundingClientRect().height ?? 0) + 16;
   }
 }

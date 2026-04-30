@@ -178,14 +178,8 @@ export class CommentHeaderComponent {
         );
       }
       this.itemKeyboardNav.navigateToThread(commentId);
-    } else if (this.deviceService.isMobile()) {
-      this.router.navigate(['/item', commentId], {
-        state: {
-          __hnewsPreviousCommentsVisitedAt: this.commentIndex.getPreviousVisitedAt('sidebar'),
-        },
-      });
     } else {
-      this.sidebarThreadNavigation.pushThread(commentId);
+      this.sidebarThreadNavigation.pushThread(commentId, { selectFirstVisibleOnOpen: true });
     }
   }
 }

@@ -113,6 +113,11 @@ export class CommentThreadIndexService {
     return !!comment?.by && !!state.storyAuthor && comment.by === state.storyAuthor;
   }
 
+  hasChildren(context: CommentThreadContext, commentId: number): boolean {
+    const comment = this.states()[context].comments.get(commentId);
+    return (comment?.kids?.length ?? 0) > 0;
+  }
+
   getParentPath(context: CommentThreadContext, commentId: number): number[] {
     const state = this.states()[context];
     const path: number[] = [];

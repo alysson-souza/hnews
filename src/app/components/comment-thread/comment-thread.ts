@@ -350,11 +350,7 @@ export class CommentThread implements OnInit {
             this.collapseAll();
             break;
           case 'viewThread':
-            if (this.deviceService.isMobile()) {
-              this.router.navigate(['/item', this.commentId()]);
-            } else {
-              this.sidebarService.openSidebarWithSlideAnimation(this.commentId());
-            }
+            this.sidebarService.openSidebarWithSlideAnimation(this.commentId());
             break;
         }
       });

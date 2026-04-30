@@ -234,7 +234,7 @@ export abstract class BaseCommentNavigationService {
    */
   viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
-    if (selectedId !== null) {
+    if (selectedId !== null && this.commentIndex.hasChildren(this.context, selectedId)) {
       this.interactionService.dispatchAction(selectedId, 'viewThread');
     }
   }
