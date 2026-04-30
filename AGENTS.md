@@ -49,6 +49,8 @@ Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.9.
 
 Comment threads use `[role="treeitem"]` for navigation. "Load More" buttons use `.load-more-btn` class to enable J/K triggering.
 
+See `docs/comment-navigation.md` for the full behavioral specification of comment navigation keys (J/K/L/H), the view-thread button, sidebar interaction, and scroll requirements.
+
 ## Conventions
 
 - 2 spaces, single quotes, `app-` selector prefix, `FooComponent`/`BarService` suffixes
