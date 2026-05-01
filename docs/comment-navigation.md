@@ -41,4 +41,5 @@ After drilling into a thread with `L`, pressing `H` returns to the previous view
 
 - Sidebar covers the full screen
 - The page behind it does not scroll
+- Swiping right from the sidebar's left edge closes the sidebar while it covers the full viewport
 - The "Open in full view" button in the sidebar header is hidden

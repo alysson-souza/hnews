@@ -135,6 +135,139 @@ describe('SidebarCommentsComponent', () => {
     expect(panel?.classList.contains('translate-x-full')).toBe(true);
   });
 
+  describe('Swipe Dismissal', () => {
+    function getPanel(): HTMLElement {
+      fixture.detectChanges();
+      const panel: HTMLElement | null = fixture.nativeElement.querySelector('.sidebar-panel');
+      expect(panel).not.toBeNull();
+
+      panel!.setPointerCapture = vi.fn();
+      panel!.releasePointerCapture = vi.fn();
+      panel!.getBoundingClientRect = vi.fn(
+        () =>
+          ({
+            left: 0,
+            right: 390,
+            top: 0,
+            bottom: 844,
+            width: 390,
+            height: 844,
+            x: 0,
+            y: 0,
+            toJSON: () => {},
+          }) as DOMRect,
+      );
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
+
+      return panel!;
+    }
+
+    function pointerEvent(init: {
+      clientX: number;
+      clientY?: number;
+      pointerId?: number;
+      timeStamp?: number;
+      target?: EventTarget;
+    }): PointerEvent {
+      return {
+        button: 0,
+        clientX: init.clientX,
+        clientY: init.clientY ?? 0,
+        pointerId: init.pointerId ?? 1,
+        timeStamp: init.timeStamp ?? 0,
+        target: init.target ?? getPanel(),
+        preventDefault: vi.fn(),
+      } as unknown as PointerEvent;
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should close after a full-width left-edge right swipe crosses the distance threshold', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 150, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 150, target: panel, timeStamp: 120 }));
+
+      expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+    });
+
+    it('should snap back and keep the sidebar open after a short drag', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 24, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 24, target: panel, timeStamp: 140 }));
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+    });
+
+    it('should ignore vertical drags', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 14, clientY: 80, target: panel, timeStamp: 80 }),
+      );
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 14, clientY: 80, target: panel, timeStamp: 120 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+    });
+
+    it('should ignore gestures when the sidebar is not full viewport width', () => {
+      const panel = getPanel();
+      panel.getBoundingClientRect = vi.fn(
+        () =>
+          ({
+            left: 0,
+            right: 320,
+            top: 0,
+            bottom: 844,
+            width: 320,
+            height: 844,
+            x: 0,
+            y: 0,
+            toJSON: () => {},
+          }) as DOMRect,
+      );
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 180, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 180, target: panel, timeStamp: 120 }));
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+    });
+
+    it('should ignore gestures that start outside the left edge zone', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 40, target: panel }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 180, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 180, target: panel, timeStamp: 120 }));
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+    });
+
+    it('should ignore gestures that start on interactive controls', () => {
+      const panel = getPanel();
+      const button = document.createElement('button');
+      panel.appendChild(button);
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: button }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 180, target: button, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 180, target: button, timeStamp: 120 }));
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Sorting Logic', () => {
     beforeEach(() => {
       component.item.set(mockItem);

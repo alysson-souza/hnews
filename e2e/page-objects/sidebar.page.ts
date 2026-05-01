@@ -28,7 +28,7 @@ export class SidebarPage extends BasePage {
   }
 
   async isOpen(): Promise<boolean> {
-    return await this.panel.evaluate((el) => el.classList.contains('translate-x-0'));
+    return await this.panel.evaluate((el) => !el.classList.contains('translate-x-full'));
   }
 
   async isClosed(): Promise<boolean> {
