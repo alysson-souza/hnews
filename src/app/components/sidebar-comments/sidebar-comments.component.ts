@@ -352,7 +352,9 @@ export class SidebarCommentsComponent {
   private readonly commentsPageSize = 10;
   private readonly smallThreadDescendantsThreshold = 40;
   private readonly swipeEdgeWidth = 24;
-  private readonly swipeIntentThreshold = 8;
+  private readonly swipeStartThreshold = 12;
+  private readonly swipeVerticalCancelThreshold = 32;
+  private readonly swipeVerticalCancelMaxX = 8;
   private readonly swipeVelocityThreshold = 0.6;
   private readonly swipeMinVelocityDistance = 40;
   private visibleTopLevelCount = signal(this.commentsPageSize);
@@ -616,15 +618,16 @@ export class SidebarCommentsComponent {
     const deltaY = event.clientY - this.swipeStartY;
 
     if (this.swipeIntent === 'pending') {
-      if (
-        Math.abs(deltaX) < this.swipeIntentThreshold &&
-        Math.abs(deltaY) < this.swipeIntentThreshold
+      if (deltaX >= this.swipeStartThreshold) {
+        this.swipeIntent = 'horizontal';
+      } else if (
+        Math.abs(deltaY) >= this.swipeVerticalCancelThreshold &&
+        deltaX < this.swipeVerticalCancelMaxX
       ) {
+        this.swipeIntent = 'vertical';
+      } else {
         return;
       }
-
-      this.swipeIntent =
-        Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0 ? 'horizontal' : 'vertical';
     }
 
     if (this.swipeIntent !== 'horizontal') {

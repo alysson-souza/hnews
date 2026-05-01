@@ -194,6 +194,20 @@ describe('SidebarCommentsComponent', () => {
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
+    it('should close after a diagonal right swipe from the left edge', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 100, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 150, clientY: 180, target: panel, timeStamp: 80 }),
+      );
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 150, clientY: 180, target: panel, timeStamp: 120 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+    });
+
     it('should snap back and keep the sidebar open after a short drag', () => {
       const panel = getPanel();
 
@@ -206,7 +220,7 @@ describe('SidebarCommentsComponent', () => {
       expect(component.isSwipeDragging()).toBe(false);
     });
 
-    it('should ignore vertical drags', () => {
+    it('should ignore mostly vertical drags with little rightward movement', () => {
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
