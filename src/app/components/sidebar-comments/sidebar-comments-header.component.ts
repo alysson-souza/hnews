@@ -150,6 +150,12 @@ import { DeviceService } from '@services/device.service';
       .icon {
         @apply w-5 h-5;
       }
+
+      @media (display-mode: standalone) and (max-width: 639.98px) {
+        .header {
+          padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+        }
+      }
     `,
   ],
 })

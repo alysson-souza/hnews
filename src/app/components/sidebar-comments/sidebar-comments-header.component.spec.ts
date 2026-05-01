@@ -43,6 +43,15 @@ describe('SidebarCommentsHeaderComponent', () => {
     expect(closeBtn).toBeTruthy();
   });
 
+  it('should reserve the top safe area for mobile standalone PWA mode', () => {
+    const styles = (
+      SidebarCommentsHeaderComponent as unknown as { ɵcmp: { styles: string[] } }
+    ).ɵcmp.styles.join('\n');
+
+    expect(styles).toContain('@media (display-mode: standalone) and (max-width: 639.98px)');
+    expect(styles).toContain('padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem)');
+  });
+
   it('should render open in full view button when itemId is provided', () => {
     fixture.componentRef.setInput('itemId', 123);
     fixture.detectChanges();
