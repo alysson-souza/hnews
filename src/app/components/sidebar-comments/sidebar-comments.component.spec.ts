@@ -230,22 +230,79 @@ describe('SidebarCommentsComponent', () => {
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
-      component.onSidebarPointerUp(pointerEvent({ clientX: 90, target: panel, timeStamp: 60 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 110, target: panel, timeStamp: 60 }));
 
-      expect(component.swipeTransform()).toBe('translateX(82px)');
+      expect(component.swipeTransform()).toBe('translateX(102px)');
 
       advanceSwipeAnimation();
 
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
-    it('should close when a qualified fast horizontal swipe is cancelled by the browser', () => {
+    it('should snap back after a short fast right flick', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 63, target: panel, timeStamp: 30 }));
+
+      advanceSwipeAnimation();
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+    });
+
+    it('should snap back when a fast partial drag pauses before release', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 108, target: panel, timeStamp: 50 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 108, target: panel, timeStamp: 250 }));
+
+      advanceSwipeAnimation();
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+    });
+
+    it('should snap back when a short fast horizontal swipe is cancelled by the browser', () => {
       vi.useFakeTimers();
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
       component.onSidebarPointerMove(pointerEvent({ clientX: 70, target: panel, timeStamp: 60 }));
       component.onSidebarPointerCancel(pointerEvent({ clientX: 70, target: panel, timeStamp: 70 }));
+
+      advanceSwipeAnimation();
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+    });
+
+    it('should not turn a pending gesture into a close on pointer cancel', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerCancel(
+        pointerEvent({ clientX: 220, target: panel, timeStamp: 80 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should close when a substantial horizontal swipe is cancelled by the browser', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 220, target: panel, timeStamp: 120 }));
+      component.onSidebarPointerCancel(
+        pointerEvent({ clientX: 220, target: panel, timeStamp: 140 }),
+      );
 
       advanceSwipeAnimation();
 
@@ -264,6 +321,170 @@ describe('SidebarCommentsComponent', () => {
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
       expect(component.isSwipeDragging()).toBe(true);
       expect(component.swipeTransform()).toBe('translateX(212px)');
+    });
+
+    it('should not steal a mostly vertical edge drag with modest rightward drift', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 22, clientY: 40, target: panel, timeStamp: 80 }),
+      );
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 22, clientY: 40, target: panel, timeStamp: 120 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should not steal an ambiguous edge drag that is more vertical than horizontal', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 32, clientY: 28, target: panel, timeStamp: 80 }),
+      );
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 32, clientY: 28, target: panel, timeStamp: 120 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should not lock horizontal on a tiny wobble before a vertical drag', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 22, clientY: 10, target: panel, timeStamp: 40 }),
+      );
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 30, clientY: 82, target: panel, timeStamp: 120 }),
+      );
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 30, clientY: 82, target: panel, timeStamp: 140 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should not lock horizontal on a small rightward wobble before a vertical drag', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      const wobbleEvent = pointerEvent({
+        clientX: 24,
+        clientY: 8,
+        target: panel,
+        timeStamp: 40,
+      });
+      component.onSidebarPointerMove(wobbleEvent);
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 28, clientY: 80, target: panel, timeStamp: 120 }),
+      );
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 28, clientY: 80, target: panel, timeStamp: 140 }),
+      );
+
+      expect(wobbleEvent.preventDefault as Mock).not.toHaveBeenCalled();
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should release a provisional horizontal gesture when it turns into a vertical drag', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 34, clientY: 10, target: panel, timeStamp: 40 }),
+      );
+      vi.advanceTimersByTime(16);
+
+      expect(component.swipeTransform()).toBe('translateX(26px)');
+
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 36, clientY: 90, target: panel, timeStamp: 120 }),
+      );
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should not start the sidebar gesture from a comment code block', () => {
+      const panel = getPanel();
+      const commentBody = document.createElement('div');
+      const pre = document.createElement('pre');
+      commentBody.className = 'comment-body';
+      commentBody.append(pre);
+      panel.append(commentBody);
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: pre }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 180, target: pre, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 180, target: pre, timeStamp: 120 }));
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should pan a comment code block horizontally instead of the sidebar', () => {
+      const panel = getPanel();
+      const commentBody = document.createElement('div');
+      const pre = document.createElement('pre');
+      commentBody.className = 'comment-body';
+      pre.scrollLeft = 100;
+      commentBody.append(pre);
+      panel.append(commentBody);
+
+      component.onSidebarPointerDown(
+        pointerEvent({ clientX: 180, clientY: 20, target: pre, timeStamp: 0 }),
+      );
+      const panEvent = pointerEvent({
+        clientX: 120,
+        clientY: 24,
+        target: pre,
+        timeStamp: 80,
+      });
+      component.onSidebarPointerMove(panEvent);
+      component.onSidebarPointerUp(
+        pointerEvent({ clientX: 120, clientY: 24, target: pre, timeStamp: 120 }),
+      );
+
+      expect(panEvent.preventDefault as Mock).toHaveBeenCalled();
+      expect(pre.scrollLeft).toBe(160);
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
+      expect(component.isSwipeDragging()).toBe(false);
+      expect(component.isSwipeSettling()).toBe(false);
+    });
+
+    it('should treat a deliberate diagonal edge swipe as horizontal before vertical cancel', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 0, target: panel }));
+      component.onSidebarPointerMove(
+        pointerEvent({ clientX: 48, clientY: 47, target: panel, timeStamp: 80 }),
+      );
+      vi.advanceTimersByTime(16);
+
+      expect(component.swipeTransform()).toBe('translateX(40px)');
+      expect(component.isSwipeDragging()).toBe(true);
     });
 
     it('should snap back when dragged past the threshold and released below it', () => {
@@ -290,14 +511,14 @@ describe('SidebarCommentsComponent', () => {
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
-      component.onSidebarPointerMove(pointerEvent({ clientX: 24, target: panel, timeStamp: 80 }));
-      component.onSidebarPointerUp(pointerEvent({ clientX: 24, target: panel, timeStamp: 140 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 36, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 36, target: panel, timeStamp: 140 }));
 
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
       expect(component.isSwipeSettling()).toBe(true);
-      expect(component.swipeTransform()).toBe('translateX(16px)');
+      expect(component.swipeTransform()).toBe('translateX(28px)');
 
-      advanceSwipeAnimation();
+      vi.advanceTimersByTime(180);
 
       expect(component.swipeTransform()).toBeNull();
       expect(component.isSwipeDragging()).toBe(false);

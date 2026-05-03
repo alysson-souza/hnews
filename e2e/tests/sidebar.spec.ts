@@ -571,4 +571,254 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
 
     expect(await sidebarPage.isOpen()).toBe(true);
   });
+
+  test('should close full-width sidebar with an imperfect diagonal right swipe', async ({
+    storiesPage,
+    sidebarPage,
+    page,
+  }) => {
+    await storiesPage.navigateToTop();
+    await page.waitForTimeout(1000);
+
+    const commentLinks = storiesPage.storyItems.locator('.story-comments');
+    const linkCount = await commentLinks.count();
+    let targetLinkIndex = -1;
+
+    for (let index = 0; index < linkCount; index++) {
+      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+      const countMatch = text.match(/\d+/);
+      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+      if (commentCount > 0) {
+        targetLinkIndex = index;
+        break;
+      }
+    }
+
+    test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+    await commentLinks.nth(targetLinkIndex).click();
+    await page.waitForTimeout(500);
+    expect(await sidebarPage.isOpen()).toBe(true);
+
+    const panelBox = await sidebarPage.panel.boundingBox();
+    test.skip(!panelBox, 'Sidebar panel was not laid out');
+
+    const startX = panelBox!.x + 8;
+    const startY = panelBox!.y + panelBox!.height / 2;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX + 45, startY + 20, { steps: 2 });
+    await page.mouse.move(startX + 110, startY - 14, { steps: 3 });
+    await page.mouse.move(startX + 205, startY + 36, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+
+    expect(await sidebarPage.isClosed()).toBe(true);
+  });
+
+  test('should keep the sidebar open after a mostly vertical edge drag', async ({
+    storiesPage,
+    sidebarPage,
+    page,
+  }) => {
+    await storiesPage.navigateToTop();
+    await page.waitForTimeout(1000);
+
+    const commentLinks = storiesPage.storyItems.locator('.story-comments');
+    const linkCount = await commentLinks.count();
+    let targetLinkIndex = -1;
+
+    for (let index = 0; index < linkCount; index++) {
+      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+      const countMatch = text.match(/\d+/);
+      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+      if (commentCount > 0) {
+        targetLinkIndex = index;
+        break;
+      }
+    }
+
+    test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+    await commentLinks.nth(targetLinkIndex).click();
+    await page.waitForTimeout(500);
+    expect(await sidebarPage.isOpen()).toBe(true);
+
+    const panelBox = await sidebarPage.panel.boundingBox();
+    test.skip(!panelBox, 'Sidebar panel was not laid out');
+
+    const startX = panelBox!.x + 8;
+    const startY = panelBox!.y + panelBox!.height / 2;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX + 10, startY + 55, { steps: 3 });
+    await page.mouse.move(startX + 18, startY + 130, { steps: 4 });
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+
+    expect(await sidebarPage.isOpen()).toBe(true);
+  });
+
+  test.describe('Chromium touch input', () => {
+    test.skip(
+      ({ browserName }) => browserName !== 'chromium',
+      'CDP touch events are Chromium-only',
+    );
+
+    test('should preserve vertical scrolling during a mostly vertical touch drag from the edge', async ({
+      storiesPage,
+      sidebarPage,
+      page,
+    }) => {
+      await storiesPage.navigateToTop();
+      await page.waitForTimeout(1000);
+
+      const commentLinks = storiesPage.storyItems.locator('.story-comments');
+      const linkCount = await commentLinks.count();
+      let targetLinkIndex = -1;
+
+      for (let index = 0; index < linkCount; index++) {
+        const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+        const countMatch = text.match(/\d+/);
+        const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+        if (commentCount > 0) {
+          targetLinkIndex = index;
+          break;
+        }
+      }
+
+      test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+      await commentLinks.nth(targetLinkIndex).click();
+      await page.waitForTimeout(500);
+      expect(await sidebarPage.isOpen()).toBe(true);
+
+      const panelBox = await sidebarPage.panel.boundingBox();
+      test.skip(!panelBox, 'Sidebar panel was not laid out');
+
+      const scrollable = await sidebarPage.commentsPanel.evaluate((element) => {
+        element.scrollTop = 0;
+        return element.scrollHeight > element.clientHeight + 200;
+      });
+      test.skip(!scrollable, 'Sidebar comments panel is not scrollable enough');
+
+      const client = await page.context().newCDPSession(page);
+      const startX = Math.round(panelBox!.x + 8);
+      const startY = Math.round(panelBox!.y + panelBox!.height / 2);
+      const beforeScrollTop = await sidebarPage.commentsPanel.evaluate(
+        (element) => element.scrollTop,
+      );
+
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: startX, y: startY, id: 1 }],
+      });
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: startX + 10, y: startY - 80, id: 1 }],
+      });
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: startX + 18, y: startY - 170, id: 1 }],
+      });
+      await page.waitForTimeout(100);
+
+      const touchState = await page.evaluate(() => {
+        const panel = document.querySelector('.sidebar-panel') as HTMLElement | null;
+        const comments = document.querySelector('.sidebar-comments-panel') as HTMLElement | null;
+        if (!panel || !comments) {
+          return null;
+        }
+
+        return {
+          panelTranslateX: new DOMMatrixReadOnly(getComputedStyle(panel).transform).m41,
+          scrollTop: comments.scrollTop,
+        };
+      });
+
+      expect(touchState).not.toBeNull();
+      expect(touchState!.panelTranslateX).toBe(0);
+      expect(touchState!.scrollTop).toBeGreaterThan(beforeScrollTop);
+
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchEnd',
+        touchPoints: [],
+      });
+      await page.waitForTimeout(500);
+
+      expect(await sidebarPage.isOpen()).toBe(true);
+    });
+
+    test('should track and close during an imperfect diagonal touch swipe', async ({
+      storiesPage,
+      sidebarPage,
+      page,
+    }) => {
+      await storiesPage.navigateToTop();
+      await page.waitForTimeout(1000);
+
+      const commentLinks = storiesPage.storyItems.locator('.story-comments');
+      const linkCount = await commentLinks.count();
+      let targetLinkIndex = -1;
+
+      for (let index = 0; index < linkCount; index++) {
+        const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+        const countMatch = text.match(/\d+/);
+        const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+        if (commentCount > 0) {
+          targetLinkIndex = index;
+          break;
+        }
+      }
+
+      test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+      await commentLinks.nth(targetLinkIndex).click();
+      await page.waitForTimeout(500);
+      expect(await sidebarPage.isOpen()).toBe(true);
+
+      const panelBox = await sidebarPage.panel.boundingBox();
+      test.skip(!panelBox, 'Sidebar panel was not laid out');
+
+      const startX = Math.round(panelBox!.x + 8);
+      const startY = Math.round(panelBox!.y + panelBox!.height / 2);
+      const client = await page.context().newCDPSession(page);
+
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: startX, y: startY, id: 1 }],
+      });
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: startX + 56, y: startY + 18, id: 1 }],
+      });
+      await page.waitForTimeout(100);
+
+      const midTransform = await sidebarPage.panel.evaluate((element) => {
+        const transform = getComputedStyle(element).transform;
+        if (transform === 'none') {
+          return 0;
+        }
+
+        return new DOMMatrixReadOnly(transform).m41;
+      });
+      expect(midTransform).toBeGreaterThan(24);
+
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: startX + 125, y: startY - 12, id: 1 }],
+      });
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: startX + 210, y: startY + 34, id: 1 }],
+      });
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchEnd',
+        touchPoints: [],
+      });
+      await page.waitForTimeout(500);
+
+      expect(await sidebarPage.isClosed()).toBe(true);
+    });
+  });
 });

@@ -73,17 +73,11 @@ import { DeviceService } from '@services/device.service';
       [style.transform]="swipeTransform()"
       [attr.inert]="sidebarService.isOpen() ? null : true"
       [attr.aria-hidden]="!sidebarService.isOpen()"
+      (pointerdown)="onSidebarPointerDown($event)"
       (pointermove)="onSidebarPointerMove($event)"
       (pointerup)="onSidebarPointerUp($event)"
       (pointercancel)="onSidebarPointerCancel($event)"
     >
-      <div
-        class="sidebar-swipe-edge absolute left-0 top-0 bottom-0 z-30 w-6"
-        [class.pointer-events-none]="!sidebarService.isOpen()"
-        aria-hidden="true"
-        (pointerdown)="onSidebarPointerDown($event)"
-      ></div>
-
       @if (sidebarService.currentItemId()) {
         <div class="h-full flex flex-col">
           <!-- Header -->
@@ -211,6 +205,11 @@ import { DeviceService } from '@services/device.service';
 
       .sidebar-comments-panel {
         container-type: inline-size;
+        touch-action: pan-y;
+      }
+
+      :host ::ng-deep .sidebar-comments-panel .comment-body pre {
+        touch-action: pan-x pan-y;
       }
 
       .sidebar-panel-dragging {
@@ -219,17 +218,6 @@ import { DeviceService } from '@services/device.service';
 
       .sidebar-panel {
         touch-action: pan-y;
-      }
-
-      .sidebar-swipe-edge {
-        pointer-events: none;
-        touch-action: none;
-      }
-
-      @media (pointer: coarse) {
-        .sidebar-swipe-edge {
-          pointer-events: auto;
-        }
       }
 
       .sidebar-panel-settling {
@@ -402,15 +390,20 @@ export class SidebarCommentsComponent {
   private readonly smallThreadDescendantsThreshold = 40;
   private readonly swipeEdgeWidth = 24;
   private readonly swipeStartThreshold = 12;
+  private readonly swipeHorizontalEarlyIntentThreshold = 24;
+  private readonly swipeHorizontalOverrideThreshold = 36;
+  private readonly swipeHorizontalIntentRatio = 1.15;
+  private readonly swipeHorizontalEarlyIntentRatio = 1.5;
+  private readonly swipeHorizontalOverrideRatio = 0.8;
   private readonly swipeVerticalCancelThreshold = 32;
-  private readonly swipeVerticalCancelMaxX = 8;
-  private readonly swipeVelocityThreshold = 0.6;
-  private readonly swipeMinVelocityDistance = 40;
+  private readonly swipeMinVelocityDistance = 64;
+  private readonly swipeMinVelocityDistanceRatio = 0.18;
   private readonly swipeProjectionMs = 220;
+  private readonly swipeReleaseVelocityMaxAgeMs = 80;
   private readonly swipeCloseThresholdRatio = 0.45;
   private readonly swipeMinCloseDurationMs = 180;
   private readonly swipeMaxCloseDurationMs = 320;
-  private readonly swipeMinSnapBackDurationMs = 260;
+  private readonly swipeMinSnapBackDurationMs = 120;
   private readonly swipeMaxSnapBackDurationMs = 360;
   private visibleTopLevelCount = signal(this.commentsPageSize);
   smallThreadMode = signal(false);
@@ -433,6 +426,12 @@ export class SidebarCommentsComponent {
   private swipeSettleTargetOffset = 0;
   private swipeSettleDuration = 0;
   private swipeSettleShouldClose = false;
+  private contentPanPointerId: number | null = null;
+  private contentPanElement: HTMLElement | null = null;
+  private contentPanStartX = 0;
+  private contentPanStartY = 0;
+  private contentPanStartScrollLeft = 0;
+  private contentPanIntent: 'pending' | 'horizontal' | null = null;
 
   swipeTransform = computed(() => {
     if (this.swipeState() === 'settling') {
@@ -680,6 +679,12 @@ export class SidebarCommentsComponent {
   }
 
   onSidebarPointerDown(event: PointerEvent): void {
+    const horizontalContent = this.getHorizontalContentTarget(event.target);
+    if (horizontalContent && event.button === 0) {
+      this.startContentPan(event, horizontalContent);
+      return;
+    }
+
     if (!this.sidebarService.isOpen() || event.button !== 0 || !this.canStartSidebarSwipe(event)) {
       return;
     }
@@ -695,10 +700,21 @@ export class SidebarCommentsComponent {
     this.swipeState.set('dragging');
     this.cancelSwipeSettleAnimation();
 
-    this.sidebarPanelRef()?.nativeElement.setPointerCapture(event.pointerId);
+    try {
+      this.sidebarPanelRef()?.nativeElement.setPointerCapture(event.pointerId);
+    } catch {
+      this.swipePointerId = null;
+      this.swipeIntent = null;
+      this.swipeState.set('idle');
+    }
   }
 
   onSidebarPointerMove(event: PointerEvent): void {
+    if (this.contentPanPointerId === event.pointerId) {
+      this.handleContentPanMove(event);
+      return;
+    }
+
     if (this.swipePointerId !== event.pointerId || this.swipeIntent === null) {
       return;
     }
@@ -708,19 +724,21 @@ export class SidebarCommentsComponent {
     this.trackSwipeSample(deltaX, event.timeStamp);
 
     if (this.swipeIntent === 'pending') {
-      if (deltaX >= this.swipeStartThreshold) {
-        this.swipeIntent = 'horizontal';
-      } else if (
-        Math.abs(deltaY) >= this.swipeVerticalCancelThreshold &&
-        deltaX < this.swipeVerticalCancelMaxX
-      ) {
-        this.swipeIntent = 'vertical';
-      } else {
+      this.resolveSwipeIntent(deltaX, deltaY, false);
+      if (this.swipeIntent === 'pending') {
         return;
       }
     }
 
     if (this.swipeIntent !== 'horizontal') {
+      if (this.swipeIntent === 'vertical') {
+        this.resetSidebarSwipe();
+      }
+      return;
+    }
+
+    if (this.shouldCancelProvisionalHorizontalSwipe(deltaX, deltaY)) {
+      this.resetSidebarSwipe();
       return;
     }
 
@@ -729,6 +747,11 @@ export class SidebarCommentsComponent {
   }
 
   onSidebarPointerUp(event: PointerEvent): void {
+    if (this.contentPanPointerId === event.pointerId) {
+      this.resetContentPan();
+      return;
+    }
+
     if (this.swipePointerId !== event.pointerId) {
       return;
     }
@@ -737,6 +760,11 @@ export class SidebarCommentsComponent {
   }
 
   onSidebarPointerCancel(event: PointerEvent): void {
+    if (this.contentPanPointerId === event.pointerId) {
+      this.resetContentPan();
+      return;
+    }
+
     if (this.swipePointerId !== event.pointerId) {
       return;
     }
@@ -758,7 +786,10 @@ export class SidebarCommentsComponent {
       return false;
     }
 
-    if (this.isInteractiveSwipeTarget(event.target)) {
+    if (
+      this.isInteractiveSwipeTarget(event.target) ||
+      this.getHorizontalContentTarget(event.target)
+    ) {
       return false;
     }
 
@@ -783,33 +814,114 @@ export class SidebarCommentsComponent {
     );
   }
 
+  private getHorizontalContentTarget(target: EventTarget | null): HTMLElement | null {
+    if (!(target instanceof HTMLElement)) {
+      return null;
+    }
+
+    return target.closest('.comment-body pre');
+  }
+
+  private startContentPan(event: PointerEvent, element: HTMLElement): void {
+    this.contentPanPointerId = event.pointerId;
+    this.contentPanElement = element;
+    this.contentPanStartX = event.clientX;
+    this.contentPanStartY = event.clientY;
+    this.contentPanStartScrollLeft = element.scrollLeft;
+    this.contentPanIntent = 'pending';
+  }
+
+  private handleContentPanMove(event: PointerEvent): void {
+    if (!this.contentPanElement || this.contentPanIntent === null) {
+      return;
+    }
+
+    const deltaX = event.clientX - this.contentPanStartX;
+    const deltaY = event.clientY - this.contentPanStartY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    if (this.contentPanIntent === 'pending') {
+      if (
+        absDeltaY >= this.swipeVerticalCancelThreshold &&
+        absDeltaY >= absDeltaX * this.swipeHorizontalIntentRatio
+      ) {
+        this.resetContentPan();
+        return;
+      }
+
+      if (
+        absDeltaX < this.swipeStartThreshold ||
+        absDeltaX < absDeltaY * this.swipeHorizontalIntentRatio
+      ) {
+        return;
+      }
+
+      this.contentPanIntent = 'horizontal';
+    }
+
+    event.preventDefault();
+    this.contentPanElement.scrollLeft = this.contentPanStartScrollLeft - deltaX;
+  }
+
+  private resetContentPan(): void {
+    this.contentPanPointerId = null;
+    this.contentPanElement = null;
+    this.contentPanIntent = null;
+    this.contentPanStartX = 0;
+    this.contentPanStartY = 0;
+    this.contentPanStartScrollLeft = 0;
+  }
+
   private finishSidebarSwipe(event: PointerEvent, fromCancel: boolean): void {
     const deltaX = event.clientX - this.swipeStartX;
     const deltaY = event.clientY - this.swipeStartY;
     const previousDeltaX = this.swipePreviousDeltaX;
+    const previousTime = this.swipePreviousTime;
     const previousVelocity = this.swipeVelocity;
+    const intentBeforeFinish = this.swipeIntent;
     this.trackSwipeSample(deltaX, event.timeStamp);
-    this.resolveSwipeIntent(deltaX, deltaY, fromCancel);
+
+    if (fromCancel && intentBeforeFinish !== 'horizontal') {
+      this.resetSidebarSwipe();
+      return;
+    }
+
+    if (!fromCancel) {
+      this.resolveSwipeIntent(deltaX, deltaY, false);
+    }
+
+    if (this.swipeIntent !== 'horizontal') {
+      this.resetSidebarSwipe();
+      return;
+    }
 
     const offset = Math.max(deltaX, 0);
     const panelWidth = this.sidebarPanelRef()?.nativeElement.getBoundingClientRect().width ?? 0;
     const distanceThreshold = panelWidth * this.swipeCloseThresholdRatio;
-    const releaseVelocity =
-      deltaX === previousDeltaX ? Math.max(previousVelocity, 0) : Math.max(this.swipeVelocity, 0);
+    const velocityDistanceThreshold = Math.max(
+      this.swipeMinVelocityDistance,
+      panelWidth * this.swipeMinVelocityDistanceRatio,
+    );
+    const canReusePreviousVelocity =
+      deltaX === previousDeltaX &&
+      event.timeStamp - previousTime <= this.swipeReleaseVelocityMaxAgeMs;
+    const releaseVelocity = Math.max(
+      canReusePreviousVelocity ? previousVelocity : this.swipeVelocity,
+      0,
+    );
     const projectedOffset = offset + releaseVelocity * this.swipeProjectionMs;
-    const shouldDismiss =
-      this.swipeIntent === 'horizontal' &&
-      (offset >= distanceThreshold ||
-        (offset >= this.swipeMinVelocityDistance && projectedOffset >= distanceThreshold) ||
-        (offset >= this.swipeMinVelocityDistance &&
-          releaseVelocity >= this.swipeVelocityThreshold));
+    const shouldDismiss = fromCancel
+      ? offset >= distanceThreshold
+      : offset >= distanceThreshold ||
+        (offset >= velocityDistanceThreshold && projectedOffset >= distanceThreshold);
 
     this.releasePointerCapture();
 
     if (shouldDismiss) {
-      this.settleSidebarSwipe(offset, panelWidth, true);
+      this.settleSidebarSwipe(offset, panelWidth, true, releaseVelocity);
     } else {
-      this.settleSidebarSwipe(offset, 0, false);
+      this.settleSidebarSwipe(offset, 0, false, releaseVelocity);
     }
   }
 
@@ -825,18 +937,34 @@ export class SidebarCommentsComponent {
       return;
     }
 
-    if (deltaX >= this.swipeStartThreshold) {
+    const horizontalIntent =
+      deltaX >= this.swipeStartThreshold &&
+      ((deltaX >= this.swipeHorizontalOverrideThreshold &&
+        deltaX >= Math.abs(deltaY) * this.swipeHorizontalOverrideRatio) ||
+        (deltaX >= this.swipeHorizontalEarlyIntentThreshold &&
+          deltaX >= Math.abs(deltaY) * this.swipeHorizontalEarlyIntentRatio));
+
+    if (horizontalIntent) {
       this.swipeIntent = 'horizontal';
       return;
     }
 
-    if (
+    const verticalIntent =
       !fromCancel &&
       Math.abs(deltaY) >= this.swipeVerticalCancelThreshold &&
-      deltaX < this.swipeVerticalCancelMaxX
-    ) {
+      Math.abs(deltaY) >= Math.max(deltaX, 0) * this.swipeHorizontalIntentRatio;
+
+    if (verticalIntent) {
       this.swipeIntent = 'vertical';
     }
+  }
+
+  private shouldCancelProvisionalHorizontalSwipe(deltaX: number, deltaY: number): boolean {
+    return (
+      deltaX < this.swipeHorizontalOverrideThreshold &&
+      Math.abs(deltaY) >= this.swipeVerticalCancelThreshold &&
+      Math.abs(deltaY) >= Math.max(deltaX, 0) * this.swipeHorizontalIntentRatio
+    );
   }
 
   private resetSidebarSwipe(): void {
@@ -853,7 +981,12 @@ export class SidebarCommentsComponent {
     this.swipeOffset.set(0);
   }
 
-  private settleSidebarSwipe(fromOffset: number, targetOffset: number, shouldClose: boolean): void {
+  private settleSidebarSwipe(
+    fromOffset: number,
+    targetOffset: number,
+    shouldClose: boolean,
+    releaseVelocity: number,
+  ): void {
     this.cancelSwipeAnimationFrame();
     this.swipeState.set('settling');
     this.swipeOffset.set(Math.max(0, fromOffset));
@@ -871,9 +1004,9 @@ export class SidebarCommentsComponent {
     this.swipeSettleStartTime = 0;
     this.swipeSettleFromOffset = Math.max(0, fromOffset);
     this.swipeSettleTargetOffset = Math.max(0, targetOffset);
-    this.swipeSettleDuration = Math.round(
-      minDuration + (maxDuration - minDuration) * distanceRatio,
-    );
+    const baseDuration = minDuration + (maxDuration - minDuration) * distanceRatio;
+    const velocityReduction = shouldClose ? Math.min(Math.max(releaseVelocity, 0) * 90, 90) : 0;
+    this.swipeSettleDuration = Math.round(Math.max(minDuration, baseDuration - velocityReduction));
     this.swipeSettleShouldClose = shouldClose;
     this.cancelSwipeSettleAnimation();
     this.swipeSettleAnimationFrame = requestAnimationFrame((time) =>
@@ -910,7 +1043,8 @@ export class SidebarCommentsComponent {
   }
 
   private iosEaseOut(progress: number): number {
-    return 1 - Math.pow(1 - progress, 3);
+    const inverse = 1 - progress;
+    return 1 - inverse * inverse * inverse * inverse;
   }
 
   private queueSwipeOffset(offset: number): void {
@@ -949,6 +1083,15 @@ export class SidebarCommentsComponent {
       return;
     }
 
-    this.sidebarPanelRef()?.nativeElement.releasePointerCapture(this.swipePointerId);
+    const panel = this.sidebarPanelRef()?.nativeElement;
+    if (!panel?.hasPointerCapture(this.swipePointerId)) {
+      return;
+    }
+
+    try {
+      panel.releasePointerCapture(this.swipePointerId);
+    } catch {
+      // The browser may have already cancelled the pointer stream.
+    }
   }
 }
