@@ -208,6 +208,25 @@ describe('SidebarCommentsComponent', () => {
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
+    it('should close after a fast right swipe even without an intermediate move', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 90, target: panel, timeStamp: 60 }));
+
+      expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+    });
+
+    it('should close when a qualified fast horizontal swipe is cancelled by the browser', () => {
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 70, target: panel, timeStamp: 60 }));
+      component.onSidebarPointerCancel(pointerEvent({ clientX: 70, target: panel, timeStamp: 70 }));
+
+      expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+    });
+
     it('should snap back and keep the sidebar open after a short drag', () => {
       const panel = getPanel();
 

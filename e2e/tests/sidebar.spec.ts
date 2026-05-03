@@ -491,4 +491,44 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
 
     expect(await sidebarPage.isClosed()).toBe(true);
   });
+
+  test('should close full-width sidebar with a fast right swipe from the left edge', async ({
+    storiesPage,
+    sidebarPage,
+    page,
+  }) => {
+    await storiesPage.navigateToTop();
+    await page.waitForTimeout(1000);
+
+    const commentLinks = storiesPage.storyItems.locator('.story-comments');
+    const linkCount = await commentLinks.count();
+    let targetLinkIndex = -1;
+
+    for (let index = 0; index < linkCount; index++) {
+      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+      const countMatch = text.match(/\d+/);
+      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+      if (commentCount > 0) {
+        targetLinkIndex = index;
+        break;
+      }
+    }
+
+    test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+    await commentLinks.nth(targetLinkIndex).click();
+    await page.waitForTimeout(500);
+    expect(await sidebarPage.isOpen()).toBe(true);
+
+    const panelBox = await sidebarPage.panel.boundingBox();
+    test.skip(!panelBox, 'Sidebar panel was not laid out');
+
+    await page.mouse.move(panelBox!.x + 8, panelBox!.y + panelBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(panelBox!.x + 95, panelBox!.y + panelBox!.height / 2, { steps: 1 });
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+
+    expect(await sidebarPage.isClosed()).toBe(true);
+  });
 });
