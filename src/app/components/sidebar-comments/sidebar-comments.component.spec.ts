@@ -180,6 +180,12 @@ describe('SidebarCommentsComponent', () => {
       } as unknown as PointerEvent;
     }
 
+    function advanceSwipeAnimation(durationMs = 400): void {
+      for (let elapsed = 0; elapsed < durationMs; elapsed += 16) {
+        vi.advanceTimersByTime(16);
+      }
+    }
+
     afterEach(() => {
       vi.restoreAllMocks();
       vi.useRealTimers();
@@ -190,11 +196,14 @@ describe('SidebarCommentsComponent', () => {
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
-      component.onSidebarPointerMove(pointerEvent({ clientX: 150, target: panel, timeStamp: 80 }));
-      component.onSidebarPointerUp(pointerEvent({ clientX: 150, target: panel, timeStamp: 120 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 200, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 200, target: panel, timeStamp: 120 }));
 
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
-      vi.advanceTimersByTime(180);
+      expect(component.isSwipeSettling()).toBe(true);
+      expect(component.swipeTransform()).toBe('translateX(192px)');
+
+      advanceSwipeAnimation();
 
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
@@ -205,13 +214,13 @@ describe('SidebarCommentsComponent', () => {
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 100, target: panel }));
       component.onSidebarPointerMove(
-        pointerEvent({ clientX: 150, clientY: 180, target: panel, timeStamp: 80 }),
+        pointerEvent({ clientX: 200, clientY: 180, target: panel, timeStamp: 80 }),
       );
       component.onSidebarPointerUp(
-        pointerEvent({ clientX: 150, clientY: 180, target: panel, timeStamp: 120 }),
+        pointerEvent({ clientX: 200, clientY: 180, target: panel, timeStamp: 120 }),
       );
 
-      vi.advanceTimersByTime(180);
+      advanceSwipeAnimation();
 
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
@@ -223,7 +232,9 @@ describe('SidebarCommentsComponent', () => {
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
       component.onSidebarPointerUp(pointerEvent({ clientX: 90, target: panel, timeStamp: 60 }));
 
-      vi.advanceTimersByTime(180);
+      expect(component.swipeTransform()).toBe('translateX(82px)');
+
+      advanceSwipeAnimation();
 
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
@@ -236,9 +247,42 @@ describe('SidebarCommentsComponent', () => {
       component.onSidebarPointerMove(pointerEvent({ clientX: 70, target: panel, timeStamp: 60 }));
       component.onSidebarPointerCancel(pointerEvent({ clientX: 70, target: panel, timeStamp: 70 }));
 
-      vi.advanceTimersByTime(180);
+      advanceSwipeAnimation();
 
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+    });
+
+    it('should not close while dragging even after crossing half the panel width', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 220, target: panel, timeStamp: 80 }));
+
+      advanceSwipeAnimation(48);
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.isSwipeDragging()).toBe(true);
+      expect(component.swipeTransform()).toBe('translateX(212px)');
+    });
+
+    it('should snap back when dragged past the threshold and released below it', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 220, target: panel, timeStamp: 80 }));
+      component.onSidebarPointerMove(pointerEvent({ clientX: 90, target: panel, timeStamp: 160 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 90, target: panel, timeStamp: 180 }));
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.isSwipeSettling()).toBe(true);
+      expect(component.swipeTransform()).toBe('translateX(82px)');
+
+      advanceSwipeAnimation();
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
     });
 
     it('should snap back and keep the sidebar open after a short drag', () => {
@@ -251,8 +295,9 @@ describe('SidebarCommentsComponent', () => {
 
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
       expect(component.isSwipeSettling()).toBe(true);
+      expect(component.swipeTransform()).toBe('translateX(16px)');
 
-      vi.advanceTimersByTime(180);
+      advanceSwipeAnimation();
 
       expect(component.swipeTransform()).toBeNull();
       expect(component.isSwipeDragging()).toBe(false);
@@ -265,7 +310,7 @@ describe('SidebarCommentsComponent', () => {
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
       component.onSidebarPointerUp(pointerEvent({ clientX: 30, target: panel, timeStamp: 20 }));
 
-      vi.advanceTimersByTime(180);
+      advanceSwipeAnimation();
 
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
       expect(component.swipeTransform()).toBeNull();

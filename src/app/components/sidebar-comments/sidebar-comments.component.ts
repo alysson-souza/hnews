@@ -216,8 +216,7 @@ import { DeviceService } from '@services/device.service';
       }
 
       .sidebar-panel-settling {
-        transition-duration: 180ms;
-        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        transition-duration: 0ms;
       }
 
       .sidebar-overlay-dragging {
@@ -225,8 +224,7 @@ import { DeviceService } from '@services/device.service';
       }
 
       .sidebar-overlay-settling {
-        transition-duration: 180ms;
-        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        transition-duration: 0ms;
       }
 
       .comments-heading {
@@ -392,7 +390,11 @@ export class SidebarCommentsComponent {
   private readonly swipeVelocityThreshold = 0.6;
   private readonly swipeMinVelocityDistance = 40;
   private readonly swipeProjectionMs = 220;
-  private readonly swipeSettleDurationMs = 180;
+  private readonly swipeCloseThresholdRatio = 0.45;
+  private readonly swipeMinCloseDurationMs = 180;
+  private readonly swipeMaxCloseDurationMs = 320;
+  private readonly swipeMinSnapBackDurationMs = 260;
+  private readonly swipeMaxSnapBackDurationMs = 360;
   private visibleTopLevelCount = signal(this.commentsPageSize);
   smallThreadMode = signal(false);
   swipeState = signal<'idle' | 'dragging' | 'settling'>('idle');
@@ -402,17 +404,18 @@ export class SidebarCommentsComponent {
   private swipePointerId: number | null = null;
   private swipeStartX = 0;
   private swipeStartY = 0;
-  private swipeStartTime = 0;
-  private swipeMaxDeltaX = 0;
   private swipePreviousDeltaX = 0;
   private swipePreviousTime = 0;
   private swipeVelocity = 0;
-  private swipeMaxVelocity = 0;
-  private swipeLastTime = 0;
   private swipeIntent: 'pending' | 'horizontal' | 'vertical' | null = null;
   private swipeAnimationFrame: number | null = null;
   private swipeQueuedOffset = 0;
-  private swipeSettleTimeout: ReturnType<typeof setTimeout> | null = null;
+  private swipeSettleAnimationFrame: number | null = null;
+  private swipeSettleStartTime = 0;
+  private swipeSettleFromOffset = 0;
+  private swipeSettleTargetOffset = 0;
+  private swipeSettleDuration = 0;
+  private swipeSettleShouldClose = false;
 
   swipeTransform = computed(() => {
     if (this.swipeState() === 'settling') {
@@ -667,17 +670,13 @@ export class SidebarCommentsComponent {
     this.swipePointerId = event.pointerId;
     this.swipeStartX = event.clientX;
     this.swipeStartY = event.clientY;
-    this.swipeStartTime = event.timeStamp;
-    this.swipeMaxDeltaX = 0;
     this.swipePreviousDeltaX = 0;
     this.swipePreviousTime = event.timeStamp;
     this.swipeVelocity = 0;
-    this.swipeMaxVelocity = 0;
-    this.swipeLastTime = event.timeStamp;
     this.swipeIntent = 'pending';
     this.swipeOffset.set(0);
     this.swipeState.set('dragging');
-    this.clearSwipeSettleTimeout();
+    this.cancelSwipeSettleAnimation();
 
     this.sidebarPanelRef()?.nativeElement.setPointerCapture(event.pointerId);
   }
@@ -770,36 +769,36 @@ export class SidebarCommentsComponent {
   private finishSidebarSwipe(event: PointerEvent, fromCancel: boolean): void {
     const deltaX = event.clientX - this.swipeStartX;
     const deltaY = event.clientY - this.swipeStartY;
+    const previousDeltaX = this.swipePreviousDeltaX;
+    const previousVelocity = this.swipeVelocity;
     this.trackSwipeSample(deltaX, event.timeStamp);
     this.resolveSwipeIntent(deltaX, deltaY, fromCancel);
 
-    const offset = Math.max(this.swipeOffset(), this.swipeMaxDeltaX, deltaX, 0);
+    const offset = Math.max(deltaX, 0);
     const panelWidth = this.sidebarPanelRef()?.nativeElement.getBoundingClientRect().width ?? 0;
-    const distanceThreshold = Math.min(120, panelWidth * 0.35);
-    const projectedOffset = offset + this.swipeMaxVelocity * this.swipeProjectionMs;
+    const distanceThreshold = panelWidth * this.swipeCloseThresholdRatio;
+    const releaseVelocity =
+      deltaX === previousDeltaX ? Math.max(previousVelocity, 0) : Math.max(this.swipeVelocity, 0);
+    const projectedOffset = offset + releaseVelocity * this.swipeProjectionMs;
     const shouldDismiss =
       this.swipeIntent === 'horizontal' &&
       (offset >= distanceThreshold ||
         (offset >= this.swipeMinVelocityDistance && projectedOffset >= distanceThreshold) ||
         (offset >= this.swipeMinVelocityDistance &&
-          this.swipeMaxVelocity >= this.swipeVelocityThreshold));
+          releaseVelocity >= this.swipeVelocityThreshold));
 
     this.releasePointerCapture();
 
     if (shouldDismiss) {
-      this.settleSidebarSwipe(panelWidth);
+      this.settleSidebarSwipe(offset, panelWidth, true);
     } else {
-      this.settleSidebarSwipe(0);
+      this.settleSidebarSwipe(offset, 0, false);
     }
   }
 
   private trackSwipeSample(deltaX: number, timeStamp: number): void {
-    this.swipeMaxDeltaX = Math.max(this.swipeMaxDeltaX, deltaX, 0);
-    this.swipeLastTime = Math.max(this.swipeLastTime, timeStamp);
-
     const elapsed = Math.max(1, timeStamp - this.swipePreviousTime);
     this.swipeVelocity = (deltaX - this.swipePreviousDeltaX) / elapsed;
-    this.swipeMaxVelocity = Math.max(this.swipeMaxVelocity, this.swipeVelocity, 0);
     this.swipePreviousDeltaX = deltaX;
     this.swipePreviousTime = timeStamp;
   }
@@ -826,34 +825,75 @@ export class SidebarCommentsComponent {
   private resetSidebarSwipe(): void {
     this.releasePointerCapture();
     this.cancelSwipeAnimationFrame();
-    this.clearSwipeSettleTimeout();
+    this.cancelSwipeSettleAnimation();
 
     this.swipePointerId = null;
     this.swipeIntent = null;
-    this.swipeMaxDeltaX = 0;
     this.swipePreviousDeltaX = 0;
     this.swipePreviousTime = 0;
     this.swipeVelocity = 0;
-    this.swipeMaxVelocity = 0;
-    this.swipeLastTime = 0;
     this.swipeState.set('idle');
     this.swipeOffset.set(0);
   }
 
-  private settleSidebarSwipe(targetOffset: number): void {
+  private settleSidebarSwipe(fromOffset: number, targetOffset: number, shouldClose: boolean): void {
     this.cancelSwipeAnimationFrame();
     this.swipeState.set('settling');
-    this.swipeOffset.set(Math.max(0, targetOffset));
+    this.swipeOffset.set(Math.max(0, fromOffset));
 
-    this.clearSwipeSettleTimeout();
-    this.swipeSettleTimeout = setTimeout(() => {
-      const shouldClose = targetOffset > 0;
-      this.resetSidebarSwipe();
+    const distance = Math.abs(targetOffset - fromOffset);
+    const panelWidth = this.sidebarPanelRef()?.nativeElement.getBoundingClientRect().width ?? 1;
+    const distanceRatio = Math.min(distance / panelWidth, 1);
+    const minDuration = shouldClose
+      ? this.swipeMinCloseDurationMs
+      : this.swipeMinSnapBackDurationMs;
+    const maxDuration = shouldClose
+      ? this.swipeMaxCloseDurationMs
+      : this.swipeMaxSnapBackDurationMs;
 
-      if (shouldClose) {
-        this.sidebarThreadNavigation.closeSidebar();
-      }
-    }, this.swipeSettleDurationMs);
+    this.swipeSettleStartTime = 0;
+    this.swipeSettleFromOffset = Math.max(0, fromOffset);
+    this.swipeSettleTargetOffset = Math.max(0, targetOffset);
+    this.swipeSettleDuration = Math.round(
+      minDuration + (maxDuration - minDuration) * distanceRatio,
+    );
+    this.swipeSettleShouldClose = shouldClose;
+    this.cancelSwipeSettleAnimation();
+    this.swipeSettleAnimationFrame = requestAnimationFrame((time) =>
+      this.stepSidebarSwipeSettle(time),
+    );
+  }
+
+  private stepSidebarSwipeSettle(time: number): void {
+    if (this.swipeSettleStartTime === 0) {
+      this.swipeSettleStartTime = time;
+    }
+
+    const elapsed = Math.max(0, time - this.swipeSettleStartTime);
+    const progress = Math.min(elapsed / this.swipeSettleDuration, 1);
+    const easedProgress = this.iosEaseOut(progress);
+    const offset =
+      this.swipeSettleFromOffset +
+      (this.swipeSettleTargetOffset - this.swipeSettleFromOffset) * easedProgress;
+    this.swipeOffset.set(offset);
+
+    if (progress < 1) {
+      this.swipeSettleAnimationFrame = requestAnimationFrame((nextTime) =>
+        this.stepSidebarSwipeSettle(nextTime),
+      );
+      return;
+    }
+
+    const shouldClose = this.swipeSettleShouldClose;
+    this.resetSidebarSwipe();
+
+    if (shouldClose) {
+      this.sidebarThreadNavigation.closeSidebar();
+    }
+  }
+
+  private iosEaseOut(progress: number): number {
+    return 1 - Math.pow(1 - progress, 3);
   }
 
   private queueSwipeOffset(offset: number): void {
@@ -878,13 +918,13 @@ export class SidebarCommentsComponent {
     this.swipeAnimationFrame = null;
   }
 
-  private clearSwipeSettleTimeout(): void {
-    if (this.swipeSettleTimeout === null) {
+  private cancelSwipeSettleAnimation(): void {
+    if (this.swipeSettleAnimationFrame === null) {
       return;
     }
 
-    clearTimeout(this.swipeSettleTimeout);
-    this.swipeSettleTimeout = null;
+    cancelAnimationFrame(this.swipeSettleAnimationFrame);
+    this.swipeSettleAnimationFrame = null;
   }
 
   private releasePointerCapture(): void {
