@@ -63,7 +63,7 @@ import { DeviceService } from '@services/device.service';
     <!-- Sidebar Panel: always in DOM, slide driven by CSS -->
     <div
       #sidebarPanel
-      class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 sm:z-30"
+      class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 lg:z-30"
       [class.translate-x-full]="!sidebarService.isOpen()"
       [class.sidebar-panel-dragging]="isSwipeDragging()"
       [style.transform]="swipeTransform()"
@@ -237,6 +237,18 @@ import { DeviceService } from '@services/device.service';
 
         .comments-title-row {
           display: contents;
+        }
+      }
+
+      @media (orientation: landscape) and (pointer: coarse) and (max-height: 639.98px) {
+        .sidebar-overlay,
+        .sidebar-panel {
+          top: 0 !important;
+        }
+
+        .sidebar-panel {
+          width: 100vw !important;
+          z-index: 50;
         }
       }
 

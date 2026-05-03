@@ -394,6 +394,64 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     });
   });
 
+  test('should keep the full-width sidebar above the overlay in landscape', async ({
+    storiesPage,
+    sidebarPage,
+    page,
+  }) => {
+    await page.setViewportSize({ width: 797, height: 377 });
+    await storiesPage.navigateToTop();
+    await page.waitForTimeout(1000);
+
+    const commentLinks = storiesPage.storyItems.locator('.story-comments');
+    const linkCount = await commentLinks.count();
+    let targetLinkIndex = -1;
+
+    for (let index = 0; index < linkCount; index++) {
+      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+      const countMatch = text.match(/\d+/);
+      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+      if (commentCount > 0) {
+        targetLinkIndex = index;
+        break;
+      }
+    }
+
+    test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+    await commentLinks.nth(targetLinkIndex).click();
+    await page.waitForTimeout(500);
+    expect(await sidebarPage.isOpen()).toBe(true);
+
+    const layout = await page.evaluate(() => {
+      const panel = document.querySelector('.sidebar-panel');
+      const overlay = document.querySelector('.sidebar-overlay');
+      if (!panel || !overlay) {
+        return null;
+      }
+
+      const panelRect = panel.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
+      const panelStyle = getComputedStyle(panel);
+      const overlayStyle = getComputedStyle(overlay);
+
+      return {
+        viewportWidth: window.innerWidth,
+        panelTop: panelRect.top,
+        panelWidth: panelRect.width,
+        overlayTop: overlayRect.top,
+        panelZIndex: Number.parseInt(panelStyle.zIndex, 10),
+        overlayZIndex: Number.parseInt(overlayStyle.zIndex, 10),
+      };
+    });
+
+    expect(layout).not.toBeNull();
+    expect(layout!.panelTop).toBeLessThanOrEqual(1);
+    expect(layout!.overlayTop).toBeLessThanOrEqual(1);
+    expect(Math.abs(layout!.panelWidth - layout!.viewportWidth)).toBeLessThanOrEqual(1);
+    expect(layout!.panelZIndex).toBeGreaterThan(layout!.overlayZIndex);
+  });
+
   test('should close full-width sidebar with a right swipe from the left edge', async ({
     storiesPage,
     sidebarPage,
