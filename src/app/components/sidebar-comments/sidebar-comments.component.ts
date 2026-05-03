@@ -50,6 +50,9 @@ import { DeviceService } from '@services/device.service';
       [class.opacity-100]="sidebarService.isOpen()"
       [class.pointer-events-none]="!sidebarService.isOpen()"
       [class.pointer-events-auto]="sidebarService.isOpen()"
+      [class.sidebar-overlay-dragging]="isSwipeDragging()"
+      [class.sidebar-overlay-settling]="isSwipeSettling()"
+      [style.opacity]="sidebarOverlayOpacity()"
       [attr.aria-hidden]="!sidebarService.isOpen()"
       role="button"
       tabindex="0"
@@ -66,6 +69,7 @@ import { DeviceService } from '@services/device.service';
       class="sidebar-panel fixed right-0 top-0 sm:top-16 bottom-0 w-full sm:w-[80vw] md:w-[60vw] lg:w-[40vw] bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800/70 shadow-2xl dark:shadow-black/50 transition-transform duration-300 overflow-hidden z-50 lg:z-30"
       [class.translate-x-full]="!sidebarService.isOpen()"
       [class.sidebar-panel-dragging]="isSwipeDragging()"
+      [class.sidebar-panel-settling]="isSwipeSettling()"
       [style.transform]="swipeTransform()"
       [attr.inert]="sidebarService.isOpen() ? null : true"
       [attr.aria-hidden]="!sidebarService.isOpen()"
@@ -209,6 +213,20 @@ import { DeviceService } from '@services/device.service';
 
       .sidebar-panel {
         touch-action: pan-y;
+      }
+
+      .sidebar-panel-settling {
+        transition-duration: 180ms;
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .sidebar-overlay-dragging {
+        transition-duration: 0ms;
+      }
+
+      .sidebar-overlay-settling {
+        transition-duration: 180ms;
+        transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       .comments-heading {
@@ -373,21 +391,50 @@ export class SidebarCommentsComponent {
   private readonly swipeVerticalCancelMaxX = 8;
   private readonly swipeVelocityThreshold = 0.6;
   private readonly swipeMinVelocityDistance = 40;
+  private readonly swipeProjectionMs = 220;
+  private readonly swipeSettleDurationMs = 180;
   private visibleTopLevelCount = signal(this.commentsPageSize);
   smallThreadMode = signal(false);
-  isSwipeDragging = signal(false);
+  swipeState = signal<'idle' | 'dragging' | 'settling'>('idle');
+  isSwipeDragging = computed(() => this.swipeState() === 'dragging');
+  isSwipeSettling = computed(() => this.swipeState() === 'settling');
   private swipeOffset = signal(0);
   private swipePointerId: number | null = null;
   private swipeStartX = 0;
   private swipeStartY = 0;
   private swipeStartTime = 0;
   private swipeMaxDeltaX = 0;
+  private swipePreviousDeltaX = 0;
+  private swipePreviousTime = 0;
+  private swipeVelocity = 0;
+  private swipeMaxVelocity = 0;
   private swipeLastTime = 0;
   private swipeIntent: 'pending' | 'horizontal' | 'vertical' | null = null;
+  private swipeAnimationFrame: number | null = null;
+  private swipeQueuedOffset = 0;
+  private swipeSettleTimeout: ReturnType<typeof setTimeout> | null = null;
 
   swipeTransform = computed(() => {
+    if (this.swipeState() === 'settling') {
+      return `translateX(${this.swipeOffset()}px)`;
+    }
+
+    if (this.swipeState() === 'dragging') {
+      return `translateX(${Math.max(0, this.swipeOffset())}px)`;
+    }
+
     const offset = this.swipeOffset();
     return offset > 0 ? `translateX(${offset}px)` : null;
+  });
+
+  sidebarOverlayOpacity = computed(() => {
+    if (!this.sidebarService.isOpen() || this.swipeState() === 'idle') {
+      return null;
+    }
+
+    const panelWidth = this.sidebarPanelRef()?.nativeElement.getBoundingClientRect().width ?? 1;
+    const progress = Math.min(Math.max(this.swipeOffset() / panelWidth, 0), 1);
+    return Math.max(0, 1 - progress * 0.85);
   });
 
   sortedCommentIds = computed(() => {
@@ -622,9 +669,15 @@ export class SidebarCommentsComponent {
     this.swipeStartY = event.clientY;
     this.swipeStartTime = event.timeStamp;
     this.swipeMaxDeltaX = 0;
+    this.swipePreviousDeltaX = 0;
+    this.swipePreviousTime = event.timeStamp;
+    this.swipeVelocity = 0;
+    this.swipeMaxVelocity = 0;
     this.swipeLastTime = event.timeStamp;
     this.swipeIntent = 'pending';
     this.swipeOffset.set(0);
+    this.swipeState.set('dragging');
+    this.clearSwipeSettleTimeout();
 
     this.sidebarPanelRef()?.nativeElement.setPointerCapture(event.pointerId);
   }
@@ -656,8 +709,7 @@ export class SidebarCommentsComponent {
     }
 
     event.preventDefault();
-    this.isSwipeDragging.set(true);
-    this.swipeOffset.set(Math.max(0, deltaX));
+    this.queueSwipeOffset(Math.max(0, deltaX));
   }
 
   onSidebarPointerUp(event: PointerEvent): void {
@@ -724,23 +776,32 @@ export class SidebarCommentsComponent {
     const offset = Math.max(this.swipeOffset(), this.swipeMaxDeltaX, deltaX, 0);
     const panelWidth = this.sidebarPanelRef()?.nativeElement.getBoundingClientRect().width ?? 0;
     const distanceThreshold = Math.min(120, panelWidth * 0.35);
-    const elapsed = Math.max(1, this.swipeLastTime - this.swipeStartTime);
-    const velocity = offset / elapsed;
+    const projectedOffset = offset + this.swipeMaxVelocity * this.swipeProjectionMs;
     const shouldDismiss =
       this.swipeIntent === 'horizontal' &&
       (offset >= distanceThreshold ||
-        (offset >= this.swipeMinVelocityDistance && velocity >= this.swipeVelocityThreshold));
+        (offset >= this.swipeMinVelocityDistance && projectedOffset >= distanceThreshold) ||
+        (offset >= this.swipeMinVelocityDistance &&
+          this.swipeMaxVelocity >= this.swipeVelocityThreshold));
 
-    this.resetSidebarSwipe();
+    this.releasePointerCapture();
 
     if (shouldDismiss) {
-      this.sidebarThreadNavigation.closeSidebar();
+      this.settleSidebarSwipe(panelWidth);
+    } else {
+      this.settleSidebarSwipe(0);
     }
   }
 
   private trackSwipeSample(deltaX: number, timeStamp: number): void {
     this.swipeMaxDeltaX = Math.max(this.swipeMaxDeltaX, deltaX, 0);
     this.swipeLastTime = Math.max(this.swipeLastTime, timeStamp);
+
+    const elapsed = Math.max(1, timeStamp - this.swipePreviousTime);
+    this.swipeVelocity = (deltaX - this.swipePreviousDeltaX) / elapsed;
+    this.swipeMaxVelocity = Math.max(this.swipeMaxVelocity, this.swipeVelocity, 0);
+    this.swipePreviousDeltaX = deltaX;
+    this.swipePreviousTime = timeStamp;
   }
 
   private resolveSwipeIntent(deltaX: number, deltaY: number, fromCancel: boolean): void {
@@ -763,15 +824,74 @@ export class SidebarCommentsComponent {
   }
 
   private resetSidebarSwipe(): void {
-    if (this.swipePointerId !== null) {
-      this.sidebarPanelRef()?.nativeElement.releasePointerCapture(this.swipePointerId);
-    }
+    this.releasePointerCapture();
+    this.cancelSwipeAnimationFrame();
+    this.clearSwipeSettleTimeout();
 
     this.swipePointerId = null;
     this.swipeIntent = null;
     this.swipeMaxDeltaX = 0;
+    this.swipePreviousDeltaX = 0;
+    this.swipePreviousTime = 0;
+    this.swipeVelocity = 0;
+    this.swipeMaxVelocity = 0;
     this.swipeLastTime = 0;
-    this.isSwipeDragging.set(false);
+    this.swipeState.set('idle');
     this.swipeOffset.set(0);
+  }
+
+  private settleSidebarSwipe(targetOffset: number): void {
+    this.cancelSwipeAnimationFrame();
+    this.swipeState.set('settling');
+    this.swipeOffset.set(Math.max(0, targetOffset));
+
+    this.clearSwipeSettleTimeout();
+    this.swipeSettleTimeout = setTimeout(() => {
+      const shouldClose = targetOffset > 0;
+      this.resetSidebarSwipe();
+
+      if (shouldClose) {
+        this.sidebarThreadNavigation.closeSidebar();
+      }
+    }, this.swipeSettleDurationMs);
+  }
+
+  private queueSwipeOffset(offset: number): void {
+    this.swipeQueuedOffset = offset;
+
+    if (this.swipeAnimationFrame !== null) {
+      return;
+    }
+
+    this.swipeAnimationFrame = requestAnimationFrame(() => {
+      this.swipeAnimationFrame = null;
+      this.swipeOffset.set(this.swipeQueuedOffset);
+    });
+  }
+
+  private cancelSwipeAnimationFrame(): void {
+    if (this.swipeAnimationFrame === null) {
+      return;
+    }
+
+    cancelAnimationFrame(this.swipeAnimationFrame);
+    this.swipeAnimationFrame = null;
+  }
+
+  private clearSwipeSettleTimeout(): void {
+    if (this.swipeSettleTimeout === null) {
+      return;
+    }
+
+    clearTimeout(this.swipeSettleTimeout);
+    this.swipeSettleTimeout = null;
+  }
+
+  private releasePointerCapture(): void {
+    if (this.swipePointerId === null) {
+      return;
+    }
+
+    this.sidebarPanelRef()?.nativeElement.releasePointerCapture(this.swipePointerId);
   }
 }

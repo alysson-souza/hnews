@@ -182,19 +182,25 @@ describe('SidebarCommentsComponent', () => {
 
     afterEach(() => {
       vi.restoreAllMocks();
+      vi.useRealTimers();
     });
 
     it('should close after a full-width left-edge right swipe crosses the distance threshold', () => {
+      vi.useFakeTimers();
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
       component.onSidebarPointerMove(pointerEvent({ clientX: 150, target: panel, timeStamp: 80 }));
       component.onSidebarPointerUp(pointerEvent({ clientX: 150, target: panel, timeStamp: 120 }));
 
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(180);
+
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
     it('should close after a diagonal right swipe from the left edge', () => {
+      vi.useFakeTimers();
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, clientY: 100, target: panel }));
@@ -205,29 +211,38 @@ describe('SidebarCommentsComponent', () => {
         pointerEvent({ clientX: 150, clientY: 180, target: panel, timeStamp: 120 }),
       );
 
+      vi.advanceTimersByTime(180);
+
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
     it('should close after a fast right swipe even without an intermediate move', () => {
+      vi.useFakeTimers();
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
       component.onSidebarPointerUp(pointerEvent({ clientX: 90, target: panel, timeStamp: 60 }));
 
+      vi.advanceTimersByTime(180);
+
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
     it('should close when a qualified fast horizontal swipe is cancelled by the browser', () => {
+      vi.useFakeTimers();
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
       component.onSidebarPointerMove(pointerEvent({ clientX: 70, target: panel, timeStamp: 60 }));
       component.onSidebarPointerCancel(pointerEvent({ clientX: 70, target: panel, timeStamp: 70 }));
 
+      vi.advanceTimersByTime(180);
+
       expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
     });
 
     it('should snap back and keep the sidebar open after a short drag', () => {
+      vi.useFakeTimers();
       const panel = getPanel();
 
       component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel }));
@@ -235,8 +250,25 @@ describe('SidebarCommentsComponent', () => {
       component.onSidebarPointerUp(pointerEvent({ clientX: 24, target: panel, timeStamp: 140 }));
 
       expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.isSwipeSettling()).toBe(true);
+
+      vi.advanceTimersByTime(180);
+
       expect(component.swipeTransform()).toBeNull();
       expect(component.isSwipeDragging()).toBe(false);
+    });
+
+    it('should snap back and keep the sidebar open after a tiny fast flick', () => {
+      vi.useFakeTimers();
+      const panel = getPanel();
+
+      component.onSidebarPointerDown(pointerEvent({ clientX: 8, target: panel, timeStamp: 0 }));
+      component.onSidebarPointerUp(pointerEvent({ clientX: 30, target: panel, timeStamp: 20 }));
+
+      vi.advanceTimersByTime(180);
+
+      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(component.swipeTransform()).toBeNull();
     });
 
     it('should ignore mostly vertical drags with little rightward movement', () => {
