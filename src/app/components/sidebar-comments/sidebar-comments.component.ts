@@ -73,11 +73,17 @@ import { DeviceService } from '@services/device.service';
       [style.transform]="swipeTransform()"
       [attr.inert]="sidebarService.isOpen() ? null : true"
       [attr.aria-hidden]="!sidebarService.isOpen()"
-      (pointerdown)="onSidebarPointerDown($event)"
       (pointermove)="onSidebarPointerMove($event)"
       (pointerup)="onSidebarPointerUp($event)"
       (pointercancel)="onSidebarPointerCancel($event)"
     >
+      <div
+        class="sidebar-swipe-edge absolute left-0 top-0 bottom-0 z-30 w-6"
+        [class.pointer-events-none]="!sidebarService.isOpen()"
+        aria-hidden="true"
+        (pointerdown)="onSidebarPointerDown($event)"
+      ></div>
+
       @if (sidebarService.currentItemId()) {
         <div class="h-full flex flex-col">
           <!-- Header -->
@@ -213,6 +219,17 @@ import { DeviceService } from '@services/device.service';
 
       .sidebar-panel {
         touch-action: pan-y;
+      }
+
+      .sidebar-swipe-edge {
+        pointer-events: none;
+        touch-action: none;
+      }
+
+      @media (pointer: coarse) {
+        .sidebar-swipe-edge {
+          pointer-events: auto;
+        }
       }
 
       .sidebar-panel-settling {
