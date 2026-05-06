@@ -46,6 +46,7 @@ node_modules/.cache/
 Thumbs.db
 
 # AI
+.codex/
 .claude/*.local.json
 .kilocode/mcp.json
 
