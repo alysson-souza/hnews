@@ -88,6 +88,32 @@ test.describe('Stories Page', () => {
       const count = await storiesPage.getStoryCount();
       expect(count).toBeGreaterThan(0);
     });
+
+    test('should keep the footer source icon constrained before stylesheets load', async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.route('**/*', async (route) => {
+        if (route.request().resourceType() === 'stylesheet') {
+          await route.abort();
+          return;
+        }
+
+        await route.continue();
+      });
+
+      await page.goto('/top');
+
+      const sourceIcon = page
+        .getByRole('link', { name: 'View Source Code On GitHub' })
+        .locator('svg');
+      await expect(sourceIcon).toBeVisible();
+
+      const sourceIconBox = await sourceIcon.boundingBox();
+      expect(sourceIconBox).not.toBeNull();
+      expect(sourceIconBox?.width).toBeLessThanOrEqual(32);
+      expect(sourceIconBox?.height).toBeLessThanOrEqual(32);
+    });
   });
 
   test.describe('Comments Link', () => {
