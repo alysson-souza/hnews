@@ -51,11 +51,9 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
                 [alt]="'Preview for ' + storyTitle()"
                 [attr.title]="ogTooltip()"
                 class="og-image"
-                [class.og-image-loaded]="ogImageLoaded()"
                 [class.object-left-top]="isGithubImage()"
                 decoding="async"
                 loading="lazy"
-                (load)="handleOgImageLoad()"
                 (error)="handleOgImageError()"
               />
             }
@@ -81,14 +79,10 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
         @apply w-full h-full flex items-center justify-center;
       }
       .og-image {
-        @apply w-full h-full object-cover opacity-0;
-        transition: opacity 0.3s ease-in;
+        @apply w-full h-full object-cover;
         image-rendering: high-quality;
         transform: translateZ(0);
         backface-visibility: hidden;
-      }
-      .og-image-loaded {
-        @apply opacity-100;
       }
     `,
   ],
@@ -105,8 +99,6 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   /** The resolved OG image URL (proxied), or null to show favicon. */
   readonly ogImageUrl = signal<string | null>(null);
-  /** Whether the OG image has finished loading (triggers fade-in). */
-  readonly ogImageLoaded = signal(false);
   /** The og:title from the article. */
   readonly ogTitle = signal<string | null>(null);
   /** The og:description from the article. */
@@ -147,7 +139,6 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
       if (this.ogImageLoadFailed()) {
         this.ogImageLoadFailed.set(false);
-        this.ogImageLoaded.set(false);
         return;
       }
 
@@ -157,12 +148,9 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
           'img.og-image',
         ) as HTMLImageElement | null;
         if (img?.complete && img.naturalWidth > 0) {
-          // Image is still decoded — restore immediately (no flicker)
-          this.ogImageLoaded.set(true);
           this.ogImageMounted.set(true);
           return;
         }
-        this.ogImageLoaded.set(false);
         this.remountOgImage();
       });
     });
@@ -178,13 +166,7 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
       if (!el) return;
 
       this.cleanupObserver = this.ogImageService.observe(el, url, (result: OgImageResult) => {
-        const previousUrl = this.ogImageUrl();
-        const shouldResetLoadState = this.ogImageLoadFailed() || previousUrl !== result.imageUrl;
-
         this.ogImageLoadFailed.set(false);
-        if (shouldResetLoadState) {
-          this.ogImageLoaded.set(false);
-        }
         this.ogImageUrl.set(result.imageUrl);
         this.ogTitle.set(result.title);
         this.ogDescription.set(result.description);
@@ -196,14 +178,9 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
     this.cleanupObserver?.();
   }
 
-  handleOgImageLoad(): void {
-    this.ogImageLoaded.set(true);
-  }
-
   handleOgImageError(): void {
     // OG image failed to load — fall back to favicon
     this.ogImageLoadFailed.set(true);
-    this.ogImageLoaded.set(false);
   }
 
   handleLinkClick(event: MouseEvent): void {

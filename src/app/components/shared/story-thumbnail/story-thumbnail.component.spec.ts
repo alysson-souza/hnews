@@ -234,25 +234,11 @@ describe('StoryThumbnailComponent', () => {
   });
 
   // -----------------------------------------------------------------------
-  // OG image fade-in
+  // OG image immediate rendering
   // -----------------------------------------------------------------------
 
-  describe('OG image fade-in', () => {
-    it('starts with ogImageLoaded as false', () => {
-      fixture.componentRef.setInput('storyTitle', 'Test');
-      fixture.detectChanges();
-      expect(component.ogImageLoaded()).toBe(false);
-    });
-
-    it('sets ogImageLoaded to true on handleOgImageLoad', () => {
-      fixture.componentRef.setInput('storyTitle', 'Test');
-      fixture.detectChanges();
-
-      component.handleOgImageLoad();
-      expect(component.ogImageLoaded()).toBe(true);
-    });
-
-    it('resets ogImageLoaded when OG result arrives', async () => {
+  describe('OG image immediate rendering', () => {
+    it('renders without a load-state opacity transition', async () => {
       const url = 'https://example.com/article';
       fixture.componentRef.setInput('storyTitle', 'Test');
       fixture.componentRef.setInput('storyUrl', url);
@@ -260,17 +246,25 @@ describe('StoryThumbnailComponent', () => {
 
       await Promise.resolve();
 
-      // Manually set loaded to true first
-      component.ogImageLoaded.set(true);
-
-      // Service delivers a result — should reset loaded to false
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=https%3A%2F%2Fexample.com%2Fog.jpg',
         title: null,
         description: null,
       });
+      fixture.detectChanges();
 
-      expect(component.ogImageLoaded()).toBe(false);
+      const img = fixture.nativeElement.querySelector('img.og-image') as HTMLImageElement;
+      img.dispatchEvent(new Event('load'));
+      fixture.detectChanges();
+
+      const styles = (
+        StoryThumbnailComponent as unknown as { ɵcmp: { styles: string[] } }
+      ).ɵcmp.styles.join('\n');
+
+      expect(img.classList.contains('og-image-loaded')).toBe(false);
+      expect(styles).not.toContain('opacity-0');
+      expect(styles).not.toContain('transition: opacity');
+      expect(styles).not.toContain('.og-image-loaded');
     });
   });
 
@@ -300,8 +294,6 @@ describe('StoryThumbnailComponent', () => {
       // Simulate image load error
       component.handleOgImageError();
       fixture.detectChanges();
-
-      expect(component.ogImageLoaded()).toBe(false);
 
       expect(fixture.nativeElement.querySelector('img.og-image')).toBeFalsy();
       expect(fixture.nativeElement.querySelector('app-story-favicon')).toBeTruthy();
@@ -491,7 +483,6 @@ describe('StoryThumbnailComponent', () => {
       fixture.detectChanges();
       await Promise.resolve();
 
-      // Deliver OG image and mark it as loaded
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=https%3A%2F%2Fexample.com%2Fog.jpg',
         title: null,
@@ -504,30 +495,12 @@ describe('StoryThumbnailComponent', () => {
       Object.defineProperty(img, 'naturalWidth', { configurable: true, value: 640 });
       Object.defineProperty(img, 'naturalHeight', { configurable: true, value: 360 });
 
-      component.handleOgImageLoad();
-      expect(component.ogImageLoaded()).toBe(true);
-
       thumbnailRecoveryStub.recoveryVersion.set(1);
       fixture.detectChanges();
       await Promise.resolve();
       fixture.detectChanges();
 
-      expect(component.ogImageLoaded()).toBe(true);
-    });
-
-    it('does not touch ogImageLoaded on recovery when no OG image is set', async () => {
-      fixture.componentRef.setInput('storyTitle', 'Test');
-      fixture.componentRef.setInput('storyUrl', 'https://example.com');
-      fixture.detectChanges();
-      await Promise.resolve();
-
-      // No OG image resolved — ogImageLoaded should stay false
-      expect(component.ogImageLoaded()).toBe(false);
-
-      thumbnailRecoveryStub.recoveryVersion.set(1);
-      fixture.detectChanges();
-
-      expect(component.ogImageLoaded()).toBe(false);
+      expect(fixture.nativeElement.querySelector('img.og-image')).toBe(img);
     });
   });
 });

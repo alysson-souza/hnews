@@ -8,7 +8,4 @@ script = ""
 [[actions]]
 name = "Run"
 icon = "run"
-command = '''
-npm i
-npm run start:cf
-'''
+command = "npm install && npm run start:cf"
