@@ -2,9 +2,8 @@
 
 Alternative frontend for Hacker News built with Angular 21.
 
-Live demos:
+Live demo:
 
-- https://hnews.ll9.com.br/ — Cloudflare Pages (supports link previews when sharing)
 - https://alysson-souza.github.io/hnews/ — GitHub Pages
 
 ## Features
@@ -76,14 +75,12 @@ App runs at `http://localhost:4200`.
 
 ## Deployment
 
-Pushes to `main` publish the production Cloudflare Pages deployment at
-`https://hnews.ll9.com.br/` and the GitHub Pages deployment at
-`https://alysson-souza.github.io/hnews/` through the GitHub Actions deploy
-workflow.
+Pushes to `main` publish the GitHub Pages demo through the GitHub Actions
+deploy workflow.
 
-Cloudflare Pages uses `wrangler.toml` as the deployment source of truth. The
-`SITE_URL` environment variable should stay aligned with the canonical
-Cloudflare domain so generated link previews point at `hnews.ll9.com.br`.
+Cloudflare Pages deployment is also supported. Configure the required
+Cloudflare repository secrets and set `SITE_URL` in `wrangler.toml` to your own
+deployment URL so generated link previews point at the right host.
 
 See `DEPLOYMENT.md` for more deployment options.
 
