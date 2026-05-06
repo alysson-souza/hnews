@@ -47,6 +47,7 @@ Thumbs.db
 
 # AI
 .codex/
+CLAUDE.md
 .claude/*.local.json
 .kilocode/mcp.json
 
