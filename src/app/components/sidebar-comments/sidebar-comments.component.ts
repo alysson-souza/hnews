@@ -30,6 +30,7 @@ import { CommentThreadToolbarComponent } from '../comment-tools/comment-thread-t
 import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-navigation.service';
 import { DeviceService } from '@services/device.service';
+import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
 
 @Component({
   selector: 'app-sidebar-comments',
@@ -40,6 +41,7 @@ import { DeviceService } from '@services/device.service';
     AppButtonComponent,
     CommentSortDropdownComponent,
     CommentThreadToolbarComponent,
+    CommentSkeletonComponent,
   ],
   template: `
     <!-- Sidebar Comments -->
@@ -150,31 +152,45 @@ import { DeviceService } from '@services/device.service';
                 </div>
 
                 @if (item()!.kids && item()!.kids!.length > 0) {
-                  <div class="space-y-4" role="tree" aria-label="Comments">
-                    @for (commentId of visibleCommentIds(); track commentId) {
-                      <app-comment-thread
-                        [commentId]="commentId"
-                        [depth]="0"
-                        [autoExpandReplies]="smallThreadMode()"
-                        [storyAuthor]="item()?.by"
-                        [previousVisitedAt]="previousVisitedAt()"
-                        [threadContext]="'sidebar'"
-                      />
-                    }
-                  </div>
-
-                  @if (hasMoreTopLevelComments()) {
-                    <div class="mt-4 flex justify-center">
-                      <app-button
-                        variant="secondary"
-                        size="sm"
-                        class="load-more-btn"
-                        [ariaLabel]="'Load more comments'"
-                        (clicked)="loadMoreTopLevelComments()"
-                      >
-                        Load {{ remainingTopLevelCount() }} more comments
-                      </app-button>
+                  @if (commentsSortPending()) {
+                    <div
+                      class="space-y-4"
+                      role="status"
+                      aria-label="Sorting comments"
+                      aria-live="polite"
+                      aria-busy="true"
+                    >
+                      @for (row of commentSortSkeletonRows; track row) {
+                        <app-comment-skeleton [depth]="0" />
+                      }
                     </div>
+                  } @else {
+                    <div class="space-y-4" role="tree" aria-label="Comments">
+                      @for (commentId of visibleCommentIds(); track commentId) {
+                        <app-comment-thread
+                          [commentId]="commentId"
+                          [depth]="0"
+                          [autoExpandReplies]="smallThreadMode()"
+                          [storyAuthor]="item()?.by"
+                          [previousVisitedAt]="previousVisitedAt()"
+                          [threadContext]="'sidebar'"
+                        />
+                      }
+                    </div>
+
+                    @if (hasMoreTopLevelComments()) {
+                      <div class="mt-4 flex justify-center">
+                        <app-button
+                          variant="secondary"
+                          size="sm"
+                          class="load-more-btn"
+                          [ariaLabel]="'Load more comments'"
+                          (clicked)="loadMoreTopLevelComments()"
+                        >
+                          Load {{ remainingTopLevelCount() }} more comments
+                        </app-button>
+                      </div>
+                    }
                   }
                 } @else {
                   <p class="text-gray-500 text-center py-8">No comments yet</p>
@@ -385,6 +401,8 @@ export class SidebarCommentsComponent {
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
   previousVisitedAt = signal<number | null>(null);
+  readonly commentSortSkeletonRows = [0, 1, 2] as const;
+  private topLevelCommentsLoadedForSort = signal(false);
 
   private readonly commentsPageSize = 10;
   private readonly smallThreadDescendantsThreshold = 40;
@@ -456,7 +474,23 @@ export class SidebarCommentsComponent {
     return Math.max(0, 1 - progress * 0.85);
   });
 
+  private topLevelCommentsReadyForSort = computed(() => {
+    return this.topLevelCommentsLoadedForSort() || this.allComments().length > 0;
+  });
+
+  commentsSortPending = computed(() => {
+    return (
+      this.sortOrder() !== 'default' &&
+      (this.item()?.kids?.length ?? 0) > 0 &&
+      !this.topLevelCommentsReadyForSort()
+    );
+  });
+
   sortedCommentIds = computed(() => {
+    if (this.commentsSortPending()) {
+      return [];
+    }
+
     const order = this.sortOrder();
     const kids = this.item()?.kids ?? [];
 
@@ -471,11 +505,19 @@ export class SidebarCommentsComponent {
   });
 
   hasMoreTopLevelComments = computed(() => {
+    if (this.commentsSortPending()) {
+      return false;
+    }
+
     const total = this.item()?.kids?.length ?? 0;
     return total > this.visibleCommentIds().length;
   });
 
   remainingTopLevelCount = computed(() => {
+    if (this.commentsSortPending()) {
+      return 0;
+    }
+
     const total = this.item()?.kids?.length ?? 0;
     const loaded = this.visibleCommentIds().length;
     const remaining = Math.max(total - loaded, 0);
@@ -556,6 +598,7 @@ export class SidebarCommentsComponent {
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
     this.commentsLoading.set(false);
+    this.topLevelCommentsLoadedForSort.set(false);
     this.previousVisitedAt.set(null);
     this.commentIndex.clearContext('sidebar');
 
@@ -623,6 +666,7 @@ export class SidebarCommentsComponent {
 
   private loadAllComments(): void {
     if (this.allComments().length > 0) {
+      this.topLevelCommentsLoadedForSort.set(true);
       return;
     }
 
@@ -636,6 +680,7 @@ export class SidebarCommentsComponent {
     this.hnService.getStoryTopLevelComments(storyId).subscribe({
       next: (comments) => {
         this.allComments.set(comments);
+        this.topLevelCommentsLoadedForSort.set(true);
         this.commentsLoading.set(false);
       },
       error: () => {

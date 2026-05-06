@@ -25,6 +25,7 @@ import {
 import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 import { CommentThreadToolbarComponent } from '@components/comment-tools/comment-thread-toolbar.component';
+import { CommentSkeletonComponent } from '@components/comment-skeleton/comment-skeleton.component';
 
 @Component({
   selector: 'app-item',
@@ -36,6 +37,7 @@ import { CommentThreadToolbarComponent } from '@components/comment-tools/comment
     AppButtonComponent,
     CommentSortDropdownComponent,
     CommentThreadToolbarComponent,
+    CommentSkeletonComponent,
   ],
   templateUrl: './item.component.html',
   styleUrl: './item.component.css',
@@ -63,6 +65,8 @@ export class ItemComponent implements OnInit {
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
   previousVisitedAt = signal<number | null>(null);
+  readonly commentSortSkeletonRows = [0, 1, 2] as const;
+  private topLevelCommentsLoadedForSort = signal(false);
 
   // Bulk loading state - stores the result from Algolia bulk load
   private bulkLoadResult = signal<BulkLoadResult | null>(null);
@@ -73,7 +77,23 @@ export class ItemComponent implements OnInit {
   private visibleTopLevelCount = signal(this.commentsPageSize);
   smallThreadMode = signal(false);
 
+  private topLevelCommentsReadyForSort = computed(() => {
+    return this.topLevelCommentsLoadedForSort() || this.allComments().length > 0;
+  });
+
+  commentsSortPending = computed(() => {
+    return (
+      this.sortOrder() !== 'default' &&
+      (this.item()?.kids?.length ?? 0) > 0 &&
+      !this.topLevelCommentsReadyForSort()
+    );
+  });
+
   sortedCommentIds = computed(() => {
+    if (this.commentsSortPending()) {
+      return [];
+    }
+
     const order = this.sortOrder();
     const kids = this.item()?.kids ?? [];
 
@@ -88,11 +108,19 @@ export class ItemComponent implements OnInit {
   });
 
   hasMoreTopLevelComments = computed(() => {
+    if (this.commentsSortPending()) {
+      return false;
+    }
+
     const total = this.item()?.kids?.length ?? 0;
     return total > this.visibleCommentIds().length;
   });
 
   remainingTopLevelCount = computed(() => {
+    if (this.commentsSortPending()) {
+      return 0;
+    }
+
     const total = this.item()?.kids?.length ?? 0;
     const loaded = this.visibleCommentIds().length;
     const remaining = Math.max(total - loaded, 0);
@@ -144,6 +172,7 @@ export class ItemComponent implements OnInit {
     // Reset cached comments (but keep sort order global)
     this.allComments.set([]);
     this.commentsLoading.set(false);
+    this.topLevelCommentsLoadedForSort.set(false);
     this.bulkLoadResult.set(null);
     this.bulkLoadingComments.set(false);
     this.itemKeyboardNav.clearSelection();
@@ -178,6 +207,7 @@ export class ItemComponent implements OnInit {
           // Pre-populate allComments for sorting (top-level only)
           const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
           this.allComments.set(topLevelComments);
+          this.topLevelCommentsLoadedForSort.set(true);
 
           const previousVisitedAt = this.getPreviousCommentsVisitedAt(
             result.story.id,
@@ -355,6 +385,7 @@ export class ItemComponent implements OnInit {
   private loadAllComments(): void {
     // If we already have comments from bulk loading, no need to fetch again
     if (this.allComments().length > 0) {
+      this.topLevelCommentsLoadedForSort.set(true);
       return;
     }
 
@@ -368,6 +399,7 @@ export class ItemComponent implements OnInit {
     this.hnService.getStoryTopLevelComments(storyId).subscribe({
       next: (comments) => {
         this.allComments.set(comments);
+        this.topLevelCommentsLoadedForSort.set(true);
         this.commentsLoading.set(false);
       },
       error: () => {

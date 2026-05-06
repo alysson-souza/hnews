@@ -109,7 +109,11 @@ describe('ItemComponent', () => {
       setSortOrder: vi.fn(),
       sortOrder: signal('default'),
       sortComments: vi.fn(
-        (kids: readonly number[], comments: readonly HNItem[], order: CommentSortOrder): number[] => {
+        (
+          kids: readonly number[],
+          comments: readonly HNItem[],
+          order: CommentSortOrder,
+        ): number[] => {
           if (order === 'default' || comments.length === 0) {
             return [...kids];
           }
@@ -276,6 +280,24 @@ describe('ItemComponent', () => {
       component.onSortChange('popular');
 
       expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(1);
+    });
+
+    it('should wait for top-level comment metadata before displaying a non-default sort', () => {
+      const comments$ = new Subject<HNItem[]>();
+      mockHnService.getStoryTopLevelComments.mockReturnValue(comments$.asObservable());
+      component.item.set(mockItem);
+      mockCommentSortService.sortOrder.set('newest');
+
+      component.onSortChange('newest');
+
+      expect(component.commentsLoading()).toBe(true);
+      expect(component.visibleCommentIds()).toEqual([]);
+
+      comments$.next(mockComments);
+      comments$.complete();
+
+      expect(component.commentsLoading()).toBe(false);
+      expect(component.visibleCommentIds()).toEqual([2, 3, 1]);
     });
   });
 

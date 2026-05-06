@@ -4,7 +4,7 @@ import type { Mock, MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { SidebarCommentsComponent } from './sidebar-comments.component';
 import { SidebarService } from '@services/sidebar.service';
 import { HackernewsService } from '@services/hackernews.service';
@@ -94,7 +94,11 @@ describe('SidebarCommentsComponent', () => {
       setSortOrder: vi.fn(),
       sortOrder: signal('default'),
       sortComments: vi.fn(
-        (kids: readonly number[], comments: readonly HNItem[], order: CommentSortOrder): number[] => {
+        (
+          kids: readonly number[],
+          comments: readonly HNItem[],
+          order: CommentSortOrder,
+        ): number[] => {
           if (order === 'default' || comments.length === 0) {
             return [...kids];
           }
@@ -665,11 +669,11 @@ describe('SidebarCommentsComponent', () => {
       expect(sortedIds).toEqual([3, 1, 2]);
     });
 
-    it('should fallback to default order when no comments loaded', () => {
+    it('should wait for sort metadata when comments are not loaded', () => {
       component.allComments.set([]);
       mockCommentSortService.sortOrder.set('newest');
       const sortedIds = component.sortedCommentIds();
-      expect(sortedIds).toEqual([1, 2, 3]); // Falls back to item kids
+      expect(sortedIds).toEqual([]);
     });
   });
 
@@ -694,6 +698,24 @@ describe('SidebarCommentsComponent', () => {
 
       expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledWith(mockItem.id);
       expect(component.allComments()).toEqual(mockComments);
+    });
+
+    it('should wait for top-level comment metadata before displaying a non-default sort', () => {
+      const comments$ = new Subject<HNItem[]>();
+      mockHnService.getStoryTopLevelComments.mockReturnValue(comments$.asObservable());
+      component.item.set(mockItem);
+      mockCommentSortService.sortOrder.set('newest');
+
+      component.onSortChange('newest');
+
+      expect(component.commentsLoading()).toBe(true);
+      expect(component.visibleCommentIds()).toEqual([]);
+
+      comments$.next(mockComments);
+      comments$.complete();
+
+      expect(component.commentsLoading()).toBe(false);
+      expect(component.visibleCommentIds()).toEqual([2, 3, 1]);
     });
 
     it('should capture previous comments visit before marking the thread visited', () => {
