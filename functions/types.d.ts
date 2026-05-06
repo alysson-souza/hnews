@@ -4,7 +4,7 @@
 declare namespace Cloudflare {
   interface Env {
     HN_API_BASE: 'https://hacker-news.firebaseio.com/v0';
-    SITE_URL: 'https://hnews-8xl.pages.dev';
+    SITE_URL: 'https://hnews.ll9.com.br';
     DEFAULT_OG_IMAGE: '/icons/android-chrome-512x512.png';
   }
 }
