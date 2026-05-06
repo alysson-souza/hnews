@@ -72,7 +72,16 @@ Workflow file: `.github/workflows/deploy.yml`.
 - If Cloudflare secrets are missing:
   - Cloudflare build/upload/deploy steps are skipped.
 
+## 6. Offline/PWA invariant
+
+The Angular service worker hashes `index.html` in `ngsw.json`. Cloudflare must not rewrite HTML after the production build, or the service worker will reject the app shell with a hash mismatch and offline boot will fail.
+
+- Keep Cloudflare Web Analytics automatic setup disabled for this Pages project.
+- Keep `Cache-Control: no-cache, no-transform` on `index.html` and `index.csr.html` in `public/_headers`.
+- If Web Analytics is ever needed, add the beacon snippet to the source HTML and keep Cloudflare auto-injection disabled so Angular hashes the final served HTML.
+
 ## Troubleshooting
 
 - **Project not found (404)**: `CLOUDFLARE_PAGES_PROJECT_NAME` does not match the Pages project name exactly.
 - **Authentication error (403)**: token is missing, revoked, or lacks `Cloudflare Pages: Edit` permission.
+- **Offline opens a plain `Offline` page**: check `/ngsw/state` on the deployed site. `Hash mismatch` or `EXISTING_CLIENTS_ONLY` usually means something rewrote `index.html` after `ngsw.json` was generated.
