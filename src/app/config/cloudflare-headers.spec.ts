@@ -34,12 +34,25 @@ describe('Cloudflare Pages headers', () => {
     return rules.find((rule) => rule.pattern === pattern)?.headers ?? [];
   }
 
-  it('caches fingerprinted root bundles immutably', () => {
-    expect(headersFor('/*.js')).toContain('Cache-Control: public, max-age=31536000, immutable');
-    expect(headersFor('/*.css')).toContain('Cache-Control: public, max-age=31536000, immutable');
+  it('caches fingerprinted root bundles immutably without matching service workers', () => {
+    expect(headersFor('/*.js')).toEqual([]);
+    expect(headersFor('/*.css')).toEqual([]);
+
+    expect(headersFor('/main-*.js')).toContain(
+      'Cache-Control: public, max-age=31536000, immutable',
+    );
+    expect(headersFor('/chunk-*.js')).toContain(
+      'Cache-Control: public, max-age=31536000, immutable',
+    );
+    expect(headersFor('/polyfills-*.js')).toContain(
+      'Cache-Control: public, max-age=31536000, immutable',
+    );
+    expect(headersFor('/styles-*.css')).toContain(
+      'Cache-Control: public, max-age=31536000, immutable',
+    );
   });
 
-  it('keeps the service worker out of the immutable JavaScript cache rule', () => {
-    expect(headersFor('/ngsw-worker.js')).toEqual(['! Cache-Control', 'Cache-Control: no-cache']);
+  it('keeps the service worker cache revalidating', () => {
+    expect(headersFor('/ngsw-worker.js')).toEqual(['Cache-Control: no-cache']);
   });
 });
