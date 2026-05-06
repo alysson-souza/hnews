@@ -2,6 +2,7 @@ import type { Mock, MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { TestBed } from '@angular/core/testing';
+import { HNItem } from '@models/hn';
 import { CommentSortService } from './comment-sort.service';
 
 describe('CommentSortService', () => {
@@ -104,5 +105,73 @@ describe('CommentSortService', () => {
     expect(newService.sortOrder()).toBe('default');
 
     expect(() => newService.setSortOrder('popular')).not.toThrow();
+  });
+
+  describe('sortComments', () => {
+    const nativeOrder = [1, 2, 3, 4];
+    const comments: HNItem[] = [
+      {
+        id: 1,
+        type: 'comment',
+        by: 'user1',
+        time: 1000,
+        text: 'Comment 1',
+        kids: [10, 11],
+        descendants: 0,
+      },
+      {
+        id: 2,
+        type: 'comment',
+        by: 'user2',
+        time: 2000,
+        text: 'Comment 2',
+        kids: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+      },
+      {
+        id: 3,
+        type: 'comment',
+        by: 'user3',
+        time: 1500,
+        text: 'Comment 3',
+        descendants: 20,
+        kids: [30],
+      },
+      {
+        id: 4,
+        type: 'comment',
+        by: 'user4',
+        time: 1250,
+        text: 'Comment 4',
+        kids: [40, 41],
+      },
+    ];
+
+    beforeEach(() => {
+      service = TestBed.inject(CommentSortService);
+    });
+
+    it('should preserve native HN order for default sorting', () => {
+      expect(service.sortComments(nativeOrder, comments, 'default')).toEqual(nativeOrder);
+    });
+
+    it('should fallback to native HN order when comments are not loaded', () => {
+      expect(service.sortComments(nativeOrder, [], 'popular')).toEqual(nativeOrder);
+    });
+
+    it('should sort comments by newest first', () => {
+      expect(service.sortComments(nativeOrder, comments, 'newest')).toEqual([2, 3, 4, 1]);
+    });
+
+    it('should sort comments by oldest first', () => {
+      expect(service.sortComments(nativeOrder, comments, 'oldest')).toEqual([1, 4, 3, 2]);
+    });
+
+    it('should sort popular comments by descendant volume with kids as a lower bound', () => {
+      expect(service.sortComments(nativeOrder, comments, 'popular')).toEqual([3, 2, 1, 4]);
+    });
+
+    it('should preserve native HN order when popularity counts are equal', () => {
+      expect(service.sortComments(nativeOrder, comments, 'popular').slice(2)).toEqual([1, 4]);
+    });
   });
 });

@@ -21,6 +21,7 @@ import { ScrollService } from '@services/scroll.service';
 import { CommentSortService } from '@services/comment-sort.service';
 import { HNItem } from '@models/hn';
 import { SidebarStorySummaryComponent } from '@components/sidebar-comments/sidebar-story-summary.component';
+import { CommentSortOrder } from '@components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
 
 describe('ItemComponent', () => {
   let component: ItemComponent;
@@ -107,6 +108,33 @@ describe('ItemComponent', () => {
     mockCommentSortService = {
       setSortOrder: vi.fn(),
       sortOrder: signal('default'),
+      sortComments: vi.fn(
+        (kids: readonly number[], comments: readonly HNItem[], order: CommentSortOrder): number[] => {
+          if (order === 'default' || comments.length === 0) {
+            return [...kids];
+          }
+
+          const nativeIndex = new Map(kids.map((id, index) => [id, index]));
+          return comments
+            .filter((comment) => nativeIndex.has(comment.id))
+            .sort((a, b) => {
+              let comparison = 0;
+
+              if (order === 'newest') {
+                comparison = b.time - a.time;
+              } else if (order === 'oldest') {
+                comparison = a.time - b.time;
+              } else if (order === 'popular') {
+                const aPopularity = Math.max(a.descendants ?? 0, a.kids?.length ?? 0);
+                const bPopularity = Math.max(b.descendants ?? 0, b.kids?.length ?? 0);
+                comparison = bPopularity - aPopularity;
+              }
+
+              return comparison || nativeIndex.get(a.id)! - nativeIndex.get(b.id)!;
+            })
+            .map((comment) => comment.id);
+        },
+      ),
     } as unknown as MockedObject<CommentSortService>;
     mockRouter = {
       events: routerEvents.asObservable(),
@@ -169,6 +197,11 @@ describe('ItemComponent', () => {
       mockCommentSortService.sortOrder.set('default');
       const sortedIds = component.sortedCommentIds();
       expect(sortedIds).toEqual([1, 2, 3]);
+      expect(mockCommentSortService.sortComments).toHaveBeenCalledWith(
+        mockItem.kids,
+        mockComments,
+        'default',
+      );
     });
 
     it('should sort comments by newest when "newest" is selected', () => {
@@ -223,6 +256,18 @@ describe('ItemComponent', () => {
 
       component.onSortChange('newest');
       expect(mockHnService.getStoryTopLevelComments).not.toHaveBeenCalled();
+    });
+
+    it('should load comments when Firebase fallback opens an item with a persisted non-default sort', () => {
+      mockHnService.getStoryWithAllComments.mockReturnValue(of(null));
+      mockHnService.getItem.mockReturnValue(of(mockItem));
+      mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
+      mockCommentSortService.sortOrder.set('popular');
+
+      component.loadItem(mockItem.id);
+
+      expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledWith(mockItem.id);
+      expect(component.allComments()).toEqual(mockComments);
     });
 
     it('should fallback to getStoryTopLevelComments when allComments is empty', () => {

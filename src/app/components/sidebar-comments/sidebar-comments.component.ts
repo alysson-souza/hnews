@@ -460,26 +460,8 @@ export class SidebarCommentsComponent {
     const order = this.sortOrder();
     const kids = this.item()?.kids ?? [];
 
-    if (order === 'default') {
-      return kids; // HN's native order
-    }
-
     const comments = this.allComments();
-    if (comments.length === 0) {
-      return kids; // Fallback while loading
-    }
-
-    // Sort by timestamp or score
-    const sorted = [...comments].sort((a, b) => {
-      if (order === 'newest') return b.time - a.time;
-      if (order === 'oldest') return a.time - b.time;
-      if (order === 'popular') {
-        return (b.descendants ?? 0) - (a.descendants ?? 0);
-      }
-      return 0;
-    });
-
-    return sorted.map((c) => c.id);
+    return this.commentSortService.sortComments(kids, comments, order);
   });
 
   visibleCommentIds = computed(() => {
@@ -589,6 +571,7 @@ export class SidebarCommentsComponent {
           this.previousVisitedAt.set(previousVisitedAt);
           this.commentIndex.configureContext('sidebar', item, { previousVisitedAt });
           this.visitedService.markCommentsVisited(item.id, item.descendants ?? item.kids?.length);
+          this.loadCommentsForActiveSort();
         } else {
           this.error.set('Item not found');
         }
@@ -632,7 +615,17 @@ export class SidebarCommentsComponent {
     }
   }
 
+  private loadCommentsForActiveSort(): void {
+    if (this.sortOrder() !== 'default') {
+      this.loadAllComments();
+    }
+  }
+
   private loadAllComments(): void {
+    if (this.allComments().length > 0) {
+      return;
+    }
+
     const storyId = this.item()?.id;
     if (!storyId) {
       return;

@@ -77,26 +77,8 @@ export class ItemComponent implements OnInit {
     const order = this.sortOrder();
     const kids = this.item()?.kids ?? [];
 
-    if (order === 'default') {
-      return kids; // HN's native order
-    }
-
     const comments = this.allComments();
-    if (comments.length === 0) {
-      return kids; // Fallback while loading
-    }
-
-    // Sort by timestamp or score
-    const sorted = [...comments].sort((a, b) => {
-      if (order === 'newest') return b.time - a.time;
-      if (order === 'oldest') return a.time - b.time;
-      if (order === 'popular') {
-        return (b.descendants ?? 0) - (a.descendants ?? 0);
-      }
-      return 0;
-    });
-
-    return sorted.map((c) => c.id);
+    return this.commentSortService.sortComments(kids, comments, order);
   });
 
   visibleCommentIds = computed(() => {
@@ -264,6 +246,7 @@ export class ItemComponent implements OnInit {
   private handleLoadSuccess() {
     const loadedItem = this.item();
     this.loading.set(false);
+    this.loadCommentsForActiveSort();
 
     const storedScrollY = this.getStoredThreadReturnScrollY();
     if (storedScrollY !== null && loadedItem?.type === 'story') {
@@ -343,6 +326,12 @@ export class ItemComponent implements OnInit {
 
     // Fetch comments if not already loaded and sort requires them
     if (newSort !== 'default' && this.allComments().length === 0) {
+      this.loadAllComments();
+    }
+  }
+
+  private loadCommentsForActiveSort(): void {
+    if (this.sortOrder() !== 'default') {
       this.loadAllComments();
     }
   }
