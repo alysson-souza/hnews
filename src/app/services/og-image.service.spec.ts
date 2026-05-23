@@ -743,7 +743,7 @@ describe('OgImageService', () => {
       expect(cacheStub.set).not.toHaveBeenCalled();
 
       thumbnailRecoveryStub.recoveryVersion.set(1);
-      TestBed.flushEffects();
+      TestBed.tick();
       await flush();
 
       expect(cb).toHaveBeenCalledWith({
@@ -957,7 +957,7 @@ describe('OgImageService', () => {
 
       // Simulate recovery — should reset activeRequests
       thumbnailRecoveryStub.recoveryVersion.set(1);
-      TestBed.flushEffects();
+      TestBed.tick();
 
       // Now a 6th request should be processable (not blocked by concurrency)
       const el6 = document.createElement('div');
@@ -1001,7 +1001,7 @@ describe('OgImageService', () => {
       expect(resolvers.length).toBe(5);
 
       thumbnailRecoveryStub.recoveryVersion.set(1);
-      TestBed.flushEffects();
+      TestBed.tick();
       await flush();
 
       expect(resolvers.length).toBe(6);

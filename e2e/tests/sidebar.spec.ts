@@ -119,7 +119,15 @@ test.describe('Sidebar Comments Panel', () => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(300);
 
-    await sidebarPage.overlay.click({ force: true });
+    const overlayBox = await sidebarPage.overlay.boundingBox();
+    const panelBox = await sidebarPage.panel.boundingBox();
+    expect(overlayBox).not.toBeNull();
+    expect(panelBox).not.toBeNull();
+
+    await page.mouse.click(
+      Math.max(20, Math.floor(panelBox!.x / 2)),
+      Math.floor(overlayBox!.y + overlayBox!.height / 2),
+    );
     await page.waitForTimeout(500);
 
     expect(await sidebarPage.isClosed()).toBe(true);

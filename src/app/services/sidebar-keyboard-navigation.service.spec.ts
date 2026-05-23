@@ -8,6 +8,7 @@ import { SidebarCommentsInteractionService } from './sidebar-comments-interactio
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
 import { SidebarService } from './sidebar.service';
+import { CommentThreadIndexService } from './comment-thread-index.service';
 
 describe('SidebarKeyboardNavigationService', () => {
   let service: SidebarKeyboardNavigationService;
@@ -15,6 +16,7 @@ describe('SidebarKeyboardNavigationService', () => {
   let mockCommandRegistry: MockedObject<CommandRegistryService>;
   let mockScrollService: MockedObject<ScrollService>;
   let mockSidebarService: MockedObject<SidebarService>;
+  let commentIndex: CommentThreadIndexService;
   let currentItemIdSignal: ReturnType<typeof signal<number | null>>;
 
   beforeEach(() => {
@@ -48,6 +50,7 @@ describe('SidebarKeyboardNavigationService', () => {
     });
 
     service = TestBed.inject(SidebarKeyboardNavigationService);
+    commentIndex = TestBed.inject(CommentThreadIndexService);
 
     // Clear any existing DOM elements
     if (document.body) {
@@ -148,6 +151,13 @@ describe('SidebarKeyboardNavigationService', () => {
     });
 
     it('should save state and open thread when viewing thread', () => {
+      commentIndex.configureContext(
+        'sidebar',
+        { id: 100, type: 'story', by: 'op', time: 100 },
+        {
+          comments: [{ id: 123, type: 'comment', by: 'alice', time: 1, kids: [456] }],
+        },
+      );
       service.selectedCommentId.set(123);
       service.viewThreadSelected();
       expect(mockSidebarService.openSidebarWithSlideAnimation).toHaveBeenCalledWith(123);

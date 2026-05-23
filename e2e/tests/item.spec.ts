@@ -159,7 +159,7 @@ test.describe('Item Page', () => {
       await expect(itemPage.page.locator('h2.comments-title')).toBeVisible();
     });
 
-    test('should reset sidebar scroll on thread open and restore on sidebar back', async ({
+    test('should scroll sidebar thread into view and restore on sidebar back', async ({
       storiesPage,
       page,
     }, testInfo) => {
@@ -242,10 +242,32 @@ test.describe('Item Page', () => {
       await expect(backButton).toBeVisible();
       await page.waitForTimeout(500);
 
-      const openThreadSidebarScroll = await sidebarPanel.evaluate((element) => {
-        return (element as HTMLElement).scrollTop;
+      const firstCommentPlacement = await sidebarPanel.evaluate((element) => {
+        const container = element as HTMLElement;
+        const firstComment = container.querySelector('[role="treeitem"]') as HTMLElement | null;
+        const toolbar = container.querySelector('.comments-heading') as HTMLElement | null;
+
+        if (!firstComment) {
+          return null;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const firstCommentRect = firstComment.getBoundingClientRect();
+        const toolbarBottom = toolbar?.getBoundingClientRect().bottom ?? containerRect.top;
+
+        return {
+          firstCommentTop: firstCommentRect.top,
+          toolbarBottom,
+          containerBottom: containerRect.bottom,
+        };
       });
-      expect(openThreadSidebarScroll).toBeLessThan(40);
+      expect(firstCommentPlacement).not.toBeNull();
+      expect(firstCommentPlacement!.firstCommentTop).toBeGreaterThanOrEqual(
+        firstCommentPlacement!.toolbarBottom - 2,
+      );
+      expect(firstCommentPlacement!.firstCommentTop).toBeLessThan(
+        firstCommentPlacement!.containerBottom,
+      );
 
       await backButton.click();
       await page.waitForTimeout(700);

@@ -82,6 +82,13 @@ describe('BaseCommentNavigationService', () => {
 
   describe('Interaction Methods', () => {
     beforeEach(() => {
+      commentIndex.configureContext(
+        'item',
+        { id: 99, type: 'story', by: 'op', time: 100 },
+        {
+          comments: [{ id: 123, type: 'comment', by: 'alice', time: 1, kids: [456] }],
+        },
+      );
       service.selectedCommentId.set(123);
     });
 

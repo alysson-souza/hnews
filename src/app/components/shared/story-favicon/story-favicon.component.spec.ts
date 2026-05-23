@@ -254,7 +254,7 @@ describe('StoryFaviconComponent', () => {
     expect(fixture.nativeElement.querySelector('div')).toBeTruthy();
   });
 
-  it('should not change state on recovery when no error', () => {
+  it('should not change state on recovery when no error', async () => {
     fixture.componentRef.setInput('url', 'https://example.com');
     fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
@@ -264,6 +264,8 @@ describe('StoryFaviconComponent', () => {
 
     // Simulate a shared thumbnail recovery trigger
     thumbnailRecoveryStub.recoveryVersion.set(1);
+    fixture.detectChanges();
+    await Promise.resolve();
     fixture.detectChanges();
 
     // Should still be showing img

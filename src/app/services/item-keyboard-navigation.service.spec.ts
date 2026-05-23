@@ -7,6 +7,7 @@ import { ItemKeyboardNavigationService } from './item-keyboard-navigation.servic
 import { SidebarCommentsInteractionService } from './sidebar-comments-interaction.service';
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
+import { CommentThreadIndexService } from './comment-thread-index.service';
 import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { Subject } from 'rxjs';
 
@@ -15,6 +16,7 @@ describe('ItemKeyboardNavigationService', () => {
   let commandRegistrySpy: MockedObject<CommandRegistryService>;
   let routerSpy: MockedObject<Router>;
   let locationSpy: MockedObject<Location>;
+  let commentIndex: CommentThreadIndexService;
   let routerEventsSubject: Subject<NavigationStart | NavigationEnd>;
 
   beforeEach(() => {
@@ -55,6 +57,7 @@ describe('ItemKeyboardNavigationService', () => {
     ) as MockedObject<CommandRegistryService>;
     routerSpy = TestBed.inject(Router) as MockedObject<Router>;
     locationSpy = TestBed.inject(Location) as MockedObject<Location>;
+    commentIndex = TestBed.inject(CommentThreadIndexService);
   });
 
   afterEach(() => {
@@ -90,6 +93,13 @@ describe('ItemKeyboardNavigationService', () => {
   });
 
   it('should save state and navigate to item page when viewing thread', () => {
+    commentIndex.configureContext(
+      'item',
+      { id: 123, type: 'story', by: 'op', time: 100 },
+      {
+        comments: [{ id: 456, type: 'comment', by: 'alice', time: 1, kids: [789] }],
+      },
+    );
     service.selectedCommentId.set(456);
     service.viewThreadSelected();
     expect(routerSpy.navigate).toHaveBeenCalledWith(

@@ -526,7 +526,7 @@ describe('CacheManagerService', () => {
       const spy = vi.spyOn(service, 'clearInflightFetches');
 
       pageLifecycleService.resumeCount.set(1);
-      TestBed.flushEffects();
+      TestBed.tick();
 
       expect(spy).toHaveBeenCalled();
     });

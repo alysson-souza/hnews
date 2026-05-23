@@ -331,7 +331,11 @@ export class OgImageService {
       this.resolvedResults.set(articleUrl, outcome.result);
     }
     try {
-      await this.cacheManager.set('ogImage', cacheKey, outcome.result, outcome.ttl);
+      if (outcome.ttl === undefined) {
+        await this.cacheManager.set('ogImage', cacheKey, outcome.result);
+      } else {
+        await this.cacheManager.set('ogImage', cacheKey, outcome.result, outcome.ttl);
+      }
     } catch (error) {
       console.warn(`Failed to cache OG metadata for ${articleUrl}:`, error);
     }

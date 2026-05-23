@@ -43,27 +43,27 @@ describe('ThumbnailRecoveryService', () => {
 
   it('does not increment on a normal hide/show cycle', () => {
     pageLifecycle.isVisible.set(false);
-    TestBed.flushEffects();
+    TestBed.tick();
 
     pageLifecycle.isVisible.set(true);
-    TestBed.flushEffects();
+    TestBed.tick();
 
     expect(service.recoveryVersion()).toBe(0);
   });
 
   it('increments when the network comes back online', () => {
     networkState.isOnline.set(false);
-    TestBed.flushEffects();
+    TestBed.tick();
 
     networkState.isOnline.set(true);
-    TestBed.flushEffects();
+    TestBed.tick();
 
     expect(service.recoveryVersion()).toBe(1);
   });
 
   it('increments when resumeCount increases', () => {
     pageLifecycle.resumeCount.set(1);
-    TestBed.flushEffects();
+    TestBed.tick();
 
     expect(service.recoveryVersion()).toBe(1);
   });
@@ -81,6 +81,7 @@ describe('ThumbnailRecoveryService', () => {
     });
 
     service = TestBed.inject(ThumbnailRecoveryService);
+    TestBed.tick();
 
     expect(service.recoveryVersion()).toBe(1);
   });

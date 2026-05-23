@@ -128,7 +128,9 @@ export class StoryItem {
 
   readonly actionsMenu = viewChild(StoryActionsMenuComponent);
 
-  openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
+  openCommentsInSidebar = computed(
+    () => this.userSettings.settings().openCommentsInSidebar && this.deviceService.isDesktop(),
+  );
   archiveUrl = computed(() => this.storyArchive.getArchiveUrl(this.story()));
   hasArchiveUrl = computed(() => this.archiveUrl() !== null);
 
