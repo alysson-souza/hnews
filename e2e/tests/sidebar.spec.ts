@@ -43,6 +43,46 @@ test.describe('Sidebar Comments Panel', () => {
     await expect(sidebarPage.commentsPanel).toBeVisible();
   });
 
+  test('should center the header title in the sidebar panel', async ({
+    storiesPage,
+    sidebarPage,
+    page,
+  }) => {
+    await storiesPage.navigateToTop();
+    await page.waitForTimeout(1000);
+
+    const commentLinks = storiesPage.storyItems.locator('.story-comments');
+    const linkCount = await commentLinks.count();
+    let targetLinkIndex = -1;
+
+    for (let index = 0; index < linkCount; index++) {
+      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+      const countMatch = text.match(/\d+/);
+      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+      if (commentCount > 0) {
+        targetLinkIndex = index;
+        break;
+      }
+    }
+
+    test.skip(targetLinkIndex < 0, 'No story with comments available');
+
+    await commentLinks.nth(targetLinkIndex).click();
+    await page.waitForTimeout(500);
+
+    expect(await sidebarPage.isOpen()).toBe(true);
+    const titleOffset = await page.locator('app-sidebar-comments-header').evaluate((element) => {
+      const panel = document.querySelector('.sidebar-panel') as HTMLElement;
+      const title = element.querySelector('.title') as HTMLElement;
+      const panelRect = panel.getBoundingClientRect();
+      const titleRect = title.getBoundingClientRect();
+
+      return titleRect.left + titleRect.width / 2 - (panelRect.left + panelRect.width / 2);
+    });
+
+    expect(Math.abs(titleOffset)).toBeLessThanOrEqual(1);
+  });
+
   test('should open sidebar via c keyboard shortcut', async ({
     storiesPage,
     sidebarPage,

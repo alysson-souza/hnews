@@ -113,18 +113,22 @@ import { DeviceService } from '@services/device.service';
 
       .header {
         @apply sticky top-0 z-10 p-3 sm:p-4 flex items-center justify-between gap-2;
+        position: relative;
         background-color: var(--app-surface);
         border-bottom: 1px solid var(--app-border);
         box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
       }
       .left-controls {
-        @apply flex items-center gap-1;
+        @apply flex items-center gap-1 relative z-10;
       }
       .title {
-        @apply text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 flex-1 text-center;
+        @apply text-lg sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 text-center;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
       }
       .right-controls {
-        @apply flex items-center gap-1;
+        @apply flex items-center gap-1 relative z-10;
       }
       .back-btn {
         @apply p-1 sm:p-2 text-slate-600 dark:text-slate-300/80 rounded transition-colors cursor-pointer;
