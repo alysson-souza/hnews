@@ -5,7 +5,9 @@ This file provides guidance to AI agents when working with code in this reposito
 ## Build and Development Commands
 
 ```bash
-npm start                # Dev server at http://localhost:4200 (assume it's running)
+npm start                # Cloudflare Pages dev server at http://localhost:8788 (default for UI/runtime checks)
+npm run start:cf         # Same Cloudflare Pages dev server with live reload
+npm run start:gh         # GitHub Pages/Angular dev server at http://localhost:4200
 npm run build:prod       # Production build
 npm test                 # Unit tests (single run, Vitest via Angular)
 npm run test:watch       # Unit tests in watch mode

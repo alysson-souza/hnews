@@ -67,11 +67,14 @@ cd hnews
 # Install dependencies
 npm install
 
-# Start the dev server
+# Start the Cloudflare Pages dev server
 npm start
 ```
 
-App runs at `http://localhost:4200`.
+App runs at `http://localhost:8788`.
+
+For the GitHub Pages/Angular dev-server build, run `npm run start:gh`; it serves
+the app at `http://localhost:4200`.
 
 ## Deployment
 

@@ -64,6 +64,8 @@ npm run e2e:chromium     # Test on Chromium only
 npm run e2e:firefox      # Test on Firefox only
 npm run e2e:webkit       # Test on WebKit only
 npm run e2e:mobile       # Test on mobile browsers
+npm run e2e:gh           # Test the GitHub Pages/Angular dev server on port 4200
 npm run e2e:report       # View HTML report
-npm run e2e:codegen      # Generate tests with Playwright
+npm run e2e:codegen      # Generate tests against Cloudflare Pages dev on port 8788
+npm run e2e:codegen:gh   # Generate tests against GitHub Pages dev on port 4200
 ```

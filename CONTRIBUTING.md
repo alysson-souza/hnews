@@ -17,14 +17,15 @@ git clone https://github.com/alysson-souza/hnews.git
 cd hnews
 npm install
 
-# Start dev server
-npm start  # http://localhost:4200
+# Start the Cloudflare Pages dev server
+npm start  # http://localhost:8788
 ```
 
 ## Scripts
 
 ```bash
-npm start              # Run dev server (http://localhost:4200)
+npm start              # Run Cloudflare Pages dev server (http://localhost:8788)
+npm run start:gh       # Run GitHub Pages/Angular dev server (http://localhost:4200)
 npm run watch          # Watch mode build
 npm run build          # Build (development)
 npm run build:prod     # Build (production)
@@ -34,7 +35,8 @@ npm run lint           # ESLint (fails on warnings)
 npm run lint:fix       # ESLint with autofix (fails on warnings)
 npm run format         # Prettier write
 npm run format:check   # Prettier check only
-npm run e2e            # Playwright e2e tests
+npm run e2e            # Playwright e2e tests against Cloudflare Pages dev
+npm run e2e:gh         # Playwright e2e tests against the 4200 GitHub Pages dev server
 npm run e2e:ui         # Interactive e2e UI mode
 npm run deploy:cf      # Deploy to Cloudflare Pages
 ```
