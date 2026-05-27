@@ -107,6 +107,14 @@ describe('KeyboardShortcutConfigService', () => {
       expect(actionsInSidebar).toBeUndefined();
     });
 
+    it('should not execute help-only actions menu rows', () => {
+      const focusedActionsShortcut = service.getShortcut('Enter', 'item-page');
+      const menuNavigationShortcut = service.getShortcut('ArrowDown', 'sidebar');
+
+      expect(focusedActionsShortcut).toBeUndefined();
+      expect(menuNavigationShortcut).toBeUndefined();
+    });
+
     it('should handle same key in different contexts', () => {
       const defaultJ = service.getShortcut('j', 'default');
       const sidebarJ = service.getShortcut('j', 'sidebar');
@@ -173,10 +181,26 @@ describe('KeyboardShortcutConfigService', () => {
       const sidebarGrouped = service.getShortcutsByCategory('sidebar');
 
       expect(defaultGrouped.has('Story Actions')).toBe(true);
-      expect(sidebarGrouped.has('Story Actions')).toBe(false);
+      expect(sidebarGrouped.has('Story Actions')).toBe(true);
 
       expect(sidebarGrouped.has('Comment Actions')).toBe(true);
       expect(defaultGrouped.has('Comment Actions')).toBe(false);
+    });
+
+    it('should include actions menu help rows in story summary contexts', () => {
+      const defaultStoryActions = service.getShortcutsByCategory('default').get('Story Actions');
+      const sidebarStoryActions = service.getShortcutsByCategory('sidebar').get('Story Actions');
+      const itemStoryActions = service.getShortcutsByCategory('item-page').get('Story Actions');
+
+      for (const storyActions of [defaultStoryActions, sidebarStoryActions, itemStoryActions]) {
+        expect(storyActions?.map((shortcut) => shortcut.description)).toEqual(
+          expect.arrayContaining([
+            'Open focused story actions menu',
+            'Move through open actions menu',
+            'Close open actions menu',
+          ]),
+        );
+      }
     });
 
     it('should return shortcuts within each category', () => {
@@ -216,9 +240,11 @@ describe('KeyboardShortcutConfigService', () => {
     it('should return different categories for different contexts', () => {
       const defaultCategories = service.getCategories('default');
       const sidebarCategories = service.getCategories('sidebar');
+      const itemPageCategories = service.getCategories('item-page');
 
       expect(defaultCategories).toContain('Story Actions');
-      expect(sidebarCategories).not.toContain('Story Actions');
+      expect(sidebarCategories).toContain('Story Actions');
+      expect(itemPageCategories).toContain('Story Actions');
 
       expect(sidebarCategories).toContain('Comment Actions');
       expect(defaultCategories).not.toContain('Comment Actions');

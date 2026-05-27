@@ -134,6 +134,12 @@ export class KeyboardShortcutsComponent {
     if (context === 'sidebar') {
       return 'Comments Sidebar';
     }
+    if (context === 'item-page') {
+      return 'Item Page';
+    }
+    if (context === 'settings-page') {
+      return 'Settings';
+    }
     return null;
   });
 

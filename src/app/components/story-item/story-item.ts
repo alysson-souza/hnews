@@ -11,9 +11,7 @@ import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { UserSettingsService } from '@services/user-settings.service';
-import { StoryShareService } from '@services/story-share.service';
 import { getDomain } from '@services/domain.utils';
-import { StoryArchiveService } from '@services/story-archive.service';
 import { StoryActionsMenuComponent } from './story-actions-menu.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
 
@@ -44,8 +42,6 @@ export class StoryItem {
   public deviceService = inject(DeviceService);
   private locationStrategy = inject(LocationStrategy);
   private userSettings = inject(UserSettingsService);
-  private shareService = inject(StoryShareService);
-  private storyArchive = inject(StoryArchiveService);
   private static itemComponentPrefetched = false;
 
   // Computed property to safely determine loading state
@@ -131,12 +127,6 @@ export class StoryItem {
   openCommentsInSidebar = computed(
     () => this.userSettings.settings().openCommentsInSidebar && this.deviceService.isDesktop(),
   );
-  archiveUrl = computed(() => this.storyArchive.getArchiveUrl(this.story()));
-  hasArchiveUrl = computed(() => this.archiveUrl() !== null);
-
-  canUseWebShare = computed(() => this.shareService.canUseWebShare());
-  getStoryActionText = computed(() => this.shareService.getStoryActionText());
-  getCommentsActionText = computed(() => this.shareService.getCommentsActionText());
 
   hasNewComments(): boolean {
     const story = this.story();
@@ -153,40 +143,6 @@ export class StoryItem {
     if (story) {
       this.visitedService.markStoryVisited(story.id);
     }
-  }
-
-  async shareStory(): Promise<void> {
-    const story = this.story();
-    if (!story) return;
-    await this.shareService.shareStory(story);
-    this.actionsMenu()?.closeMenu();
-  }
-
-  async shareComments(): Promise<void> {
-    const story = this.story();
-    if (!story) return;
-    await this.shareService.shareComments(story);
-    this.actionsMenu()?.closeMenu();
-  }
-
-  openCommentsInNewTab(): void {
-    const story = this.story();
-    if (!story) return;
-
-    const path = this.locationStrategy.prepareExternalUrl(`/item/${story.id}`);
-    const url = `${window.location.origin}${path}`;
-    window.open(url, '_blank');
-    this.actionsMenu()?.closeMenu();
-  }
-
-  openStoryInArchive(): void {
-    const archiveUrl = this.archiveUrl();
-    if (!archiveUrl || typeof window === 'undefined') {
-      return;
-    }
-
-    window.open(archiveUrl, '_blank', 'noopener,noreferrer');
-    this.actionsMenu()?.closeMenu();
   }
 
   getItemLink(): string {

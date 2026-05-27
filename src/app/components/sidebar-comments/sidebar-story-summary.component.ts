@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, inject, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input } from '@angular/core';
 
 import { Router, RouterLink } from '@angular/router';
 import { HNItem } from '@models/hn';
@@ -8,7 +8,7 @@ import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
-import { StoryArchiveService } from '@services/story-archive.service';
+import { StoryActionsMenuComponent } from '../story-item/story-actions-menu.component';
 
 @Component({
   selector: 'app-sidebar-story-summary',
@@ -18,6 +18,7 @@ import { StoryArchiveService } from '@services/story-archive.service';
     CommentTextComponent,
     UserTagComponent,
     StoryLinkComponent,
+    StoryActionsMenuComponent,
     RouterLink,
   ],
   template: `
@@ -53,30 +54,38 @@ import { StoryArchiveService } from '@services/story-archive.service';
           }
         </div>
       } @else {
-        <h3 class="story-title">
-          <app-story-link
-            [url]="item().url"
-            [textContent]="item().title"
-            [linkTitle]="item().title || ''"
-            class="story-link"
-          />
-        </h3>
+        <div class="story-summary-header">
+          <div class="story-summary-main">
+            <h3 class="story-title">
+              <app-story-link
+                [url]="item().url"
+                [textContent]="item().title"
+                [linkTitle]="item().title || ''"
+                class="story-link"
+              />
+            </h3>
 
-        <!-- Domain - clickable -->
-        @if (item().url && getDomain(item().url)) {
-          <button
-            type="button"
-            role="button"
-            (click)="searchByDomain($event)"
-            (keyup.enter)="searchByDomain($event)"
-            (keyup.space)="searchByDomain($event)"
-            class="domain-btn"
-            [attr.aria-label]="'Search for more stories from ' + getDomain(item().url)"
-            [attr.title]="'Search for more stories from ' + getDomain(item().url)"
-          >
-            {{ getDomain(item().url) }}
-          </button>
-        }
+            <!-- Domain - clickable -->
+            @if (item().url && getDomain(item().url)) {
+              <button
+                type="button"
+                role="button"
+                (click)="searchByDomain($event)"
+                (keyup.enter)="searchByDomain($event)"
+                (keyup.space)="searchByDomain($event)"
+                class="domain-btn"
+                [attr.aria-label]="'Search for more stories from ' + getDomain(item().url)"
+                [attr.title]="'Search for more stories from ' + getDomain(item().url)"
+              >
+                {{ getDomain(item().url) }}
+              </button>
+            }
+          </div>
+
+          <div class="story-actions-slot">
+            <app-story-actions-menu [story]="item()" />
+          </div>
+        </div>
 
         <div class="meta">
           @if (item().score !== undefined && item().score !== null) {
@@ -92,18 +101,6 @@ import { StoryArchiveService } from '@services/story-archive.service';
             <span>•</span>
           }
           <span class="time-text">{{ item().time | relativeTime }}</span>
-          @if (archiveUrl()) {
-            <span>•</span>
-            <a
-              class="open-link"
-              [href]="archiveUrl()!"
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-              aria-label="Open story in Internet Archive"
-            >
-              Open in Internet Archive
-            </a>
-          }
         </div>
 
         @if (item().text) {
@@ -127,6 +124,15 @@ import { StoryArchiveService } from '@services/story-archive.service';
       }
       .story-title {
         @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100;
+      }
+      .story-summary-header {
+        @apply grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2;
+      }
+      .story-summary-main {
+        @apply min-w-0;
+      }
+      .story-actions-slot {
+        @apply relative flex-shrink-0 self-start;
       }
       .story-link {
         @apply text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
@@ -155,8 +161,6 @@ export class SidebarStorySummaryComponent {
   readonly boxedText = input(false);
   readonly parentDiscussionId = input<number | null>(null);
   private router = inject(Router);
-  private storyArchive = inject(StoryArchiveService);
-  readonly archiveUrl = computed(() => this.storyArchive.getArchiveUrl(this.item()));
 
   hasMetaPrefix(): boolean {
     return this.item().score != null || !!this.item().by;

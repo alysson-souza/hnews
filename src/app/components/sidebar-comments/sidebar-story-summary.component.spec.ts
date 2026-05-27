@@ -6,6 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { provideLocationMocks } from '@angular/common/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { StoryActionsMenuComponent } from '../story-item/story-actions-menu.component';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -136,15 +137,32 @@ describe('SidebarStorySummaryComponent', () => {
       expect(domainBtn.nativeElement.textContent.trim()).toBe('example.com');
     });
 
-    it('should render an Internet Archive action when URL exists', () => {
+    it('should render the story actions menu for story summaries', () => {
+      const actionsMenu = fixture.debugElement.query(By.directive(StoryActionsMenuComponent));
+
+      expect(actionsMenu).toBeTruthy();
+      expect((actionsMenu.componentInstance as StoryActionsMenuComponent).story()).toEqual({
+        id: 123,
+        type: 'story',
+        by: 'testuser',
+        time: 1708099200,
+        title: 'Test Story',
+        score: 100,
+        url: 'https://example.com/article',
+      });
+    });
+
+    it('should make Internet Archive available through the actions menu', () => {
       const meta = fixture.debugElement.query(By.css('.meta'));
-      const archiveLink = fixture.debugElement.query(By.css('.open-link'));
-      expect(archiveLink).toBeTruthy();
-      expect(meta.nativeElement.contains(archiveLink.nativeElement)).toBe(true);
-      expect(archiveLink.nativeElement.getAttribute('href')).toBe(
-        'https://web.archive.org/web/*/https://example.com/article',
+      const inlineArchiveLink = fixture.debugElement.query(
+        By.css('.meta .open-link:not(.parent-discussion-meta-link)'),
       );
-      expect(archiveLink.nativeElement.textContent.trim()).toBe('Open in Internet Archive');
+      const actionsMenu = fixture.debugElement.query(By.directive(StoryActionsMenuComponent))
+        .componentInstance as StoryActionsMenuComponent;
+
+      expect(meta).toBeTruthy();
+      expect(inlineArchiveLink).toBeFalsy();
+      expect(actionsMenu.showArchiveAction()).toBe(true);
     });
 
     it('should not render domain button when no URL', () => {
@@ -215,6 +233,22 @@ describe('SidebarStorySummaryComponent', () => {
         shell.nativeElement.compareDocumentPosition(meta.nativeElement) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
+    });
+
+    it('should not render the story actions menu for comment summaries', () => {
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'comment',
+        by: 'testuser',
+        time: 1708099200,
+        text: 'This is the comment text',
+        parent: 456,
+      });
+      fixture.detectChanges();
+
+      const actionsMenu = fixture.debugElement.query(By.directive(StoryActionsMenuComponent));
+
+      expect(actionsMenu).toBeFalsy();
     });
 
     it('should wrap text in a quote surface shell when boxedText is enabled', () => {

@@ -16,7 +16,6 @@ import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { HNItem } from '@models/hn';
 import { UserSettingsService } from '@services/user-settings.service';
-import { StoryShareService } from '@services/story-share.service';
 
 class MockDeviceService {
   private desktop = true;
@@ -67,7 +66,7 @@ describe('StoryItem comments link behaviour', () => {
     visitedServiceMock.getNewCommentCount.mockReturnValue(0);
     visitedServiceMock.isVisited.mockReturnValue(false);
 
-    localStorage.clear();
+    window.localStorage.clear();
 
     TestBed.configureTestingModule({
       imports: [StoryItem],
@@ -326,7 +325,7 @@ describe('StoryItem comments link behaviour', () => {
 
   describe('Upvoting', () => {
     beforeEach(() => {
-      localStorage.clear();
+      window.localStorage.clear();
     });
 
     it('should upvote a story', () => {
@@ -335,7 +334,7 @@ describe('StoryItem comments link behaviour', () => {
       component.upvote();
 
       expect(component.hasVoted()).toBe(true);
-      const stored = localStorage.getItem('votedItems');
+      const stored = window.localStorage.getItem('votedItems');
       expect(stored).toBeTruthy();
       const votedIds = JSON.parse(stored!);
       expect(votedIds).toContain(story.id);
@@ -347,14 +346,14 @@ describe('StoryItem comments link behaviour', () => {
       component.upvote();
       component.upvote();
 
-      const stored = localStorage.getItem('votedItems');
+      const stored = window.localStorage.getItem('votedItems');
       const votedIds = JSON.parse(stored!);
       expect(votedIds.length).toBe(1);
     });
 
     it('should handle voted items stored in localStorage', () => {
-      localStorage.clear();
-      localStorage.setItem('votedItems', JSON.stringify([123, 456]));
+      window.localStorage.clear();
+      window.localStorage.setItem('votedItems', JSON.stringify([123, 456]));
 
       const newFixture = TestBed.createComponent(StoryItem);
       const newComponent = newFixture.componentInstance;
@@ -367,7 +366,7 @@ describe('StoryItem comments link behaviour', () => {
       newFixture.detectChanges();
       expect(newComponent.hasVoted()).toBe(false);
 
-      localStorage.clear();
+      window.localStorage.clear();
     });
   });
 
@@ -383,133 +382,11 @@ describe('StoryItem comments link behaviour', () => {
       expect(component.actionsMenu()).toBeDefined();
     });
 
-    it('should pass story id to actions menu component', () => {
+    it('should pass the story to actions menu component', () => {
       fixture.componentRef.setInput('story', story);
       fixture.detectChanges();
 
-      expect(component.actionsMenu()?.storyId()).toBe(story.id);
-    });
-
-    it('should enable the archive action when the story has an external URL', () => {
-      fixture.componentRef.setInput('story', {
-        ...story,
-        url: 'https://example.com/article',
-      });
-      fixture.detectChanges();
-
-      expect(component.hasArchiveUrl()).toBe(true);
-      expect(component.actionsMenu()?.showArchiveAction()).toBe(true);
-    });
-
-    it('should hide the archive action when the story has no external URL', () => {
-      fixture.componentRef.setInput('story', story);
-      fixture.detectChanges();
-
-      expect(component.hasArchiveUrl()).toBe(false);
-      expect(component.actionsMenu()?.showArchiveAction()).toBe(false);
-    });
-  });
-
-  describe('Sharing functionality', () => {
-    let shareService: StoryShareService;
-
-    beforeEach(() => {
-      fixture.componentRef.setInput('story', story);
-      shareService = TestBed.inject(StoryShareService);
-    });
-
-    it('should share story using clipboard when Web Share API is not available', async () => {
-      vi.spyOn(navigator.clipboard, 'writeText').mockReturnValue(Promise.resolve());
-      vi.spyOn(shareService, 'shareStory');
-
-      await component.shareStory();
-
-      expect(shareService.shareStory).toHaveBeenCalledWith(story);
-    });
-
-    it('should share comments using clipboard', async () => {
-      vi.spyOn(navigator.clipboard, 'writeText').mockReturnValue(Promise.resolve());
-      vi.spyOn(shareService, 'shareComments');
-
-      await component.shareComments();
-
-      expect(shareService.shareComments).toHaveBeenCalledWith(story);
-    });
-
-    it('should handle clipboard write failure gracefully', async () => {
-      vi.spyOn(navigator.clipboard, 'writeText').mockReturnValue(
-        Promise.reject(new Error('Clipboard error')),
-      );
-      vi.spyOn(console, 'error');
-      vi.spyOn(shareService, 'shareStory');
-
-      await component.shareStory();
-
-      expect(console.error).toHaveBeenCalled();
-    });
-
-    it('should compute share action text correctly', () => {
-      const storyText = component.getStoryActionText();
-      const commentsText = component.getCommentsActionText();
-
-      expect(storyText).toContain('Story');
-      expect(commentsText).toContain('Comments');
-    });
-
-    it('should compute action text from share service', () => {
-      // The component delegates to the service
-      const storyText = component.getStoryActionText();
-      const serviceStoryText = shareService.getStoryActionText();
-
-      expect(storyText).toEqual(serviceStoryText);
-    });
-  });
-
-  describe('Open comments in new tab', () => {
-    it('should open comments in new tab', () => {
-      fixture.componentRef.setInput('story', story);
-      fixture.detectChanges();
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-      openSpy.mockClear();
-
-      component.openCommentsInNewTab();
-
-      expect(openSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('Open story in archive', () => {
-    it('should open the story in Internet Archive when a URL exists', () => {
-      fixture.componentRef.setInput('story', {
-        ...story,
-        url: 'https://example.com/article',
-      });
-      fixture.detectChanges();
-
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-      openSpy.mockClear();
-      const closeMenuSpy = vi.spyOn(component.actionsMenu()!, 'closeMenu');
-
-      component.openStoryInArchive();
-
-      expect(openSpy).toHaveBeenCalledWith(
-        'https://web.archive.org/web/*/https://example.com/article',
-        '_blank',
-        'noopener,noreferrer',
-      );
-      expect(closeMenuSpy).toHaveBeenCalled();
-    });
-
-    it('should do nothing when the story has no external URL', () => {
-      fixture.componentRef.setInput('story', story);
-      fixture.detectChanges();
-
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-      openSpy.mockClear();
-
-      component.openStoryInArchive();
-
-      expect(openSpy).not.toHaveBeenCalled();
+      expect(component.actionsMenu()?.story()).toBe(story);
     });
   });
 
@@ -667,9 +544,5 @@ describe('StoryItem comments link behaviour', () => {
       expect(component.isLoading()).toBe(false);
     });
 
-    it('should detect web share availability', () => {
-      const canShare = component.canUseWebShare();
-      expect(typeof canShare).toBe('boolean');
-    });
   });
 });

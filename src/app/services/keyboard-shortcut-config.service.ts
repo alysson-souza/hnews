@@ -12,6 +12,7 @@ export interface KeyboardShortcut {
   description: string;
   category: string;
   commandId: string; // Command ID to execute
+  helpOnly?: boolean; // Display-only row for native/focus-scoped controls
   condition?: () => boolean; // Optional condition for availability
 }
 
@@ -96,6 +97,33 @@ export class KeyboardShortcutConfigService {
       description: 'Toggle actions menu',
       category: 'Story Actions',
       commandId: 'story.actions.toggle',
+    },
+    {
+      key: 'Enter',
+      label: 'Enter/Space',
+      contexts: ['default', 'sidebar', 'item-page'],
+      description: 'Open focused story actions menu',
+      category: 'Story Actions',
+      commandId: 'ui.storyActions.openFocused',
+      helpOnly: true,
+    },
+    {
+      key: 'ArrowDown',
+      label: 'j/k or arrows',
+      contexts: ['default', 'sidebar', 'item-page'],
+      description: 'Move through open actions menu',
+      category: 'Story Actions',
+      commandId: 'ui.storyActions.navigateMenu',
+      helpOnly: true,
+    },
+    {
+      key: 'Escape',
+      label: 'Esc',
+      contexts: ['default', 'sidebar', 'item-page'],
+      description: 'Close open actions menu',
+      category: 'Story Actions',
+      commandId: 'ui.storyActions.closeMenu',
+      helpOnly: true,
     },
     {
       key: 'O',
@@ -370,7 +398,11 @@ export class KeyboardShortcutConfigService {
   getShortcut(key: string, context: KeyboardContext): KeyboardShortcut | undefined {
     // First try global shortcuts
     const globalShortcut = this.shortcuts.find(
-      (s) => s.key === key && s.contexts.includes('global') && (!s.condition || s.condition()),
+      (s) =>
+        !s.helpOnly &&
+        s.key === key &&
+        s.contexts.includes('global') &&
+        (!s.condition || s.condition()),
     );
 
     if (globalShortcut) {
@@ -379,7 +411,11 @@ export class KeyboardShortcutConfigService {
 
     // Then try context-specific shortcuts
     return this.shortcuts.find(
-      (s) => s.key === key && s.contexts.includes(context) && (!s.condition || s.condition()),
+      (s) =>
+        !s.helpOnly &&
+        s.key === key &&
+        s.contexts.includes(context) &&
+        (!s.condition || s.condition()),
     );
   }
 

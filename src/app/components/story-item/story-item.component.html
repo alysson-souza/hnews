@@ -104,16 +104,7 @@
         @if (isLoading()) {
           <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-slate-700 rounded skeleton"></div>
         } @else {
-          <app-story-actions-menu
-            [storyId]="story()!.id"
-            [shareStoryText]="getStoryActionText()"
-            [shareCommentsText]="getCommentsActionText()"
-            [showArchiveAction]="hasArchiveUrl()"
-            (shareStory)="shareStory()"
-            (shareComments)="shareComments()"
-            (openOnArchive)="openStoryInArchive()"
-            (openInNewTab)="openCommentsInNewTab()"
-          />
+          <app-story-actions-menu [story]="story()!" />
         }
       </div>
     </div>

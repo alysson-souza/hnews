@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Component, ElementRef, signal, OnInit, output, input, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import { LocationStrategy } from '@angular/common';
 
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
+import { HNItem } from '@models/hn';
+import { StoryArchiveService } from '@services/story-archive.service';
+import { StoryShareService } from '@services/story-share.service';
 
 @Component({
   selector: 'app-story-actions-menu',
@@ -43,7 +47,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             class="story-actions-item story-actions-item-top"
             role="menuitem"
             [attr.data-index]="0"
-            (click)="shareStory.emit()"
+            (click)="shareStory()"
           >
             {{ shareStoryText() }}
           </button>
@@ -51,7 +55,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             class="story-actions-item"
             role="menuitem"
             [attr.data-index]="1"
-            (click)="shareComments.emit()"
+            (click)="shareComments()"
           >
             {{ shareCommentsText() }}
           </button>
@@ -61,7 +65,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
               class="story-actions-item"
               role="menuitem"
               [attr.data-index]="2"
-              (click)="openOnArchive.emit()"
+              (click)="openStoryInArchive()"
             >
               Open in Internet Archive
             </button>
@@ -70,7 +74,7 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
             class="story-actions-item story-actions-item-bottom"
             role="menuitem"
             [attr.data-index]="showArchiveAction() ? 3 : 2"
-            (click)="openInNewTab.emit()"
+            (click)="openCommentsInNewTab()"
           >
             Open Comments in New Tab
           </button>
@@ -116,16 +120,17 @@ import { solarMenuDotsLinear } from '@ng-icons/solar-icons/linear';
     `,
   ],
 })
-export class StoryActionsMenuComponent implements OnInit {
-  readonly storyId = input(0);
-  readonly shareStoryText = input('Copy Story Link');
-  readonly shareCommentsText = input('Copy Comments Link');
-  readonly showArchiveAction = input(false);
+export class StoryActionsMenuComponent {
+  readonly story = input.required<HNItem>();
 
-  readonly shareStory = output<void>();
-  readonly shareComments = output<void>();
-  readonly openOnArchive = output<void>();
-  readonly openInNewTab = output<void>();
+  private locationStrategy = inject(LocationStrategy);
+  private shareService = inject(StoryShareService);
+  private storyArchive = inject(StoryArchiveService);
+
+  readonly shareStoryText = this.shareService.getStoryActionText;
+  readonly shareCommentsText = this.shareService.getCommentsActionText;
+  readonly archiveUrl = computed(() => this.storyArchive.getArchiveUrl(this.story()));
+  readonly showArchiveAction = computed(() => this.archiveUrl() !== null);
 
   readonly actionsBtn = viewChild<ElementRef<HTMLButtonElement>>('actionsBtn');
   readonly actionsMenu = viewChild<ElementRef<HTMLDivElement>>('actionsMenu');
@@ -135,18 +140,8 @@ export class StoryActionsMenuComponent implements OnInit {
   menuLeft = signal(0);
   activeIndex = signal(0);
 
-  buttonId = signal('');
-  menuId = signal('');
-
-  ngOnInit(): void {
-    this.updateIds();
-  }
-
-  private updateIds(): void {
-    const storyId = this.storyId();
-    this.buttonId.set(`actions-btn-${storyId}`);
-    this.menuId.set(`actions-menu-${storyId}`);
-  }
+  readonly buttonId = computed(() => `actions-btn-${this.story().id}`);
+  readonly menuId = computed(() => `actions-menu-${this.story().id}`);
 
   toggleMenu(event: Event): void {
     event.preventDefault();
@@ -176,18 +171,38 @@ export class StoryActionsMenuComponent implements OnInit {
       if (!btn) return;
 
       const rect = btn.getBoundingClientRect();
+      const fixedOrigin = this.getFixedPositionOrigin(menu);
       const viewportPadding = 8;
       const menuWidth = menu?.offsetWidth ?? 256;
       const menuHeight = menu?.offsetHeight ?? 0;
       const maxLeft = window.innerWidth - menuWidth - viewportPadding;
       const minLeft = viewportPadding;
       const desiredLeft = rect.right - menuWidth;
-      this.menuLeft.set(Math.max(minLeft, Math.min(maxLeft, desiredLeft)));
+      const viewportLeft = Math.max(minLeft, Math.min(maxLeft, desiredLeft));
 
       const maxTop = window.innerHeight - menuHeight - viewportPadding;
       const desiredTop = rect.bottom + viewportPadding;
-      this.menuTop.set(Math.max(viewportPadding, Math.min(maxTop, desiredTop)));
+      const viewportTop = Math.max(viewportPadding, Math.min(maxTop, desiredTop));
+
+      this.menuLeft.set(viewportLeft - fixedOrigin.left);
+      this.menuTop.set(viewportTop - fixedOrigin.top);
     }, 0);
+  }
+
+  private getFixedPositionOrigin(menu: HTMLDivElement | undefined): { left: number; top: number } {
+    if (!menu) {
+      return { left: 0, top: 0 };
+    }
+
+    const previousLeft = menu.style.left;
+    const previousTop = menu.style.top;
+    menu.style.left = '0px';
+    menu.style.top = '0px';
+    const rect = menu.getBoundingClientRect();
+    menu.style.left = previousLeft;
+    menu.style.top = previousTop;
+
+    return { left: rect.left, top: rect.top };
   }
 
   private setupClickOutside(): void {
@@ -209,6 +224,43 @@ export class StoryActionsMenuComponent implements OnInit {
   closeMenu(): void {
     this.isOpen.set(false);
     this.focusStoryCard();
+  }
+
+  async shareStory(): Promise<void> {
+    try {
+      await this.shareService.shareStory(this.story());
+    } finally {
+      this.closeMenu();
+    }
+  }
+
+  async shareComments(): Promise<void> {
+    try {
+      await this.shareService.shareComments(this.story());
+    } finally {
+      this.closeMenu();
+    }
+  }
+
+  openCommentsInNewTab(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const path = this.locationStrategy.prepareExternalUrl(`/item/${this.story().id}`);
+    const url = `${window.location.origin}${path}`;
+    window.open(url, '_blank');
+    this.closeMenu();
+  }
+
+  openStoryInArchive(): void {
+    const archiveUrl = this.archiveUrl();
+    if (!archiveUrl || typeof window === 'undefined') {
+      return;
+    }
+
+    window.open(archiveUrl, '_blank', 'noopener,noreferrer');
+    this.closeMenu();
   }
 
   // =============================
@@ -237,7 +289,12 @@ export class StoryActionsMenuComponent implements OnInit {
   private focusStoryCard(): void {
     const storyItem = this.actionsBtn()?.nativeElement.closest('app-story-item');
     const storyCard = storyItem?.querySelector('article.story-card') as HTMLElement | null;
-    storyCard?.focus();
+    if (storyCard) {
+      storyCard.focus();
+      return;
+    }
+
+    this.actionsBtn()?.nativeElement.focus();
   }
 
   private moveFocus(delta: number): void {

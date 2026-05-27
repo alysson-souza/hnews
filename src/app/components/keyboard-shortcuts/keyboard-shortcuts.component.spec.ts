@@ -22,7 +22,9 @@ describe('KeyboardShortcutsComponent', () => {
     } as unknown as MockedObject<KeyboardShortcutConfigService>;
 
     // Mock currentContext as a signal
-    const currentContextSignal = signal<'default' | 'sidebar'>('default');
+    const currentContextSignal = signal<'default' | 'sidebar' | 'item-page' | 'settings-page'>(
+      'default',
+    );
     mockKeyboardContext = {
       currentContext: vi.fn().mockImplementation(() => currentContextSignal()),
     };
@@ -146,6 +148,24 @@ describe('KeyboardShortcutsComponent', () => {
 
       const label = component.contextLabel();
       expect(label).toBe('Comments Sidebar');
+    });
+
+    it('should return "Item Page" for item page context', () => {
+      const itemPageSignal = signal<'item-page'>('item-page');
+      mockKeyboardContext.currentContext.mockImplementation(() => itemPageSignal());
+
+      component = TestBed.createComponent(KeyboardShortcutsComponent).componentInstance;
+
+      expect(component.contextLabel()).toBe('Item Page');
+    });
+
+    it('should return "Settings" for settings page context', () => {
+      const settingsPageSignal = signal<'settings-page'>('settings-page');
+      mockKeyboardContext.currentContext.mockImplementation(() => settingsPageSignal());
+
+      component = TestBed.createComponent(KeyboardShortcutsComponent).componentInstance;
+
+      expect(component.contextLabel()).toBe('Settings');
     });
   });
 
