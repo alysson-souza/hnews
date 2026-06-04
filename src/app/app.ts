@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import {
-  Component,
-  inject,
-  signal,
-  computed,
-  OnInit,
-  HostListener,
-  viewChild,
-} from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, viewChild } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -22,7 +14,6 @@ import { SidebarService } from '@services/sidebar.service';
 import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
 import { NavigationHistoryService } from '@services/navigation-history.service';
 import { StoryListStateService } from '@services/story-list-state.service';
-import { NetworkStateService } from '@services/network-state.service';
 import { ScrollService } from '@services/scroll.service';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from '@services/pwa-update.service';
@@ -58,7 +49,6 @@ export class App implements OnInit {
   keyboardNavService = inject(KeyboardNavigationService);
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
-  networkState = inject(NetworkStateService);
   private scrollService = inject(ScrollService);
   http = inject(HttpClient);
   private pwaUpdate = inject(PwaUpdateService);
@@ -81,8 +71,6 @@ export class App implements OnInit {
       ? `https://github.com/alysson-souza/hnews/commit/${this.commitSha}`
       : null;
 
-  // Network state from NetworkStateService
-  isOffline = computed(() => !this.networkState.isOnline());
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
   private lastRefreshTime = 0;

@@ -701,23 +701,4 @@ describe('App', () => {
       expect(app.commitUrl).toBeNull();
     });
   });
-
-  describe('Offline State', () => {
-    let fixture: ComponentFixture<App>;
-    let app: App;
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(App);
-      app = fixture.componentInstance;
-      fixture.detectChanges();
-    });
-
-    it('should have isOffline computed signal', () => {
-      // isOffline is a computed signal from networkState.isOnline()
-      expect(app.isOffline).toBeDefined();
-      // The actual value depends on networkState.isOnline() which is tested in network-state.service.spec.ts
-      const offlineValue = app.isOffline();
-      expect(typeof offlineValue).toBe('boolean');
-    });
-  });
 });

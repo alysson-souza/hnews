@@ -11,7 +11,6 @@ import { AppHeaderComponent } from '@components/layout/header/header.component';
   imports: [AppShellComponent],
   template: `
     <app-shell
-      [offline]="offline"
       [routerUrl]="routerUrl"
       [searchQuery]="searchQuery"
       [mobileMenuOpen]="mobileMenuOpen"
@@ -25,7 +24,6 @@ import { AppHeaderComponent } from '@components/layout/header/header.component';
   `,
 })
 class AppShellHostComponent {
-  offline = false;
   showBanner = false;
   routerUrl = '/top';
   searchQuery = '';
@@ -61,9 +59,6 @@ describe('AppShellComponent', () => {
     expect(content).toBeTruthy();
     expect(content.textContent?.trim()).toBe('Projected Content');
   });
-
-  // Offline banner has been removed; covered by in-page indicators now
-
   it('re-emits search submissions from the header', () => {
     const headerDebug = fixture.debugElement.query(By.directive(AppHeaderComponent));
     const header = headerDebug.componentInstance as AppHeaderComponent;

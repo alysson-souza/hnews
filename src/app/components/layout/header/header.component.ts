@@ -25,7 +25,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
         <div class="flex items-center h-16">
           <!-- Brand: always visible, left-aligned -->
           <div class="flex-shrink-0">
-            <app-header-brand [offline]="offline()" />
+            <app-header-brand />
           </div>
 
           <!-- Desktop spacer 1: creates left padding for centered nav -->
@@ -123,7 +123,6 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
   ],
 })
 export class AppHeaderComponent {
-  readonly offline = input(false);
   readonly routerUrl = input('');
   readonly searchQuery = input('');
   readonly mobileMenuOpen = input(false);

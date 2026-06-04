@@ -10,7 +10,6 @@ import { AppFooterComponent } from '../footer/footer.component';
   imports: [AppHeaderComponent, AppFooterComponent],
   template: `
     <app-header
-      [offline]="offline()"
       [routerUrl]="routerUrl()"
       [searchQuery]="searchQuery()"
       [mobileMenuOpen]="mobileMenuOpen()"
@@ -55,7 +54,6 @@ import { AppFooterComponent } from '../footer/footer.component';
   ],
 })
 export class AppShellComponent {
-  readonly offline = input(false);
   readonly routerUrl = input('');
   readonly searchQuery = input('');
   readonly mobileMenuOpen = input(false);

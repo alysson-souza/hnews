@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, input } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 import { ScrollService } from '@services/scroll.service';
@@ -26,9 +26,6 @@ import { ScrollService } from '@services/scroll.service';
           >HNews</span
         >
       </a>
-      @if (offline()) {
-        <span class="ml-2 sm:ml-3 px-2 py-1 bg-yellow-500 text-white text-xs rounded">Offline</span>
-      }
     </div>
   `,
   styles: [
@@ -63,8 +60,6 @@ import { ScrollService } from '@services/scroll.service';
   ],
 })
 export class HeaderBrandComponent {
-  readonly offline = input(false);
-
   private scrollService = inject(ScrollService);
 
   scrollToTop(): void {
