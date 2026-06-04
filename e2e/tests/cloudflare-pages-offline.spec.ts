@@ -47,13 +47,18 @@ test.describe('Cloudflare Pages offline boot', () => {
 
     expect(response?.status()).not.toBe(503);
     await expect(page.getByText('HNews').first()).toBeVisible();
+
+    // Also verify the root URL is served from the SW shell while offline
+    const rootResponse = await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+    expect(rootResponse?.status()).not.toBe(503);
+    await expect(page.getByText('HNews').first()).toBeVisible();
   });
 
   test('renders cached story lists with the saved-results offline state', async ({
     page,
     context,
   }) => {
-    await installServiceWorkerWithoutStoryData(page, baseUrl);
+    await bootServiceWorker(page, baseUrl);
     await seedStoryListCache(page);
 
     await context.setOffline(true);
@@ -67,7 +72,7 @@ test.describe('Cloudflare Pages offline boot', () => {
     page,
     context,
   }) => {
-    await installServiceWorkerWithoutStoryData(page, baseUrl);
+    await bootServiceWorker(page, baseUrl);
 
     await context.setOffline(true);
     await page.goto(`${baseUrl}top`, { waitUntil: 'domcontentloaded' });
@@ -77,7 +82,7 @@ test.describe('Cloudflare Pages offline boot', () => {
   });
 
   test('disables search while offline', async ({ page, context }) => {
-    await installServiceWorkerWithoutStoryData(page, baseUrl);
+    await bootServiceWorker(page, baseUrl);
 
     await context.setOffline(true);
     await page.goto(`${baseUrl}search`, { waitUntil: 'domcontentloaded' });
@@ -93,7 +98,7 @@ test.describe('Cloudflare Pages offline boot', () => {
   });
 });
 
-async function installServiceWorkerWithoutStoryData(page: Page, baseUrl: string): Promise<void> {
+async function bootServiceWorker(page: Page, baseUrl: string): Promise<void> {
   await page.goto(`${baseUrl}settings`, { waitUntil: 'networkidle' });
   await waitForServiceWorkerControl(page);
 }

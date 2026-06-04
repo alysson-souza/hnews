@@ -73,10 +73,23 @@ export class StoryListStore {
   /** Batch size for fetching in filtered modes */
   private readonly FILTERED_BATCH_SIZE = 50;
 
+  /** Tracks the previous online state to detect offline→online transitions */
+  private previousOnline = this.networkState.isOnline();
+
   constructor() {
     // Sync update subscriptions whenever loadedStoryIds changes
     effect(() => {
       this.syncUpdateSubscriptions(this.loadedStoryIds());
+    });
+
+    // Auto-refresh when connectivity is restored so the list reloads without
+    // requiring a manual refresh gesture.
+    effect(() => {
+      const online = this.networkState.isOnline();
+      if (online && !this.previousOnline) {
+        this.refresh();
+      }
+      this.previousOnline = online;
     });
 
     // Cleanup all subscriptions on destroy

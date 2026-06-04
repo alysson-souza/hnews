@@ -5,6 +5,7 @@ import { HackernewsService } from '@services/hackernews.service';
 import { NetworkStateService } from '@services/network-state.service';
 import { StoryListStateService, StoryListState } from '@services/story-list-state.service';
 import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
+import { signal } from '@angular/core';
 import { of, Subject, Observable } from 'rxjs';
 import { HNItem } from '@models/hn';
 import { getFilterCutoffTimestamp } from '@models/story-filter';
@@ -119,14 +120,14 @@ class MockFilterPrefsService {
 }
 
 class MockNetworkStateService {
-  private offline = false;
+  readonly isOnline = signal(true);
 
   isOffline() {
-    return this.offline;
+    return !this.isOnline();
   }
 
   setOffline(value: boolean) {
-    this.offline = value;
+    this.isOnline.set(!value);
   }
 }
 
@@ -177,6 +178,22 @@ describe('StoryListStore', () => {
     expect(store.error()).toBeNull();
     expect(store.totalStoryIds()).toEqual([]);
     expect(store.stories()).toEqual([]);
+  });
+
+  it('auto-refreshes when connectivity is restored after an offline cold start', async () => {
+    // Go offline and flush the effect so previousOnline is tracked as false
+    mockNetwork.setOffline(true);
+    TestBed.flushEffects();
+
+    store.init('top', 2);
+    expect(mockHN.topStoryCalls).toBe(0);
+
+    // Come back online — the effect should detect the false→true transition and refresh
+    mockNetwork.setOffline(false);
+    TestBed.flushEffects();
+    await Promise.resolve();
+
+    expect(mockHN.topStoryCalls).toBeGreaterThan(0);
   });
 
   it('loads more stories when loadMore is called', async () => {
