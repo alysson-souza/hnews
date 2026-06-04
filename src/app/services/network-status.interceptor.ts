@@ -15,22 +15,31 @@ import { NetworkStateService } from './network-state.service';
 @Injectable()
 export class NetworkStatusInterceptor implements HttpInterceptor {
   private readonly network = inject(NetworkStateService);
+  private readonly connectivitySignalOrigins = [
+    'https://hacker-news.firebaseio.com/',
+    'https://hn.algolia.com/',
+  ];
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
       tap((event) => {
-        if (event instanceof HttpResponse) {
-          // Any successful response indicates connectivity is OK
+        if (event instanceof HttpResponse && this.isConnectivitySignal(req.url)) {
+          // Only remote data APIs prove network connectivity. Same-origin responses may be
+          // served by the Angular service worker while the browser is actually offline.
           this.network.noteRequestSuccess();
         }
       }),
       catchError((error: unknown) => {
-        // Mark offline only for connectivity-like errors
-        if (error instanceof HttpErrorResponse) {
+        // Mark offline only for connectivity-like errors from remote data APIs.
+        if (error instanceof HttpErrorResponse && this.isConnectivitySignal(req.url)) {
           this.network.noteRequestFailure(error);
         }
         return throwError(() => error);
       }),
     );
+  }
+
+  private isConnectivitySignal(url: string): boolean {
+    return this.connectivitySignalOrigins.some((origin) => url.startsWith(origin));
   }
 }

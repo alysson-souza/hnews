@@ -4,6 +4,7 @@ import { Injectable, Signal, computed, inject, signal, effect, DestroyRef } from
 import { HNItem } from '@models/hn';
 import { StoryFilterMode, applyStoryFilter } from '@models/story-filter';
 import { HackernewsService } from '@services/hackernews.service';
+import { NetworkStateService } from '@services/network-state.service';
 import { StoryListStateService } from '@services/story-list-state.service';
 import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
 import { map, switchMap, take } from 'rxjs/operators';
@@ -14,6 +15,7 @@ export type StoryType = 'top' | 'best' | 'new' | 'ask' | 'show' | 'job';
 @Injectable({ providedIn: 'root' })
 export class StoryListStore {
   private hn = inject(HackernewsService);
+  private networkState = inject(NetworkStateService);
   private state = inject(StoryListStateService);
   private filterPrefs = inject(StoryFilterPreferencesService);
   private destroyRef = inject(DestroyRef);
@@ -254,6 +256,10 @@ export class StoryListStore {
    * Fetches more stories to support filtered modes.
    */
   private fetchMoreForFilter(): void {
+    if (this.networkState.isOffline()) {
+      return;
+    }
+
     const totalIds = this.totalStoryIds();
     const fetched = this.fetchedCount();
 
@@ -298,6 +304,17 @@ export class StoryListStore {
 
     this.loading.set(true);
     this.error.set(null);
+
+    if (this.networkState.isOffline()) {
+      this.loading.set(false);
+      if (isRefresh) this.refreshing.set(false);
+      if (this.loadedStories().length === 0) {
+        this.totalStoryIds.set([]);
+        this.fetchedCount.set(0);
+      }
+      return;
+    }
+
     // Use cached-first by default; on explicit refresh, force fetch IDs
     this.getStoryIds(isRefresh)
       .pipe(take(1))
@@ -383,6 +400,7 @@ export class StoryListStore {
   /** Append next page items if available. */
   loadMore(): void {
     if (!this.hasMore()) return;
+    if (this.networkState.isOffline()) return;
 
     const mode = this.filterMode();
 
@@ -422,6 +440,8 @@ export class StoryListStore {
 
   /** Background refresh; updates top IDs and new-stories indicator only. */
   silentRefreshStoryList(): void {
+    if (this.networkState.isOffline()) return;
+
     console.debug('🔄 Auto refresh: Checking for new stories...');
     this.getStoryIds(true)
       .pipe(take(1))

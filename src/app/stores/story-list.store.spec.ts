@@ -2,6 +2,7 @@
 import { TestBed } from '@angular/core/testing';
 import { StoryListStore } from './story-list.store';
 import { HackernewsService } from '@services/hackernews.service';
+import { NetworkStateService } from '@services/network-state.service';
 import { StoryListStateService, StoryListState } from '@services/story-list-state.service';
 import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
 import { of, Subject, Observable } from 'rxjs';
@@ -11,8 +12,10 @@ import { getFilterCutoffTimestamp } from '@models/story-filter';
 /** Test double for HackernewsService */
 class MockHNService {
   private itemStreams = new Map<number, Subject<HNItem | null>>();
+  topStoryCalls = 0;
 
   getTopStories() {
+    this.topStoryCalls++;
     return of([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   }
   getBestStories() {
@@ -115,10 +118,23 @@ class MockFilterPrefsService {
   }
 }
 
+class MockNetworkStateService {
+  private offline = false;
+
+  isOffline() {
+    return this.offline;
+  }
+
+  setOffline(value: boolean) {
+    this.offline = value;
+  }
+}
+
 describe('StoryListStore', () => {
   let store: StoryListStore;
   let mockHN: MockHNService;
   let mockState: MockStateService;
+  let mockNetwork: MockNetworkStateService;
 
   beforeEach(() => {
     // Clear localStorage before each test
@@ -128,6 +144,7 @@ describe('StoryListStore', () => {
       providers: [
         StoryListStore,
         { provide: HackernewsService, useClass: MockHNService },
+        { provide: NetworkStateService, useClass: MockNetworkStateService },
         { provide: StoryListStateService, useClass: MockStateService },
         { provide: StoryFilterPreferencesService, useClass: MockFilterPrefsService },
       ],
@@ -135,6 +152,7 @@ describe('StoryListStore', () => {
     store = TestBed.inject(StoryListStore);
     mockHN = TestBed.inject(HackernewsService) as unknown as MockHNService;
     mockState = TestBed.inject(StoryListStateService) as unknown as MockStateService;
+    mockNetwork = TestBed.inject(NetworkStateService) as unknown as MockNetworkStateService;
   });
 
   afterEach(() => {
@@ -147,6 +165,18 @@ describe('StoryListStore', () => {
     expect(store.totalStoryIds()).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(store.stories().length).toBe(2);
     expect(!!store.loading()).toBe(false);
+  });
+
+  it('does not fetch stories on an offline cold start with no cached state', () => {
+    mockNetwork.setOffline(true);
+
+    store.init('top', 2);
+
+    expect(mockHN.topStoryCalls).toBe(0);
+    expect(store.loading()).toBe(false);
+    expect(store.error()).toBeNull();
+    expect(store.totalStoryIds()).toEqual([]);
+    expect(store.stories()).toEqual([]);
   });
 
   it('loads more stories when loadMore is called', async () => {

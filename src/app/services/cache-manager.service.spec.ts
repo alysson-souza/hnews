@@ -386,46 +386,6 @@ describe('CacheManagerService', () => {
     });
   });
 
-  describe('Offline support', () => {
-    it('checks if offline', () => {
-      const result = service.isOffline();
-      expect(typeof result).toBe('boolean');
-    });
-
-    it('gets offline data', async () => {
-      const storyIds = [1, 2, 3];
-      const stories: HNItem[] = [
-        { id: 1, type: 'story', by: 'user1', time: Date.now(), title: 'Story 1' },
-        { id: 2, type: 'story', by: 'user2', time: Date.now(), title: 'Story 2' },
-      ];
-
-      // Set up test data
-      await indexedDBService.setStoryList('top', storyIds);
-      for (const story of stories) {
-        await indexedDBService.setStory(story);
-      }
-
-      // Verify test data is set up correctly
-      const verifyList = await indexedDBService.getStoryList('top');
-      expect(verifyList).toEqual(storyIds);
-
-      const verifyStory1 = await indexedDBService.getStory(1);
-      const verifyStory2 = await indexedDBService.getStory(2);
-      expect(verifyStory1).toBeTruthy();
-      expect(verifyStory2).toBeTruthy();
-
-      // Get offline data
-      const result = await service.getOfflineData();
-
-      // Verify results with better error messages
-      expect(
-        result.stories.length,
-        `Expected 2 stories but got ${result.stories.length}. Stories: ${JSON.stringify(result.stories)}`,
-      ).toBe(2);
-      expect(result.hasMore).toBe(false);
-    });
-  });
-
   describe('Storage management', () => {
     it('gets storage info', async () => {
       const info = await service.getStorageInfo();

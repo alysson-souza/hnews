@@ -589,28 +589,6 @@ export class CacheManagerService {
     await Promise.all(promises);
   }
 
-  // Offline support
-
-  isOffline(): boolean {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-    return !window.navigator.onLine;
-  }
-
-  async getOfflineData(): Promise<{
-    stories: HNItem[];
-    hasMore: boolean;
-  }> {
-    const storyIds = (await this.indexedDB.getStoryList('top')) || [];
-    const stories = await this.indexedDB.getStories(storyIds.slice(0, 30));
-
-    return {
-      stories: Array.from(stories.values()),
-      hasMore: storyIds.length > 30,
-    };
-  }
-
   /**
    * Clear all in-flight fetch promises.
    * Used on tab resume to discard stale promises from before freeze/discard.
