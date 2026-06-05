@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef, effect } from '@angular/core';
 
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,6 +26,7 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
 import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 import { CommentThreadToolbarComponent } from '@components/comment-tools/comment-thread-toolbar.component';
 import { CommentSkeletonComponent } from '@components/comment-skeleton/comment-skeleton.component';
+import { NetworkStateService } from '@services/network-state.service';
 
 @Component({
   selector: 'app-item',
@@ -53,12 +54,21 @@ export class ItemComponent implements OnInit {
   private commentDisplayStrategy = inject(CommentDisplayStrategyService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
   private commentIndex = inject(CommentThreadIndexService);
+  private networkState = inject(NetworkStateService);
   private lastNavigationWasPopstate = false;
+  private previousOnline = this.networkState.isOnline();
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
   parentDiscussionId = signal<number | null>(null);
+
+  /** True while a background refresh is in progress (keeps existing content visible). */
+  refreshing = signal(false);
+  /** Bumped after each successful refresh to force Angular to recreate comment threads. */
+  refreshToken = signal(0);
+  /** Tracks the item ID of the page currently displayed. */
+  private currentItemId = signal<number | null>(null);
 
   // Sorting state - use global service
   sortOrder = this.commentSortService.sortOrder;
@@ -127,6 +137,17 @@ export class ItemComponent implements OnInit {
     return Math.min(this.commentsPageSize, remaining);
   });
 
+  constructor() {
+    // Auto-refresh when connectivity is restored, mirroring StoryListStore behaviour.
+    effect(() => {
+      const online = this.networkState.isOnline();
+      if (online && !this.previousOnline) {
+        this.refresh();
+      }
+      this.previousOnline = online;
+    });
+  }
+
   ngOnInit() {
     this.router.events
       .pipe(
@@ -162,6 +183,7 @@ export class ItemComponent implements OnInit {
       return;
     }
 
+    this.currentItemId.set(itemId);
     const inheritedPreviousVisitedAt = this.getInheritedPreviousVisitedAt(itemId);
 
     this.loading.set(true);
@@ -191,8 +213,15 @@ export class ItemComponent implements OnInit {
    *
    * The bulk load pre-populates the cache, so subsequent getItem() calls
    * from CommentThread components are instant cache hits.
+   *
+   * When `isRefresh` is true the existing content stays visible; only `refreshToken`
+   * is bumped on success so Angular recreates the comment threads with fresh data.
    */
-  private loadWithAlgoliaBulk(itemId: number, inheritedPreviousVisitedAt: number | null) {
+  private loadWithAlgoliaBulk(
+    itemId: number,
+    inheritedPreviousVisitedAt: number | null,
+    isRefresh = false,
+  ) {
     this.bulkLoadingComments.set(true);
 
     this.hnService.getStoryWithAllComments(itemId).subscribe({
@@ -202,18 +231,26 @@ export class ItemComponent implements OnInit {
           this.bulkLoadResult.set(result);
           this.item.set(result.story);
           this.resolveParentDiscussion(result.story, itemId);
-          this.applyCommentDisplayStrategy(result.story);
+
+          // Only recompute display strategy on a full load; a refresh preserves
+          // the existing pagination / small-thread-mode the user may have changed.
+          if (!isRefresh) {
+            this.applyCommentDisplayStrategy(result.story);
+          }
 
           // Pre-populate allComments for sorting (top-level only)
           const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
           this.allComments.set(topLevelComments);
           this.topLevelCommentsLoadedForSort.set(true);
 
-          const previousVisitedAt = this.getPreviousCommentsVisitedAt(
-            result.story.id,
-            inheritedPreviousVisitedAt,
-          );
-          this.previousVisitedAt.set(previousVisitedAt);
+          // On refresh keep the existing previousVisitedAt so unread badges remain
+          // relative to the original page open time.
+          const previousVisitedAt = isRefresh
+            ? this.previousVisitedAt()
+            : this.getPreviousCommentsVisitedAt(result.story.id, inheritedPreviousVisitedAt);
+          if (!isRefresh) {
+            this.previousVisitedAt.set(previousVisitedAt);
+          }
           this.commentIndex.configureContext('item', result.story, {
             comments: Array.from(result.commentsMap.values()),
             previousVisitedAt,
@@ -224,17 +261,24 @@ export class ItemComponent implements OnInit {
             this.getCommentCountForVisit(result.story),
           );
 
-          this.handleLoadSuccess();
+          if (isRefresh) {
+            // Bump the token so the @for track expression rebuilds comment threads,
+            // forcing them to re-read the fresh cache data.
+            this.refreshToken.update((n) => n + 1);
+            this.refreshing.set(false);
+          }
+
+          this.handleLoadSuccess(isRefresh);
         } else {
           // Algolia failed, fallback to Firebase API
-          this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt);
+          this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt, isRefresh);
         }
         this.bulkLoadingComments.set(false);
       },
       error: () => {
         // Algolia failed, fallback to Firebase API
         this.bulkLoadingComments.set(false);
-        this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt);
+        this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt, isRefresh);
       },
     });
   }
@@ -243,40 +287,61 @@ export class ItemComponent implements OnInit {
    * Fallback: Load item using Firebase API (original N+1 approach).
    * Used when Algolia bulk load fails.
    */
-  private loadWithFirebaseApi(itemId: number, inheritedPreviousVisitedAt: number | null) {
+  private loadWithFirebaseApi(
+    itemId: number,
+    inheritedPreviousVisitedAt: number | null,
+    isRefresh = false,
+  ) {
     this.hnService.getItem(itemId).subscribe({
       next: (item) => {
         if (item) {
           this.item.set(item);
           this.resolveParentDiscussion(item, itemId);
-          this.applyCommentDisplayStrategy(item);
-          const previousVisitedAt = this.getPreviousCommentsVisitedAt(
-            item.id,
-            inheritedPreviousVisitedAt,
-          );
-          this.previousVisitedAt.set(previousVisitedAt);
+          if (!isRefresh) {
+            this.applyCommentDisplayStrategy(item);
+          }
+          const previousVisitedAt = isRefresh
+            ? this.previousVisitedAt()
+            : this.getPreviousCommentsVisitedAt(item.id, inheritedPreviousVisitedAt);
+          if (!isRefresh) {
+            this.previousVisitedAt.set(previousVisitedAt);
+          }
           this.commentIndex.configureContext('item', item, { previousVisitedAt });
           this.visitedService.markCommentsVisited(item.id, this.getCommentCountForVisit(item));
-          this.handleLoadSuccess();
+          if (isRefresh) {
+            this.refreshToken.update((n) => n + 1);
+          }
+          this.handleLoadSuccess(isRefresh);
         } else {
           this.error.set('Item not found');
         }
         this.loading.set(false);
+        if (isRefresh) {
+          this.refreshing.set(false);
+        }
       },
       error: () => {
         this.error.set('Failed to load item. Please try again.');
         this.loading.set(false);
+        if (isRefresh) {
+          this.refreshing.set(false);
+        }
       },
     });
   }
 
   /**
    * Common success handler for both bulk and fallback loading.
+   * When `isRefresh` is true only comment sorting is re-applied; scroll is preserved.
    */
-  private handleLoadSuccess() {
+  private handleLoadSuccess(isRefresh = false) {
     const loadedItem = this.item();
     this.loading.set(false);
     this.loadCommentsForActiveSort();
+
+    if (isRefresh) {
+      return;
+    }
 
     const storedScrollY = this.getStoredThreadReturnScrollY();
     if (storedScrollY !== null && loadedItem?.type === 'story') {
@@ -340,6 +405,26 @@ export class ItemComponent implements OnInit {
       const next = current + this.commentsPageSize;
       return Math.min(next, total);
     });
+  }
+
+  /**
+   * Re-fetch the current item and all its comments in the background.
+   * Existing content stays visible (no skeleton flash) while the request is in flight.
+   * Called by the header refresh button via `CommandRegistryService`.
+   */
+  refresh(): void {
+    if (this.networkState.isOffline()) return;
+    const id = this.currentItemId();
+    if (!id) return;
+
+    // Nothing loaded yet (error state) — fall back to a full load.
+    if (!this.item()) {
+      this.loadItem(id);
+      return;
+    }
+
+    this.refreshing.set(true);
+    this.loadWithAlgoliaBulk(id, null, true);
   }
 
   onSortChange(newSort: CommentSortOrder): void {

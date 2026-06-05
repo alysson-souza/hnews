@@ -19,6 +19,7 @@ import { BulkLoadResult } from '@services/algolia-comment-loader.service';
 import { VisitedService } from '@services/visited.service';
 import { ScrollService } from '@services/scroll.service';
 import { CommentSortService } from '@services/comment-sort.service';
+import { NetworkStateService } from '@services/network-state.service';
 import { HNItem } from '@models/hn';
 import { SidebarStorySummaryComponent } from '@components/sidebar-comments/sidebar-story-summary.component';
 import { CommentSortOrder } from '@components/shared/comment-sort-dropdown/comment-sort-dropdown.component';
@@ -30,6 +31,7 @@ describe('ItemComponent', () => {
   let mockVisitedService: MockedObject<VisitedService>;
   let mockScrollService: MockedObject<ScrollService>;
   let mockCommentSortService: MockedObject<CommentSortService>;
+  let mockNetworkState: { isOnline: ReturnType<typeof signal<boolean>>; isOffline: () => boolean };
   let mockActivatedRoute: Partial<ActivatedRoute>;
   let mockRouter: MockedObject<Router>;
   let mockLocation: MockedObject<Location>;
@@ -154,6 +156,12 @@ describe('ItemComponent', () => {
       back: vi.fn(),
     } as unknown as MockedObject<Location>;
 
+    const isOnlineSig = signal(true);
+    mockNetworkState = {
+      isOnline: isOnlineSig,
+      isOffline: () => !isOnlineSig(),
+    };
+
     mockActivatedRoute = {
       params: new BehaviorSubject<Params>({ id: '123' }),
       queryParams: new BehaviorSubject<Params>({}),
@@ -169,6 +177,7 @@ describe('ItemComponent', () => {
         { provide: VisitedService, useValue: mockVisitedService },
         { provide: ScrollService, useValue: mockScrollService },
         { provide: CommentSortService, useValue: mockCommentSortService },
+        { provide: NetworkStateService, useValue: mockNetworkState },
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
         { provide: Router, useValue: mockRouter },
         { provide: Location, useValue: mockLocation },
@@ -584,6 +593,140 @@ describe('ItemComponent', () => {
       expect(component.smallThreadMode()).toBe(false);
       expect(component.visibleCommentIds().length).toBe(10);
       expect(component.hasMoreTopLevelComments()).toBe(true);
+    });
+  });
+
+  describe('Refresh', () => {
+    beforeEach(() => {
+      // detectChanges triggers ngOnInit (which calls loadItem via route params) AND
+      // flushes Angular effects for the first time — essential so that the reconnect
+      // effect's initial run is settled before any individual test begins.
+      fixture.detectChanges();
+    });
+
+    it('should be a no-op when offline', () => {
+      mockNetworkState.isOnline.set(false);
+      mockHnService.getStoryWithAllComments.mockClear();
+
+      component.refresh();
+
+      expect(mockHnService.getStoryWithAllComments).not.toHaveBeenCalled();
+      expect(component.refreshing()).toBe(false);
+    });
+
+    it('should be a no-op when no item is loaded (currentItemId is null)', () => {
+      // Fresh component with no item loaded
+      const freshComp = TestBed.createComponent(ItemComponent).componentInstance;
+      mockHnService.getStoryWithAllComments.mockClear();
+
+      freshComp.refresh();
+
+      expect(mockHnService.getStoryWithAllComments).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to a full loadItem when item signal is null (error state)', () => {
+      component.item.set(null);
+      component.error.set('Something went wrong');
+      mockHnService.getStoryWithAllComments.mockClear();
+
+      component.refresh();
+
+      // loadItem path is taken — it calls getStoryWithAllComments again
+      expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(mockItem.id);
+      // loading is set to true for a full load
+      expect(component.loading()).toBe(false); // resolves immediately with mock
+    });
+
+    it('should keep existing item and comments visible during refresh (no skeleton)', () => {
+      const existingItem = component.item();
+      const existingComments = component.allComments();
+
+      // Simulate a slow response so we can inspect mid-flight state
+      const slowSubject = new Subject<BulkLoadResult>();
+      mockHnService.getStoryWithAllComments.mockReturnValue(slowSubject.asObservable());
+
+      component.refresh();
+
+      // Content stays intact while in flight
+      expect(component.item()).toBe(existingItem);
+      expect(component.allComments()).toEqual(existingComments);
+      expect(component.loading()).toBe(false);
+      expect(component.refreshing()).toBe(true);
+
+      // Resolve the request
+      slowSubject.next(createBulkLoadResult(mockItem, mockComments));
+      slowSubject.complete();
+
+      expect(component.refreshing()).toBe(false);
+    });
+
+    it('should bump refreshToken on a successful refresh', () => {
+      const tokenBefore = component.refreshToken();
+
+      component.refresh();
+
+      expect(component.refreshToken()).toBe(tokenBefore + 1);
+    });
+
+    it('should clear refreshing flag even when Algolia fails and Firebase also fails', () => {
+      mockHnService.getStoryWithAllComments.mockReturnValue(of(null));
+      mockHnService.getItem.mockReturnValue(throwError(() => new Error('Firebase down')));
+
+      component.refresh();
+
+      expect(component.refreshing()).toBe(false);
+    });
+
+    it('should clear refreshing flag when Algolia fails but Firebase succeeds', () => {
+      const updatedItem: HNItem = { ...mockItem, descendants: 99 };
+      mockHnService.getStoryWithAllComments.mockReturnValue(of(null));
+      mockHnService.getItem.mockReturnValue(of(updatedItem));
+
+      component.refresh();
+
+      expect(component.refreshing()).toBe(false);
+      expect(component.item()?.descendants).toBe(99);
+    });
+
+    it('should not reset scroll-position-related state (loading stays false, pagination unchanged)', () => {
+      component['visibleTopLevelCount'].set(15);
+
+      component.refresh();
+
+      // Full reset would set visibleTopLevelCount back to commentsPageSize (10).
+      // Background refresh must not touch it.
+      expect(component['visibleTopLevelCount']()).toBe(15);
+    });
+
+    it('should preserve previousVisitedAt across a refresh', () => {
+      const stamp = 1_700_000_000_000;
+      component.previousVisitedAt.set(stamp);
+
+      component.refresh();
+
+      expect(component.previousVisitedAt()).toBe(stamp);
+    });
+
+    it('should NOT re-fetch on initial mount (effect quiet when already online)', () => {
+      // detectChanges (in beforeEach) already ran ngOnInit + the first effect flush.
+      // Starting online, so previousOnline was seeded to true and the effect was a no-op.
+      // Clearing the mock now and running more effects must not trigger any extra call.
+      mockHnService.getStoryWithAllComments.mockClear();
+      TestBed.flushEffects();
+
+      expect(mockHnService.getStoryWithAllComments).not.toHaveBeenCalled();
+    });
+
+    it('should re-fetch content on reconnect (offline → online transition)', () => {
+      // Go offline, then come back online — the effect must trigger a refresh.
+      mockNetworkState.isOnline.set(false);
+      TestBed.flushEffects();
+      mockHnService.getStoryWithAllComments.mockClear();
+
+      mockNetworkState.isOnline.set(true);
+      TestBed.flushEffects();
+
+      expect(mockHnService.getStoryWithAllComments).toHaveBeenCalledWith(mockItem.id);
     });
   });
 });

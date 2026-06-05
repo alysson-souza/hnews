@@ -87,7 +87,18 @@ export class App implements OnInit {
 
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
-  refreshing = this.storyListStore.refreshing;
+  /**
+   * True while a refresh is in progress on any route that supports it.
+   * Re-evaluated on navigation so it picks up the active component's signal.
+   */
+  refreshing = computed(() => {
+    this.navigationEnd();
+    if (this.storyListStore.refreshing()) return true;
+    const outlet = this.outlet();
+    if (!outlet?.isActivated || !outlet.component) return false;
+    const comp = outlet.component as { refreshing?: { (): boolean } };
+    return typeof comp.refreshing === 'function' ? comp.refreshing() : false;
+  });
   private lastRefreshTime = 0;
 
   private navigationEnd = toSignal(
@@ -302,8 +313,12 @@ export class App implements OnInit {
     }
     this.lastRefreshTime = now;
 
-    this.keyboardNavService.clearSelection();
-    this.scrollService.scrollToTop();
+    // Only reset scroll/selection on story-list pages; on item/comments pages
+    // the user may be mid-thread and we want to preserve their reading position.
+    if (this.keyboardContext.isOnStoryList()) {
+      this.keyboardNavService.clearSelection();
+      this.scrollService.scrollToTop();
+    }
 
     const outlet = this.outlet();
     if (outlet?.isActivated && outlet.component) {

@@ -72,7 +72,11 @@
             </div>
           } @else {
             <div class="space-y-4" role="tree" aria-label="Comments">
-              @for (commentId of visibleCommentIds(); track commentId; let first = $first) {
+              @for (
+                commentId of visibleCommentIds();
+                track refreshToken().toString() + ':' + commentId;
+                let first = $first
+              ) {
                 <app-comment-thread
                   [commentId]="commentId"
                   [depth]="0"
