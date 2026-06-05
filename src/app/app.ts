@@ -87,17 +87,11 @@ export class App implements OnInit {
 
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
-  /**
-   * True while a refresh is in progress on any route that supports it.
-   * Re-evaluated on navigation so it picks up the active component's signal.
-   */
+  /** True while a refresh is in progress on any route that supports it. */
   refreshing = computed(() => {
-    this.navigationEnd();
     if (this.storyListStore.refreshing()) return true;
-    const outlet = this.outlet();
-    if (!outlet?.isActivated || !outlet.component) return false;
-    const comp = outlet.component as { refreshing?: { (): boolean } };
-    return typeof comp.refreshing === 'function' ? comp.refreshing() : false;
+    const comp = this.activeComponent() as { refreshing?: () => boolean } | null;
+    return typeof comp?.refreshing === 'function' ? comp.refreshing() : false;
   });
   private lastRefreshTime = 0;
 
@@ -105,12 +99,18 @@ export class App implements OnInit {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
     { initialValue: null },
   );
-  canRefresh = computed(() => {
+  /** Currently activated route component; re-resolved on every navigation. */
+  private activeComponent = computed(() => {
     this.navigationEnd();
-    if (!this.networkState.isOnline()) return false;
     const outlet = this.outlet();
-    if (!outlet?.isActivated) return false;
-    return typeof (outlet.component as { refresh?: unknown })?.refresh === 'function';
+    if (!outlet?.isActivated || !outlet.component) return null;
+    return outlet.component;
+  });
+  canRefresh = computed(() => {
+    if (!this.networkState.isOnline()) return false;
+    const comp = this.activeComponent();
+    if (!comp) return false;
+    return typeof (comp as { refresh?: unknown }).refresh === 'function';
   });
 
   constructor() {

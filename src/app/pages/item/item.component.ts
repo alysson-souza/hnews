@@ -80,7 +80,6 @@ export class ItemComponent implements OnInit {
 
   // Bulk loading state - stores the result from Algolia bulk load
   private bulkLoadResult = signal<BulkLoadResult | null>(null);
-  bulkLoadingComments = signal(false);
 
   private readonly commentsPageSize = 10;
   private readonly smallThreadDescendantsThreshold = 40;
@@ -196,7 +195,6 @@ export class ItemComponent implements OnInit {
     this.commentsLoading.set(false);
     this.topLevelCommentsLoadedForSort.set(false);
     this.bulkLoadResult.set(null);
-    this.bulkLoadingComments.set(false);
     this.itemKeyboardNav.clearSelection();
     this.previousVisitedAt.set(null);
     this.parentDiscussionId.set(null);
@@ -222,8 +220,6 @@ export class ItemComponent implements OnInit {
     inheritedPreviousVisitedAt: number | null,
     isRefresh = false,
   ) {
-    this.bulkLoadingComments.set(true);
-
     this.hnService.getStoryWithAllComments(itemId).subscribe({
       next: (result) => {
         if (result) {
@@ -273,11 +269,9 @@ export class ItemComponent implements OnInit {
           // Algolia failed, fallback to Firebase API
           this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt, isRefresh);
         }
-        this.bulkLoadingComments.set(false);
       },
       error: () => {
         // Algolia failed, fallback to Firebase API
-        this.bulkLoadingComments.set(false);
         this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt, isRefresh);
       },
     });
