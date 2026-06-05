@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -15,6 +15,8 @@ import { AppHeaderComponent } from '@components/layout/header/header.component';
       [searchQuery]="searchQuery"
       [mobileMenuOpen]="mobileMenuOpen"
       [showMobileSearch]="showMobileSearch"
+      [refreshing]="refreshing"
+      [canRefresh]="canRefresh"
       [commitShaShort]="commitShaShort"
       [commitUrl]="commitUrl"
       (searchSubmit)="onSearchSubmit()"
@@ -29,6 +31,8 @@ class AppShellHostComponent {
   searchQuery = '';
   mobileMenuOpen = false;
   showMobileSearch = false;
+  refreshing = false;
+  canRefresh = false;
   commitShaShort = 'abc1234';
   commitUrl = 'https://example.com';
 

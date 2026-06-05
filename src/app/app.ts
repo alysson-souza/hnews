@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, signal, OnInit, HostListener, viewChild } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  OnInit,
+  HostListener,
+  viewChild,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -15,6 +25,7 @@ import { KeyboardNavigationService } from '@services/keyboard-navigation.service
 import { NavigationHistoryService } from '@services/navigation-history.service';
 import { StoryListStateService } from '@services/story-list-state.service';
 import { ScrollService } from '@services/scroll.service';
+import { StoryListStore } from '@stores/story-list.store';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from '@services/pwa-update.service';
 import { AppShellComponent } from '@components/layout/app-shell/app-shell.component';
@@ -49,6 +60,7 @@ export class App implements OnInit {
   keyboardNavService = inject(KeyboardNavigationService);
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
+  private storyListStore = inject(StoryListStore);
   private scrollService = inject(ScrollService);
   http = inject(HttpClient);
   private pwaUpdate = inject(PwaUpdateService);
@@ -73,7 +85,18 @@ export class App implements OnInit {
 
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
+  refreshing = this.storyListStore.refreshing;
   private lastRefreshTime = 0;
+
+  private navigationEnd = toSignal(
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
+    { initialValue: null },
+  );
+  canRefresh = computed(() => {
+    this.navigationEnd();
+    const outlet = this.outlet();
+    return typeof (outlet?.component as { refresh?: unknown })?.refresh === 'function';
+  });
 
   constructor() {
     this.registerGlobalCommands();

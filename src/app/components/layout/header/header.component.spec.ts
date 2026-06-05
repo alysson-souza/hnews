@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AppHeaderComponent } from './header.component';
+import { CommandRegistryService } from '@services/command-registry.service';
 
 describe('AppHeaderComponent', () => {
   let fixture: ComponentFixture<AppHeaderComponent>;
@@ -79,5 +80,38 @@ describe('AppHeaderComponent', () => {
 
     expect(searchToggleSpy).toHaveBeenCalled();
     expect(menuToggleSpy).toHaveBeenCalled();
+  });
+
+  it('executes the story refresh command from mobile controls', () => {
+    const commandRegistry = TestBed.inject(CommandRegistryService);
+    vi.spyOn(commandRegistry, 'execute').mockResolvedValue();
+
+    fixture.componentRef.setInput('canRefresh', true);
+    fixture.detectChanges();
+
+    const mobileControls = fixture.nativeElement.querySelector('app-header-mobile-controls');
+    const refreshButton = mobileControls.querySelector(
+      'button[aria-label="Refresh app"]',
+    ) as HTMLButtonElement;
+
+    refreshButton.click();
+
+    expect(commandRegistry.execute).toHaveBeenCalledWith('story.refresh');
+  });
+
+  it('passes refreshing state to mobile controls', () => {
+    fixture.componentRef.setInput('canRefresh', true);
+    fixture.componentRef.setInput('refreshing', true);
+    fixture.detectChanges();
+
+    const mobileControls = fixture.nativeElement.querySelector('app-header-mobile-controls');
+    const refreshButton = mobileControls.querySelector(
+      'button[aria-label="Refreshing app"]',
+    ) as HTMLButtonElement;
+    const icon = refreshButton.querySelector('ng-icon') as HTMLElement;
+
+    expect(refreshButton.disabled).toBe(true);
+    expect(refreshButton.getAttribute('aria-busy')).toBe('true');
+    expect(icon.classList.contains('animate-spin')).toBe(true);
   });
 });

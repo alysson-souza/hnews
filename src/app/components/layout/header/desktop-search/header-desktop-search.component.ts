@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, output, model } from '@angular/core';
+import { Component, inject, input, output, model } from '@angular/core';
 
 import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { solarMagniferLinear, solarKeyboardLinear } from '@ng-icons/solar-icons/linear';
+import {
+  solarMagniferLinear,
+  solarKeyboardLinear,
+  solarRefreshLinear,
+} from '@ng-icons/solar-icons/linear';
 import { CommandRegistryService } from '@services/command-registry.service';
 
 @Component({
   selector: 'app-header-desktop-search',
   imports: [ThemeToggleComponent, NgIconComponent],
-  viewProviders: [provideIcons({ solarMagniferLinear, solarKeyboardLinear })],
+  viewProviders: [provideIcons({ solarMagniferLinear, solarKeyboardLinear, solarRefreshLinear })],
   template: `
     <div class="hidden lg:flex items-center gap-4">
       <div class="keyboard-hint-only">
@@ -24,6 +28,20 @@ import { CommandRegistryService } from '@services/command-registry.service';
           <ng-icon name="solarKeyboardLinear" />
         </button>
       </div>
+      @if (canRefresh()) {
+        <button
+          type="button"
+          tabindex="0"
+          (click)="commandRegistry.execute('story.refresh')"
+          [disabled]="refreshing()"
+          class="shortcuts-button pwa-refresh-button"
+          [attr.aria-label]="refreshing() ? 'Refreshing app' : 'Refresh app'"
+          [attr.aria-busy]="refreshing()"
+          [title]="refreshing() ? 'Refreshing app' : 'Refresh app'"
+        >
+          <ng-icon name="solarRefreshLinear" [class.animate-spin]="refreshing()" />
+        </button>
+      }
       <app-theme-toggle />
       <form (submit)="$event.preventDefault(); onSubmit()" class="relative" role="search">
         <button
@@ -45,7 +63,7 @@ import { CommandRegistryService } from '@services/command-registry.service';
           aria-label="Search Hacker News stories"
           aria-describedby="search-hint"
           [title]="'Search For Stories (Press / to focus)'"
-          class="app-input app-input-sm search-input w-64 !pl-10"
+          class="app-input app-input-sm search-input w-64 pl-10!"
         />
       </form>
     </div>
@@ -72,6 +90,20 @@ import { CommandRegistryService } from '@services/command-registry.service';
         @apply focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2;
       }
 
+      .shortcuts-button:disabled {
+        @apply cursor-wait opacity-70;
+      }
+
+      .pwa-refresh-button {
+        display: none;
+      }
+
+      @media (display-mode: standalone) {
+        .pwa-refresh-button {
+          display: flex;
+        }
+      }
+
       .search-button {
         @apply absolute left-2 top-1/2 -translate-y-1/2;
         @apply flex items-center justify-center;
@@ -84,6 +116,8 @@ import { CommandRegistryService } from '@services/command-registry.service';
 })
 export class HeaderDesktopSearchComponent {
   readonly commandRegistry = inject(CommandRegistryService);
+  readonly refreshing = input(false);
+  readonly canRefresh = input(false);
   readonly searchQuery = model('');
   readonly searchSubmit = output<void>();
   readonly desktopSearchKeydown = output<KeyboardEvent>();

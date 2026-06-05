@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, input, output } from '@angular/core';
 
 import { HeaderBrandComponent } from './brand/header-brand.component';
@@ -24,7 +24,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
       <div class="max-w-5xl mx-auto px-2 sm:px-4">
         <div class="flex items-center h-16">
           <!-- Brand: always visible, left-aligned -->
-          <div class="flex-shrink-0">
+          <div class="shrink-0">
             <app-header-brand />
           </div>
 
@@ -40,6 +40,8 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           <!-- Desktop search: right-aligned -->
           <app-header-desktop-search
             [searchQuery]="searchQuery()"
+            [refreshing]="refreshing()"
+            [canRefresh]="canRefresh()"
             (searchQueryChange)="searchQueryChange.emit($event)"
             (searchSubmit)="searchSubmit.emit()"
             (desktopSearchKeydown)="desktopSearchKeydown.emit($event)"
@@ -50,6 +52,8 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
             <app-header-mobile-controls
               [mobileMenuOpen]="mobileMenuOpen()"
               [showMobileSearch]="showMobileSearch()"
+              [refreshing]="refreshing()"
+              [canRefresh]="canRefresh()"
               (menuToggleRequested)="menuToggleRequested.emit()"
               (searchToggleRequested)="searchToggleRequested.emit()"
             />
@@ -127,6 +131,8 @@ export class AppHeaderComponent {
   readonly searchQuery = input('');
   readonly mobileMenuOpen = input(false);
   readonly showMobileSearch = input(false);
+  readonly refreshing = input(false);
+  readonly canRefresh = input(false);
 
   readonly searchQueryChange = output<string>();
   readonly searchSubmit = output<void>();

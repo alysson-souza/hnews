@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2026 Alysson Souza
 import { Component, output, input } from '@angular/core';
 
 import { AppHeaderComponent } from '../header/header.component';
@@ -14,6 +14,8 @@ import { AppFooterComponent } from '../footer/footer.component';
       [searchQuery]="searchQuery()"
       [mobileMenuOpen]="mobileMenuOpen()"
       [showMobileSearch]="showMobileSearch()"
+      [refreshing]="refreshing()"
+      [canRefresh]="canRefresh()"
       (searchQueryChange)="searchQueryChange.emit($event)"
       (searchSubmit)="searchSubmit.emit()"
       (desktopSearchKeydown)="desktopSearchKeydown.emit($event)"
@@ -58,6 +60,8 @@ export class AppShellComponent {
   readonly searchQuery = input('');
   readonly mobileMenuOpen = input(false);
   readonly showMobileSearch = input(false);
+  readonly refreshing = input(false);
+  readonly canRefresh = input(false);
   readonly commitShaShort = input('');
   readonly commitUrl = input<string | null>(null);
 
