@@ -137,10 +137,7 @@ export class NetworkStateService implements OnDestroy {
   }
 
   private getInitialOnlineState(): boolean {
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
-      return true; // SSR fallback: assume online
-    }
-    return navigator.onLine;
+    return true;
   }
 
   private getInitialConnectionQuality(): ConnectionQuality {

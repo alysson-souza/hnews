@@ -38,14 +38,14 @@ describe('NetworkStateService', () => {
       expect(service.isOnline()).toBe(true);
     });
 
-    it('should initialize with offline state when navigator.onLine is false', () => {
+    it('should initialize online regardless of navigator.onLine', () => {
       Object.defineProperty(navigator, 'onLine', {
         writable: true,
         value: false,
       });
       service = TestBed.inject(NetworkStateService);
-      expect(service.isOnline()).toBe(false);
-      expect(service.offlineSince()).not.toBeNull();
+      expect(service.isOnline()).toBe(true);
+      expect(service.offlineSince()).toBeNull();
     });
 
     it('should set offlineSince to null when starting online', () => {
@@ -66,13 +66,13 @@ describe('NetworkStateService', () => {
       expect(service.connectionQuality()).toBe('fast');
     });
 
-    it('should initialize connectionQuality as offline when offline', () => {
+    it('should initialize connectionQuality as fast regardless of navigator.onLine', () => {
       Object.defineProperty(navigator, 'onLine', {
         writable: true,
         value: false,
       });
       service = TestBed.inject(NetworkStateService);
-      expect(service.connectionQuality()).toBe('offline');
+      expect(service.connectionQuality()).toBe('fast');
     });
   });
 

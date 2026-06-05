@@ -318,16 +318,6 @@ export class StoryListStore {
     this.loading.set(true);
     this.error.set(null);
 
-    if (this.networkState.isOffline()) {
-      this.loading.set(false);
-      if (isRefresh) this.refreshing.set(false);
-      if (this.loadedStories().length === 0) {
-        this.totalStoryIds.set([]);
-        this.fetchedCount.set(0);
-      }
-      return;
-    }
-
     // Use cached-first by default; on explicit refresh, force fetch IDs
     this.getStoryIds(isRefresh)
       .pipe(take(1))

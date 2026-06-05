@@ -168,32 +168,30 @@ describe('StoryListStore', () => {
     expect(!!store.loading()).toBe(false);
   });
 
-  it('does not fetch stories on an offline cold start with no cached state', () => {
+  it('always attempts to fetch stories on cold start regardless of offline state', async () => {
     mockNetwork.setOffline(true);
 
     store.init('top', 2);
+    await Promise.resolve();
 
-    expect(mockHN.topStoryCalls).toBe(0);
-    expect(store.loading()).toBe(false);
-    expect(store.error()).toBeNull();
-    expect(store.totalStoryIds()).toEqual([]);
-    expect(store.stories()).toEqual([]);
+    expect(mockHN.topStoryCalls).toBe(1);
   });
 
-  it('auto-refreshes when connectivity is restored after an offline cold start', async () => {
-    // Go offline and flush the effect so previousOnline is tracked as false
+  it('auto-refreshes when connectivity is restored after going offline mid-session', async () => {
+    // Start online, load stories
+    store.init('top', 2);
+    await Promise.resolve();
+    const callsAfterInit = mockHN.topStoryCalls;
+    expect(callsAfterInit).toBeGreaterThan(0);
+
+    // Go offline then come back online — the effect should detect the false→true transition
     mockNetwork.setOffline(true);
     TestBed.flushEffects();
-
-    store.init('top', 2);
-    expect(mockHN.topStoryCalls).toBe(0);
-
-    // Come back online — the effect should detect the false→true transition and refresh
     mockNetwork.setOffline(false);
     TestBed.flushEffects();
     await Promise.resolve();
 
-    expect(mockHN.topStoryCalls).toBeGreaterThan(0);
+    expect(mockHN.topStoryCalls).toBeGreaterThan(callsAfterInit);
   });
 
   it('loads more stories when loadMore is called', async () => {
