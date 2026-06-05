@@ -98,7 +98,8 @@ export class App implements OnInit {
     this.navigationEnd();
     if (!this.networkState.isOnline()) return false;
     const outlet = this.outlet();
-    return typeof (outlet?.component as { refresh?: unknown })?.refresh === 'function';
+    if (!outlet?.isActivated) return false;
+    return typeof (outlet.component as { refresh?: unknown })?.refresh === 'function';
   });
 
   constructor() {
@@ -305,9 +306,9 @@ export class App implements OnInit {
     this.scrollService.scrollToTop();
 
     const outlet = this.outlet();
-    if (outlet && outlet.component) {
+    if (outlet?.isActivated && outlet.component) {
       const activatedComponent = outlet.component as { refresh?: () => void };
-      if (activatedComponent && typeof activatedComponent.refresh === 'function') {
+      if (typeof activatedComponent.refresh === 'function') {
         activatedComponent.refresh();
       }
     }
