@@ -11,6 +11,7 @@ import { signal, WritableSignal } from '@angular/core';
 import { App } from './app';
 import { PwaUpdateService } from '@services/pwa-update.service';
 import { KeyboardContextService } from '@services/keyboard-context.service';
+import { NetworkStateService } from '@services/network-state.service';
 
 describe('App', () => {
   let mockPwaUpdateService: MockedObject<PwaUpdateService>;
@@ -699,6 +700,25 @@ describe('App', () => {
           : null;
 
       expect(app.commitUrl).toBeNull();
+    });
+  });
+
+  describe('canRefresh signal', () => {
+    let fixture: ComponentFixture<App>;
+    let app: App;
+    let networkState: NetworkStateService;
+
+    beforeEach(() => {
+      fixture = TestBed.createComponent(App);
+      app = fixture.componentInstance;
+      networkState = TestBed.inject(NetworkStateService);
+      fixture.detectChanges();
+    });
+
+    it('returns false when offline', () => {
+      networkState.isOnline.set(false);
+
+      expect(app.canRefresh()).toBe(false);
     });
   });
 });

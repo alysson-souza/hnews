@@ -26,6 +26,7 @@ import { NavigationHistoryService } from '@services/navigation-history.service';
 import { StoryListStateService } from '@services/story-list-state.service';
 import { ScrollService } from '@services/scroll.service';
 import { StoryListStore } from '@stores/story-list.store';
+import { NetworkStateService } from '@services/network-state.service';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from '@services/pwa-update.service';
 import { AppShellComponent } from '@components/layout/app-shell/app-shell.component';
@@ -61,6 +62,7 @@ export class App implements OnInit {
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
   private storyListStore = inject(StoryListStore);
+  private networkState = inject(NetworkStateService);
   private scrollService = inject(ScrollService);
   http = inject(HttpClient);
   private pwaUpdate = inject(PwaUpdateService);
@@ -94,6 +96,7 @@ export class App implements OnInit {
   );
   canRefresh = computed(() => {
     this.navigationEnd();
+    if (!this.networkState.isOnline()) return false;
     const outlet = this.outlet();
     return typeof (outlet?.component as { refresh?: unknown })?.refresh === 'function';
   });
