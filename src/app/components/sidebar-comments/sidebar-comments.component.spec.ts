@@ -897,5 +897,28 @@ describe('SidebarCommentsComponent', () => {
       expect(component.visibleCommentIds().length).toBe(10);
       expect(component.hasMoreTopLevelComments()).toBe(true);
     });
+
+    it('should use the shared comment spacing wrappers for comment lists', () => {
+      const largeStory: HNItem = {
+        ...mockItem,
+        descendants: 120,
+        kids: Array.from({ length: 25 }, (_, i) => i + 1),
+      };
+
+      mockHnService.getItem.mockReturnValue(of(largeStory));
+
+      component['loadItem'](999);
+      fixture.detectChanges();
+
+      const commentsBody = fixture.nativeElement.querySelector('.comments-body');
+      const commentsList = fixture.nativeElement.querySelector('.comments-list[role="tree"]');
+      const loadMore = fixture.nativeElement.querySelector('.comments-load-more');
+
+      expect(commentsBody).not.toBeNull();
+      expect(commentsList).not.toBeNull();
+      expect(commentsList.classList.contains('space-y-4')).toBe(false);
+      expect(loadMore).not.toBeNull();
+      expect(loadMore.classList.contains('mt-4')).toBe(false);
+    });
   });
 });

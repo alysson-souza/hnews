@@ -220,7 +220,8 @@ button.tree-connector {
 /* Comment card base styling */
 .comment-card {
   @apply relative;
-  @apply rounded-lg p-3;
+  @apply rounded-lg;
+  padding: var(--thread-gap);
   background-color: var(--app-surface-2);
   border: 1px solid var(--app-border);
   transition:
@@ -428,17 +429,6 @@ code {
 .sub-comment blockquote p:first-child {
   margin-top: 0;
 }
-/* Comments panel: control bottom spacing via last child margin, not card padding */
-.comments-card .space-y-4 > :last-child {
-  /* Last top-level thread should not add extra space beyond card padding */
-  margin-bottom: 0;
-}
-
-.comments-card .space-y-4 + .mt-6 {
-  /* Load-more container itself should not push the card bottom further down */
-  margin-bottom: 0;
-}
-
 /* Distinct URL styling inside comment text and story bodies */
 .comment-body a,
 .item-prose a {

@@ -470,6 +470,17 @@ describe('CommentThread', () => {
       expect(button!.textContent?.includes('Load 2 more replies')).toBe(true);
     });
 
+    it('should use shared spacing wrappers for nested replies', () => {
+      const children = fixture.nativeElement.querySelector('.thread-children');
+      const loadMore = fixture.nativeElement.querySelector('.thread-load-more');
+
+      expect(children).not.toBeNull();
+      expect(children.classList.contains('space-y-3')).toBe(false);
+      expect(children.classList.contains('mt-3')).toBe(false);
+      expect(loadMore).not.toBeNull();
+      expect(loadMore.classList.contains('mt-3')).toBe(false);
+    });
+
     it('should request the next page when clicking the load more button', () => {
       const buttons = fixture.debugElement.queryAll(By.css('app-button button'));
       expect(buttons.length).toBeGreaterThan(0);
@@ -526,23 +537,6 @@ describe('CommentThread', () => {
 
       const card = fixture.debugElement.query(By.css('.comment-card'));
       expect(card.nativeElement.classList.contains('unread')).toBe(true);
-    });
-  });
-
-  describe('getIndentClass', () => {
-    it('should return correct margin class for depth 0', () => {
-      fixture.componentRef.setInput('depth', 0);
-      expect(component.getIndentClass()).toBe('ml-0');
-    });
-
-    it('should return correct margin class for depth 3', () => {
-      fixture.componentRef.setInput('depth', 3);
-      expect(component.getIndentClass()).toBe('ml-12');
-    });
-
-    it('should cap indentation at depth 8', () => {
-      fixture.componentRef.setInput('depth', 10);
-      expect(component.getIndentClass()).toBe('ml-32');
     });
   });
 

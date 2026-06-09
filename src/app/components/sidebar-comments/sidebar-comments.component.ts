@@ -116,9 +116,9 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
               sidebarService.animationDirection() === 'right'
             "
           >
-            <div class="p-4 sm:p-6">
+            <div class="comments-body">
               @if (loading()) {
-                <div class="skeleton space-y-4">
+                <div class="skeleton comments-list">
                   <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
                   <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
                   <div class="h-20 bg-gray-100 dark:bg-slate-800 rounded-lg"></div>
@@ -127,7 +127,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
                 <!-- Story Details -->
                 <app-sidebar-story-summary [item]="item()!" [boxedText]="true" />
 
-                <hr class="mt-4 border-gray-200 dark:border-slate-700/60" />
+                <hr class="comments-divider" />
 
                 <!-- Comments Header with Sort -->
                 <div class="comments-heading">
@@ -154,7 +154,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
                 @if (item()!.kids && item()!.kids!.length > 0) {
                   @if (commentsSortPending()) {
                     <div
-                      class="space-y-4"
+                      class="comments-list"
                       role="status"
                       aria-label="Sorting comments"
                       aria-live="polite"
@@ -165,7 +165,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
                       }
                     </div>
                   } @else {
-                    <div class="space-y-4" role="tree" aria-label="Comments">
+                    <div class="comments-list" role="tree" aria-label="Comments">
                       @for (commentId of visibleCommentIds(); track commentId) {
                         <app-comment-thread
                           [commentId]="commentId"
@@ -179,7 +179,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
                     </div>
 
                     @if (hasMoreTopLevelComments()) {
-                      <div class="mt-4 flex justify-center">
+                      <div class="comments-load-more">
                         <app-button
                           variant="secondary"
                           size="sm"
@@ -248,9 +248,34 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
         transition-duration: 0ms;
       }
 
+      .comments-body {
+        padding: var(--thread-gap);
+      }
+
+      .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--thread-gap);
+      }
+
+      .comments-load-more {
+        display: flex;
+        justify-content: center;
+        margin-top: var(--thread-gap);
+      }
+
+      .comments-divider {
+        margin-top: var(--thread-gap);
+        border-color: var(--app-border);
+      }
+
       .comments-heading {
-        @apply sticky top-0 z-20 isolate -mx-4 mb-6 flex flex-col gap-2 px-4 py-2 sm:-mx-6 sm:px-6 sm:py-3;
+        @apply sticky top-0 z-20 isolate flex flex-col;
         @apply pointer-events-auto;
+        gap: var(--thread-gap);
+        margin-inline: calc(var(--thread-gap) * -1);
+        margin-bottom: var(--thread-gap);
+        padding: var(--thread-gap);
         background-color: var(--app-surface);
         border-bottom: 1px solid var(--app-border);
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
@@ -261,7 +286,8 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
       }
 
       .comments-title-row {
-        @apply flex min-w-0 items-center justify-between gap-2;
+        @apply flex min-w-0 items-center justify-between;
+        gap: var(--thread-gap);
       }
 
       .comments-controls {
@@ -273,7 +299,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
           display: grid;
           grid-template-columns: max-content max-content minmax(0, 1fr);
           align-items: center;
-          gap: 0.25rem;
+          gap: var(--thread-gap);
         }
 
         .comments-title-row {

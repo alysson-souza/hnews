@@ -35,25 +35,50 @@
   @apply text-lg font-bold text-gray-800 dark:text-gray-200;
 }
 .comments-heading {
-  @apply sticky z-30 isolate mb-0 flex flex-col gap-2 rounded-t-lg px-6 py-2 md:flex-row md:items-center md:justify-between md:gap-3 md:py-3;
+  @apply sticky z-30 isolate mb-0 flex flex-col rounded-t-lg md:flex-row md:items-center md:justify-between;
   @apply pointer-events-auto;
   top: 4rem;
+  gap: var(--thread-gap);
+  padding: var(--thread-gap);
   background-color: var(--app-surface);
   border-bottom: 1px solid var(--app-border);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 .comments-title-row {
-  @apply flex min-w-0 items-center justify-between gap-2 md:flex-shrink-0;
+  @apply flex min-w-0 items-center justify-between md:flex-shrink-0;
+  gap: var(--thread-gap);
 }
 .comments-controls {
-  @apply flex min-w-0 max-w-full items-center gap-2 overflow-x-auto overscroll-x-contain;
+  @apply flex min-w-0 max-w-full items-center overflow-x-auto overscroll-x-contain;
   @apply [-webkit-overflow-scrolling:touch] [scrollbar-width:none] md:justify-end md:overflow-visible;
+  gap: var(--thread-gap);
 }
 .comments-controls::-webkit-scrollbar {
   display: none;
 }
 .comments-body {
-  @apply p-6;
+  padding: var(--thread-gap);
+}
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--thread-gap);
+}
+.comments-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--thread-gap);
+}
+
+@media (max-width: 639.98px) {
+  :host ::ng-deep app-card.comments-card {
+    margin-inline: -0.5rem;
+  }
+
+  :host ::ng-deep app-card.comments-card .card-base {
+    border-inline-width: 0;
+    border-radius: 0;
+  }
 }
 
 @media (display-mode: standalone) {

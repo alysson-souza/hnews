@@ -60,7 +60,7 @@
         @if (item()!.kids && item()!.kids!.length > 0) {
           @if (commentsSortPending()) {
             <div
-              class="space-y-4"
+              class="comments-list"
               role="status"
               aria-label="Sorting comments"
               aria-live="polite"
@@ -71,7 +71,7 @@
               }
             </div>
           } @else {
-            <div class="space-y-4" role="tree" aria-label="Comments">
+            <div class="comments-list" role="tree" aria-label="Comments">
               @for (
                 commentId of visibleCommentIds();
                 track refreshToken() + ':' + commentId;
@@ -91,7 +91,7 @@
             </div>
 
             @if (hasMoreTopLevelComments()) {
-              <div class="mt-6 flex justify-center">
+              <div class="comments-load-more">
                 <app-button
                   variant="secondary"
                   size="sm"

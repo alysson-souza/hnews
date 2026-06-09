@@ -94,7 +94,7 @@ import {
         </div>
         <div children>
           @if (!isCollapsed() && (replies().length > 0 || loadingReplies())) {
-            <div class="mt-3 space-y-3">
+            <div class="thread-children">
               @for (reply of replies(); track reply.id; let isFirst = $first; let isLast = $last) {
                 <app-comment-thread
                   [commentId]="reply.id"
@@ -112,7 +112,7 @@ import {
               }
 
               @if (hasMoreReplies()) {
-                <div class="mt-3">
+                <div class="thread-load-more">
                   <app-button
                     variant="secondary"
                     size="sm"
@@ -195,6 +195,17 @@ import {
       /* Misc */
       .collapsed-text {
         @apply text-sm text-gray-500 dark:text-gray-400 italic;
+      }
+
+      .thread-children {
+        display: flex;
+        flex-direction: column;
+        gap: var(--thread-gap);
+        margin-top: var(--thread-gap);
+      }
+
+      .thread-load-more {
+        display: flex;
       }
 
       /* Animation for expand/collapse */
@@ -494,11 +505,5 @@ export class CommentThread implements OnInit {
 
     const targetPage = Math.floor((totalReplies - 1) / this.repliesLoader.pageSize);
     this.repliesLoader.loadUpToPage(targetPage);
-  }
-
-  getIndentClass(): string {
-    // Apply appropriate indentation based on depth
-    const indentLevel = Math.min(this.depth(), 8); // Cap at 8 levels
-    return `ml-${indentLevel * 4}`;
   }
 }
