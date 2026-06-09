@@ -543,6 +543,5 @@ describe('StoryItem comments link behaviour', () => {
       fixture.detectChanges();
       expect(component.isLoading()).toBe(false);
     });
-
   });
 });

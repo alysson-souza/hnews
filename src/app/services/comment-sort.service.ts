@@ -37,7 +37,11 @@ export class CommentSortService {
     }
   }
 
-  sortComments(kids: readonly number[], comments: readonly HNItem[], order: CommentSortOrder): number[] {
+  sortComments(
+    kids: readonly number[],
+    comments: readonly HNItem[],
+    order: CommentSortOrder,
+  ): number[] {
     if (order === 'default' || comments.length === 0) {
       return [...kids];
     }
