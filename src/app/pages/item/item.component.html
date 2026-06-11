@@ -1,63 +1,62 @@
 <app-page-container>
-  @if (loading()) {
-    <!-- Card 1: Story summary skeleton -->
-    <app-card class="block mb-6" [radius]="'lg'">
-      <div class="skel-title mb-2 skeleton"></div>
-      <div class="skel-domain mb-3 skeleton"></div>
-      <div class="skel-meta skeleton"></div>
-    </app-card>
-
-    <!-- Card 2: Comments skeleton -->
-    <app-card class="block" [radius]="'lg'">
-      <div class="flex items-center justify-between mb-4">
-        <div class="skel-comments-title skeleton"></div>
-        <div class="skel-sort skeleton"></div>
-      </div>
-      <div class="space-y-4">
-        <div class="skel-comment skeleton"></div>
-        <div class="skel-comment skeleton"></div>
-        <div class="skel-comment skeleton"></div>
-      </div>
-    </app-card>
-  } @else if (item()) {
-    <!-- Story Details -->
+  @if (loading() || item()) {
+    <!-- Card 1: Story summary -->
     <app-card class="block mb-6" id="submission-title" [radius]="'lg'">
-      @if (item()!.type === 'comment') {
-        <!-- Discussion title for comment threads -->
-        <h1 class="story-title mb-4">Discussion</h1>
-      }
+      @if (loading()) {
+        <div class="skel-title mb-2 skeleton"></div>
+        <div class="skel-domain mb-3 skeleton"></div>
+        <div class="skel-meta skeleton"></div>
+      } @else {
+        @if (item()!.type === 'comment') {
+          <!-- Discussion title for comment threads -->
+          <h1 class="story-title mb-4">Discussion</h1>
+        }
 
-      <!-- Story/Comment summary -->
-      <app-sidebar-story-summary
-        [item]="item()!"
-        [boxedText]="true"
-        [parentDiscussionId]="parentDiscussionId()"
-      />
+        <!-- Story/Comment summary -->
+        <app-sidebar-story-summary
+          [item]="item()!"
+          [boxedText]="true"
+          [parentDiscussionId]="parentDiscussionId()"
+        />
+      }
     </app-card>
 
-    <!-- Comments Section -->
+    <!-- Card 2: Comments -->
     <app-card class="block comments-card" [radius]="'lg'" [noPadding]="true">
       <div class="comments-heading">
-        <div class="comments-title-row">
-          <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
-          <app-comment-sort-dropdown
-            [sortOrder]="sortOrder()"
-            [loading]="commentsLoading()"
-            (sortChange)="onSortChange($event)"
-          />
-        </div>
-        <div class="comments-controls">
-          <app-comment-thread-toolbar
-            (nextUnread)="jumpToNextUnread()"
-            (nextOP)="jumpToNextOP()"
-            (expandAll)="expandAllComments()"
-            (collapseAll)="collapseAllComments()"
-          />
-        </div>
+        @if (loading()) {
+          <div class="comments-title-row">
+            <div class="skel-comments-title skeleton"></div>
+            <div class="skel-sort skeleton"></div>
+          </div>
+        } @else {
+          <div class="comments-title-row">
+            <h2 class="comments-title">Comments ({{ item()!.descendants || 0 }})</h2>
+            <app-comment-sort-dropdown
+              [sortOrder]="sortOrder()"
+              [loading]="commentsLoading()"
+              (sortChange)="onSortChange($event)"
+            />
+          </div>
+          <div class="comments-controls">
+            <app-comment-thread-toolbar
+              (nextUnread)="jumpToNextUnread()"
+              (nextOP)="jumpToNextOP()"
+              (expandAll)="expandAllComments()"
+              (collapseAll)="collapseAllComments()"
+            />
+          </div>
+        }
       </div>
 
       <div class="comments-body">
-        @if (item()!.kids && item()!.kids!.length > 0) {
+        @if (loading()) {
+          <div class="comments-list">
+            @for (row of commentSortSkeletonRows; track row) {
+              <app-comment-skeleton [depth]="0" />
+            }
+          </div>
+        } @else if (item()!.kids && item()!.kids!.length > 0) {
           @if (commentsSortPending()) {
             <div
               class="comments-list"
