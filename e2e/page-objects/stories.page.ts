@@ -12,7 +12,7 @@ export class StoriesPage extends BasePage {
     super(page);
     this.storyItems = page.locator('app-story-item');
     this.loadMoreButton = page.locator('button:has-text("Load More")');
-    this.refreshButton = page.locator('button[aria-label*="Refresh"]');
+    this.refreshButton = page.locator('button[aria-label*="Refresh"]:visible');
     this.newStoriesBadge = page.locator('.new-stories-badge');
     this.navigationLinks = page.locator('nav a');
   }
