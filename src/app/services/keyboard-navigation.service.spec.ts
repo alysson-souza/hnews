@@ -7,6 +7,7 @@ import { KeyboardNavigationService } from './keyboard-navigation.service';
 import { CommandRegistryService } from './command-registry.service';
 import { ScrollService } from './scroll.service';
 import { NavigationHistoryService } from './navigation-history.service';
+import { StoryListStore } from '@stores/story-list.store';
 
 describe('KeyboardNavigationService', () => {
   let service: KeyboardNavigationService;
@@ -14,6 +15,7 @@ describe('KeyboardNavigationService', () => {
   let mockCommandRegistry: MockedObject<CommandRegistryService>;
   let mockScrollService: MockedObject<ScrollService>;
   let mockNavigationHistory: MockedObject<NavigationHistoryService>;
+  let mockStoryListStore: { toggleFilterMode: ReturnType<typeof vi.fn> };
   let registeredCommands: Record<string, () => void | Promise<void>>;
 
   beforeEach(() => {
@@ -33,6 +35,9 @@ describe('KeyboardNavigationService', () => {
     mockNavigationHistory = {
       pushCurrentState: vi.fn(),
     } as unknown as MockedObject<NavigationHistoryService>;
+    mockStoryListStore = {
+      toggleFilterMode: vi.fn(),
+    };
 
     TestBed.configureTestingModule({
       providers: [
@@ -41,6 +46,7 @@ describe('KeyboardNavigationService', () => {
         { provide: CommandRegistryService, useValue: mockCommandRegistry },
         { provide: ScrollService, useValue: mockScrollService },
         { provide: NavigationHistoryService, useValue: mockNavigationHistory },
+        { provide: StoryListStore, useValue: mockStoryListStore },
       ],
     });
 
@@ -88,19 +94,50 @@ describe('KeyboardNavigationService', () => {
 
       service['navigateToTab']('prev');
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/jobs']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/saved']);
     });
 
-    it('should navigate from jobs to settings (next)', () => {
+    it('should navigate from jobs to saved (next)', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/jobs', writable: true });
+
+      service['navigateToTab']('next');
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/saved']);
+    });
+
+    it('should navigate from saved to settings (next)', () => {
+      Object.defineProperty(mockRouter, 'url', { value: '/saved', writable: true });
 
       service['navigateToTab']('next');
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/settings']);
     });
+
+    it('should navigate from saved to jobs (prev)', () => {
+      Object.defineProperty(mockRouter, 'url', { value: '/saved', writable: true });
+
+      service['navigateToTab']('prev');
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/jobs']);
+    });
+
+    it('should not toggle the feed filter on saved stories', () => {
+      Object.defineProperty(mockRouter, 'url', { value: '/saved', writable: true });
+
+      registeredCommands['story.toggleFilter']();
+
+      expect(mockStoryListStore.toggleFilterMode).not.toHaveBeenCalled();
+    });
   });
 
   describe('Story opening', () => {
+    it('should register save toggle command', () => {
+      expect(mockCommandRegistry.register).toHaveBeenCalledWith(
+        'story.save.toggle',
+        expect.any(Function),
+      );
+    });
+
     it('should click the nested link when opening a story', () => {
       document.body.innerHTML = `
         <div data-story-index="0" data-story-id="123">
@@ -188,6 +225,41 @@ describe('KeyboardNavigationService', () => {
       registeredCommands['story.actions.toggle']();
 
       expect(actionsClickSpy).toHaveBeenCalled();
+    });
+
+    it('should click the selected story save button', () => {
+      document.body.innerHTML = `
+        <div data-story-index="0" data-story-id="123">
+          <button type="button" class="story-bookmark">Save</button>
+        </div>
+      `;
+
+      service.setTotalItems(1);
+      service.setSelectedIndex(0);
+
+      const saveButton = document.querySelector('.story-bookmark') as HTMLButtonElement;
+      const saveClickSpy = vi.spyOn(saveButton, 'click').mockImplementation(() => {});
+
+      registeredCommands['story.save.toggle']();
+
+      expect(saveClickSpy).toHaveBeenCalled();
+    });
+
+    it('should not save a story when no row is selected', () => {
+      document.body.innerHTML = `
+        <div data-story-index="0" data-story-id="123">
+          <button type="button" class="story-bookmark">Save</button>
+        </div>
+      `;
+
+      service.setTotalItems(1);
+
+      const saveButton = document.querySelector('.story-bookmark') as HTMLButtonElement;
+      const saveClickSpy = vi.spyOn(saveButton, 'click').mockImplementation(() => {});
+
+      registeredCommands['story.save.toggle']();
+
+      expect(saveClickSpy).not.toHaveBeenCalled();
     });
   });
 });

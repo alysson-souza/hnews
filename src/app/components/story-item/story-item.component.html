@@ -164,6 +164,18 @@
             }
           </a>
         }
+        <span class="hidden sm:inline" aria-hidden="true">•</span>
+        <button
+          type="button"
+          class="story-bookmark"
+          [attr.aria-pressed]="isSaved()"
+          [attr.aria-label]="
+            (isSaved() ? 'Remove saved story ' : 'Save ') + (story()!.title || 'story')
+          "
+          (click)="toggleSaved($event)"
+        >
+          {{ isSaved() ? 'Saved' : 'Save' }}
+        </button>
       }
     </div>
   </div>

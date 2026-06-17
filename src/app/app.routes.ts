@@ -73,6 +73,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/search/search.component').then((m) => m.SearchComponent),
   },
   {
+    path: 'saved',
+    loadComponent: () =>
+      import('./pages/saved/saved-stories.component').then((m) => m.SavedStoriesComponent),
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./pages/settings/settings.component').then((m) => m.SettingsComponent),

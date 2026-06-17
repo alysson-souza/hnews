@@ -16,6 +16,7 @@ import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { HNItem } from '@models/hn';
 import { UserSettingsService } from '@services/user-settings.service';
+import { SavedStoriesService } from '@services/saved-stories.service';
 
 class MockDeviceService {
   private desktop = true;
@@ -52,6 +53,7 @@ describe('StoryItem comments link behaviour', () => {
   let toggleSidebarSpy: Mock;
   let deviceService: MockDeviceService;
   let userSettings: UserSettingsService;
+  let savedStories: SavedStoriesService;
   let router: Router;
   let story: HNItem;
 
@@ -87,6 +89,7 @@ describe('StoryItem comments link behaviour', () => {
     toggleSidebarSpy = vi.spyOn(sidebarService, 'toggleSidebar');
     deviceService = TestBed.inject(DeviceService) as unknown as MockDeviceService;
     userSettings = TestBed.inject(UserSettingsService);
+    savedStories = TestBed.inject(SavedStoriesService);
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate');
     vi.spyOn(router, 'navigateByUrl');
@@ -367,6 +370,58 @@ describe('StoryItem comments link behaviour', () => {
       expect(newComponent.hasVoted()).toBe(false);
 
       window.localStorage.clear();
+    });
+  });
+
+  describe('Save control', () => {
+    it('renders Save with aria-pressed=false for unsaved stories', () => {
+      fixture.detectChanges();
+
+      const button = fixture.debugElement.query(By.css('.story-bookmark'))
+        .nativeElement as HTMLButtonElement;
+
+      expect(button.textContent?.trim()).toBe('Save');
+      expect(button.getAttribute('aria-pressed')).toBe('false');
+      expect(button.getAttribute('aria-label')).toBe('Save Test Story');
+    });
+
+    it('toggles saved state and renders Saved', () => {
+      fixture.detectChanges();
+      const button = fixture.debugElement.query(By.css('.story-bookmark'))
+        .nativeElement as HTMLButtonElement;
+
+      button.click();
+      fixture.detectChanges();
+
+      expect(savedStories.isSaved(story.id)).toBe(true);
+      expect(button.textContent?.trim()).toBe('Saved');
+      expect(button.getAttribute('aria-pressed')).toBe('true');
+
+      button.click();
+      fixture.detectChanges();
+
+      expect(savedStories.isSaved(story.id)).toBe(false);
+      expect(button.textContent?.trim()).toBe('Save');
+      expect(button.getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('stops propagation when toggling saved state', () => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
+
+      component.toggleSaved(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(savedStories.isSaved(story.id)).toBe(true);
+    });
+
+    it('does not regress comments link rendering', () => {
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.story-comments'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('.story-bookmark'))).toBeTruthy();
     });
   });
 

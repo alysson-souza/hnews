@@ -25,8 +25,8 @@ import { ScrollService } from '@services/scroll.service';
       @reference '../../../../styles.css';
 
       .nav-link {
-        @apply relative z-10;
-        @apply text-slate-600 dark:text-slate-300/80 px-3 py-1.5 rounded-full font-medium text-sm;
+        @apply relative z-10 inline-flex items-center whitespace-nowrap leading-5;
+        @apply text-slate-600 dark:text-slate-300/80 px-2.5 xl:px-3 py-1.5 rounded-full font-medium text-sm;
         @apply hover:text-brand dark:hover:text-blue-300;
         @apply transition-colors duration-200 cursor-pointer;
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;

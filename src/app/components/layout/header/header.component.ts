@@ -21,7 +21,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
   ],
   template: `
     <header class="app-header" role="banner">
-      <div class="max-w-5xl mx-auto px-2 sm:px-4">
+      <div class="max-w-7xl mx-auto px-2 sm:px-4">
         <div class="flex items-center h-16">
           <!-- Brand: always visible, left-aligned -->
           <div class="shrink-0">

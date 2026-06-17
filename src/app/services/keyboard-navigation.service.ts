@@ -31,6 +31,7 @@ export class KeyboardNavigationService {
     this.commandRegistry.register('story.openFull', () => this.openSelectedStoryFullPage());
     this.commandRegistry.register('story.openComments', () => this.openSelectedComments());
     this.commandRegistry.register('story.openCommentsPage', () => this.navigateToItemPage());
+    this.commandRegistry.register('story.save.toggle', () => this.toggleSelectedStorySaved());
     this.commandRegistry.register('navigation.previousTab', () => this.navigateToPreviousTab());
     this.commandRegistry.register('navigation.nextTab', () => this.navigateToNextTab());
     // Toggle actions menu for currently selected story
@@ -224,6 +225,18 @@ export class KeyboardNavigationService {
     }
   }
 
+  private toggleSelectedStorySaved(): void {
+    const selectedIndex = this.selectedIndex();
+    if (selectedIndex === null) {
+      return;
+    }
+
+    const saveButton = document.querySelector(
+      `[data-story-index="${selectedIndex}"] .story-bookmark`,
+    ) as HTMLButtonElement | null;
+    saveButton?.click();
+  }
+
   private navigateToItemPage(): void {
     const selectedIndex = this.selectedIndex();
     if (selectedIndex !== null) {
@@ -248,10 +261,13 @@ export class KeyboardNavigationService {
     this.navigateToTab('next');
   }
 
+  private currentTab(): string {
+    return this.router.url.split('/')[1]?.split('?')[0] || 'top';
+  }
+
   private navigateToTab(direction: 'next' | 'prev'): void {
-    const tabs = ['top', 'best', 'newest', 'ask', 'show', 'jobs', 'settings'];
-    const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
-    const currentIndex = tabs.indexOf(currentPath);
+    const tabs = ['top', 'best', 'newest', 'ask', 'show', 'jobs', 'saved', 'settings'];
+    const currentIndex = tabs.indexOf(this.currentTab());
 
     if (currentIndex === -1) return;
 
@@ -267,9 +283,7 @@ export class KeyboardNavigationService {
   }
 
   private pushNavigationState(): void {
-    const currentPath = this.router.url.split('/')[1]?.split('?')[0] || 'top';
-    const storyType = currentPath === '' ? 'top' : currentPath;
-    this.navigationHistory.pushCurrentState(this.selectedIndex(), storyType);
+    this.navigationHistory.pushCurrentState(this.selectedIndex(), this.currentTab());
   }
 
   private blurActiveElement(): void {
@@ -280,6 +294,10 @@ export class KeyboardNavigationService {
   }
 
   private toggleStoryFilter(): void {
+    if (this.currentTab() === 'saved') {
+      return;
+    }
+
     this.storyListStore.toggleFilterMode();
     this.clearSelection();
   }

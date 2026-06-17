@@ -24,7 +24,7 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
   template: `
     <nav
       #navContainer
-      class="hidden lg:flex items-center space-x-1 relative"
+      class="hidden lg:flex flex-shrink-0 items-center gap-0.5 relative"
       role="navigation"
       aria-label="Main Navigation"
     >
@@ -43,6 +43,7 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
       <app-nav-link route="/ask"> Ask HN </app-nav-link>
       <app-nav-link route="/show"> Show HN </app-nav-link>
       <app-nav-link route="/jobs"> Jobs </app-nav-link>
+      <app-nav-link route="/saved"> Saved </app-nav-link>
       <app-nav-link route="/settings"> Settings </app-nav-link>
     </nav>
   `,

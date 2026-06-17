@@ -121,6 +121,12 @@ describe('KeyboardContextService', () => {
       expect(service.isOnStoryList()).toBe(true);
     });
 
+    it('should return true for /saved', () => {
+      Object.defineProperty(mockRouter, 'url', { value: '/saved', writable: true });
+      service = TestBed.inject(KeyboardContextService);
+      expect(service.isOnStoryList()).toBe(true);
+    });
+
     it('should return true for story list paths with query parameters', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top?page=2', writable: true });
       service = TestBed.inject(KeyboardContextService);

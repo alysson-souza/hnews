@@ -9,6 +9,7 @@ import { CommentTextComponent } from '../comment-text/comment-text.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
 import { StoryActionsMenuComponent } from '../story-item/story-actions-menu.component';
+import { SavedStoriesService } from '@services/saved-stories.service';
 
 @Component({
   selector: 'app-sidebar-story-summary',
@@ -101,6 +102,18 @@ import { StoryActionsMenuComponent } from '../story-item/story-actions-menu.comp
             <span>•</span>
           }
           <span class="time-text">{{ item().time | relativeTime }}</span>
+          <span>•</span>
+          <button
+            type="button"
+            class="bookmark-btn"
+            [attr.aria-pressed]="isSaved()"
+            [attr.aria-label]="
+              (isSaved() ? 'Remove saved story ' : 'Save ') + (item().title || 'story')
+            "
+            (click)="toggleSaved($event)"
+          >
+            {{ isSaved() ? 'Saved' : 'Save' }}
+          </button>
         </div>
 
         @if (item().text) {
@@ -150,6 +163,13 @@ import { StoryActionsMenuComponent } from '../story-item/story-actions-menu.comp
         @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors duration-200;
         @apply rounded focus-visible:outline-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 focus-visible:outline-offset-1;
       }
+      .bookmark-btn {
+        @apply inline-flex items-center rounded px-1 py-0.5 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer font-medium;
+        @apply focus-visible:outline-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-400 focus-visible:outline-offset-1;
+      }
+      .bookmark-btn[aria-pressed='true'] {
+        @apply text-blue-600 dark:text-blue-300;
+      }
       .time-text {
         @apply text-gray-500 dark:text-gray-500;
       }
@@ -161,6 +181,20 @@ export class SidebarStorySummaryComponent {
   readonly boxedText = input(false);
   readonly parentDiscussionId = input<number | null>(null);
   private router = inject(Router);
+  private savedStories = inject(SavedStoriesService);
+
+  isSaved(): boolean {
+    return this.savedStories.isSaved(this.item().id);
+  }
+
+  toggleSaved(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const item = this.item();
+    if (item.type !== 'comment') {
+      this.savedStories.toggle(item);
+    }
+  }
 
   hasMetaPrefix(): boolean {
     return this.item().score != null || !!this.item().by;

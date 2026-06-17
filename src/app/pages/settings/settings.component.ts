@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, WritableSignal } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -11,8 +11,10 @@ import { UserSettingsService } from '@services/user-settings.service';
 import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { CommandRegistryService } from '@services/command-registry.service';
+import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
 import { ScrollService } from '@services/scroll.service';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
+import { SavedStoriesService } from '@services/saved-stories.service';
 import { PrivacyService } from '@models/privacy-redirect';
 import { AppButtonComponent } from '@components/shared/app-button/app-button.component';
 import { CardComponent } from '@components/shared/card/card.component';
@@ -335,6 +337,22 @@ import {
       .action-buttons {
         @apply flex flex-wrap items-center justify-center sm:justify-end gap-2;
       }
+
+      .saved-stories-row {
+        @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+      }
+
+      .saved-stories-count {
+        @apply flex items-baseline gap-2 text-sm text-gray-600 dark:text-gray-400;
+      }
+
+      .saved-stories-count-value {
+        @apply font-mono text-base font-semibold tabular-nums text-gray-900 dark:text-gray-100;
+      }
+
+      .saved-stories-actions {
+        @apply flex flex-wrap items-center gap-2;
+      }
     `,
   ],
 })
@@ -346,8 +364,10 @@ export class SettingsComponent implements OnInit {
   sidebarService = inject(SidebarService);
   deviceService = inject(DeviceService);
   private commandRegistry = inject(CommandRegistryService);
+  private keyboardNavService = inject(KeyboardNavigationService);
   private scrollService = inject(ScrollService);
   privacyRedirectService = inject(PrivacyRedirectService);
+  private savedStories = inject(SavedStoriesService);
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');
@@ -378,8 +398,11 @@ export class SettingsComponent implements OnInit {
   });
   cacheMessage = signal<string>('');
   cacheError = signal(false);
+  savedStoriesMessage = signal<string>('');
+  savedStoriesError = signal(false);
 
   openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
+  savedStoriesCount = computed(() => this.savedStories.records().size);
 
   // Privacy redirect computed signals
   privacyRedirectEnabled = computed(() => this.privacyRedirectService.settings().enabled);
@@ -512,14 +535,7 @@ export class SettingsComponent implements OnInit {
 
   exportTags(): void {
     const json = this.tagsService.exportTags();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `hn-user-tags-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
+    this.downloadJsonFile(`hn-user-tags-${Date.now()}.json`, json);
     this.showMessage('Tags exported successfully', false);
   }
 
@@ -587,10 +603,81 @@ export class SettingsComponent implements OnInit {
     this.userSettings.setSetting('openCommentsInSidebar', newValue);
   }
 
+  private downloadJsonFile(filename: string, json: string): void {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private flashMessage(
+    messageSignal: WritableSignal<string>,
+    errorSignal: WritableSignal<boolean>,
+    msg: string,
+    error: boolean,
+  ): void {
+    messageSignal.set(msg);
+    errorSignal.set(error);
+    setTimeout(() => messageSignal.set(''), 3000);
+  }
+
   private showMessage(msg: string, error: boolean): void {
-    this.message.set(msg);
-    this.isError.set(error);
-    setTimeout(() => this.message.set(''), 3000);
+    this.flashMessage(this.message, this.isError, msg, error);
+  }
+
+  exportSavedStories(): void {
+    const json = this.savedStories.exportSavedStories();
+    this.downloadJsonFile(`hnews-saved-stories-${Date.now()}.json`, json);
+    this.showSavedStoriesMessage('Saved stories exported successfully', false);
+  }
+
+  importSavedStories(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      try {
+        const result = this.savedStories.importSavedStories(content);
+        this.keyboardNavService.clearSelection();
+        this.showSavedStoriesMessage(
+          `Saved stories imported: ${result.imported} new, ${result.updated} updated, ${result.skipped} skipped`,
+          false,
+        );
+      } catch {
+        this.showSavedStoriesMessage(
+          'Failed to import saved stories. Please check the file format.',
+          true,
+        );
+      }
+    };
+    reader.onerror = () => {
+      this.showSavedStoriesMessage(
+        'Failed to import saved stories. Please check the file format.',
+        true,
+      );
+    };
+    reader.readAsText(file);
+
+    input.value = '';
+  }
+
+  clearSavedStories(): void {
+    if (confirm('Are you sure you want to clear all saved stories? This cannot be undone.')) {
+      this.savedStories.clearSavedStories();
+      this.keyboardNavService.clearSelection();
+      this.showSavedStoriesMessage('All saved stories cleared', false);
+    }
+  }
+
+  private showSavedStoriesMessage(msg: string, error: boolean): void {
+    this.flashMessage(this.savedStoriesMessage, this.savedStoriesError, msg, error);
   }
 
   // Cache management methods
@@ -634,9 +721,7 @@ export class SettingsComponent implements OnInit {
   }
 
   private showCacheMessage(msg: string, error: boolean): void {
-    this.cacheMessage.set(msg);
-    this.cacheError.set(error);
-    setTimeout(() => this.cacheMessage.set(''), 3000);
+    this.flashMessage(this.cacheMessage, this.cacheError, msg, error);
   }
 
   formatBytes(bytes: number): string {

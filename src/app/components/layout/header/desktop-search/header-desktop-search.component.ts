@@ -63,7 +63,7 @@ import { CommandRegistryService } from '@services/command-registry.service';
           aria-label="Search Hacker News stories"
           aria-describedby="search-hint"
           [title]="'Search For Stories (Press / to focus)'"
-          class="app-input app-input-sm search-input w-64 pl-10!"
+          class="app-input app-input-sm search-input w-56 xl:w-64 pl-10!"
         />
       </form>
     </div>

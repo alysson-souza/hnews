@@ -19,6 +19,7 @@ import { NavLinkComponent } from '../../../shared/nav-link/nav-link.component';
       <app-nav-link route="/ask" [mobile]="true" (click)="onClose()"> Ask HN </app-nav-link>
       <app-nav-link route="/show" [mobile]="true" (click)="onClose()"> Show HN </app-nav-link>
       <app-nav-link route="/jobs" [mobile]="true" (click)="onClose()"> Jobs </app-nav-link>
+      <app-nav-link route="/saved" [mobile]="true" (click)="onClose()"> Saved </app-nav-link>
       <app-nav-link route="/settings" [mobile]="true" (click)="onClose()"> Settings </app-nav-link>
     </nav>
   `,

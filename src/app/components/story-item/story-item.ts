@@ -14,6 +14,7 @@ import { UserSettingsService } from '@services/user-settings.service';
 import { getDomain } from '@services/domain.utils';
 import { StoryActionsMenuComponent } from './story-actions-menu.component';
 import { StoryLinkComponent } from '../shared/story-link/story-link.component';
+import { SavedStoriesService } from '@services/saved-stories.service';
 
 @Component({
   selector: 'app-story-item',
@@ -42,6 +43,7 @@ export class StoryItem {
   public deviceService = inject(DeviceService);
   private locationStrategy = inject(LocationStrategy);
   private userSettings = inject(UserSettingsService);
+  private savedStories = inject(SavedStoriesService);
   private static itemComponentPrefetched = false;
 
   // Computed property to safely determine loading state
@@ -59,6 +61,10 @@ export class StoryItem {
   }
 
   hasVoted = computed(() => (this.storyId() ? this.votedItems().has(this.storyId()!) : false));
+  isSaved = computed(() => {
+    const id = this.storyId();
+    return id ? this.savedStories.isSaved(id) : false;
+  });
 
   // Expose utilities for template
   getDomain(url?: string): string {
@@ -93,6 +99,16 @@ export class StoryItem {
 
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('votedItems', JSON.stringify(Array.from(newVoted)));
+    }
+  }
+
+  toggleSaved(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const story = this.story();
+    if (story) {
+      this.savedStories.toggle(story);
     }
   }
 

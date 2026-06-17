@@ -362,6 +362,66 @@
 
     <hr class="section-divider" />
 
+    <!-- Saved Stories -->
+    <section class="setting-section" role="region" aria-label="Saved Stories Management">
+      <h2 class="settings-category-label">Saved Stories</h2>
+
+      @if (savedStoriesMessage()) {
+        <div [class]="savedStoriesError() ? 'alert-danger' : 'alert-success'">
+          {{ savedStoriesMessage() }}
+        </div>
+      }
+
+      <div class="saved-stories-row">
+        <div class="saved-stories-count" aria-live="polite">
+          <span class="saved-stories-count-value">{{ savedStoriesCount() }}</span>
+          <span>{{ savedStoriesCount() === 1 ? 'story' : 'stories' }}</span>
+        </div>
+        <div class="saved-stories-actions">
+          <app-button
+            (clicked)="exportSavedStories()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Export saved stories"
+            [disabled]="savedStoriesCount() === 0"
+          >
+            <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
+            Export
+          </app-button>
+          <app-button
+            (clicked)="savedStoriesFileInput.click()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Import saved stories"
+          >
+            <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
+            Import
+          </app-button>
+          <input
+            #savedStoriesFileInput
+            type="file"
+            accept=".json"
+            (change)="importSavedStories($event)"
+            class="hidden"
+            aria-hidden="true"
+          />
+          @if (savedStoriesCount() > 0) {
+            <app-button
+              (clicked)="clearSavedStories()"
+              variant="danger"
+              size="sm"
+              ariaLabel="Clear saved stories"
+            >
+              <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
+              Clear Saved
+            </app-button>
+          }
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
     <!-- Cache Management -->
     <section class="setting-section" role="region" aria-label="Cache Management">
       <h2 class="settings-category-label">Cache</h2>

@@ -42,6 +42,7 @@ describe('KeyboardShortcutConfigService', () => {
       expect(defaultKeys).toContain('h'); // Previous tab
       expect(defaultKeys).toContain('l'); // Next tab
       expect(defaultKeys).toContain('c'); // Open comments
+      expect(defaultKeys).toContain('s'); // Save story
     });
 
     it('should return sidebar context shortcuts', () => {
@@ -99,6 +100,14 @@ describe('KeyboardShortcutConfigService', () => {
 
       expect(defaultShortcut).toBeDefined();
       expect(defaultShortcut?.commandId).toBe('story.openComments');
+    });
+
+    it('should return the save toggle shortcut in the default context', () => {
+      const saveShortcut = service.getShortcut('s', 'default');
+
+      expect(saveShortcut).toBeDefined();
+      expect(saveShortcut?.commandId).toBe('story.save.toggle');
+      expect(saveShortcut?.description).toBe('Save or unsave story');
     });
 
     it('should not return shortcuts from other contexts', () => {

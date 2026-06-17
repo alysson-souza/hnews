@@ -48,7 +48,7 @@ export class KeyboardContextService {
     const url = this.currentUrl();
     // Remove fragment and query params to get the base path
     const path = url.split('#')[0].split('?')[0];
-    return ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs'].includes(path);
+    return ['/', '/top', '/best', '/newest', '/ask', '/show', '/jobs', '/saved'].includes(path);
   });
 
   /**

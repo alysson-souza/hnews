@@ -15,6 +15,7 @@ Live demo:
 - Voting UX: Local upvote state for comments (persisted in localStorage)
 - User profiles: Karma, member since, recent submissions with paging
 - Search: Algolia-powered with type, sort, and date range filters
+- Saved stories: Bookmark stories for a dedicated `/saved` page
 - Sidebar: Slide-over comments viewer for quick exploration
 - Theming: Light/Dark/Auto with one-click toggle and persistence
 - Vim-style keyboard navigation: hjkl navigation, vim-like shortcuts
@@ -34,6 +35,7 @@ Essential shortcuts
 - `h` / `l` – Navigate tabs
 - `o` – Open selected story
 - `c` – Open comments sidebar
+- `s` – Save / unsave selected story
 - `/` – Focus search input
 - `?` – Show keyboard shortcuts help
 

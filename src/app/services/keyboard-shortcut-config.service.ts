@@ -99,6 +99,13 @@ export class KeyboardShortcutConfigService {
       commandId: 'story.actions.toggle',
     },
     {
+      key: 's',
+      contexts: ['default'],
+      description: 'Save or unsave story',
+      category: 'Story Actions',
+      commandId: 'story.save.toggle',
+    },
+    {
       key: 'Enter',
       label: 'Enter/Space',
       contexts: ['default', 'sidebar', 'item-page'],

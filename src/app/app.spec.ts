@@ -663,6 +663,18 @@ describe('App', () => {
 
       expect(app.keyboardNavService.selectNext).not.toHaveBeenCalled();
     });
+
+    it('should execute save toggle when pressing s on a story list page', () => {
+      const executeSpy = vi.spyOn(app['commandRegistry'], 'execute').mockResolvedValue();
+
+      const event = new KeyboardEvent('keydown', { key: 's' });
+      const mockTarget = document.createElement('div');
+      vi.spyOn(event, 'target', 'get').mockReturnValue(mockTarget);
+
+      app.handleKeyboardEvent(event);
+
+      expect(executeSpy).toHaveBeenCalledWith('story.save.toggle');
+    });
   });
 
   describe('Version Info', () => {

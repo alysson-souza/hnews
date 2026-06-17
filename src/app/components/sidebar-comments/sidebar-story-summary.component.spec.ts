@@ -7,6 +7,7 @@ import { provideLocationMocks } from '@angular/common/testing';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { StoryActionsMenuComponent } from '../story-item/story-actions-menu.component';
+import { SavedStoriesService } from '@services/saved-stories.service';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -15,8 +16,11 @@ describe('SidebarStorySummaryComponent', () => {
   let component: SidebarStorySummaryComponent;
   let fixture: ComponentFixture<SidebarStorySummaryComponent>;
   let router: Router;
+  let savedStories: SavedStoriesService;
 
   beforeEach(async () => {
+    window.localStorage.clear();
+
     await TestBed.configureTestingModule({
       imports: [SidebarStorySummaryComponent],
       providers: [
@@ -28,6 +32,7 @@ describe('SidebarStorySummaryComponent', () => {
     fixture = TestBed.createComponent(SidebarStorySummaryComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
+    savedStories = TestBed.inject(SavedStoriesService);
     vi.spyOn(router, 'navigate');
 
     fixture.componentRef.setInput('item', {
@@ -187,6 +192,33 @@ describe('SidebarStorySummaryComponent', () => {
       expect(meta.nativeElement.textContent).toContain('testuser');
     });
 
+    it('should render and toggle save control for story summaries', () => {
+      const button = fixture.debugElement.query(By.css('.bookmark-btn'))
+        .nativeElement as HTMLButtonElement;
+
+      expect(button.textContent?.trim()).toBe('Save');
+      expect(button.getAttribute('aria-pressed')).toBe('false');
+
+      button.click();
+      fixture.detectChanges();
+
+      expect(savedStories.isSaved(123)).toBe(true);
+      expect(button.textContent?.trim()).toBe('Saved');
+      expect(button.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('should stop propagation when toggling a sidebar save control', () => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'stopPropagation');
+
+      component.toggleSaved(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(savedStories.isSaved(123)).toBe(true);
+    });
+
     it('should render text content when present', () => {
       fixture.componentRef.setInput('item', {
         id: 123,
@@ -249,6 +281,20 @@ describe('SidebarStorySummaryComponent', () => {
       const actionsMenu = fixture.debugElement.query(By.directive(StoryActionsMenuComponent));
 
       expect(actionsMenu).toBeFalsy();
+    });
+
+    it('should not render a save button for comment summaries', () => {
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'comment',
+        by: 'testuser',
+        time: 1708099200,
+        text: 'This is the comment text',
+        parent: 456,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css('.bookmark-btn'))).toBeFalsy();
     });
 
     it('should wrap text in a quote surface shell when boxedText is enabled', () => {
