@@ -82,7 +82,10 @@ class MockHNService {
 class MockStateService {
   private cachedState: StoryListState | null = null;
 
-  getState() {
+  getState(_storyType: string, pageSize: number) {
+    if (!this.cachedState || this.cachedState.pageSize !== pageSize) {
+      return null;
+    }
     return this.cachedState;
   }
   // Store for testing
@@ -91,6 +94,7 @@ class MockStateService {
     storyIds: number[],
     currentPage: number,
     totalStoryIds: number[],
+    pageSize: number,
     selectedIndex: number | null,
   ) {
     this.cachedState = {
@@ -98,6 +102,7 @@ class MockStateService {
       storyIds,
       currentPage,
       totalStoryIds,
+      pageSize,
       selectedIndex,
       timestamp: Date.now(),
     };
@@ -202,6 +207,25 @@ describe('StoryListStore', () => {
     expect(store.stories().length).toBe(4);
   });
 
+  it('does not restore cached stories when pageSize changes for the same story type', async () => {
+    store.init('top', 2);
+    await Promise.resolve();
+    store.loadMore();
+    await Promise.resolve();
+
+    expect(store.currentPage()).toBe(1);
+    expect(store.stories().length).toBe(4);
+
+    store.init('top', 3);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(store.currentPage()).toBe(0);
+    expect(store.stories().map((story) => story.id)).toEqual([1, 2, 3]);
+    expect(store.stories().length).toBe(3);
+    expect(store.hasMore()).toBe(true);
+  });
+
   describe('filter mode', () => {
     it('defaults to default filter mode', async () => {
       store.init('top', 5);
@@ -300,6 +324,7 @@ describe('StoryListStore', () => {
         storyIds: [1, 2, 3],
         currentPage: 1,
         totalStoryIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        pageSize: 5,
         selectedIndex: null,
         timestamp: Date.now(),
       };
@@ -328,6 +353,7 @@ describe('StoryListStore', () => {
         storyIds: [999, 998, 997], // Non-existent IDs
         currentPage: 0,
         totalStoryIds: [1, 2, 3],
+        pageSize: 2,
         selectedIndex: null,
         timestamp: Date.now(),
       };
@@ -414,6 +440,7 @@ describe('StoryListStore', () => {
         storyIds: [1, 2, 3, 4, 5, 6],
         currentPage: 0,
         totalStoryIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        pageSize: 6,
         selectedIndex: null,
         timestamp: Date.now(),
       };

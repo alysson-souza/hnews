@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2025-2026 Alysson Souza
 import { Injectable, Signal, computed, inject, signal, effect, DestroyRef } from '@angular/core';
 import { HNItem } from '@models/hn';
 import { StoryFilterMode, applyStoryFilter } from '@models/story-filter';
@@ -128,23 +128,25 @@ export class StoryListStore {
     const thisSequence = this.initSequence;
 
     const typeChanged = this.storyType() !== type;
+    const pageSizeChanged = this.pageSize() !== pageSize;
     this.storyType.set(type);
     this.pageSize.set(pageSize);
 
-    if (typeChanged) {
-      // Reset view state when switching categories
+    if (typeChanged || pageSizeChanged) {
+      // Reset view state when switching categories or changing page shape.
       this.loading.set(true);
       this.error.set(null);
       this.currentPage.set(0);
       this.setStories([], []);
       this.totalStoryIds.set([]);
       this.newStoriesAvailable.set(0);
+      this.pendingTotalIds.set(null);
       this.fetchedCount.set(0);
     }
 
     // DO NOT sync filter mode here - defer until data loads
 
-    const cachedState = this.state.getState(type);
+    const cachedState = this.state.getState(type, pageSize);
     if (cachedState && cachedState.storyIds.length > 0) {
       // ID-based restore: keep loading indicator while fetching items
       this.loading.set(true);
@@ -594,6 +596,7 @@ export class StoryListStore {
       this.loadedStoryIds(),
       this.currentPage(),
       this.totalStoryIds(),
+      this.pageSize(),
       null,
     );
   }

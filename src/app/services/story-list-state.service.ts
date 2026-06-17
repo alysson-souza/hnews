@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2025-2026 Alysson Souza
 import { Injectable } from '@angular/core';
 import { HNItem } from '@models/hn';
 
@@ -8,6 +8,7 @@ interface SerializedStoryListState {
   currentPage: number;
   totalStoryIds: number[];
   storyType: string;
+  pageSize: number;
   selectedIndex: number | null;
   timestamp: number;
 }
@@ -17,6 +18,7 @@ export interface StoryListState {
   currentPage: number;
   totalStoryIds: number[];
   storyType: string;
+  pageSize: number;
   selectedIndex: number | null;
   timestamp: number;
 }
@@ -36,6 +38,7 @@ export class StoryListStateService {
     storyIds: number[],
     currentPage: number,
     totalStoryIds: number[],
+    pageSize: number,
     selectedIndex: number | null,
   ): void {
     const serializedState: SerializedStoryListState = {
@@ -43,6 +46,7 @@ export class StoryListStateService {
       currentPage,
       totalStoryIds,
       storyType,
+      pageSize,
       selectedIndex,
       timestamp: Date.now(),
     };
@@ -59,7 +63,7 @@ export class StoryListStateService {
   /**
    * Get cached state for a story type from sessionStorage
    */
-  getState(storyType: string): StoryListState | null {
+  getState(storyType: string, pageSize: number): StoryListState | null {
     try {
       const key = this.storagePrefix + storyType;
       const stored = sessionStorage.getItem(key);
@@ -73,7 +77,12 @@ export class StoryListStateService {
       };
 
       // Defensive migration: if legacy shape with stories array or missing storyIds, return null
-      if ('stories' in parsed || !parsed.storyIds || !Array.isArray(parsed.storyIds)) {
+      if (
+        'stories' in parsed ||
+        !parsed.storyIds ||
+        !Array.isArray(parsed.storyIds) ||
+        parsed.pageSize !== pageSize
+      ) {
         return null;
       }
 
@@ -119,8 +128,8 @@ export class StoryListStateService {
   /**
    * Check if we have valid cached state
    */
-  hasValidState(storyType: string): boolean {
-    const state = this.getState(storyType);
+  hasValidState(storyType: string, pageSize: number): boolean {
+    const state = this.getState(storyType, pageSize);
     return state !== null && state.storyIds.length > 0;
   }
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2025-2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import { StoryList } from './story-list';
 import { StoryListStore } from '@stores/story-list.store';
 import { HackernewsService } from '@services/hackernews.service';
@@ -91,6 +92,7 @@ class MockSidebarService {
 /** Test double for DeviceService */
 class MockDeviceService {
   isDesktop = vi.fn().mockReturnValue(false);
+  shouldShowKeyboardHints = vi.fn().mockReturnValue(false);
 }
 
 /** Test double for PageLifecycleService */
@@ -114,6 +116,7 @@ describe('StoryList', () => {
     await TestBed.configureTestingModule({
       imports: [StoryList],
       providers: [
+        provideRouter([]),
         StoryList,
         { provide: HackernewsService, useValue: mockHNService },
         { provide: StoryListStateService, useClass: MockStateService },
@@ -349,49 +352,40 @@ describe('StoryList', () => {
     });
   });
 
-  describe('ngOnInit', () => {
+  describe('input changes', () => {
     it('should initialize store with storyType and pageSize', () => {
+      fixture = TestBed.createComponent(StoryList);
       vi.spyOn(store, 'init');
-      // Uses default input values: storyType='top', pageSize=30
-      component.ngOnInit();
+
+      fixture.detectChanges();
 
       expect(store.init).toHaveBeenCalledWith('top', 30);
     });
-  });
 
-  describe('ngOnChanges', () => {
     it('should re-initialize store when storyType changes', () => {
+      fixture = TestBed.createComponent(StoryList);
       vi.spyOn(store, 'init');
 
-      const changes = {
-        storyType: {
-          currentValue: 'best',
-          previousValue: 'top',
-          firstChange: false,
-          isFirstChange: () => false,
-        },
-      };
+      fixture.detectChanges();
+      vi.mocked(store.init).mockClear();
 
-      component.ngOnChanges(changes);
+      fixture.componentRef.setInput('storyType', 'best');
+      fixture.detectChanges();
 
-      expect(store.init).toHaveBeenCalledWith('top', 30);
+      expect(store.init).toHaveBeenCalledWith('best', 30);
     });
 
-    it('should not re-initialize on first change', () => {
+    it('should re-initialize store when pageSize changes', () => {
+      fixture = TestBed.createComponent(StoryList);
       vi.spyOn(store, 'init');
 
-      const changes = {
-        storyType: {
-          currentValue: 'top',
-          previousValue: undefined,
-          firstChange: true,
-          isFirstChange: () => true,
-        },
-      };
+      fixture.detectChanges();
+      vi.mocked(store.init).mockClear();
 
-      component.ngOnChanges(changes);
+      fixture.componentRef.setInput('pageSize', 10);
+      fixture.detectChanges();
 
-      expect(store.init).not.toHaveBeenCalled();
+      expect(store.init).toHaveBeenCalledWith('top', 10);
     });
   });
 
@@ -415,14 +409,20 @@ describe('StoryList', () => {
 
   describe('skeletonArray', () => {
     it('should create array with pageSize elements', () => {
-      // Default pageSize is 30, test uses that
-      const skelArr = Array(component.pageSize())
-        .fill(0)
-        .map((_, i) => i);
+      const skelArr = component.skeletonArray();
 
       expect(skelArr.length).toBe(30);
       expect(skelArr[0]).toBe(0);
       expect(skelArr[29]).toBe(29);
+    });
+
+    it('should update when pageSize changes', async () => {
+      fixture = TestBed.createComponent(StoryList);
+
+      fixture.componentRef.setInput('pageSize', 10);
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.skeletonArray()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     });
   });
 });

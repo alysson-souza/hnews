@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
+// Copyright (C) 2025-2026 Alysson Souza
 import {
   Component,
   OnInit,
   OnDestroy,
-  OnChanges,
-  SimpleChanges,
   inject,
   effect,
   computed,
   input,
+  untracked,
 } from '@angular/core';
 import { environment } from '@env/environment';
 
@@ -100,7 +99,7 @@ import { StoryFilterMode, FILTER_MODE_LABELS } from '@models/story-filter';
     `,
   ],
 })
-export class StoryList implements OnInit, OnDestroy, OnChanges {
+export class StoryList implements OnInit, OnDestroy {
   readonly storyType = input<'top' | 'best' | 'new' | 'ask' | 'show' | 'job'>('top');
   readonly pageSize = input(30);
 
@@ -133,9 +132,11 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
   isOffline = computed(() => this.networkState.isOffline());
 
   // Array for skeleton count based on page size
-  skeletonArray = Array(this.pageSize())
-    .fill(0)
-    .map((_, i) => i);
+  skeletonArray = computed(() =>
+    Array(this.pageSize())
+      .fill(0)
+      .map((_, i) => i),
+  );
 
   // Auto-refresh management
   private destroy$ = new Subject<void>();
@@ -144,23 +145,20 @@ export class StoryList implements OnInit, OnDestroy, OnChanges {
 
   constructor() {
     effect(() => {
+      const storyType = this.storyType();
+      const pageSize = this.pageSize();
+      untracked(() => this.store.init(storyType, pageSize));
+    });
+
+    effect(() => {
       const storyCount = this.stories().length;
       this.keyboardNavService.setTotalItems(storyCount);
     });
   }
 
   ngOnInit() {
-    // Check cache on initial load
-    this.store.init(this.storyType(), this.pageSize());
-
     // Start auto-refresh timer
     this.startAutoRefresh();
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['storyType'] && !changes['storyType'].firstChange) {
-      this.store.init(this.storyType(), this.pageSize());
-    }
   }
 
   ngOnDestroy() {

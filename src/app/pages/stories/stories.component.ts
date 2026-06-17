@@ -1,29 +1,26 @@
 // SPDX-License-Identifier: MIT
-// Copyright (C) 2025 Alysson Souza
-import { Component, inject, OnInit, viewChild } from '@angular/core';
+// Copyright (C) 2025-2026 Alysson Souza
+import { Component, inject, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { ActivatedRoute } from '@angular/router';
 import { StoryList } from '@components/story-list/story-list';
+import { map } from 'rxjs/operators';
+
+type StoryType = 'top' | 'best' | 'new' | 'ask' | 'show' | 'job';
 
 @Component({
   selector: 'app-stories',
   imports: [StoryList],
-  template: ` <app-story-list [storyType]="storyType" /> `,
+  template: ` <app-story-list [storyType]="storyType()" /> `,
 })
-export class StoriesComponent implements OnInit {
+export class StoriesComponent {
   readonly storyList = viewChild.required(StoryList);
   private route = inject(ActivatedRoute);
-  storyType: 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' = 'top';
-
-  ngOnInit() {
-    // Listen to matcher-provided route params to handle reuse without destroying the component
-    this.route.paramMap.subscribe((params) => {
-      const paramType = params.get('type');
-      const mappedType = this.mapParamToStoryType(paramType);
-      this.storyType = mappedType;
-      // StoryList detects the change through Input updates
-    });
-  }
+  readonly storyType = toSignal(
+    this.route.paramMap.pipe(map((params) => this.mapParamToStoryType(params.get('type')))),
+    { initialValue: this.mapParamToStoryType(this.route.snapshot.paramMap.get('type')) },
+  );
 
   refresh(): void {
     const storyList = this.storyList();
@@ -32,9 +29,7 @@ export class StoriesComponent implements OnInit {
     }
   }
 
-  private mapParamToStoryType(
-    type: string | null,
-  ): 'top' | 'best' | 'new' | 'ask' | 'show' | 'job' {
+  private mapParamToStoryType(type: string | null): StoryType {
     switch (type) {
       case 'top':
       case 'best':

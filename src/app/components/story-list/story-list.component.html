@@ -40,7 +40,7 @@
     <!-- Loading State with Skeletons -->
     @if ((loading() && stories().length === 0) || refreshing()) {
       <div class="stories-space" role="status" aria-live="polite" aria-label="Loading Stories">
-        @for (i of skeletonArray; track i) {
+        @for (i of skeletonArray(); track i) {
           <app-story-item [loading]="true" />
         }
       </div>
