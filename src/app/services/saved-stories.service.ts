@@ -4,6 +4,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { take } from 'rxjs/operators';
 import { HNItem, mapToHNItem } from '@models/hn';
 import { HackernewsService } from '@services/hackernews.service';
+import { IndexedDBService } from '@services/indexed-db.service';
 
 export interface SavedStoryRecord {
   id: number;
@@ -31,6 +32,7 @@ const EXPORT_VERSION = 1;
 @Injectable({ providedIn: 'root' })
 export class SavedStoriesService {
   private readonly hackernews = inject(HackernewsService);
+  private readonly indexedDB = inject(IndexedDBService);
   private readonly _records = signal<Map<number, SavedStoryRecord>>(this.load());
   private readonly warmingIds = new Set<number>();
   readonly records = this._records.asReadonly();
@@ -56,11 +58,15 @@ export class SavedStoriesService {
   }
 
   // Pre-fetch the full comment tree through the same loader the item page uses,
-  // populating the shared cache so a saved story's discussion is available offline.
+  // populating the shared cache so a saved story's discussion is available offline,
+  // and persist it to the durable saved-comments store (see IndexedDBService) so it
+  // survives the regular cache's TTL eviction. Re-running this (e.g. on revisiting the
+  // saved page) re-fetches and overwrites the durable copy, so it stays current as new
+  // comments arrive rather than freezing the tree at save time.
   // getStoryWithAllComments has no in-flight dedup of its own, so a fetch already
   // running for this id (from this warm-up or the item page) is left alone instead
   // of triggering a second identical request.
-  private warmComments(id: number): void {
+  warmComments(id: number): void {
     if (typeof window === 'undefined' || this.warmingIds.has(id)) {
       return;
     }
@@ -69,7 +75,13 @@ export class SavedStoriesService {
       .getStoryWithAllComments(id)
       .pipe(take(1))
       .subscribe({
-        next: () => this.warmingIds.delete(id),
+        next: (result) => {
+          this.warmingIds.delete(id);
+          if (result && this.isSaved(id)) {
+            const items = [result.story, ...result.commentsMap.values()];
+            void this.indexedDB.setSavedItems(id, items);
+          }
+        },
         error: () => this.warmingIds.delete(id),
       });
   }
@@ -80,6 +92,7 @@ export class SavedStoriesService {
       return;
     }
     this.setRecords(records);
+    void this.indexedDB.deleteSavedItemsByStory(id);
   }
 
   toggle(story: HNItem): boolean {
@@ -151,11 +164,13 @@ export class SavedStoriesService {
     }
 
     const records = new Map(this._records());
+    const idsToWarm: number[] = [];
     for (const incomingRecord of incoming.values()) {
       const existing = records.get(incomingRecord.id);
       if (!existing) {
         records.set(incomingRecord.id, incomingRecord);
         result.imported++;
+        idsToWarm.push(incomingRecord.id);
         continue;
       }
 
@@ -163,17 +178,22 @@ export class SavedStoriesService {
       if (!recordsEqual(existing, merged)) {
         records.set(incomingRecord.id, merged);
         result.updated++;
+        idsToWarm.push(incomingRecord.id);
       } else {
         result.skipped++;
       }
     }
 
     this.setRecords(records);
+    for (const id of idsToWarm) {
+      this.warmComments(id);
+    }
     return result;
   }
 
   clearSavedStories(): void {
     this.setRecords(new Map());
+    void this.indexedDB.clear('savedComments');
   }
 
   private load(): Map<number, SavedStoryRecord> {

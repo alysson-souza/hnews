@@ -4,6 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { HNItem } from '@models/hn';
 import { HackernewsService } from '@services/hackernews.service';
+import { IndexedDBService } from '@services/indexed-db.service';
+import { BulkLoadResult } from '@services/algolia-comment-loader.service';
 import { SavedStoriesService } from './saved-stories.service';
 
 const STORAGE_KEY = 'hn_saved_stories_v1';
@@ -28,9 +30,20 @@ const exportJson = (records: unknown[]): string =>
     stories: records,
   });
 
+const bulkResult = (id: number, commentIds: number[] = []): BulkLoadResult => ({
+  story: story(id),
+  commentsMap: new Map(commentIds.map((cid) => [cid, story(cid, { type: 'comment' })])),
+  commentCount: commentIds.length,
+});
+
 describe('SavedStoriesService', () => {
   let service: SavedStoriesService;
   let hackernews: { getStoryWithAllComments: ReturnType<typeof vi.fn> };
+  let indexedDB: {
+    setSavedItems: ReturnType<typeof vi.fn>;
+    deleteSavedItemsByStory: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     window.localStorage.clear();
@@ -38,9 +51,17 @@ describe('SavedStoriesService', () => {
     vi.setSystemTime(1700000000000);
 
     hackernews = { getStoryWithAllComments: vi.fn().mockReturnValue(of(null)) };
+    indexedDB = {
+      setSavedItems: vi.fn().mockResolvedValue(undefined),
+      deleteSavedItemsByStory: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
+    };
 
     TestBed.configureTestingModule({
-      providers: [{ provide: HackernewsService, useValue: hackernews }],
+      providers: [
+        { provide: HackernewsService, useValue: hackernews },
+        { provide: IndexedDBService, useValue: indexedDB },
+      ],
     });
     service = TestBed.inject(SavedStoriesService);
   });
@@ -93,6 +114,78 @@ describe('SavedStoriesService', () => {
     service.unsave(10);
     service.save(story(10));
     expect(hackernews.getStoryWithAllComments).toHaveBeenCalledTimes(2);
+  });
+
+  it('persists the fetched comment tree to the durable saved-comments store', () => {
+    hackernews.getStoryWithAllComments.mockReturnValue(of(bulkResult(11, [12, 13])));
+
+    service.save(story(11));
+
+    expect(indexedDB.setSavedItems).toHaveBeenCalledTimes(1);
+    const [storyId, items] = indexedDB.setSavedItems.mock.calls[0];
+    expect(storyId).toBe(11);
+    expect(items.map((item: HNItem) => item.id)).toEqual([11, 12, 13]);
+  });
+
+  it('does not persist to the durable store when the bulk load fails', () => {
+    hackernews.getStoryWithAllComments.mockReturnValue(of(null));
+
+    service.save(story(20));
+
+    expect(indexedDB.setSavedItems).not.toHaveBeenCalled();
+  });
+
+  it('does not persist stale durable comments after unsaving during warm-up', () => {
+    const pending = new Subject<BulkLoadResult | null>();
+    hackernews.getStoryWithAllComments.mockReturnValue(pending);
+
+    service.save(story(21));
+    service.unsave(21);
+    pending.next(bulkResult(21, [22]));
+    pending.complete();
+
+    expect(indexedDB.deleteSavedItemsByStory).toHaveBeenCalledWith(21);
+    expect(indexedDB.setSavedItems).not.toHaveBeenCalled();
+  });
+
+  it('overwrites the durable comment copy on re-warm', () => {
+    hackernews.getStoryWithAllComments
+      .mockReturnValueOnce(of(bulkResult(30, [31])))
+      .mockReturnValueOnce(of(bulkResult(30, [31, 32])));
+
+    service.save(story(30));
+    service.warmComments(30);
+
+    expect(indexedDB.setSavedItems).toHaveBeenCalledTimes(2);
+    expect(indexedDB.setSavedItems.mock.calls[1][1].map((item: HNItem) => item.id)).toEqual([
+      30, 31, 32,
+    ]);
+  });
+
+  it('removes durable comments when a story is unsaved', () => {
+    service.save(story(40));
+    service.unsave(40);
+
+    expect(indexedDB.deleteSavedItemsByStory).toHaveBeenCalledWith(40);
+  });
+
+  it('clears the durable comment store when clearing saved stories', () => {
+    service.save(story(41));
+    service.clearSavedStories();
+
+    expect(indexedDB.clear).toHaveBeenCalledWith('savedComments');
+  });
+
+  it('warms comments for imported records', () => {
+    hackernews.getStoryWithAllComments.mockReturnValue(of(bulkResult(50, [51])));
+
+    service.importSavedStories(exportJson([{ id: 50, savedAt: 1700000000000, story: story(50) }]));
+
+    expect(hackernews.getStoryWithAllComments).toHaveBeenCalledWith(50);
+    expect(indexedDB.setSavedItems).toHaveBeenCalledTimes(1);
+    expect(indexedDB.setSavedItems.mock.calls[0][1].map((item: HNItem) => item.id)).toEqual([
+      50, 51,
+    ]);
   });
 
   it('reloads saved records from localStorage', () => {

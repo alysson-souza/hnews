@@ -27,6 +27,56 @@ describe('IndexedDBService', () => {
     expect(service).toBeTruthy();
   });
 
+  describe('Initialization lifecycle', () => {
+    it('falls back instead of hanging when an upgrade is blocked', async () => {
+      const request = {
+        error: null,
+        onblocked: null,
+        onerror: null,
+        onsuccess: null,
+        onupgradeneeded: null,
+      } as unknown as IDBOpenDBRequest;
+      const openSpy = vi.spyOn(indexedDB, 'open').mockReturnValue(request);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      try {
+        const openDb = (service as unknown as { db: IDBDatabase | null }).db;
+        openDb?.close();
+        (service as unknown as { db: IDBDatabase | null }).db = null;
+        (service as unknown as { initPromise: Promise<void> | null }).initPromise = null;
+
+        const resultPromise = service.get('stories', 1);
+        const blocked = (request as unknown as { onblocked: (() => void) | null }).onblocked;
+        expect(blocked).toEqual(expect.any(Function));
+
+        blocked?.();
+
+        await expect(resultPromise).resolves.toBeNull();
+        expect(
+          (service as unknown as { initPromise: Promise<void> | null }).initPromise,
+        ).toBeNull();
+      } finally {
+        openSpy.mockRestore();
+        warnSpy.mockRestore();
+        errorSpy.mockRestore();
+      }
+    });
+
+    it('closes an open connection on versionchange and can reopen later', async () => {
+      await service.count('apiCache');
+      const db = (service as unknown as { db: IDBDatabase | null }).db;
+      expect(db).toBeTruthy();
+
+      const closeSpy = vi.spyOn(db as IDBDatabase, 'close');
+      db?.onversionchange?.({} as IDBVersionChangeEvent);
+
+      expect(closeSpy).toHaveBeenCalled();
+      expect((service as unknown as { db: IDBDatabase | null }).db).toBeNull();
+      await expect(service.count('apiCache')).resolves.toBeGreaterThanOrEqual(0);
+    });
+  });
+
   describe('Story operations', () => {
     it('should set and get a story', async () => {
       const story: HNItem = {
@@ -259,6 +309,69 @@ describe('IndexedDBService', () => {
       // Should be retrievable immediately
       const retrieved = await service.get('stories', 'defaultTTL');
       expect(retrieved).toBeTruthy();
+    });
+  });
+
+  describe('Saved-comment durability', () => {
+    const story = (id: number, title: string): HNItem => ({
+      id,
+      type: id === 1 ? 'story' : 'comment',
+      by: 'user',
+      time: Date.now(),
+      title,
+    });
+
+    it('round-trips saved items and exposes them via getStory', async () => {
+      const items = [story(1, 'Saved story'), story(2, 'Saved comment')];
+
+      await service.setSavedItems(1, items);
+
+      expect(await service.getSavedItem(1)).toMatchObject({ id: 1, title: 'Saved story' });
+      expect(await service.getSavedItem(2)).toMatchObject({ id: 2, title: 'Saved comment' });
+      // getStory falls back to the saved store when there's no fresh TTL'd entry.
+      expect(await service.getStory(2)).toMatchObject({ id: 2, title: 'Saved comment' });
+    });
+
+    it('prefers the fresh TTL store over the saved store when both have data', async () => {
+      await service.setSavedItems(1, [story(1, 'Stale saved copy')]);
+      await service.setStory(story(1, 'Fresh copy'));
+
+      expect(await service.getStory(1)).toMatchObject({ title: 'Fresh copy' });
+    });
+
+    it('survives expiry of the regular TTL store', async () => {
+      await service.setSavedItems(1, [story(1, 'Durable')]);
+      await service.set('stories', 1, story(1, 'Expiring'), 1);
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(await service.getStory(1)).toMatchObject({ title: 'Durable' });
+    });
+
+    it('overwrites saved items on re-warm instead of duplicating them', async () => {
+      await service.setSavedItems(5, [story(5, 'First version')]);
+      await service.setSavedItems(5, [story(5, 'Second version')]);
+
+      expect(await service.getSavedItem(5)).toMatchObject({ title: 'Second version' });
+    });
+
+    it('deletes only the saved items belonging to the given story', async () => {
+      await service.setSavedItems(1, [story(1, 'Story 1'), story(2, 'Comment of 1')]);
+      await service.setSavedItems(10, [story(10, 'Story 10')]);
+
+      await service.deleteSavedItemsByStory(1);
+
+      expect(await service.getSavedItem(1)).toBeNull();
+      expect(await service.getSavedItem(2)).toBeNull();
+      expect(await service.getSavedItem(10)).toMatchObject({ title: 'Story 10' });
+    });
+
+    it('clears saved items via clearAll', async () => {
+      await service.setSavedItems(1, [story(1, 'Story 1')]);
+
+      await service.clearAll();
+
+      expect(await service.getSavedItem(1)).toBeNull();
     });
   });
 

@@ -12,11 +12,16 @@ export interface CachedItem<T> {
   etag?: string;
 }
 
+export interface SavedCachedItem<T> extends CachedItem<T> {
+  storyId: number;
+}
+
 export interface DBSchema {
   stories: CachedItem<HNItem>;
   users: CachedItem<HNUser>;
   storyLists: CachedItem<number[]>;
   apiCache: CachedItem<unknown>;
+  savedComments: SavedCachedItem<HNItem>;
 }
 
 @Injectable({
@@ -24,7 +29,7 @@ export interface DBSchema {
 })
 export class IndexedDBService {
   private dbName = 'hnews-cache-db';
-  private dbVersion = 1;
+  private dbVersion = 2;
   private db: IDBDatabase | null = null;
   private initPromise: Promise<void> | null = null;
 
@@ -39,6 +44,11 @@ export class IndexedDBService {
     USERS: 'users',
     STORY_LISTS: 'storyLists',
     API_CACHE: 'apiCache',
+    // Holds the full comment tree for saved stories. Entries never expire by TTL —
+    // they're only removed when a story is unsaved or the cache is explicitly cleared
+    // (Settings > Clear cache), so offline reading survives the normal TTL eviction
+    // that affects the STORIES store.
+    SAVED_COMMENTS: 'savedComments',
   };
 
   constructor() {
@@ -60,11 +70,24 @@ export class IndexedDBService {
 
       request.onerror = () => {
         console.warn('Failed to open IndexedDB (likely private browsing mode):', request.error);
+        this.initPromise = null;
+        resolve(); // Resolve instead of reject to prevent blocking
+      };
+
+      request.onblocked = () => {
+        console.warn('IndexedDB upgrade blocked by another open app tab');
+        this.initPromise = null;
         resolve(); // Resolve instead of reject to prevent blocking
       };
 
       request.onsuccess = () => {
         this.db = request.result;
+        this.db.onversionchange = () => {
+          this.db?.close();
+          this.db = null;
+          this.initPromise = null;
+        };
+        this.initPromise = null;
         this.cleanupExpired();
         resolve();
       };
@@ -92,6 +115,12 @@ export class IndexedDBService {
           const apiStore = db.createObjectStore(this.stores.API_CACHE, { keyPath: 'key' });
           apiStore.createIndex('timestamp', 'timestamp', { unique: false });
         }
+
+        if (!db.objectStoreNames.contains(this.stores.SAVED_COMMENTS)) {
+          const savedStore = db.createObjectStore(this.stores.SAVED_COMMENTS, { keyPath: 'key' });
+          savedStore.createIndex('timestamp', 'timestamp', { unique: false });
+          savedStore.createIndex('storyId', 'storyId', { unique: false });
+        }
       };
     });
   }
@@ -108,6 +137,7 @@ export class IndexedDBService {
     await this.initPromise;
 
     if (!this.db) {
+      this.initPromise = null;
       throw new Error('IndexedDB not available');
     }
 
@@ -237,11 +267,99 @@ export class IndexedDBService {
 
   // Specific methods for different data types
   async getStory(id: number): Promise<HNItem | null> {
-    return this.get<HNItem>(this.stores.STORIES, id);
+    const fresh = await this.get<HNItem>(this.stores.STORIES, id);
+    // Fall back to the durable saved-comments store so a saved story's comments
+    // stay readable after the regular TTL'd entry has been evicted.
+    return fresh ?? this.getSavedItem(id);
   }
 
   async setStory(story: HNItem): Promise<void> {
     return this.set(this.stores.STORIES, story.id, story, this.ttlStoryItem);
+  }
+
+  // Saved-story comment persistence (no TTL eviction; see SAVED_COMMENTS comment above).
+
+  async getSavedItem(id: number): Promise<HNItem | null> {
+    try {
+      const db = await this.ensureDB();
+      const transaction = db.transaction([this.stores.SAVED_COMMENTS], 'readonly');
+      const store = transaction.objectStore(this.stores.SAVED_COMMENTS);
+      const request = store.get(id);
+
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => {
+          const result = request.result as SavedCachedItem<HNItem> | undefined;
+          resolve(result?.data ?? null);
+        };
+        request.onerror = () => {
+          console.error('IndexedDB getSavedItem error:', request.error);
+          reject(request.error);
+        };
+      });
+    } catch (error) {
+      console.error('IndexedDB getSavedItem error:', error);
+      return null;
+    }
+  }
+
+  async setSavedItems(storyId: number, items: HNItem[]): Promise<void> {
+    try {
+      const db = await this.ensureDB();
+      const transaction = db.transaction([this.stores.SAVED_COMMENTS], 'readwrite');
+      const store = transaction.objectStore(this.stores.SAVED_COMMENTS);
+      const timestamp = Date.now();
+
+      for (const item of items) {
+        const cachedItem: SavedCachedItem<HNItem> = {
+          key: item.id,
+          data: item,
+          timestamp,
+          ttl: Infinity,
+          storyId,
+        };
+        store.put(cachedItem);
+      }
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => {
+          console.error('IndexedDB setSavedItems error:', transaction.error);
+          reject(transaction.error);
+        };
+      });
+    } catch (error) {
+      console.error('IndexedDB setSavedItems error:', error);
+      throw error;
+    }
+  }
+
+  async deleteSavedItemsByStory(storyId: number): Promise<void> {
+    try {
+      const db = await this.ensureDB();
+      const transaction = db.transaction([this.stores.SAVED_COMMENTS], 'readwrite');
+      const store = transaction.objectStore(this.stores.SAVED_COMMENTS);
+      const index = store.index('storyId');
+      const request = index.openCursor(IDBKeyRange.only(storyId));
+
+      return new Promise((resolve, reject) => {
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+          if (cursor) {
+            cursor.delete();
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+        request.onerror = () => {
+          console.error('IndexedDB deleteSavedItemsByStory error:', request.error);
+          reject(request.error);
+        };
+      });
+    } catch (error) {
+      console.error('IndexedDB deleteSavedItemsByStory error:', error);
+      throw error;
+    }
   }
 
   async getStoryList(type: string): Promise<number[] | null> {

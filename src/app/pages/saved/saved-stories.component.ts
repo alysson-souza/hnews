@@ -155,6 +155,12 @@ export class SavedStoriesComponent {
           this.refreshing.set(false);
         },
       });
+
+    // Re-warm each saved story's durable comment copy so it picks up new replies
+    // instead of staying frozen at whatever it last fetched.
+    for (const id of ids) {
+      this.savedStories.warmComments(id);
+    }
   }
 
   storyFor(record: SavedStoryRecord): HNItem {

@@ -637,7 +637,7 @@ export class CacheManagerService {
     }
 
     // Count items in IndexedDB
-    const stores = ['stories', 'users', 'storyLists', 'apiCache'];
+    const stores = ['stories', 'users', 'storyLists', 'apiCache', 'savedComments'];
     for (const store of stores) {
       const count = await this.indexedDB.count(store);
       itemCount += count;
