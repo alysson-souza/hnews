@@ -38,7 +38,7 @@
 /* Vote Section */
 .vote-section {
   /* Mobile-first (default): horizontal layout at top */
-  @apply flex flex-row items-center gap-2;
+  @apply flex flex-row items-center justify-between gap-2;
   @apply px-3 py-1.5;
   background-color: var(--app-surface-2);
   border-bottom: 1px solid var(--app-border);
@@ -51,6 +51,11 @@
   @apply sm:px-2 sm:py-4;
   @apply sm:w-[88px] sm:min-w-[88px];
   @apply sm:flex-shrink-0;
+}
+
+.vote-controls {
+  @apply flex flex-row items-center gap-2;
+  @apply sm:flex-col sm:items-center sm:gap-0.5;
 }
 
 @media (min-width: 640px) {
@@ -129,6 +134,10 @@
 
 .story-actions-slot {
   @apply relative ml-2 sm:ml-0 flex-shrink-0 self-start;
+}
+
+.story-actions-slot-mobile {
+  @apply ml-0 self-center;
 }
 
 .story-title {

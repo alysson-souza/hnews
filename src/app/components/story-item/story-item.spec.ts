@@ -443,6 +443,50 @@ describe('StoryItem comments link behaviour', () => {
 
       expect(component.actionsMenu()?.story()).toBe(story);
     });
+
+    it('renders the actions menu in the mobile vote header only', () => {
+      fixture.destroy();
+      deviceService.setDesktop(false);
+      fixture = TestBed.createComponent(StoryItem);
+      component = fixture.componentInstance;
+      fixture.componentRef.setInput('story', story);
+      fixture.detectChanges();
+
+      const root = fixture.nativeElement as HTMLElement;
+      const actionsMenus = root.querySelectorAll('app-story-actions-menu');
+      const mobileActions = root.querySelector(
+        '.vote-section .story-actions-slot-mobile app-story-actions-menu',
+      );
+      const headerActions = root.querySelector(
+        '.story-header .story-actions-slot-header app-story-actions-menu',
+      );
+
+      expect(actionsMenus.length).toBe(1);
+      expect(mobileActions).toBeTruthy();
+      expect(headerActions).toBeFalsy();
+    });
+
+    it('keeps the actions menu in the story header outside mobile', () => {
+      fixture.destroy();
+      deviceService.setDesktop(true);
+      fixture = TestBed.createComponent(StoryItem);
+      component = fixture.componentInstance;
+      fixture.componentRef.setInput('story', story);
+      fixture.detectChanges();
+
+      const root = fixture.nativeElement as HTMLElement;
+      const actionsMenus = root.querySelectorAll('app-story-actions-menu');
+      const mobileActions = root.querySelector(
+        '.vote-section .story-actions-slot-mobile app-story-actions-menu',
+      );
+      const headerActions = root.querySelector(
+        '.story-header .story-actions-slot-header app-story-actions-menu',
+      );
+
+      expect(actionsMenus.length).toBe(1);
+      expect(mobileActions).toBeFalsy();
+      expect(headerActions).toBeTruthy();
+    });
   });
 
   describe('Helper methods', () => {

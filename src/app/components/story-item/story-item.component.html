@@ -1,31 +1,43 @@
 <article class="story-card" [class.story-card-selected]="isSelected()" role="article" tabindex="-1">
   <!-- Vote Section -->
   <div class="vote-section">
-    @if (isLoading()) {
-      <div class="vote-skeleton-icon skeleton"></div>
-      <div class="vote-skeleton-count skeleton"></div>
-    } @else {
-      <button
-        (click)="upvote()"
-        class="vote-button"
-        [class.vote-button-active]="!hasVoted()"
-        [class.vote-button-voted]="hasVoted()"
-        [disabled]="hasVoted()"
-        [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-        [attr.aria-pressed]="hasVoted()"
-        [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
-      >
-        <svg class="w-5 h-5 sm:w-8 sm:h-8 fill-current" viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
-        </svg>
-      </button>
-      <span
-        class="vote-count"
-        [class.vote-count-active]="!hasVoted()"
-        [class.vote-count-voted]="hasVoted()"
-      >
-        {{ (story()!.score || 0) + (hasVoted() ? 1 : 0) | number }}
-      </span>
+    <div class="vote-controls">
+      @if (isLoading()) {
+        <div class="vote-skeleton-icon skeleton"></div>
+        <div class="vote-skeleton-count skeleton"></div>
+      } @else {
+        <button
+          (click)="upvote()"
+          class="vote-button"
+          [class.vote-button-active]="!hasVoted()"
+          [class.vote-button-voted]="hasVoted()"
+          [disabled]="hasVoted()"
+          [attr.aria-label]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+          [attr.aria-pressed]="hasVoted()"
+          [title]="hasVoted() ? 'Already Upvoted' : 'Upvote Story'"
+        >
+          <svg class="w-5 h-5 sm:w-8 sm:h-8 fill-current" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M10 3L3 10h4v7h6v-7h4L10 3z" />
+          </svg>
+        </button>
+        <span
+          class="vote-count"
+          [class.vote-count-active]="!hasVoted()"
+          [class.vote-count-voted]="hasVoted()"
+        >
+          {{ (story()!.score || 0) + (hasVoted() ? 1 : 0) | number }}
+        </span>
+      }
+    </div>
+
+    @if (deviceService.isMobile()) {
+      <div class="story-actions-slot story-actions-slot-mobile">
+        @if (isLoading()) {
+          <div class="w-8 h-8 bg-gray-200 dark:bg-slate-700 rounded skeleton"></div>
+        } @else {
+          <app-story-actions-menu [story]="story()!" />
+        }
+      </div>
     }
   </div>
 
@@ -99,14 +111,16 @@
         }
       </div>
 
-      <!-- Actions Button -->
-      <div class="story-actions-slot">
-        @if (isLoading()) {
-          <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-slate-700 rounded skeleton"></div>
-        } @else {
-          <app-story-actions-menu [story]="story()!" />
-        }
-      </div>
+      @if (!deviceService.isMobile()) {
+        <!-- Actions Button -->
+        <div class="story-actions-slot story-actions-slot-header">
+          @if (isLoading()) {
+            <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-slate-700 rounded skeleton"></div>
+          } @else {
+            <app-story-actions-menu [story]="story()!" />
+          }
+        </div>
+      }
     </div>
 
     <!-- Metadata -->

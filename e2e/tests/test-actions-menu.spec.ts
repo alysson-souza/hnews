@@ -118,6 +118,24 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     await expect(storyCard).toBeFocused();
   });
 
+  test('should place the story actions button in the mobile vote header', async ({
+    page,
+  }, testInfo) => {
+    test.skip(!testInfo.project.name.includes('mobile'), 'Mobile-only story card layout');
+
+    const firstStory = page.locator('app-story-item').first();
+    const actionsBtn = firstStory.locator('.vote-section button.story-actions-btn');
+    await expect(actionsBtn).toBeVisible();
+    await expect(firstStory.locator('.story-header button.story-actions-btn')).toHaveCount(0);
+
+    await actionsBtn.click();
+    await page.waitForTimeout(300);
+
+    const menu = page.locator('[data-testid="story-actions-menu"]').first();
+    await expect(menu).toBeVisible();
+    await expectMenuInViewport(page, menu);
+  });
+
   test('should open menu from the sidebar story summary', async ({
     page,
     sidebarPage,
