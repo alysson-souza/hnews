@@ -118,7 +118,7 @@ import { SavedStoriesService } from '@services/saved-stories.service';
 
         @if (item().text) {
           @if (boxedText()) {
-            <div class="quote-surface-shell mt-3">
+            <div class="quote-surface-shell">
               <app-comment-text [html]="item().text!" />
             </div>
           } @else {
@@ -134,6 +134,9 @@ import { SavedStoriesService } from '@services/saved-stories.service';
 
       .story {
         @apply mb-0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--thread-gap);
       }
       .story-title {
         @apply text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100;
@@ -143,6 +146,9 @@ import { SavedStoriesService } from '@services/saved-stories.service';
       }
       .story-summary-main {
         @apply min-w-0;
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--thread-gap) / 2);
       }
       .story-actions-slot {
         @apply relative flex-shrink-0 self-start;
@@ -151,13 +157,16 @@ import { SavedStoriesService } from '@services/saved-stories.service';
         @apply text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded;
       }
       .domain-btn {
-        @apply inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all mb-2;
+        @apply inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline cursor-pointer break-all;
+        align-self: flex-start;
+        max-width: 100%;
+        text-align: left;
+      }
+      .quote-surface-shell {
+        padding: var(--thread-gap);
       }
       .meta {
         @apply flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400;
-      }
-      .comment-meta {
-        @apply mt-3;
       }
       .open-link {
         @apply inline-flex items-center text-blue-600 dark:text-blue-300 hover:underline cursor-pointer transition-colors duration-200;

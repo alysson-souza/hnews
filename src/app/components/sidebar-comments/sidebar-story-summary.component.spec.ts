@@ -140,6 +140,28 @@ describe('SidebarStorySummaryComponent', () => {
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
       expect(domainBtn).toBeTruthy();
       expect(domainBtn.nativeElement.textContent.trim()).toBe('example.com');
+      expect(domainBtn.nativeElement.classList.contains('mb-2')).toBe(false);
+    });
+
+    it('should keep the domain button aligned to the start of the summary column', () => {
+      const styles = (
+        SidebarStorySummaryComponent as unknown as { ɵcmp: { styles: string[] } }
+      ).ɵcmp.styles.join('\n');
+
+      expect(styles).toContain('align-self: flex-start');
+      expect(styles).toContain('max-width: 100%');
+      expect(styles).toContain('text-align: left');
+    });
+
+    it('should use structural gaps for story summary spacing', () => {
+      const styles = (
+        SidebarStorySummaryComponent as unknown as { ɵcmp: { styles: string[] } }
+      ).ɵcmp.styles.join('\n');
+
+      expect(styles).toContain('gap: var(--thread-gap)');
+      expect(styles).toContain('gap: calc(var(--thread-gap) / 2)');
+      expect(styles).not.toContain('mb-2');
+      expect(styles).not.toContain('mt-3');
     });
 
     it('should render the story actions menu for story summaries', () => {
@@ -182,6 +204,29 @@ describe('SidebarStorySummaryComponent', () => {
       const domainBtn = fixture.debugElement.query(By.css('.domain-btn'));
       expect(domainBtn).toBeFalsy();
       expect(fixture.debugElement.query(By.css('.open-link'))).toBeFalsy();
+    });
+
+    it('should keep story meta after the same summary wrapper with and without a domain', () => {
+      const metaWithDomain = fixture.debugElement.query(By.css('.meta'));
+      expect(metaWithDomain.nativeElement.previousElementSibling.classList).toContain(
+        'story-summary-header',
+      );
+
+      fixture.componentRef.setInput('item', {
+        id: 123,
+        type: 'story',
+        by: 'testuser',
+        time: 1708099200,
+        title: 'Text Only Story',
+        score: 100,
+      });
+      fixture.detectChanges();
+
+      const metaWithoutDomain = fixture.debugElement.query(By.css('.meta'));
+      expect(fixture.debugElement.query(By.css('.domain-btn'))).toBeFalsy();
+      expect(metaWithoutDomain.nativeElement.previousElementSibling.classList).toContain(
+        'story-summary-header',
+      );
     });
 
     it('should render meta information', () => {
@@ -313,7 +358,17 @@ describe('SidebarStorySummaryComponent', () => {
 
       const shell = fixture.debugElement.query(By.css('.quote-surface-shell'));
       expect(shell).toBeTruthy();
+      expect(shell.nativeElement.classList.contains('mt-3')).toBe(false);
       expect(shell.query(By.css('app-comment-text'))).toBeTruthy();
+    });
+
+    it('should align boxed text padding with sidebar comment cards', () => {
+      const styles = (
+        SidebarStorySummaryComponent as unknown as { ɵcmp: { styles: string[] } }
+      ).ɵcmp.styles.join('\n');
+
+      expect(styles).toContain('.quote-surface-shell');
+      expect(styles).toContain('padding: var(--thread-gap)');
     });
 
     it('should handle item without author', () => {

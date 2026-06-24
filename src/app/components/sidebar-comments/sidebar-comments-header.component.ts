@@ -112,8 +112,9 @@ import { DeviceService } from '@services/device.service';
       @reference '../../../styles.css';
 
       .header {
-        @apply sticky top-0 z-10 p-3 sm:p-4 flex items-center justify-between gap-2;
+        @apply sticky top-0 z-10 flex items-center justify-between gap-2;
         position: relative;
+        padding: var(--thread-gap);
         background-color: var(--app-surface);
         border-bottom: 1px solid var(--app-border);
         box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
@@ -157,7 +158,7 @@ import { DeviceService } from '@services/device.service';
 
       @media (display-mode: standalone) and (max-width: 639.98px) {
         .header {
-          padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+          padding-top: calc(env(safe-area-inset-top, 0px) + var(--thread-gap));
         }
       }
     `,

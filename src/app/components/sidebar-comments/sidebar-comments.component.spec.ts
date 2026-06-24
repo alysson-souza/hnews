@@ -920,5 +920,15 @@ describe('SidebarCommentsComponent', () => {
       expect(loadMore).not.toBeNull();
       expect(loadMore.classList.contains('mt-4')).toBe(false);
     });
+
+    it('should reset divider spacing with the shared thread gap', () => {
+      const styles = (
+        SidebarCommentsComponent as unknown as { ɵcmp: { styles: string[] } }
+      ).ɵcmp.styles.join('\n');
+      const dividerStyles = styles.match(/\.comments-divider[\s\S]*?\}/)?.[0] ?? '';
+
+      expect(dividerStyles).toContain('margin-block: var(--thread-gap)');
+      expect(dividerStyles).not.toContain('margin-top: var(--thread-gap)');
+    });
   });
 });

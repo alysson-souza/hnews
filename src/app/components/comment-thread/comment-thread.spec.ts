@@ -17,6 +17,7 @@ import { SidebarCommentsInteractionService } from '@services/sidebar-comments-in
 import { Subject } from 'rxjs';
 
 import { CommentThread } from './comment-thread';
+import { CommentHeaderComponent } from '../comment-header/comment-header.component';
 
 class MockCacheManagerService {
   get() {
@@ -492,6 +493,26 @@ describe('CommentThread', () => {
       fixture.detectChanges();
 
       expect(mockRepliesLoader.loadNextPage).toHaveBeenCalledTimes(1);
+    });
+
+    it('should keep default comment header density outside the sidebar', () => {
+      fixture.componentRef.setInput('threadContext', 'item');
+      fixture.detectChanges();
+
+      const header = fixture.debugElement.query(By.directive(CommentHeaderComponent))
+        .componentInstance as CommentHeaderComponent;
+
+      expect(header.density()).toBe('default');
+    });
+
+    it('should use compact comment header density in the sidebar', () => {
+      fixture.componentRef.setInput('threadContext', 'sidebar');
+      fixture.detectChanges();
+
+      const header = fixture.debugElement.query(By.directive(CommentHeaderComponent))
+        .componentInstance as CommentHeaderComponent;
+
+      expect(header.density()).toBe('compact');
     });
 
     it('should show reply count when collapsed with children', () => {

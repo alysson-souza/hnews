@@ -13,6 +13,8 @@ import { DeviceService } from '@services/device.service';
 import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 
+export type CommentHeaderDensity = 'default' | 'compact';
+
 @Component({
   selector: 'app-comment-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +28,7 @@ import { CommentThreadIndexService } from '@services/comment-thread-index.servic
   ],
   viewProviders: [provideIcons({ solarAltArrowDownLinear, solarAltArrowRightLinear })],
   template: `
-    <div class="comment-header">
+    <div class="comment-header" [class.comment-header-compact]="density() === 'compact'">
       @if (showCollapseToggle()) {
         <button
           type="button"
@@ -92,6 +94,9 @@ import { CommentThreadIndexService } from '@services/comment-thread-index.servic
         @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-slate-400;
         @apply w-full min-h-8;
       }
+      .comment-header-compact {
+        min-height: 0;
+      }
       .time-text {
         @apply text-gray-500 dark:text-slate-500;
       }
@@ -125,6 +130,11 @@ import { CommentThreadIndexService } from '@services/comment-thread-index.servic
         @apply ml-auto;
         @apply px-2 py-1;
       }
+      .comment-header-compact .view-thread-inline {
+        padding: 0 0.375rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+      }
     `,
   ],
 })
@@ -146,6 +156,7 @@ export class CommentHeaderComponent {
   readonly isStandalonePage = input(false);
   readonly collapsed = input(false);
   readonly showCollapseToggle = input(false);
+  readonly density = input<CommentHeaderDensity>('default');
 
   readonly expand = output<void>();
   readonly toggleCollapse = output<void>();

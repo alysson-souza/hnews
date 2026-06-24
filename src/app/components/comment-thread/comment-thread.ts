@@ -75,6 +75,7 @@ import {
             [isStandalonePage]="isStandalonePage()"
             [showCollapseToggle]="true"
             [collapsed]="isCollapsed() || showExpandButton()"
+            [density]="threadContext() === 'sidebar' ? 'compact' : 'default'"
             (expand)="expandReplies()"
             (toggleCollapse)="onChevronToggle()"
           />

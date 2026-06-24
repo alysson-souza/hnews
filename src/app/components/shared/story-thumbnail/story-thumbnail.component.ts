@@ -70,7 +70,9 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
       @reference '../../../../styles.css';
 
       .thumb {
-        @apply w-20 h-20 relative overflow-hidden rounded-md border border-gray-200 dark:border-slate-800 bg-gray-100 dark:bg-slate-700;
+        @apply relative overflow-hidden rounded-md border border-gray-200 dark:border-slate-800 bg-gray-100 dark:bg-slate-700;
+        width: 82px;
+        height: 82px;
       }
       .thumb-link {
         @apply block w-full h-full hover:opacity-90 transition-opacity;

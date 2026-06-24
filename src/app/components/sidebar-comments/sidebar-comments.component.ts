@@ -265,7 +265,7 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
       }
 
       .comments-divider {
-        margin-top: var(--thread-gap);
+        margin-block: var(--thread-gap);
         border-color: var(--app-border);
       }
 
