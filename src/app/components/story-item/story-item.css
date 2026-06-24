@@ -2,7 +2,7 @@
 
 /* Story Item Card */
 .story-card {
-  @apply relative flex flex-col sm:flex-row rounded-2xl mb-2 overflow-hidden;
+  @apply relative flex flex-col sm:flex-row rounded-xl mb-2 overflow-hidden;
   @apply top-0 transition-[border-color,box-shadow,background-color,top] duration-200 ease-out;
   background-color: var(--app-surface);
   border: 1px solid var(--app-border);
