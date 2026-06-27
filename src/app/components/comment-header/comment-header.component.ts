@@ -90,9 +90,15 @@ export type CommentHeaderDensity = 'default' | 'compact';
     `
       @reference '../../../styles.css';
 
+      :host {
+        display: block;
+        width: 100%;
+      }
+
       .comment-header {
         @apply flex items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-slate-400;
-        @apply w-full min-h-8;
+        @apply w-full;
+        min-height: 1.25rem;
       }
       .comment-header-compact {
         min-height: 0;
@@ -114,6 +120,7 @@ export type CommentHeaderDensity = 'default' | 'compact';
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
         @apply cursor-pointer;
         @apply p-0.5 -ml-1;
+        margin-right: -0.25rem;
       }
       .collapse-icon {
         @apply text-sm;
@@ -128,12 +135,12 @@ export type CommentHeaderDensity = 'default' | 'compact';
         @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
         @apply cursor-pointer;
         @apply ml-auto;
-        @apply px-2 py-1;
-      }
-      .comment-header-compact .view-thread-inline {
-        padding: 0 0.375rem;
+        padding: 0 0 0 0.5rem;
         font-size: 0.875rem;
         line-height: 1.25rem;
+      }
+      .comment-header-compact .view-thread-inline {
+        padding-left: 0.375rem;
       }
     `,
   ],

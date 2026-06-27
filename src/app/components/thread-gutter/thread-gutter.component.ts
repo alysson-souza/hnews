@@ -81,6 +81,7 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
 
       .content {
         @apply relative;
+        margin-top: calc(var(--thread-gap) / 3);
       }
 
       /* Keyboard focus ring for comment card */
