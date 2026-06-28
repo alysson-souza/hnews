@@ -20,7 +20,15 @@ npm run e2e:ui           # Interactive e2e UI mode
 
 **Running a single test file:** `npm test -- --include src/path/to/file.spec.ts`
 
-**Important:** Always use `ng test` or `npm test`. Never run `vitest` directly.
+**Important:** Use `ng test` or `npm test` for unit tests.
+
+## Testing Strategy
+
+- Add automated coverage for each behavior change at the layer that observes the contract directly.
+- Use unit tests for logic, transforms, state transitions, sanitization, parsing, data mapping, and stable component contracts.
+- Use browser or e2e tests for layout, spacing, scrolling, focus, responsive behavior, keyboard behavior, and CSS-dependent behavior.
+- Verify UI changes in the browser before finishing, with concrete evidence such as DOM measurements, screenshots, or an e2e assertion.
+- Ask before adding broad new test infrastructure.
 
 ## Architecture
 

@@ -369,6 +369,12 @@ code {
 }
 
 /* Code block styling */
+.comment-body,
+.item-prose,
+.sub-comment {
+  display: flow-root;
+}
+
 .comment-body pre,
 .item-prose pre,
 .sub-comment pre {
@@ -399,7 +405,7 @@ code {
 .comment-body blockquote:first-child,
 .item-prose blockquote:first-child,
 .sub-comment blockquote:first-child {
-  margin-top: 0;
+  margin-top: 0.5rem;
 }
 .comment-body blockquote:last-child,
 .item-prose blockquote:last-child,
