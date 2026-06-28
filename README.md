@@ -5,6 +5,7 @@ Alternative frontend for Hacker News built with Angular.
 Live demo:
 
 - https://alysson-souza.github.io/hnews/ — GitHub Pages
+- https://hnews-8xl.pages.dev — Cloudflare Pages
 
 ## Features
 
