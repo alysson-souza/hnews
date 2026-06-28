@@ -6,7 +6,6 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ```bash
 npm start                # Cloudflare Pages dev server at http://localhost:8788 (default for UI/runtime checks)
-npm run start:cf         # Same Cloudflare Pages dev server with live reload
 npm run start:gh         # GitHub Pages/Angular dev server at http://localhost:4200
 npm run build:prod       # Production build
 npm test                 # Unit tests (single run, Vitest via Angular)
@@ -21,11 +20,11 @@ npm run e2e:ui           # Interactive e2e UI mode
 
 **Running a single test file:** `npm test -- --include src/path/to/file.spec.ts`
 
-**Important:** Always use `ng test` or `npm test`—never run `vitest` directly.
+**Important:** Always use `ng test` or `npm test`. Never run `vitest` directly.
 
 ## Architecture
 
-Angular 21 standalone components with signals, Tailwind CSS v4, TypeScript 5.9.
+Angular standalone components with signals, Tailwind CSS, TypeScript.
 
 ### Core Folders
 

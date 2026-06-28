@@ -21,7 +21,7 @@ npm run deploy:cf
 
 ## Manual Build
 
-Build the production bundle; output is in `dist/hnews/browser/`.
+Build the production bundle. Output is in `dist/hnews/browser/`.
 
 ```bash
 npm run build:prod
