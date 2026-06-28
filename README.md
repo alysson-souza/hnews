@@ -1,6 +1,6 @@
 # HNews — Hacker News Reader
 
-Alternative frontend for Hacker News built with Angular 21.
+Alternative frontend for Hacker News built with Angular.
 
 Live demo:
 
@@ -8,44 +8,20 @@ Live demo:
 
 ## Features
 
-- Story feeds: Top, Best, Newest, Ask HN, Show HN, Jobs
-- Auto-refresh: Story rankings update every 5 minutes (tab visibility aware)
-- Comments: Nested threads, lazy loading, auto-collapse for large threads
-- Syntax highlighting: Automatic language detection for code in comments (25 languages)
-- Voting UX: Local upvote state for comments (persisted in localStorage)
-- User profiles: Karma, member since, recent submissions with paging
-- Search: Algolia-powered with type, sort, and date range filters
-- Saved stories: Bookmark stories for a dedicated `/saved` page
-- Sidebar: Slide-over comments viewer for quick exploration
-- Theming: Light/Dark/Auto with one-click toggle and persistence
-- Vim-style keyboard navigation: hjkl navigation, vim-like shortcuts
-- Keyboard shortcuts: Full keyboard navigation with help dialog
-- Caching: Multi-layer cache (memory, IndexedDB, Service Worker, localStorage)
-- Two-phase loading: Cached display first, fresh data updates in background
-- PWA-ready: Angular Service Worker enabled in production builds
-- Responsive UI: Optimized for desktop, tablet, and mobile
-- HN-compatible routes (e.g., `/item?id=123`, `/user?id=pg`)
-- Userscript: Automatic redirect from news.ycombinator.com to HNews (visit `/userscript` for installation)
-
-## Keyboard Shortcuts
-
-Essential shortcuts
-
-- `j` / `k` – Move selection down / up
-- `h` / `l` – Navigate tabs
-- `o` – Open selected story
-- `c` – Open comments sidebar
-- `s` – Save / unsave selected story
-- `/` – Focus search input
-- `?` – Show keyboard shortcuts help
-
-Shortcuts are contextual: different sets apply on the story list, comments sidebar, item page, and settings page. Use `Escape` to close the sidebar. Press `?` at any time to see **all** currently available actions for the active view.
+- Story feeds (Top, Best, Newest, Ask HN, Show HN, Jobs) with auto-refresh
+- Comments: nested threads, lazy loading, syntax highlighting for code
+- Search powered by Algolia with type, sort, and date range filters
+- User profiles, saved stories, slide-over comments sidebar
+- Theming (Light/Dark/Auto), vim-style keyboard navigation with help dialog (`?`)
+- Multi-layer caching (memory, IndexedDB, Service Worker) with two-phase loading
+- PWA with Angular Service Worker
+- Responsive UI for desktop, tablet, and mobile
 
 ## Tech Stack
 
-- Angular 21 (standalone components, signals)
-- Tailwind CSS v4 (with @tailwindcss/postcss)
-- TypeScript 5.9, RxJS 7.8
+- Angular (standalone components, signals)
+- Tailwind CSS (with @tailwindcss/postcss)
+- TypeScript, RxJS
 - highlight.js (syntax highlighting with auto-detection)
 - Angular Service Worker (PWA)
 - ESLint (angular-eslint), Prettier, Husky + lint-staged
@@ -56,8 +32,8 @@ Shortcuts are contextual: different sets apply on the story list, comments sideb
 
 ### Prerequisites
 
-- Node.js 22+ (LTS recommended; `.nvmrc` provided)
-- npm 9+
+- Node.js (see `.nvmrc` for the required version)
+- npm
 
 ### Installation
 
@@ -75,7 +51,7 @@ npm start
 
 App runs at `http://localhost:8788`.
 
-For the GitHub Pages/Angular dev-server build, run `npm run start:gh`; it serves
+For the GitHub Pages/Angular dev-server build, run `npm run start:gh`. It serves
 the app at `http://localhost:4200`.
 
 ## Deployment
@@ -83,9 +59,10 @@ the app at `http://localhost:4200`.
 Pushes to `main` publish the GitHub Pages demo through the GitHub Actions
 deploy workflow.
 
-Cloudflare Pages deployment is also supported. Configure the required
-Cloudflare repository secrets and set `SITE_URL` in `wrangler.toml` to your own
-deployment URL so generated link previews point at the right host.
+Cloudflare Pages deployment is also supported. Set `SITE_URL` in `wrangler.toml`
+to your deployment URL so generated link previews point at the right host. Manual
+deploys require `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to be set as
+repository secrets.
 
 See `DEPLOYMENT.md` for more deployment options.
 
