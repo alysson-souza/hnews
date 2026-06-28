@@ -72,10 +72,6 @@ describe('KeyboardShortcutsComponent', () => {
     component = TestBed.createComponent(KeyboardShortcutsComponent).componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should initialize with isOpen set to false', () => {
     expect(component.isOpen()).toBe(false);
   });
@@ -231,14 +227,6 @@ describe('KeyboardShortcutsComponent', () => {
   });
 
   describe('Accessibility', () => {
-    it('should be properly configured for screen readers', () => {
-      // The component template includes proper ARIA attributes
-      // This test ensures the component structure supports accessibility
-      expect(component).toBeTruthy();
-      expect(component.open).toBeDefined();
-      expect(component.close).toBeDefined();
-    });
-
     it('should support keyboard navigation', () => {
       // Test that keyboard events are properly handled
       const event = new KeyboardEvent('keydown', {
@@ -259,17 +247,6 @@ describe('KeyboardShortcutsComponent', () => {
   });
 
   describe('Component Lifecycle', () => {
-    it('should initialize correctly with all dependencies', () => {
-      expect(component).toBeTruthy();
-      expect(component.isOpen()).toBe(false);
-      expect(typeof component.open).toBe('function');
-      expect(typeof component.close).toBe('function');
-      expect(typeof component.currentContext).toBe('function');
-      expect(typeof component.shortcutsByCategory).toBe('function');
-      expect(typeof component.categories).toBe('function');
-      expect(typeof component.contextLabel).toBe('function');
-    });
-
     it('should handle multiple open/close operations', () => {
       // Test multiple operations to ensure stability
       component.open();

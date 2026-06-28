@@ -10,11 +10,6 @@ describe('DeviceService', () => {
     TestBed.configureTestingModule({});
   });
 
-  it('should be created', () => {
-    service = TestBed.inject(DeviceService);
-    expect(service).toBeTruthy();
-  });
-
   describe('Device Detection', () => {
     it('should correctly classify device types based on width', () => {
       service = TestBed.inject(DeviceService);

@@ -41,11 +41,6 @@ describe('CommentSortService', () => {
     });
   });
 
-  it('should be created', () => {
-    service = TestBed.inject(CommentSortService);
-    expect(service).toBeTruthy();
-  });
-
   it('should default to "default" sort order', () => {
     (localStorageSpy.getItem as Mock).mockReturnValue(null);
     service = TestBed.inject(CommentSortService);

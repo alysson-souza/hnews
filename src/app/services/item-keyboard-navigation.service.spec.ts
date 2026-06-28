@@ -64,10 +64,6 @@ describe('ItemKeyboardNavigationService', () => {
     service.ngOnDestroy();
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should register item commands', () => {
     expect(commandRegistrySpy.register).toHaveBeenCalledWith(
       'item.nextComment',

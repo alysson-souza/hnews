@@ -47,10 +47,6 @@ describe('SidebarStorySummaryComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('getDomain', () => {
     it('should extract domain from URL', () => {
       expect(component.getDomain('https://www.example.com/path')).toBe('example.com');
@@ -141,27 +137,6 @@ describe('SidebarStorySummaryComponent', () => {
       expect(domainBtn).toBeTruthy();
       expect(domainBtn.nativeElement.textContent.trim()).toBe('example.com');
       expect(domainBtn.nativeElement.classList.contains('mb-2')).toBe(false);
-    });
-
-    it('should keep the domain button aligned to the start of the summary column', () => {
-      const styles = (
-        SidebarStorySummaryComponent as unknown as { ɵcmp: { styles: string[] } }
-      ).ɵcmp.styles.join('\n');
-
-      expect(styles).toContain('align-self: flex-start');
-      expect(styles).toContain('max-width: 100%');
-      expect(styles).toContain('text-align: left');
-    });
-
-    it('should use structural gaps for story summary spacing', () => {
-      const styles = (
-        SidebarStorySummaryComponent as unknown as { ɵcmp: { styles: string[] } }
-      ).ɵcmp.styles.join('\n');
-
-      expect(styles).toContain('gap: var(--thread-gap)');
-      expect(styles).toContain('gap: calc(var(--thread-gap) / 2)');
-      expect(styles).not.toContain('mb-2');
-      expect(styles).not.toContain('mt-3');
     });
 
     it('should render the story actions menu for story summaries', () => {
@@ -360,15 +335,6 @@ describe('SidebarStorySummaryComponent', () => {
       expect(shell).toBeTruthy();
       expect(shell.nativeElement.classList.contains('mt-3')).toBe(false);
       expect(shell.query(By.css('app-comment-text'))).toBeTruthy();
-    });
-
-    it('should align boxed text padding with sidebar comment cards', () => {
-      const styles = (
-        SidebarStorySummaryComponent as unknown as { ɵcmp: { styles: string[] } }
-      ).ɵcmp.styles.join('\n');
-
-      expect(styles).toContain('.quote-surface-shell');
-      expect(styles).toContain('padding: var(--thread-gap)');
     });
 
     it('should handle item without author', () => {

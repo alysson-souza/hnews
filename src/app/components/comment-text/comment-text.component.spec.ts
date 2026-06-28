@@ -21,10 +21,6 @@ describe('CommentTextComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeDefined();
-  });
-
   it('should process html input using all transforms in correct order', () => {
     const raw = `
       <p>Check this out:</p>

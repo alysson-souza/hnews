@@ -430,13 +430,6 @@ describe('StoryItem comments link behaviour', () => {
       fixture.detectChanges();
     });
 
-    it('should render actions menu component', () => {
-      fixture.componentRef.setInput('story', story);
-      fixture.detectChanges();
-
-      expect(component.actionsMenu()).toBeDefined();
-    });
-
     it('should pass the story to actions menu component', () => {
       fixture.componentRef.setInput('story', story);
       fixture.detectChanges();

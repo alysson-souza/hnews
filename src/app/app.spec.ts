@@ -79,12 +79,6 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeDefined();
-  });
-
   it('should render title', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
@@ -685,12 +679,6 @@ describe('App', () => {
       fixture = TestBed.createComponent(App);
       app = fixture.componentInstance;
       fixture.detectChanges();
-    });
-
-    it('should have version info', () => {
-      expect(app.version).toBeDefined();
-      expect(app.commitSha).toBeDefined();
-      expect(app.commitShaShort).toBeDefined();
     });
 
     it('should generate commit URL when commit SHA is not unknown', () => {

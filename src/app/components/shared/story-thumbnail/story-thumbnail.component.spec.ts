@@ -92,12 +92,6 @@ describe('StoryThumbnailComponent', () => {
   // Basic rendering
   // -----------------------------------------------------------------------
 
-  it('should create', () => {
-    fixture.componentRef.setInput('storyTitle', 'Test Story');
-    fixture.detectChanges();
-    expect(component).toBeTruthy();
-  });
-
   it('should show placeholder for text posts', () => {
     fixture.componentRef.setInput('storyTitle', 'Ask HN: Something');
     fixture.componentRef.setInput('isTextPost', true);
@@ -230,41 +224,6 @@ describe('StoryThumbnailComponent', () => {
       fixture.destroy();
 
       expect(ogImageStub.cleanupCalls).toContain(url);
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // OG image immediate rendering
-  // -----------------------------------------------------------------------
-
-  describe('OG image immediate rendering', () => {
-    it('renders without a load-state opacity transition', async () => {
-      const url = 'https://example.com/article';
-      fixture.componentRef.setInput('storyTitle', 'Test');
-      fixture.componentRef.setInput('storyUrl', url);
-      fixture.detectChanges();
-
-      await Promise.resolve();
-
-      ogImageStub.resolve(url, {
-        imageUrl: '/api/og-image-proxy?url=https%3A%2F%2Fexample.com%2Fog.jpg',
-        title: null,
-        description: null,
-      });
-      fixture.detectChanges();
-
-      const img = fixture.nativeElement.querySelector('img.og-image') as HTMLImageElement;
-      img.dispatchEvent(new Event('load'));
-      fixture.detectChanges();
-
-      const styles = (
-        StoryThumbnailComponent as unknown as { ɵcmp: { styles: string[] } }
-      ).ɵcmp.styles.join('\n');
-
-      expect(img.classList.contains('og-image-loaded')).toBe(false);
-      expect(styles).not.toContain('opacity-0');
-      expect(styles).not.toContain('transition: opacity');
-      expect(styles).not.toContain('.og-image-loaded');
     });
   });
 

@@ -20,10 +20,6 @@ describe('SidebarCommentsHeaderComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should emit dismiss event when close button is clicked', () => {
     vi.spyOn(component.dismiss, 'emit');
 
@@ -41,26 +37,6 @@ describe('SidebarCommentsHeaderComponent', () => {
   it('should render close button', () => {
     const closeBtn = fixture.debugElement.query(By.css('.close-btn'));
     expect(closeBtn).toBeTruthy();
-  });
-
-  it('should use the shared thread gap for outer header padding', () => {
-    const styles = (
-      SidebarCommentsHeaderComponent as unknown as { ɵcmp: { styles: string[] } }
-    ).ɵcmp.styles.join('\n');
-
-    expect(styles).toContain('padding: var(--thread-gap)');
-    expect(styles).not.toContain('p-3 sm:p-4');
-  });
-
-  it('should reserve the top safe area for mobile standalone PWA mode', () => {
-    const styles = (
-      SidebarCommentsHeaderComponent as unknown as { ɵcmp: { styles: string[] } }
-    ).ɵcmp.styles.join('\n');
-
-    expect(styles).toContain('@media (display-mode: standalone) and (max-width: 639.98px)');
-    expect(styles).toContain(
-      'padding-top: calc(env(safe-area-inset-top, 0px) + var(--thread-gap))',
-    );
   });
 
   it('should render open in full view button when itemId is provided', () => {

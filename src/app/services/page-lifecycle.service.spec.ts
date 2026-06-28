@@ -16,11 +16,6 @@ describe('PageLifecycleService', () => {
   });
 
   describe('initialization', () => {
-    it('should be created', () => {
-      service = TestBed.inject(PageLifecycleService);
-      expect(service).toBeTruthy();
-    });
-
     it('should start visible when document is visible', () => {
       service = TestBed.inject(PageLifecycleService);
       expect(service.isVisible()).toBe(true);

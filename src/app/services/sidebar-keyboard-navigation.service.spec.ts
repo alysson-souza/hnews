@@ -65,10 +65,6 @@ describe('SidebarKeyboardNavigationService', () => {
   });
 
   describe('initialization', () => {
-    it('should be created', () => {
-      expect(service).toBeTruthy();
-    });
-
     it('should register commands', () => {
       expect(mockCommandRegistry.register).toHaveBeenCalledWith(
         'sidebar.nextComment',

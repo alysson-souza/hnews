@@ -17,10 +17,6 @@ describe('PaginationComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should calculate start and end items correctly', () => {
     fixture.componentRef.setInput('currentPage', 2);
     fixture.componentRef.setInput('itemsPerPage', 10);

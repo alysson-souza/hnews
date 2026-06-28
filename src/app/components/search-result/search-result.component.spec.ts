@@ -26,10 +26,6 @@ describe('SearchResultComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('getParentId for search results', () => {
     it('should return story_id for comment search results', () => {
       fixture.componentRef.setInput('item', {

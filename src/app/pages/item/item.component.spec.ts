@@ -196,10 +196,6 @@ describe('ItemComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('Sorting Logic', () => {
     beforeEach(() => {
       component.item.set(mockItem);

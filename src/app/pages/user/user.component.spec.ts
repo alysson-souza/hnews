@@ -121,10 +121,6 @@ describe('UserComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('User Submissions Loading', () => {
     it('should load and display user submissions using getItems()', () => {
       component.ngOnInit();

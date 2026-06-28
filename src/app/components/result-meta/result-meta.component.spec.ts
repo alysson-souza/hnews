@@ -6,7 +6,6 @@ import { ResultMetaComponent } from './result-meta.component';
 import { UserTagComponent } from '../user-tag/user-tag.component';
 
 describe('ResultMetaComponent', () => {
-  let component: ResultMetaComponent;
   let fixture: ComponentFixture<ResultMetaComponent>;
 
   beforeEach(async () => {
@@ -16,11 +15,6 @@ describe('ResultMetaComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(ResultMetaComponent);
-    component = fixture.componentInstance;
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
   });
 
   describe('story result metadata', () => {

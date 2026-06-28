@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025-2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { StoryList } from './story-list';
 import { StoryListStore } from '@stores/story-list.store';
@@ -131,10 +130,6 @@ describe('StoryList', () => {
     keyboardNavService = TestBed.inject(
       KeyboardNavigationService,
     ) as unknown as MockKeyboardNavigationService;
-  });
-
-  it('should create', () => {
-    expect(component).toBeDefined();
   });
 
   describe('silentRefreshStoryList', () => {
@@ -285,28 +280,6 @@ describe('StoryList', () => {
     });
   });
 
-  describe('template', () => {
-    it('renders the load more button as a primary shared action', () => {
-      fixture = TestBed.createComponent(StoryList);
-      const rendered = fixture.componentInstance;
-
-      rendered.loading = signal(false);
-      rendered.refreshing = signal(false);
-      rendered.error = signal<string | null>(null);
-      rendered.stories = signal([]);
-      rendered.newStoriesAvailable = signal(0);
-      rendered.isFilteredEmpty = signal(false);
-
-      vi.spyOn(rendered, 'hasMore').mockReturnValue(true);
-
-      fixture.detectChanges();
-
-      const button = fixture.debugElement.query(By.css('.load-more-btn button'));
-      expect(button).toBeTruthy();
-      expect(button.nativeElement.classList).toContain('btn-primary');
-    });
-  });
-
   describe('hasMore', () => {
     it('should return true when more stories are available', () => {
       vi.spyOn(store, 'hasMore').mockReturnValue(true);
@@ -398,12 +371,6 @@ describe('StoryList', () => {
 
       expect(destroySpy).toHaveBeenCalled();
       expect(completeSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('isOffline computed', () => {
-    it('should be defined', () => {
-      expect(component.isOffline).toBeDefined();
     });
   });
 

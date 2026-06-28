@@ -60,10 +60,6 @@ describe('BaseCommentNavigationService', () => {
     document.body.innerHTML = '';
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should initially have no selection', () => {
     expect(service.selectedCommentId()).toBeNull();
   });

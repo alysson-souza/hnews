@@ -58,10 +58,6 @@ describe('KeyboardNavigationService', () => {
     document.body.innerHTML = '';
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('Tab Navigation', () => {
     it('should navigate to next tab', () => {
       // Mock private method access or use registered command

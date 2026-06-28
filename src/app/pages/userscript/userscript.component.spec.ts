@@ -25,10 +25,6 @@ describe('UserscriptComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should generate userscript content with the dynamic base URL', () => {
     const content = component.userscriptContent();
     expect(content).toContain('// ==UserScript==');

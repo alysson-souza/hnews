@@ -42,10 +42,6 @@ describe('SidebarService', () => {
   });
 
   describe('initialization', () => {
-    it('should be created', () => {
-      expect(service).toBeTruthy();
-    });
-
     it('should initialize with closed sidebar and null item ID', () => {
       expect(service.isOpen()).toBe(false);
       expect(service.currentItemId()).toBeNull();

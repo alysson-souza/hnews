@@ -24,11 +24,6 @@ describe('NetworkStateService', () => {
   });
 
   describe('initialization', () => {
-    it('should be created', () => {
-      service = TestBed.inject(NetworkStateService);
-      expect(service).toBeTruthy();
-    });
-
     it('should initialize with current online state', () => {
       Object.defineProperty(navigator, 'onLine', {
         writable: true,

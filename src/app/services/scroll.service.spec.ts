@@ -22,10 +22,6 @@ describe('ScrollService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('scrollToTop', () => {
     it('should scroll to top with smooth behavior by default', async () => {
       await service.scrollToTop();

@@ -45,10 +45,6 @@ describe('UserTagComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('username input', () => {
     it('should set username and load tag', () => {
       const mockTag = {

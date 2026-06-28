@@ -37,11 +37,6 @@ describe('KeyboardContextService', () => {
   });
 
   describe('initialization', () => {
-    it('should be created', () => {
-      service = TestBed.inject(KeyboardContextService);
-      expect(service).toBeTruthy();
-    });
-
     it('should initialize with default context when sidebar is closed', () => {
       mockSidebarService.isOpen.mockReturnValue(false);
       service = TestBed.inject(KeyboardContextService);

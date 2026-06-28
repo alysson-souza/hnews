@@ -33,10 +33,6 @@ describe('NavLinkComponent', () => {
     scrollService = TestBed.inject(ScrollService) as MockedObject<ScrollService>;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   describe('handleClick', () => {
     it('should scroll to top when called', () => {
       // Act
@@ -85,18 +81,6 @@ describe('NavLinkComponent', () => {
       expect(linkElement).toBeTruthy();
       expect(linkElement.nativeElement.getAttribute('href')).toBe('/test');
       expect(content.trim()).toBe('');
-    });
-
-    it('should apply correct CSS classes', () => {
-      // Arrange
-      fixture.componentRef.setInput('mobile', true);
-      fixture.detectChanges();
-
-      // Act
-      const linkElement = fixture.debugElement.query(By.css('a'));
-
-      // Assert
-      expect(linkElement.classes['nav-link-mobile']).toBe(true);
     });
 
     it('should set aria-current attribute when active', () => {

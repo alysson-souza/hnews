@@ -23,10 +23,6 @@ describe('IndexedDBService', () => {
     }
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('Initialization lifecycle', () => {
     it('falls back instead of hanging when an upgrade is blocked', async () => {
       const request = {

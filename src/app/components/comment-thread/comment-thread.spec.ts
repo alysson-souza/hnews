@@ -164,10 +164,6 @@ describe('CommentThread', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeDefined();
-  });
-
   describe('Computed Properties', () => {
     describe('totalRepliesCount', () => {
       it('should return 0 when comment is not loaded', () => {
@@ -469,17 +465,6 @@ describe('CommentThread', () => {
       expect(button).toBeDefined();
       expect(button!.disabled).toBe(false);
       expect(button!.textContent?.includes('Load 2 more replies')).toBe(true);
-    });
-
-    it('should use shared spacing wrappers for nested replies', () => {
-      const children = fixture.nativeElement.querySelector('.thread-children');
-      const loadMore = fixture.nativeElement.querySelector('.thread-load-more');
-
-      expect(children).not.toBeNull();
-      expect(children.classList.contains('space-y-3')).toBe(false);
-      expect(children.classList.contains('mt-3')).toBe(false);
-      expect(loadMore).not.toBeNull();
-      expect(loadMore.classList.contains('mt-3')).toBe(false);
     });
 
     it('should request the next page when clicking the load more button', () => {

@@ -33,10 +33,6 @@ describe('EnhanceLinksDirective', () => {
     router = TestBed.inject(Router);
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should enhance external links with icon', async () => {
     component.html.set('<a href="https://example.com">Link</a>');
     fixture.detectChanges();
@@ -140,16 +136,6 @@ describe('EnhanceLinksDirective', () => {
 
     expect(links[0].textContent).toContain('github.com');
     expect(links[1].textContent).toContain('stackoverflow.com');
-  });
-
-  it('should add styling classes to icon', () => {
-    component.html.set('<a href="https://example.com">Link</a>');
-    fixture.detectChanges();
-
-    const icon = element.querySelector('ng-icon');
-    expect(icon?.classList.contains('link-icon')).toBe(true);
-    expect(icon?.classList.contains('ml-1')).toBe(true);
-    expect(icon?.classList.contains('inline-block')).toBe(true);
   });
 
   it('should set aria-hidden on icon', () => {

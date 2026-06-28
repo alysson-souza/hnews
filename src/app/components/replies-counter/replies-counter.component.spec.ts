@@ -17,10 +17,6 @@ describe('RepliesCounterComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should stop event propagation when expand button is clicked', () => {
     fixture.componentRef.setInput('count', 5);
     fixture.detectChanges();

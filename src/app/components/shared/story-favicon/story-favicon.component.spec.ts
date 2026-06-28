@@ -37,13 +37,6 @@ describe('StoryFaviconComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
-    fixture.detectChanges();
-    expect(component).toBeTruthy();
-  });
-
   it('should generate correct Google favicon URL', () => {
     fixture.componentRef.setInput('url', 'https://www.google.com/some/path');
     fixture.componentRef.setInput('altText', 'Google');

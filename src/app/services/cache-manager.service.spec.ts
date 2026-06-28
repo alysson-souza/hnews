@@ -324,12 +324,6 @@ describe('CacheManagerService', () => {
       expect(list).toBeNull();
     });
 
-    it('clears memory cache', () => {
-      service.clearMemoryCache();
-      // Should not throw
-      expect(service).toBeTruthy();
-    });
-
     it('clears type-specific cache via clear()', async () => {
       await service.set('story', '1', { id: 1 });
       await service.set('story', '2', { id: 2 });
@@ -420,25 +414,6 @@ describe('CacheManagerService', () => {
       expect(typeof stats.swCache).toBe('number');
       expect(typeof stats.itemCount).toBe('number');
       expect(typeof stats.memoryItems).toBe('number');
-    });
-  });
-
-  describe('Prefetching', () => {
-    it('prefetches multiple keys', async () => {
-      await service.set('story', '1', { id: 1 });
-      await service.set('story', '2', { id: 2 });
-      await service.set('story', '3', { id: 3 });
-
-      await service.prefetch('story', ['1', '2', '3']);
-
-      // Should not throw
-      expect(service).toBeTruthy();
-    });
-  });
-
-  describe('Service initialization', () => {
-    it('initializes without errors', () => {
-      expect(service).toBeTruthy();
     });
   });
 

@@ -60,10 +60,6 @@ describe('PwaUpdateService', () => {
     vi.useRealTimers();
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should initialize with updateAvailable set to false', () => {
     expect(service.updateAvailable()).toBe(false);
   });

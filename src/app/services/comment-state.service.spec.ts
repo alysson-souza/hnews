@@ -25,10 +25,6 @@ describe('CommentStateService', () => {
     service = TestBed.inject(CommentStateService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('getState', () => {
     it('should return undefined for unsaved comment', () => {
       expect(service.getState(12345)).toBeUndefined();

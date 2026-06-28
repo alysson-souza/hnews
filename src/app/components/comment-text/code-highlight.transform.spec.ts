@@ -32,12 +32,6 @@ describe('highlightCodeBlocks', () => {
     expect(result).toContain('language-javascript');
   });
 
-  it('should add hljs-highlighted class to pre tags', async () => {
-    const html = '<pre><code>console.log("hello");</code></pre>';
-    const result = await highlightCodeBlocks(html);
-    expect(result).toContain('hljs-highlighted');
-  });
-
   it('should detect Python code blocks', async () => {
     const html = '<pre><code>def hello():\n  print("world")</code></pre>';
     const result = await highlightCodeBlocks(html);

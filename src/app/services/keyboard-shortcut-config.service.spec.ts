@@ -25,12 +25,6 @@ describe('KeyboardShortcutConfigService', () => {
     service = TestBed.inject(KeyboardShortcutConfigService);
   });
 
-  describe('initialization', () => {
-    it('should be created', () => {
-      expect(service).toBeTruthy();
-    });
-  });
-
   describe('getShortcutsForContext', () => {
     it('should return default context shortcuts', () => {
       const shortcuts = service.getShortcutsForContext('default');

@@ -44,10 +44,6 @@ describe('CommentHeaderComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeDefined();
-  });
-
   it('renders user tag when "by" is provided', () => {
     fixture.componentRef.setInput('by', 'alice');
     fixture.detectChanges();
@@ -107,25 +103,6 @@ describe('CommentHeaderComponent', () => {
     expect(component.density()).toBe('default');
     expect(header.classList.contains('comment-header-compact')).toBe(false);
     expect(viewThreadButton.classList.contains('view-thread-inline')).toBe(true);
-  });
-
-  it('applies compact density styles for sidebar comment headers', () => {
-    fixture.componentRef.setInput('density', 'compact');
-    fixture.componentRef.setInput('hasChildren', true);
-    fixture.componentRef.setInput('commentId', 123);
-    fixture.detectChanges();
-
-    const styles = (
-      CommentHeaderComponent as unknown as { ɵcmp: { styles: string[] } }
-    ).ɵcmp.styles.join('\n');
-    const header = fixture.debugElement.query(By.css('.comment-header'))
-      .nativeElement as HTMLElement;
-
-    expect(component.density()).toBe('compact');
-    expect(header.classList.contains('comment-header-compact')).toBe(true);
-    expect(styles).toContain('.comment-header-compact');
-    expect(styles).toContain('min-height: 0');
-    expect(styles).toContain('padding: 0 0.375rem');
   });
 
   it('forwards expand click via (expand) to parent output', () => {

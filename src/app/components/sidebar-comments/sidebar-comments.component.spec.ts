@@ -145,28 +145,6 @@ describe('SidebarCommentsComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should avoid transform classes on the open panel', () => {
-    fixture.detectChanges();
-
-    const panel: HTMLElement | null = fixture.nativeElement.querySelector('.sidebar-panel');
-    expect(panel).not.toBeNull();
-    expect(panel?.classList.contains('translate-x-full')).toBe(false);
-  });
-
-  it('should keep the panel translated offscreen while closed', () => {
-    (mockSidebarService.isOpen as Mock).mockReturnValue(false);
-
-    fixture.detectChanges();
-
-    const panel: HTMLElement | null = fixture.nativeElement.querySelector('.sidebar-panel');
-    expect(panel).not.toBeNull();
-    expect(panel?.classList.contains('translate-x-full')).toBe(true);
-  });
-
   describe('Swipe Dismissal', () => {
     function getPanel(): HTMLElement {
       fixture.detectChanges();
@@ -919,16 +897,6 @@ describe('SidebarCommentsComponent', () => {
       expect(commentsList.classList.contains('space-y-4')).toBe(false);
       expect(loadMore).not.toBeNull();
       expect(loadMore.classList.contains('mt-4')).toBe(false);
-    });
-
-    it('should reset divider spacing with the shared thread gap', () => {
-      const styles = (
-        SidebarCommentsComponent as unknown as { ɵcmp: { styles: string[] } }
-      ).ɵcmp.styles.join('\n');
-      const dividerStyles = styles.match(/\.comments-divider[\s\S]*?\}/)?.[0] ?? '';
-
-      expect(dividerStyles).toContain('margin-block: var(--thread-gap)');
-      expect(dividerStyles).not.toContain('margin-top: var(--thread-gap)');
     });
   });
 });

@@ -17,10 +17,6 @@ describe('CommentSortDropdownComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should render all sort options', () => {
     const select = fixture.nativeElement.querySelector('select');
     const options = select.querySelectorAll('option');

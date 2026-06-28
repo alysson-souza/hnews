@@ -91,10 +91,6 @@ describe('AlgoliaCommentLoaderService', () => {
     service = TestBed.inject(AlgoliaCommentLoaderService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('loadStoryWithComments', () => {
     it('should load story with all nested comments in one request', async () => {
       algoliaApiMock.getItem.mockReturnValue(of(mockAlgoliaResponse));
