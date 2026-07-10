@@ -33,7 +33,7 @@ Live demo:
 
 ### Prerequisites
 
-- Node.js (see `.nvmrc` for the required version)
+- Node.js (see `.node-version` for the required version)
 - npm
 
 ### Installation
