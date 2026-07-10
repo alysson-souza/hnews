@@ -22,8 +22,15 @@ test.describe('Userscript Page', () => {
   });
 
   test('should copy userscript to clipboard', async ({ userscriptPage, page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {
+          writeText: () => Promise.resolve(),
+        },
+      });
+    });
     await userscriptPage.navigateToUserscript();
-    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     await userscriptPage.copyButton.click();
     await page.waitForTimeout(500);
     await expect(userscriptPage.copyButton).toContainText('Copied!');

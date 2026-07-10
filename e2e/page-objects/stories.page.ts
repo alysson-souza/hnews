@@ -10,41 +10,41 @@ export class StoriesPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.storyItems = page.locator('app-story-item');
+    this.storyItems = page.locator('app-story-item').filter({ has: page.locator('.story-title') });
     this.loadMoreButton = page.locator('button:has-text("Load More")');
     this.refreshButton = page.locator('button[aria-label*="Refresh"]:visible');
-    this.newStoriesBadge = page.locator('.new-stories-badge');
+    this.newStoriesBadge = page.locator('.new-stories-indicator');
     this.navigationLinks = page.locator('nav a');
   }
 
   async navigateToTop() {
     await this.navigate('/top');
-    await this.waitForNetworkIdle();
+    await this.waitForStoryListReady();
   }
 
   async navigateToNew() {
     await this.navigate('/newest');
-    await this.waitForNetworkIdle();
+    await this.waitForStoryListReady();
   }
 
   async navigateToBest() {
     await this.navigate('/best');
-    await this.waitForNetworkIdle();
+    await this.waitForStoryListReady();
   }
 
   async navigateToAsk() {
     await this.navigate('/ask');
-    await this.waitForNetworkIdle();
+    await this.waitForStoryListReady();
   }
 
   async navigateToShow() {
     await this.navigate('/show');
-    await this.waitForNetworkIdle();
+    await this.waitForStoryListReady();
   }
 
   async navigateToJobs() {
     await this.navigate('/jobs');
-    await this.waitForNetworkIdle();
+    await this.waitForStoryListReady();
   }
 
   async getStoryCount(): Promise<number> {
@@ -112,5 +112,10 @@ export class StoriesPage extends BasePage {
     const storyItem = this.storyItems.nth(index);
     const commentsLink = storyItem.locator('.story-comments');
     return (await commentsLink.textContent()) ?? '';
+  }
+
+  private async waitForStoryListReady(): Promise<void> {
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.storyItems.first().waitFor({ timeout: 15000 });
   }
 }

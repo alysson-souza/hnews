@@ -90,7 +90,10 @@ class MockSidebarService {
 
 /** Test double for DeviceService */
 class MockDeviceService {
+  isMobile = vi.fn().mockReturnValue(false);
+  isTablet = vi.fn().mockReturnValue(false);
   isDesktop = vi.fn().mockReturnValue(false);
+  getDeviceType = vi.fn().mockReturnValue('desktop');
   shouldShowKeyboardHints = vi.fn().mockReturnValue(false);
 }
 

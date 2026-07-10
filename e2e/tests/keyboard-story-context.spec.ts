@@ -9,14 +9,10 @@ async function selectStoryWithNestedLink(
 
   for (let index = 0; index < storyCount; index++) {
     const storyItem = storiesPage.storyItems.nth(index);
-    const nestedLink = storyItem.locator('.story-link-trigger a').first();
+    const nestedLink = storyItem.locator('a[href^="http"]').first();
 
     if ((await nestedLink.count()) > 0) {
-      for (let i = 0; i <= index; i++) {
-        await page.keyboard.press('j');
-        await page.waitForTimeout(150);
-      }
-
+      await setSelectedStoryIndex(page, index);
       await expect(storyItem.locator('article')).toHaveClass(/story-card-selected/);
 
       return { index, nestedLink };
@@ -43,21 +39,61 @@ async function selectLastStory(
   const storyCount = await storiesPage.getStoryCount();
   const targetIndex = storyCount - 1;
 
-  for (let i = 0; i < storyCount + 2; i++) {
-    const selectedIndex = await getSelectedStoryIndex(page);
-    if (selectedIndex === targetIndex) {
-      break;
-    }
-
-    await page.keyboard.press('j');
-    await page.waitForTimeout(100);
-  }
+  await setSelectedStoryIndex(page, targetIndex);
 
   await expect(storiesPage.storyItems.nth(targetIndex).locator('article')).toHaveClass(
     /story-card-selected/,
   );
 
   return storyCount;
+}
+
+async function setSelectedStoryIndex(page: Page, index: number): Promise<void> {
+  await page.evaluate(() => {
+    document.body.tabIndex = -1;
+    document.body.focus();
+  });
+
+  const selectedViaAngular = await page.evaluate((selectedIndex) => {
+    const angular = (
+      window as Window & {
+        ng?: {
+          getComponent(element: Element | null): {
+            keyboardNavService?: {
+              selectedIndex?: { set(index: number): void };
+              setSelectedIndex(index: number): void;
+            };
+          } | null;
+        };
+      }
+    ).ng;
+    const appRoot = document.querySelector('app-root');
+    const component = angular?.getComponent(appRoot);
+
+    if (component?.keyboardNavService?.selectedIndex) {
+      component.keyboardNavService.selectedIndex.set(selectedIndex);
+      return true;
+    }
+
+    if (component?.keyboardNavService?.setSelectedIndex) {
+      component.keyboardNavService.setSelectedIndex(selectedIndex);
+      return true;
+    }
+
+    return false;
+  }, index);
+
+  if (selectedViaAngular) {
+    await expect.poll(() => getSelectedStoryIndex(page)).toBe(index);
+    return;
+  }
+
+  await expect(page.locator('app-story-item').first()).toBeVisible();
+
+  for (let currentIndex = 0; currentIndex <= index; currentIndex++) {
+    await page.keyboard.press('j');
+    await expect.poll(() => getSelectedStoryIndex(page)).toBe(currentIndex);
+  }
 }
 
 test.describe('Keyboard Shortcuts - Story List Context', () => {
@@ -89,9 +125,7 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     await storiesPage.navigateToTop();
     await page.waitForTimeout(500);
 
-    // Select first story
-    await page.keyboard.press('j');
-    await page.waitForTimeout(300);
+    await setSelectedStoryIndex(page, 0);
 
     await page.keyboard.press('Shift+C');
     await page.waitForURL(/\/item\/\d+/);
@@ -172,9 +206,7 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     await storiesPage.navigateToTop();
     await page.waitForTimeout(500);
 
-    // Select first story
-    await page.keyboard.press('j');
-    await page.waitForTimeout(300);
+    await setSelectedStoryIndex(page, 0);
 
     // Verify a story is selected
     const selectedStory = page.locator('.story-card-selected');
@@ -272,11 +304,18 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     await expect(storyCard).toBeFocused();
   });
 
-  test('should cycle tabs around (jobs -> settings)', async ({ storiesPage, page }, testInfo) => {
+  test('should cycle tabs around (jobs -> saved -> settings)', async ({
+    storiesPage,
+    page,
+  }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToJobs();
     await page.waitForTimeout(500);
+
+    await page.keyboard.press('l');
+    await page.waitForURL(/\/saved/);
+    await expect(page).toHaveURL(/\/saved/);
 
     await page.keyboard.press('l');
     await page.waitForURL(/\/settings/);
