@@ -53,7 +53,17 @@ export class EnhanceLinksDirective implements AfterViewInit, OnDestroy {
     this.processLinks();
 
     // Set up MutationObserver to handle dynamic content updates
-    this.observer = new MutationObserver(() => {
+    this.observer = new MutationObserver((mutations) => {
+      // Ignore mutations caused by rendering the link icon itself.
+      const linksChanged = mutations.some((mutation) =>
+        [...mutation.addedNodes, ...mutation.removedNodes].some(
+          (node) =>
+            node instanceof HTMLAnchorElement ||
+            (node instanceof Element && node.querySelector('a') !== null),
+        ),
+      );
+      if (!linksChanged) return;
+
       // Debounce rapid mutations
       if (this.processingTimeout) {
         clearTimeout(this.processingTimeout);

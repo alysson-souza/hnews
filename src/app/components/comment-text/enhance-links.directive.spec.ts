@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
 import { solarLinkLinear } from '@ng-icons/solar-icons/linear';
+import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 import { EnhanceLinksDirective } from './enhance-links.directive';
 
 @Component({
@@ -20,11 +21,20 @@ describe('EnhanceLinksDirective', () => {
   let component: TestComponent;
   let element: HTMLElement;
   let router: Router;
+  let privacyRedirectService: { transformUrl: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
+    privacyRedirectService = {
+      transformUrl: vi.fn((url: string) => url),
+    };
+
     await TestBed.configureTestingModule({
       imports: [TestComponent],
-      providers: [provideIcons({ solarLinkLinear }), provideRouter([])],
+      providers: [
+        provideIcons({ solarLinkLinear }),
+        provideRouter([]),
+        { provide: PrivacyRedirectService, useValue: privacyRedirectService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestComponent);
@@ -196,6 +206,22 @@ describe('EnhanceLinksDirective', () => {
     // should skip links that already have icons
     const finalIconCount = element.querySelectorAll('ng-icon').length;
     expect(finalIconCount).toBe(initialIconCount);
+  });
+
+  it('should preserve privacy redirect listeners after icon rendering', async () => {
+    const originalUrl = 'https://x.com/user/status/123';
+    const redirectedUrl = 'https://nitter.example/user/status/123';
+    privacyRedirectService.transformUrl.mockReturnValue(redirectedUrl);
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    component.html.set(`<a href="${originalUrl}">Post</a>`);
+    fixture.detectChanges();
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    element.querySelector('a')?.click();
+
+    expect(privacyRedirectService.transformUrl).toHaveBeenCalledWith(originalUrl);
+    expect(openSpy).toHaveBeenCalledWith(redirectedUrl, '_blank', 'noopener,noreferrer');
   });
 
   describe('Hacker News link translation', () => {
