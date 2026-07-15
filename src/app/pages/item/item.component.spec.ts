@@ -642,6 +642,19 @@ describe('ItemComponent', () => {
       expect(component.refreshing()).toBe(false);
     });
 
+    it('reports primary item and comment loading through refreshStatus', () => {
+      component.loading.set(true);
+      expect(component.refreshStatus()).toBe('loading');
+
+      component.loading.set(false);
+      component.commentsLoading.set(true);
+      expect(component.refreshStatus()).toBe('loading');
+
+      component.commentsLoading.set(false);
+      component.refreshing.set(true);
+      expect(component.refreshStatus()).toBe('refreshing');
+    });
+
     it('should be a no-op when no item is loaded (currentItemId is null)', () => {
       // Fresh component with no item loaded
       const freshComp = TestBed.createComponent(ItemComponent).componentInstance;
@@ -713,6 +726,22 @@ describe('ItemComponent', () => {
       component.refresh();
 
       expect(component.refreshing()).toBe(false);
+      expect(component.item()?.descendants).toBe(99);
+    });
+
+    it('should finish Firebase fallback refresh after its first update', () => {
+      const updatedItem: HNItem = { ...mockItem, descendants: 99 };
+      const firebaseUpdates = new Subject<HNItem | null>();
+      mockHnService.getStoryWithAllComments.mockReturnValue(of(null));
+      mockHnService.getItem.mockReturnValue(firebaseUpdates.asObservable());
+
+      component.refresh();
+      expect(component.refreshing()).toBe(true);
+
+      firebaseUpdates.next(updatedItem);
+
+      expect(component.refreshing()).toBe(false);
+      expect(firebaseUpdates.observed).toBe(false);
       expect(component.item()?.descendants).toBe(99);
     });
 

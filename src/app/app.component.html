@@ -3,7 +3,7 @@
   [searchQuery]="searchQuery"
   [mobileMenuOpen]="mobileMenuOpen()"
   [showMobileSearch]="showMobileSearch()"
-  [refreshing]="refreshing()"
+  [refreshStatus]="refreshStatus()"
   [canRefresh]="canRefresh()"
   [commitShaShort]="commitShaShort"
   [commitUrl]="commitUrl"
@@ -14,7 +14,11 @@
   (searchToggleRequested)="toggleMobileSearch()"
   (closeMenuRequested)="closeMobileMenu()"
 >
-  <router-outlet shellMain />
+  <router-outlet
+    shellMain
+    (activate)="activateRoute($event)"
+    (deactivate)="deactivateRoute($event)"
+  />
 </app-shell>
 
 <!-- PWA Update Indicator -->

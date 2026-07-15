@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { take } from 'rxjs/operators';
+import { finalize, take } from 'rxjs/operators';
+import { RefreshableRoute, RefreshStatus } from '@models/refresh';
 
 import { StoryItem } from '@components/story-item/story-item';
 import { PageContainerComponent } from '@components/shared/page-container/page-container.component';
@@ -108,7 +109,7 @@ import { SidebarService } from '@services/sidebar.service';
     `,
   ],
 })
-export class SavedStoriesComponent {
+export class SavedStoriesComponent implements RefreshableRoute {
   private savedStories = inject(SavedStoriesService);
   private hackernews = inject(HackernewsService);
   private networkState = inject(NetworkStateService);
@@ -117,6 +118,9 @@ export class SavedStoriesComponent {
 
   records = computed(() => this.savedStories.getAll());
   refreshing = signal(false);
+  readonly refreshStatus = computed<RefreshStatus>(() =>
+    this.refreshing() ? 'refreshing' : 'idle',
+  );
   error = signal<string | null>(null);
   isOffline = computed(() => this.networkState.isOffline());
 
@@ -144,15 +148,16 @@ export class SavedStoriesComponent {
 
     this.hackernews
       .getItems(ids, true)
-      .pipe(take(1))
+      .pipe(
+        take(1),
+        finalize(() => this.refreshing.set(false)),
+      )
       .subscribe({
         next: (items) => {
           this.savedStories.updateSnapshots(items);
-          this.refreshing.set(false);
         },
         error: () => {
           this.error.set('Unable to refresh saved stories.');
-          this.refreshing.set(false);
         },
       });
 

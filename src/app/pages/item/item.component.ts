@@ -4,8 +4,8 @@ import { Component, OnInit, inject, signal, computed, DestroyRef, effect } from 
 
 import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs/operators';
-import { firstValueFrom } from 'rxjs';
+import { catchError, filter, finalize, switchMap, take, tap } from 'rxjs/operators';
+import { EMPTY, firstValueFrom, of } from 'rxjs';
 import { HackernewsService } from '@services/hackernews.service';
 import { BulkLoadResult } from '@services/algolia-comment-loader.service';
 import { HNItem } from '@models/hn';
@@ -27,6 +27,7 @@ import { CommentThreadIndexService } from '@services/comment-thread-index.servic
 import { CommentThreadToolbarComponent } from '@components/comment-tools/comment-thread-toolbar.component';
 import { CommentSkeletonComponent } from '@components/comment-skeleton/comment-skeleton.component';
 import { NetworkStateService } from '@services/network-state.service';
+import { RefreshableRoute, RefreshStatus } from '@models/refresh';
 
 @Component({
   selector: 'app-item',
@@ -43,7 +44,7 @@ import { NetworkStateService } from '@services/network-state.service';
   templateUrl: './item.component.html',
   styleUrl: './item.component.css',
 })
-export class ItemComponent implements OnInit {
+export class ItemComponent implements OnInit, RefreshableRoute {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -74,6 +75,12 @@ export class ItemComponent implements OnInit {
   sortOrder = this.commentSortService.sortOrder;
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
+  readonly refreshStatus = computed<RefreshStatus>(() => {
+    if (this.refreshing()) {
+      return 'refreshing';
+    }
+    return this.loading() || this.commentsLoading() ? 'loading' : 'idle';
+  });
   previousVisitedAt = signal<number | null>(null);
   readonly commentSortSkeletonRows = [0, 1, 2] as const;
   private topLevelCommentsLoadedForSort = signal(false);
@@ -220,108 +227,101 @@ export class ItemComponent implements OnInit {
     inheritedPreviousVisitedAt: number | null,
     isRefresh = false,
   ) {
-    this.hnService.getStoryWithAllComments(itemId).subscribe({
-      next: (result) => {
-        if (result) {
-          // Algolia bulk load succeeded
-          this.bulkLoadResult.set(result);
-          this.item.set(result.story);
-          this.resolveParentDiscussion(result.story, itemId);
+    this.hnService
+      .getStoryWithAllComments(itemId)
+      .pipe(
+        catchError(() => of(null)),
+        switchMap((result) => {
+          if (result) {
+            // Algolia bulk load succeeded
+            this.bulkLoadResult.set(result);
+            this.item.set(result.story);
+            this.resolveParentDiscussion(result.story, itemId);
 
-          // Only recompute display strategy on a full load; a refresh preserves
-          // the existing pagination / small-thread-mode the user may have changed.
-          if (!isRefresh) {
-            this.applyCommentDisplayStrategy(result.story);
+            // Only recompute display strategy on a full load; a refresh preserves
+            // the existing pagination / small-thread-mode the user may have changed.
+            if (!isRefresh) {
+              this.applyCommentDisplayStrategy(result.story);
+            }
+
+            // Pre-populate allComments for sorting (top-level only)
+            const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
+            this.allComments.set(topLevelComments);
+            this.topLevelCommentsLoadedForSort.set(true);
+
+            // On refresh keep the existing previousVisitedAt so unread badges remain
+            // relative to the original page open time.
+            const previousVisitedAt = isRefresh
+              ? this.previousVisitedAt()
+              : this.getPreviousCommentsVisitedAt(result.story.id, inheritedPreviousVisitedAt);
+            if (!isRefresh) {
+              this.previousVisitedAt.set(previousVisitedAt);
+            }
+            this.commentIndex.configureContext('item', result.story, {
+              comments: Array.from(result.commentsMap.values()),
+              previousVisitedAt,
+            });
+
+            this.visitedService.markCommentsVisited(
+              result.story.id,
+              this.getCommentCountForVisit(result.story),
+            );
+
+            if (isRefresh) {
+              // Bump the token so the @for track expression rebuilds comment threads,
+              // forcing them to re-read the fresh cache data.
+              this.refreshToken.update((n) => n + 1);
+            }
+
+            this.handleLoadSuccess(isRefresh);
+            return EMPTY;
           }
 
-          // Pre-populate allComments for sorting (top-level only)
-          const topLevelComments = this.getTopLevelCommentsFromBulkResult(result);
-          this.allComments.set(topLevelComments);
-          this.topLevelCommentsLoadedForSort.set(true);
+          // Algolia failed, fall back to Firebase API within the same lifecycle.
+          const fallbackItem$ = isRefresh
+            ? this.hnService.getItem(itemId, true)
+            : this.hnService.getItem(itemId);
+          return fallbackItem$.pipe(
+            take(1),
+            tap((item) => {
+              if (!item) {
+                this.error.set('Item not found');
+                return;
+              }
 
-          // On refresh keep the existing previousVisitedAt so unread badges remain
-          // relative to the original page open time.
-          const previousVisitedAt = isRefresh
-            ? this.previousVisitedAt()
-            : this.getPreviousCommentsVisitedAt(result.story.id, inheritedPreviousVisitedAt);
-          if (!isRefresh) {
-            this.previousVisitedAt.set(previousVisitedAt);
-          }
-          this.commentIndex.configureContext('item', result.story, {
-            comments: Array.from(result.commentsMap.values()),
-            previousVisitedAt,
-          });
-
-          this.visitedService.markCommentsVisited(
-            result.story.id,
-            this.getCommentCountForVisit(result.story),
+              this.item.set(item);
+              this.resolveParentDiscussion(item, itemId);
+              if (!isRefresh) {
+                this.applyCommentDisplayStrategy(item);
+              }
+              const previousVisitedAt = isRefresh
+                ? this.previousVisitedAt()
+                : this.getPreviousCommentsVisitedAt(item.id, inheritedPreviousVisitedAt);
+              if (!isRefresh) {
+                this.previousVisitedAt.set(previousVisitedAt);
+              }
+              this.commentIndex.configureContext('item', item, { previousVisitedAt });
+              this.visitedService.markCommentsVisited(item.id, this.getCommentCountForVisit(item));
+              if (isRefresh) {
+                this.refreshToken.update((n) => n + 1);
+              }
+              this.handleLoadSuccess(isRefresh);
+            }),
+            catchError(() => {
+              this.error.set('Failed to load item. Please try again.');
+              return EMPTY;
+            }),
           );
-
+        }),
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.loading.set(false);
           if (isRefresh) {
-            // Bump the token so the @for track expression rebuilds comment threads,
-            // forcing them to re-read the fresh cache data.
-            this.refreshToken.update((n) => n + 1);
             this.refreshing.set(false);
           }
-
-          this.handleLoadSuccess(isRefresh);
-        } else {
-          // Algolia failed, fallback to Firebase API
-          this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt, isRefresh);
-        }
-      },
-      error: () => {
-        // Algolia failed, fallback to Firebase API
-        this.loadWithFirebaseApi(itemId, inheritedPreviousVisitedAt, isRefresh);
-      },
-    });
-  }
-
-  /**
-   * Fallback: Load item using Firebase API (original N+1 approach).
-   * Used when Algolia bulk load fails.
-   */
-  private loadWithFirebaseApi(
-    itemId: number,
-    inheritedPreviousVisitedAt: number | null,
-    isRefresh = false,
-  ) {
-    this.hnService.getItem(itemId).subscribe({
-      next: (item) => {
-        if (item) {
-          this.item.set(item);
-          this.resolveParentDiscussion(item, itemId);
-          if (!isRefresh) {
-            this.applyCommentDisplayStrategy(item);
-          }
-          const previousVisitedAt = isRefresh
-            ? this.previousVisitedAt()
-            : this.getPreviousCommentsVisitedAt(item.id, inheritedPreviousVisitedAt);
-          if (!isRefresh) {
-            this.previousVisitedAt.set(previousVisitedAt);
-          }
-          this.commentIndex.configureContext('item', item, { previousVisitedAt });
-          this.visitedService.markCommentsVisited(item.id, this.getCommentCountForVisit(item));
-          if (isRefresh) {
-            this.refreshToken.update((n) => n + 1);
-          }
-          this.handleLoadSuccess(isRefresh);
-        } else {
-          this.error.set('Item not found');
-        }
-        this.loading.set(false);
-        if (isRefresh) {
-          this.refreshing.set(false);
-        }
-      },
-      error: () => {
-        this.error.set('Failed to load item. Please try again.');
-        this.loading.set(false);
-        if (isRefresh) {
-          this.refreshing.set(false);
-        }
-      },
-    });
+        }),
+      )
+      .subscribe();
   }
 
   /**

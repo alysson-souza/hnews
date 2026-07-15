@@ -7,7 +7,7 @@ import { HackernewsService } from '@services/hackernews.service';
 import { NetworkStateService } from '@services/network-state.service';
 import { StoryListStateService } from '@services/story-list-state.service';
 import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
-import { map, switchMap, take } from 'rxjs/operators';
+import { finalize, map, switchMap, take } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 
 export type StoryType = 'top' | 'best' | 'new' | 'ask' | 'show' | 'job';
@@ -24,6 +24,12 @@ export class StoryListStore {
   private updateSubs = new Map<number, Subscription>();
   /** Current init subscription for cancellation */
   private currentInitSubscription: Subscription | null = null;
+  /** Current story-loading subscription for cancellation */
+  private currentLoadSubscription: Subscription | null = null;
+  /** Current pagination subscription for cancellation */
+  private currentPaginationSubscription: Subscription | null = null;
+  /** Current automatic update check for cancellation */
+  private currentBackgroundRefreshSubscription: Subscription | null = null;
   /** Monotonic counter to track init operations */
   private initSequence = 0;
   /** Queued filter mode change during init loading */
@@ -61,6 +67,8 @@ export class StoryListStore {
   readonly totalStoryIds = signal<number[]>([]);
   /** True while explicit refresh is active */
   readonly refreshing = signal<boolean>(false);
+  /** True while the automatic update check is active */
+  readonly backgroundRefreshing = signal<boolean>(false);
   /** Count of new items detected at top during background refresh */
   readonly newStoriesAvailable = signal<number>(0);
   /** Pending fresh IDs detected by background refresh; applied on user intent */
@@ -94,6 +102,10 @@ export class StoryListStore {
 
     // Cleanup all subscriptions on destroy
     this.destroyRef.onDestroy(() => {
+      this.currentInitSubscription?.unsubscribe();
+      this.currentLoadSubscription?.unsubscribe();
+      this.currentPaginationSubscription?.unsubscribe();
+      this.currentBackgroundRefreshSubscription?.unsubscribe();
       this.updateSubs.forEach((sub) => sub.unsubscribe());
       this.updateSubs.clear();
     });
@@ -122,6 +134,14 @@ export class StoryListStore {
     // Cancel any in-flight init operation
     this.currentInitSubscription?.unsubscribe();
     this.currentInitSubscription = null;
+    this.currentLoadSubscription?.unsubscribe();
+    this.currentLoadSubscription = null;
+    this.currentPaginationSubscription?.unsubscribe();
+    this.currentPaginationSubscription = null;
+    this.currentBackgroundRefreshSubscription?.unsubscribe();
+    this.currentBackgroundRefreshSubscription = null;
+    this.refreshing.set(false);
+    this.backgroundRefreshing.set(false);
 
     // Increment sequence to invalidate stale operations
     this.initSequence++;
@@ -282,16 +302,28 @@ export class StoryListStore {
       return; // No more to fetch
     }
 
+    this.currentPaginationSubscription?.unsubscribe();
+    this.currentPaginationSubscription = null;
+    const thisSequence = this.initSequence;
     this.loading.set(true);
 
     const end = Math.min(fetched + this.FILTERED_BATCH_SIZE, totalIds.length);
     const idsToFetch = totalIds.slice(fetched, end);
 
-    this.hn
+    const subscription = this.hn
       .getItems(idsToFetch)
-      .pipe(map((items) => items.filter((i): i is HNItem => !!i)))
+      .pipe(
+        map((items) => items.filter((i): i is HNItem => !!i)),
+        finalize(() => {
+          if (thisSequence === this.initSequence) {
+            this.loading.set(false);
+          }
+        }),
+      )
       .subscribe({
         next: (items) => {
+          if (thisSequence !== this.initSequence) return;
+
           // Deduplicate and merge with existing pool
           const currentPool = this.loadedStories();
           const currentIds = this.loadedStoryIds();
@@ -300,20 +332,29 @@ export class StoryListStore {
           const newIds = newItems.map((i) => i.id);
           this.setStories([...currentIds, ...newIds], [...currentPool, ...newItems]);
           this.fetchedCount.set(end);
-          this.loading.set(false);
           this.saveCurrentState();
         },
-        error: () => {
-          this.loading.set(false);
-        },
+        error: () => undefined,
       });
+
+    this.currentPaginationSubscription = subscription.closed ? null : subscription;
+    subscription.add(() => {
+      if (this.currentPaginationSubscription === subscription) {
+        this.currentPaginationSubscription = null;
+      }
+    });
   }
 
   /**
-   * Fetch IDs and current page items; when isRefresh is true, applies a short
-   * minimum display time and then performs a background details refresh.
+   * Fetch IDs and current page items. Refresh state follows the request lifecycle.
    */
-  loadStories(isRefresh = false, refreshStartTime?: number): void {
+  loadStories(isRefresh = false): void {
+    this.currentLoadSubscription?.unsubscribe();
+    this.currentLoadSubscription = null;
+    if (isRefresh) {
+      this.refreshing.set(true);
+    }
+
     // Capture current sequence
     const thisSequence = this.initSequence;
 
@@ -321,7 +362,7 @@ export class StoryListStore {
     this.error.set(null);
 
     // Use cached-first by default; on explicit refresh, force fetch IDs
-    this.getStoryIds(isRefresh)
+    const subscription = this.getStoryIds(isRefresh)
       .pipe(take(1))
       .pipe(
         switchMap((ids) => {
@@ -341,6 +382,17 @@ export class StoryListStore {
           return this.hn.getItems(pageIds, isRefresh);
         }),
         map((items) => items.filter((i): i is HNItem => !!i)),
+        finalize(() => {
+          if (thisSequence !== this.initSequence) {
+            return;
+          }
+          if (!this.currentPaginationSubscription) {
+            this.loading.set(false);
+          }
+          if (isRefresh) {
+            this.refreshing.set(false);
+          }
+        }),
       )
       .subscribe({
         next: (items) => {
@@ -354,19 +406,6 @@ export class StoryListStore {
           // Apply filter mode after data is loaded
           if (!isRefresh) {
             this.applyFilterMode();
-          }
-
-          this.loading.set(false);
-
-          if (isRefresh && refreshStartTime) {
-            const elapsed = Date.now() - refreshStartTime;
-            const remainingTime = Math.max(0, 500 - elapsed);
-            if (remainingTime > 0) {
-              setTimeout(() => this.refreshing.set(false), remainingTime);
-            } else {
-              this.refreshing.set(false);
-            }
-            // No indicator in manual refresh, we already replaced content
           }
 
           // Non-manual loads do not auto-trigger silent refresh here; the component can decide
@@ -383,10 +422,10 @@ export class StoryListStore {
           if (this.visibleStories().length === 0) {
             this.error.set('Failed to load stories. Please try again.');
           }
-          this.loading.set(false);
-          if (isRefresh) this.refreshing.set(false);
         },
       });
+
+    this.currentLoadSubscription = subscription.closed ? null : subscription;
   }
 
   /** Clear persisted state for current category and reload from network. */
@@ -394,12 +433,10 @@ export class StoryListStore {
     // Manual refresh should clear any pending indicators/state
     this.newStoriesAvailable.set(0);
     this.pendingTotalIds.set(null);
-    this.refreshing.set(true);
     // Do NOT clear current in-memory stories/ids; keep showing cached content.
     // We'll attempt a network refresh; on success, loadStories will update state
     // and save snapshot. On failure, we keep the existing cached view.
-    const refreshStartTime = Date.now();
-    this.loadStories(true, refreshStartTime);
+    this.loadStories(true);
   }
 
   /** Append next page items if available. */
@@ -416,6 +453,9 @@ export class StoryListStore {
     }
 
     // Default mode: paginated loading
+    this.currentPaginationSubscription?.unsubscribe();
+    this.currentPaginationSubscription = null;
+    const thisSequence = this.initSequence;
     this.currentPage.update((p) => p + 1);
     this.loading.set(true);
 
@@ -423,35 +463,63 @@ export class StoryListStore {
     const end = start + this.pageSize();
     const pageIds = this.totalStoryIds().slice(start, end);
 
-    this.hn
+    const subscription = this.hn
       .getItems(pageIds)
-      .pipe(map((items) => items.filter((i): i is HNItem => !!i)))
+      .pipe(
+        map((items) => items.filter((i): i is HNItem => !!i)),
+        finalize(() => {
+          if (thisSequence === this.initSequence) {
+            this.loading.set(false);
+          }
+        }),
+      )
       .subscribe({
         next: (items) => {
+          if (thisSequence !== this.initSequence) return;
+
           const currentIds = this.loadedStoryIds();
           const newIds = items.map((i) => i.id);
           const currentStories = this.loadedStories();
           this.setStories([...currentIds, ...newIds], [...currentStories, ...items]);
           this.fetchedCount.update((c) => c + items.length);
-          this.loading.set(false);
           this.saveCurrentState();
         },
         error: () => {
+          if (thisSequence !== this.initSequence) return;
           this.error.set('Failed to load more stories.');
-          this.loading.set(false);
         },
       });
+
+    this.currentPaginationSubscription = subscription.closed ? null : subscription;
+    subscription.add(() => {
+      if (this.currentPaginationSubscription === subscription) {
+        this.currentPaginationSubscription = null;
+      }
+    });
   }
 
   /** Background refresh; updates top IDs and new-stories indicator only. */
   silentRefreshStoryList(): void {
-    if (this.networkState.isOffline()) return;
+    if (this.networkState.isOffline() || this.backgroundRefreshing()) return;
 
+    this.currentBackgroundRefreshSubscription?.unsubscribe();
+    this.currentBackgroundRefreshSubscription = null;
+    const thisSequence = this.initSequence;
+    this.backgroundRefreshing.set(true);
     console.debug('🔄 Auto refresh: Checking for new stories...');
-    this.getStoryIds(true)
-      .pipe(take(1))
+    const subscription = this.getStoryIds(true)
+      .pipe(
+        take(1),
+        finalize(() => {
+          if (thisSequence === this.initSequence) {
+            this.backgroundRefreshing.set(false);
+          }
+        }),
+      )
       .subscribe({
         next: (freshIds) => {
+          if (thisSequence !== this.initSequence) return;
+
           const currentIds = this.totalStoryIds();
           const newStoryCount = this.countNewStoriesAtTop(currentIds, freshIds);
           console.debug(`🔄 Auto refresh: Found ${newStoryCount} new stories`);
@@ -467,7 +535,10 @@ export class StoryListStore {
             this.pendingTotalIds.set(null);
           }
         },
+        error: () => undefined,
       });
+
+    this.currentBackgroundRefreshSubscription = subscription.closed ? null : subscription;
   }
 
   loadNewStories(): void {

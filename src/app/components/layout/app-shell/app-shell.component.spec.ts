@@ -15,7 +15,7 @@ import { AppHeaderComponent } from '@components/layout/header/header.component';
       [searchQuery]="searchQuery"
       [mobileMenuOpen]="mobileMenuOpen"
       [showMobileSearch]="showMobileSearch"
-      [refreshing]="refreshing"
+      [refreshStatus]="refreshStatus"
       [canRefresh]="canRefresh"
       [commitShaShort]="commitShaShort"
       [commitUrl]="commitUrl"
@@ -31,7 +31,7 @@ class AppShellHostComponent {
   searchQuery = '';
   mobileMenuOpen = false;
   showMobileSearch = false;
-  refreshing = false;
+  refreshStatus: 'idle' | 'loading' | 'refreshing' = 'idle';
   canRefresh = false;
   commitShaShort = 'abc1234';
   commitUrl = 'https://example.com';

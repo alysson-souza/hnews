@@ -56,16 +56,31 @@ describe('HeaderDesktopSearchComponent', () => {
       expect(btn.nativeElement.getAttribute('tabindex')).toBe('0');
     });
 
-    it('should disable and spin while refreshing', () => {
-      fixture.componentRef.setInput('refreshing', true);
-      fixture.detectChanges();
+    it('should disable and spin during initial loading', async () => {
+      fixture.componentRef.setInput('refreshStatus', 'loading');
+      await fixture.whenStable();
 
-      const btn = fixture.debugElement.query(By.css('button[aria-label="Refreshing app"]'));
+      const btn = fixture.debugElement.query(By.css('button[aria-label="Loading app"]'));
       const icon = btn.nativeElement.querySelector('ng-icon') as HTMLElement;
 
       expect(btn.nativeElement.disabled).toBe(true);
       expect(btn.nativeElement.getAttribute('aria-busy')).toBe('true');
       expect(icon.classList.contains('animate-spin')).toBe(true);
+    });
+
+    it('reacts when loading completes', async () => {
+      fixture.componentRef.setInput('refreshStatus', 'loading');
+      await fixture.whenStable();
+
+      fixture.componentRef.setInput('refreshStatus', 'idle');
+      await fixture.whenStable();
+
+      const btn = fixture.debugElement.query(By.css('button[aria-label="Refresh app"]'));
+      const icon = btn.nativeElement.querySelector('ng-icon') as HTMLElement;
+
+      expect(btn.nativeElement.disabled).toBe(false);
+      expect(btn.nativeElement.getAttribute('aria-busy')).toBe('false');
+      expect(icon.classList.contains('animate-spin')).toBe(false);
     });
   });
 });

@@ -1,8 +1,9 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { chromium, expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
+import { tmpdir } from 'node:os';
 
 type HeaderSet = Record<string, string>;
 
@@ -33,6 +34,98 @@ test.describe('Cloudflare Pages offline boot', () => {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
     });
+  });
+
+  test('keeps the standalone refresh button reactive during loading and refresh', async () => {
+    const userDataDir = await mkdtemp(join(tmpdir(), 'hnews-pwa-'));
+    // Chromium only exposes standalone display mode in a real, headed app window.
+    // Start on an inert in-scope page so request routes are ready before the app cold boots.
+    const context = await chromium.launchPersistentContext(userDataDir, {
+      headless: false,
+      args: [`--app=${baseUrl}standalone-test-shell.html`],
+    });
+    const [page] = context.pages();
+
+    let releaseInitialLoad!: () => void;
+    const initialLoadGate = new Promise<void>((resolve) => {
+      releaseInitialLoad = resolve;
+    });
+    let releaseManualRefresh!: () => void;
+    const manualRefreshGate = new Promise<void>((resolve) => {
+      releaseManualRefresh = resolve;
+    });
+    let storyListRequests = 0;
+
+    await context.route('**/v0/topstories.json*', async (route) => {
+      storyListRequests += 1;
+      await (storyListRequests === 1 ? initialLoadGate : manualRefreshGate);
+      await route.fulfill({
+        json: [1001],
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
+    });
+    await context.route('**/v0/item/1001.json*', async (route) => {
+      await route.fulfill({
+        json: {
+          id: 1001,
+          type: 'story',
+          by: 'pwa_user',
+          time: 1_700_000_000,
+          title: 'Reactive PWA Story',
+          url: 'https://example.com/reactive-pwa-story',
+          score: 42,
+          descendants: 0,
+          kids: [],
+        },
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
+    });
+
+    await page.goto(`${baseUrl}top`, { waitUntil: 'domcontentloaded' });
+    await expect
+      .poll(() => page.evaluate(() => matchMedia('(display-mode: standalone)').matches))
+      .toBe(true);
+    await expect.poll(() => storyListRequests).toBe(1);
+
+    const loadingButton = page.getByRole('button', { name: 'Loading app' });
+    await expect(loadingButton).toBeVisible();
+    await expect(loadingButton).toBeDisabled();
+    await expect(loadingButton).toHaveAttribute('aria-busy', 'true');
+    await expect(loadingButton.locator('ng-icon')).toHaveClass(/animate-spin/);
+
+    releaseInitialLoad();
+
+    const refreshButton = page.getByRole('button', { name: 'Refresh app' });
+    await expect(refreshButton).toBeVisible();
+    await expect(refreshButton).toBeEnabled();
+    await expect(refreshButton).toHaveAttribute('aria-busy', 'false');
+
+    await refreshButton.click();
+
+    const refreshingButton = page.getByRole('button', { name: 'Refreshing app' });
+    await expect(refreshingButton).toBeVisible();
+    await expect(refreshingButton).toBeDisabled();
+    await expect(refreshingButton).toHaveAttribute('aria-busy', 'true');
+    await expect(refreshingButton.locator('ng-icon')).toHaveClass(/animate-spin/);
+
+    releaseManualRefresh();
+
+    await expect(refreshButton).toBeVisible();
+    await expect(refreshButton).toBeEnabled();
+    await expect(refreshButton.locator('ng-icon')).not.toHaveClass(/animate-spin/);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(async () => {
+            const registration = await navigator.serviceWorker.getRegistration();
+            return registration?.active?.state ?? null;
+          }),
+        { timeout: 15_000 },
+      )
+      .toBe('activated');
+
+    await context.close();
+    await rm(userDataDir, { recursive: true, force: true });
   });
 
   test('keeps the Angular service worker healthy when Pages may transform HTML', async ({
@@ -222,6 +315,12 @@ async function startCloudflareLikeServer(): Promise<{ server: Server; baseUrl: s
   const server = createServer(async (request, response) => {
     try {
       const requestUrl = new URL(request.url ?? '/', 'http://localhost');
+      if (requestUrl.pathname === '/standalone-test-shell.html') {
+        response.setHeader('Content-Type', 'text/html; charset=utf-8');
+        response.end('<link rel="manifest" href="/manifest.webmanifest"><title>HNews PWA</title>');
+        return;
+      }
+
       const requestedPath = requestUrl.pathname === '/' ? '/index.html' : requestUrl.pathname;
       const assetPath = extname(requestedPath) === '' ? '/index.html' : requestedPath;
       const filePath = toDistFilePath(assetPath);

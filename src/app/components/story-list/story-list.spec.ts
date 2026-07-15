@@ -303,16 +303,7 @@ describe('StoryList', () => {
 
       component.loadStories(true);
 
-      expect(store.loadStories).toHaveBeenCalledWith(true, undefined);
-    });
-
-    it('should call store.loadStories with refresh time', () => {
-      vi.spyOn(store, 'loadStories');
-      const time = Date.now();
-
-      component.loadStories(true, time);
-
-      expect(store.loadStories).toHaveBeenCalledWith(true, time);
+      expect(store.loadStories).toHaveBeenCalledWith(true);
     });
   });
 

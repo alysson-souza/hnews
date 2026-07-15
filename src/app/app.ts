@@ -9,9 +9,7 @@ import {
   HostListener,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
+import { RouterOutlet, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -25,8 +23,8 @@ import { KeyboardNavigationService } from '@services/keyboard-navigation.service
 import { NavigationHistoryService } from '@services/navigation-history.service';
 import { StoryListStateService } from '@services/story-list-state.service';
 import { ScrollService } from '@services/scroll.service';
-import { StoryListStore } from '@stores/story-list.store';
 import { NetworkStateService } from '@services/network-state.service';
+import { isRefreshableRoute, RefreshableRoute, RefreshStatus } from '@models/refresh';
 import { VERSION, COMMIT_SHA, COMMIT_SHA_SHORT } from './version';
 import { PwaUpdateService } from '@services/pwa-update.service';
 import { AppShellComponent } from '@components/layout/app-shell/app-shell.component';
@@ -50,7 +48,6 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
 })
 export class App implements OnInit {
   readonly keyboardShortcuts = viewChild.required(KeyboardShortcutsComponent);
-  readonly outlet = viewChild.required(RouterOutlet);
 
   title = 'HNews';
   searchQuery = '';
@@ -61,7 +58,6 @@ export class App implements OnInit {
   keyboardNavService = inject(KeyboardNavigationService);
   navigationHistory = inject(NavigationHistoryService);
   storyListStateService = inject(StoryListStateService);
-  private storyListStore = inject(StoryListStore);
   private networkState = inject(NetworkStateService);
   private scrollService = inject(ScrollService);
   http = inject(HttpClient);
@@ -87,30 +83,15 @@ export class App implements OnInit {
 
   mobileMenuOpen = signal(false);
   showMobileSearch = signal(false);
-  /** True while a refresh is in progress on any route that supports it. */
-  refreshing = computed(() => {
-    if (this.storyListStore.refreshing()) return true;
-    const comp = this.activeComponent() as { refreshing?: () => boolean } | null;
-    return typeof comp?.refreshing === 'function' ? comp.refreshing() : false;
-  });
+  private readonly activeRefreshRoute = signal<RefreshableRoute | null>(null);
+  readonly refreshStatus = computed<RefreshStatus>(
+    () => this.activeRefreshRoute()?.refreshStatus() ?? 'idle',
+  );
   private lastRefreshTime = 0;
 
-  private navigationEnd = toSignal(
-    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
-    { initialValue: null },
-  );
-  /** Currently activated route component; re-resolved on every navigation. */
-  private activeComponent = computed(() => {
-    this.navigationEnd();
-    const outlet = this.outlet();
-    if (!outlet?.isActivated || !outlet.component) return null;
-    return outlet.component;
-  });
   canRefresh = computed(() => {
     if (!this.networkState.isOnline()) return false;
-    const comp = this.activeComponent();
-    if (!comp) return false;
-    return typeof (comp as { refresh?: unknown }).refresh === 'function';
+    return this.activeRefreshRoute() !== null;
   });
 
   constructor() {
@@ -307,6 +288,11 @@ export class App implements OnInit {
   }
 
   private refreshCurrentStoryList(): void {
+    const activeRoute = this.activeRefreshRoute();
+    if (!activeRoute || this.refreshStatus() !== 'idle') {
+      return;
+    }
+
     const now = Date.now();
     if (now - this.lastRefreshTime < 1000) {
       return;
@@ -320,12 +306,16 @@ export class App implements OnInit {
       this.scrollService.scrollToTop();
     }
 
-    const outlet = this.outlet();
-    if (outlet?.isActivated && outlet.component) {
-      const activatedComponent = outlet.component as { refresh?: () => void };
-      if (typeof activatedComponent.refresh === 'function') {
-        activatedComponent.refresh();
-      }
+    activeRoute.refresh();
+  }
+
+  activateRoute(component: unknown): void {
+    this.activeRefreshRoute.set(isRefreshableRoute(component) ? component : null);
+  }
+
+  deactivateRoute(component: unknown): void {
+    if (this.activeRefreshRoute() === component) {
+      this.activeRefreshRoute.set(null);
     }
   }
 

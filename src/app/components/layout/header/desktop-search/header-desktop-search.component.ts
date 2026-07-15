@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, input, output, model } from '@angular/core';
+import { Component, computed, inject, input, output, model } from '@angular/core';
 
 import { ThemeToggleComponent } from '../../../shared/theme-toggle/theme-toggle.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -10,6 +10,7 @@ import {
   solarRefreshLinear,
 } from '@ng-icons/solar-icons/linear';
 import { CommandRegistryService } from '@services/command-registry.service';
+import { RefreshStatus } from '@models/refresh';
 
 @Component({
   selector: 'app-header-desktop-search',
@@ -33,13 +34,13 @@ import { CommandRegistryService } from '@services/command-registry.service';
           type="button"
           tabindex="0"
           (click)="commandRegistry.execute('story.refresh')"
-          [disabled]="refreshing()"
+          [disabled]="refreshBusy()"
           class="shortcuts-button pwa-refresh-button"
-          [attr.aria-label]="refreshing() ? 'Refreshing app' : 'Refresh app'"
-          [attr.aria-busy]="refreshing()"
-          [title]="refreshing() ? 'Refreshing app' : 'Refresh app'"
+          [attr.aria-label]="refreshLabel()"
+          [attr.aria-busy]="refreshBusy()"
+          [title]="refreshLabel()"
         >
-          <ng-icon name="solarRefreshLinear" [class.animate-spin]="refreshing()" />
+          <ng-icon name="solarRefreshLinear" [class.animate-spin]="refreshBusy()" />
         </button>
       }
       <app-theme-toggle />
@@ -116,7 +117,18 @@ import { CommandRegistryService } from '@services/command-registry.service';
 })
 export class HeaderDesktopSearchComponent {
   readonly commandRegistry = inject(CommandRegistryService);
-  readonly refreshing = input(false);
+  readonly refreshStatus = input<RefreshStatus>('idle');
+  readonly refreshBusy = computed(() => this.refreshStatus() !== 'idle');
+  readonly refreshLabel = computed(() => {
+    switch (this.refreshStatus()) {
+      case 'loading':
+        return 'Loading app';
+      case 'refreshing':
+        return 'Refreshing app';
+      default:
+        return 'Refresh app';
+    }
+  });
   readonly canRefresh = input(false);
   readonly searchQuery = model('');
   readonly searchSubmit = output<void>();

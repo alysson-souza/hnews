@@ -99,14 +99,14 @@ describe('AppHeaderComponent', () => {
     expect(commandRegistry.execute).toHaveBeenCalledWith('story.refresh');
   });
 
-  it('passes refreshing state to mobile controls', () => {
+  it('passes loading state to mobile controls', () => {
     fixture.componentRef.setInput('canRefresh', true);
-    fixture.componentRef.setInput('refreshing', true);
+    fixture.componentRef.setInput('refreshStatus', 'loading');
     fixture.detectChanges();
 
     const mobileControls = fixture.nativeElement.querySelector('app-header-mobile-controls');
     const refreshButton = mobileControls.querySelector(
-      'button[aria-label="Refreshing app"]',
+      'button[aria-label="Loading app"]',
     ) as HTMLButtonElement;
     const icon = refreshButton.querySelector('ng-icon') as HTMLElement;
 

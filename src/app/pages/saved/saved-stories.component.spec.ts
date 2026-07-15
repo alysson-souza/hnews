@@ -3,7 +3,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideLocationMocks } from '@angular/common/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 
 import { StoryItem } from '@components/story-item/story-item';
@@ -179,6 +179,25 @@ describe('SavedStoriesComponent', () => {
     expect(hackernews.getItems).toHaveBeenCalledWith([3], true);
     expect(savedStories.getAll()[0].story?.title).toBe('Fresh');
     expect(keyboardNav.clearSelection).toHaveBeenCalled();
+  });
+
+  it('exposes automatic refresh activity through refreshStatus', async () => {
+    savedStories.save(makeStory(5));
+    const refreshResult = new Subject<HNItem[]>();
+    hackernews.getItems.mockReturnValue(refreshResult.asObservable());
+    networkState.isOnline.mockReturnValue(true);
+    networkState.isOffline.mockReturnValue(false);
+
+    createComponent();
+    await Promise.resolve();
+
+    expect(fixture.componentInstance.refreshStatus()).toBe('refreshing');
+
+    refreshResult.next([makeStory(5, 'Fresh')]);
+    refreshResult.complete();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.refreshStatus()).toBe('idle');
   });
 
   it('renders imported ID-only records with a fallback story row', async () => {

@@ -170,8 +170,8 @@ export class StoryList implements OnInit, OnDestroy {
     // State persisted by store
   }
 
-  loadStories(isRefresh = false, refreshStartTime?: number) {
-    this.store.loadStories(isRefresh, refreshStartTime);
+  loadStories(isRefresh = false) {
+    this.store.loadStories(isRefresh);
   }
 
   loadMore() {

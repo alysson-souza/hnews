@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
 import { Component, input, output } from '@angular/core';
+import { RefreshStatus } from '@models/refresh';
 
 import { HeaderBrandComponent } from './brand/header-brand.component';
 import { HeaderDesktopNavComponent } from './desktop-nav/header-desktop-nav.component';
@@ -40,7 +41,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
           <!-- Desktop search: right-aligned -->
           <app-header-desktop-search
             [searchQuery]="searchQuery()"
-            [refreshing]="refreshing()"
+            [refreshStatus]="refreshStatus()"
             [canRefresh]="canRefresh()"
             (searchQueryChange)="searchQueryChange.emit($event)"
             (searchSubmit)="searchSubmit.emit()"
@@ -52,7 +53,7 @@ import { HeaderMobileNavComponent } from './mobile-nav/header-mobile-nav.compone
             <app-header-mobile-controls
               [mobileMenuOpen]="mobileMenuOpen()"
               [showMobileSearch]="showMobileSearch()"
-              [refreshing]="refreshing()"
+              [refreshStatus]="refreshStatus()"
               [canRefresh]="canRefresh()"
               (menuToggleRequested)="menuToggleRequested.emit()"
               (searchToggleRequested)="searchToggleRequested.emit()"
@@ -131,7 +132,7 @@ export class AppHeaderComponent {
   readonly searchQuery = input('');
   readonly mobileMenuOpen = input(false);
   readonly showMobileSearch = input(false);
-  readonly refreshing = input(false);
+  readonly refreshStatus = input<RefreshStatus>('idle');
   readonly canRefresh = input(false);
 
   readonly searchQueryChange = output<string>();

@@ -6,7 +6,7 @@ import { NetworkStateService } from '@services/network-state.service';
 import { StoryListStateService, StoryListState } from '@services/story-list-state.service';
 import { StoryFilterPreferencesService } from '@services/story-filter-preferences.service';
 import { signal } from '@angular/core';
-import { of, Subject, Observable } from 'rxjs';
+import { of, Subject, Observable, throwError } from 'rxjs';
 import { HNItem } from '@models/hn';
 import { getFilterCutoffTimestamp } from '@models/story-filter';
 
@@ -171,6 +171,122 @@ describe('StoryListStore', () => {
     expect(store.totalStoryIds()).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(store.stories().length).toBe(2);
     expect(!!store.loading()).toBe(false);
+  });
+
+  it('ends manual refresh when the request completes without a display timer', async () => {
+    store.init('top', 2);
+    await Promise.resolve();
+
+    store.refresh();
+    expect(store.refreshing()).toBe(true);
+
+    await Promise.resolve();
+
+    expect(store.refreshing()).toBe(false);
+  });
+
+  it('ends manual refresh when the request errors', async () => {
+    store.init('top', 2);
+    await Promise.resolve();
+    vi.spyOn(mockHN, 'getTopStories').mockReturnValue(
+      throwError(() => new Error('Refresh failed')),
+    );
+
+    store.refresh();
+
+    expect(store.refreshing()).toBe(false);
+    expect(store.loading()).toBe(false);
+  });
+
+  it('keeps refresh active when a request is cancelled by its replacement', async () => {
+    store.init('top', 2);
+    await Promise.resolve();
+    const firstRefresh = new Subject<number[]>();
+    const replacementRefresh = new Subject<number[]>();
+    vi.spyOn(mockHN, 'getTopStories')
+      .mockReturnValueOnce(firstRefresh.asObservable())
+      .mockReturnValueOnce(replacementRefresh.asObservable());
+
+    store.refresh();
+    store.refresh();
+
+    expect(firstRefresh.observed).toBe(false);
+    expect(store.refreshing()).toBe(true);
+
+    replacementRefresh.next([1, 2]);
+    replacementRefresh.complete();
+    await Promise.resolve();
+
+    expect(store.refreshing()).toBe(false);
+  });
+
+  it('tracks automatic update checks separately from the story skeleton state', () => {
+    const updateResult = new Subject<number[]>();
+    vi.spyOn(mockHN, 'getTopStories').mockReturnValue(updateResult.asObservable());
+
+    store.silentRefreshStoryList();
+
+    expect(store.backgroundRefreshing()).toBe(true);
+    expect(store.refreshing()).toBe(false);
+
+    updateResult.next([1, 2, 3]);
+    updateResult.complete();
+
+    expect(store.backgroundRefreshing()).toBe(false);
+  });
+
+  it('cancels an automatic update check when the active feed changes', async () => {
+    store.init('top', 2);
+    await Promise.resolve();
+    const topUpdateResult = new Subject<number[]>();
+    vi.spyOn(mockHN, 'getTopStories').mockReturnValue(topUpdateResult.asObservable());
+
+    store.silentRefreshStoryList();
+    expect(store.backgroundRefreshing()).toBe(true);
+
+    store.init('best', 2);
+
+    expect(topUpdateResult.observed).toBe(false);
+    expect(store.backgroundRefreshing()).toBe(false);
+
+    topUpdateResult.next([99, 1, 2]);
+    topUpdateResult.complete();
+    await Promise.resolve();
+
+    expect(store.storyType()).toBe('best');
+    expect(store.newStoriesAvailable()).toBe(0);
+  });
+
+  it('cancels pagination when the active feed changes', async () => {
+    store.init('top', 2);
+    await Promise.resolve();
+    const paginationResult = new Subject<HNItem[]>();
+    const getItems = mockHN.getItems.bind(mockHN);
+    vi.spyOn(mockHN, 'getItems').mockImplementation((ids) =>
+      ids.includes(3) ? paginationResult.asObservable() : getItems(ids),
+    );
+
+    store.loadMore();
+    expect(store.loading()).toBe(true);
+
+    store.init('best', 2);
+
+    expect(paginationResult.observed).toBe(false);
+
+    paginationResult.next([
+      {
+        id: 3,
+        type: 'story',
+        title: 'Stale Top Story',
+        time: getFilterCutoffTimestamp(),
+      },
+    ]);
+    paginationResult.complete();
+    await Promise.resolve();
+
+    expect(store.storyType()).toBe('best');
+    expect(store.stories().map((story) => story.id)).toEqual([1, 2]);
+    expect(store.loading()).toBe(false);
   });
 
   it('always attempts to fetch stories on cold start regardless of offline state', async () => {

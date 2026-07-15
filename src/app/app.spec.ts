@@ -12,6 +12,7 @@ import { App } from './app';
 import { PwaUpdateService } from '@services/pwa-update.service';
 import { KeyboardContextService } from '@services/keyboard-context.service';
 import { NetworkStateService } from '@services/network-state.service';
+import { CommandRegistryService } from '@services/command-registry.service';
 
 describe('App', () => {
   let mockPwaUpdateService: MockedObject<PwaUpdateService>;
@@ -719,6 +720,53 @@ describe('App', () => {
       networkState.isOnline.set(false);
 
       expect(app.canRefresh()).toBe(false);
+    });
+
+    it('reacts to the active route refresh status from its first loading state', () => {
+      const routeStatus = signal<'idle' | 'loading' | 'refreshing'>('loading');
+      const refresh = vi.fn();
+      const refreshApp = app as unknown as {
+        activateRoute(component: unknown): void;
+        refreshStatus(): 'idle' | 'loading' | 'refreshing';
+      };
+
+      refreshApp.activateRoute({ refreshStatus: routeStatus, refresh });
+
+      expect(app.canRefresh()).toBe(true);
+      expect(refreshApp.refreshStatus()).toBe('loading');
+
+      routeStatus.set('idle');
+
+      expect(refreshApp.refreshStatus()).toBe('idle');
+    });
+
+    it('clears refresh state when a non-refreshable route activates', () => {
+      const refreshApp = app as unknown as {
+        activateRoute(component: unknown): void;
+        refreshStatus(): 'idle' | 'loading' | 'refreshing';
+      };
+
+      refreshApp.activateRoute({
+        refreshStatus: signal<'idle' | 'loading' | 'refreshing'>('refreshing'),
+        refresh: vi.fn(),
+      });
+      refreshApp.activateRoute({});
+
+      expect(app.canRefresh()).toBe(false);
+      expect(refreshApp.refreshStatus()).toBe('idle');
+    });
+
+    it('routes the refresh command through the active refreshable route', async () => {
+      const refresh = vi.fn();
+      const refreshApp = app as unknown as { activateRoute(component: unknown): void };
+      refreshApp.activateRoute({
+        refreshStatus: signal<'idle' | 'loading' | 'refreshing'>('idle'),
+        refresh,
+      });
+
+      await TestBed.inject(CommandRegistryService).execute('story.refresh');
+
+      expect(refresh).toHaveBeenCalledOnce();
     });
   });
 });

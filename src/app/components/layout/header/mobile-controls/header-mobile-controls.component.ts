@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, inject, output, input } from '@angular/core';
+import { Component, computed, inject, output, input } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { CommandRegistryService } from '@services/command-registry.service';
+import { RefreshStatus } from '@models/refresh';
 import {
   solarMagniferLinear,
   solarHamburgerMenuLinear,
@@ -28,13 +29,17 @@ import {
           type="button"
           role="button"
           (click)="onRefreshApp()"
-          [disabled]="refreshing()"
+          [disabled]="refreshBusy()"
           class="mobile-menu-button pwa-refresh-button"
-          [attr.aria-label]="refreshing() ? 'Refreshing app' : 'Refresh app'"
-          [attr.aria-busy]="refreshing()"
-          [title]="refreshing() ? 'Refreshing app' : 'Refresh app'"
+          [attr.aria-label]="refreshLabel()"
+          [attr.aria-busy]="refreshBusy()"
+          [title]="refreshLabel()"
         >
-          <ng-icon name="solarRefreshLinear" class="text-2xl" [class.animate-spin]="refreshing()" />
+          <ng-icon
+            name="solarRefreshLinear"
+            class="text-2xl"
+            [class.animate-spin]="refreshBusy()"
+          />
         </button>
       }
 
@@ -97,7 +102,18 @@ export class HeaderMobileControlsComponent {
   readonly commandRegistry = inject(CommandRegistryService);
   readonly mobileMenuOpen = input(false);
   readonly showMobileSearch = input(false);
-  readonly refreshing = input(false);
+  readonly refreshStatus = input<RefreshStatus>('idle');
+  readonly refreshBusy = computed(() => this.refreshStatus() !== 'idle');
+  readonly refreshLabel = computed(() => {
+    switch (this.refreshStatus()) {
+      case 'loading':
+        return 'Loading app';
+      case 'refreshing':
+        return 'Refreshing app';
+      default:
+        return 'Refresh app';
+    }
+  });
   readonly canRefresh = input(false);
   readonly menuToggleRequested = output<void>();
   readonly searchToggleRequested = output<void>();
