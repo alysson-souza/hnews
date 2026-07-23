@@ -44,6 +44,58 @@ test.describe('Sidebar Comments Panel', () => {
 
     expect(await sidebarPage.isOpen()).toBe(true);
     await expect(sidebarPage.commentsPanel).toBeVisible();
+
+    const horizontalSpacing = await sidebarPage.commentsPanel.evaluate((panel) => {
+      const body = panel.querySelector('.comments-body');
+      const heading = panel.querySelector('.comments-heading');
+      if (!body || !heading) {
+        return null;
+      }
+
+      const bodyStyle = getComputedStyle(body);
+      const headingStyle = getComputedStyle(heading);
+
+      return {
+        bodyPaddingLeft: bodyStyle.paddingLeft,
+        bodyPaddingRight: bodyStyle.paddingRight,
+        headingPaddingLeft: headingStyle.paddingLeft,
+        headingPaddingRight: headingStyle.paddingRight,
+        headingMarginLeft: headingStyle.marginLeft,
+        headingMarginRight: headingStyle.marginRight,
+      };
+    });
+
+    expect(horizontalSpacing).toEqual({
+      bodyPaddingLeft: '18px',
+      bodyPaddingRight: '18px',
+      headingPaddingLeft: '18px',
+      headingPaddingRight: '18px',
+      headingMarginLeft: '-18px',
+      headingMarginRight: '-18px',
+    });
+
+    const dividerSpacing = await sidebarPage.commentsPanel.evaluate((panel) => {
+      const storySummary = panel.querySelector('app-sidebar-story-summary');
+      const divider = panel.querySelector('.comments-divider');
+      const sortDropdown = panel.querySelector('app-comment-sort-dropdown');
+      if (!storySummary || !divider || !sortDropdown) {
+        return null;
+      }
+
+      const summaryRect = storySummary.getBoundingClientRect();
+      const dividerRect = divider.getBoundingClientRect();
+      const dropdownRect = sortDropdown.getBoundingClientRect();
+
+      return {
+        gapAbove: dividerRect.top - summaryRect.bottom,
+        gapBelow: dropdownRect.top - dividerRect.bottom,
+      };
+    });
+
+    expect(dividerSpacing).toEqual({
+      gapAbove: 12,
+      gapBelow: 12,
+    });
   });
 
   test('should center the header title in the sidebar panel', async ({

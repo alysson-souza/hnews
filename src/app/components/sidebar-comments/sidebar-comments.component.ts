@@ -249,7 +249,10 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
       }
 
       .comments-body {
-        padding: var(--thread-gap);
+        --sidebar-comments-inline-padding: 18px;
+
+        padding-block: var(--thread-gap);
+        padding-inline: var(--sidebar-comments-inline-padding);
       }
 
       .comments-list {
@@ -265,7 +268,8 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
       }
 
       .comments-divider {
-        margin-block: var(--thread-gap);
+        margin-block-start: var(--thread-gap);
+        margin-block-end: 0;
         border-color: var(--app-border);
       }
 
@@ -273,9 +277,10 @@ import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.c
         @apply sticky top-0 z-20 isolate flex flex-col;
         @apply pointer-events-auto;
         gap: var(--thread-gap);
-        margin-inline: calc(var(--thread-gap) * -1);
+        margin-inline: calc(var(--sidebar-comments-inline-padding) * -1);
         margin-bottom: var(--thread-gap);
-        padding: var(--thread-gap);
+        padding-block: var(--thread-gap);
+        padding-inline: var(--sidebar-comments-inline-padding);
         background-color: var(--app-surface);
         border-bottom: 1px solid var(--app-border);
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
