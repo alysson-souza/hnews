@@ -2,12 +2,12 @@
 
 ## Prerequisites
 
-- Node.js 22+ (see `.nvmrc`)
+- Node.js 24+ (see `.node-version`)
 - npm 9+
 
 Optional
 
-- nvm: `nvm use` to match the project Node version
+- nvm: `nvm use` to match the project Node version (reads `.nvmrc`; run `nvm install $(cat .node-version) && nvm use $(cat .node-version)` if you don't keep one)
 
 ## Setup
 
