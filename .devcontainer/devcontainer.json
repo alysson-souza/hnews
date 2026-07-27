@@ -10,6 +10,9 @@
     "storage": "32gb"
   },
   "customizations": {
+    "zed": {
+      "extensions": ["angular"]
+    },
     "vscode": {
       "extensions": [
         "angular.ng-template",
