@@ -190,7 +190,7 @@ describe('StoryThumbnailComponent', () => {
       const img = fixture.nativeElement.querySelector('img.og-image');
       expect(img).toBeTruthy();
       expect(img.src).toContain('/api/og-image-proxy');
-      expect(img.alt).toBe('Preview for Test Story');
+      expect(img.alt).toBe('');
     });
 
     it('keeps showing favicon when service resolves with null imageUrl', async () => {

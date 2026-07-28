@@ -39,7 +39,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should generate correct Google favicon URL', () => {
     fixture.componentRef.setInput('url', 'https://www.google.com/some/path');
-    fixture.componentRef.setInput('altText', 'Google');
     fixture.detectChanges();
 
     expect(component.faviconUrl()).toBe('/api/favicons?domain=google.com');
@@ -47,7 +46,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should preserve subdomains for favicon lookup', () => {
     fixture.componentRef.setInput('url', 'https://edition.cnn.com/2026/02/25/politics/some-story');
-    fixture.componentRef.setInput('altText', 'CNN');
     fixture.detectChanges();
 
     expect(component.faviconUrl()).toBe('/api/favicons?domain=edition.cnn.com');
@@ -55,7 +53,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should preserve a full country-code hostname', () => {
     fixture.componentRef.setInput('url', 'https://news.bbc.co.uk/some/path');
-    fixture.componentRef.setInput('altText', 'BBC');
     fixture.detectChanges();
 
     expect(component.faviconUrl()).toBe('/api/favicons?domain=news.bbc.co.uk');
@@ -63,7 +60,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should return default asset if no domain found', () => {
     fixture.componentRef.setInput('url', '');
-    fixture.componentRef.setInput('altText', 'No URL');
     fixture.detectChanges();
 
     expect(component.faviconUrl()).toBe('/assets/default-thumb.svg');
@@ -71,7 +67,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should compute domain letter correctly', () => {
     fixture.componentRef.setInput('url', 'https://github.com/angular/angular');
-    fixture.componentRef.setInput('altText', 'GitHub');
     fixture.detectChanges();
 
     expect(component.domainLetter()).toBe('G');
@@ -79,7 +74,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should handle www prefix in domain letter', () => {
     fixture.componentRef.setInput('url', 'https://www.reddit.com/r/angular');
-    fixture.componentRef.setInput('altText', 'Reddit');
     fixture.detectChanges();
 
     expect(component.domainLetter()).toBe('R');
@@ -87,7 +81,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should show image initially', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     const img = fixture.nativeElement.querySelector('img');
@@ -103,7 +96,6 @@ describe('StoryFaviconComponent', () => {
       'preferredFaviconUrl',
       '/api/favicons?url=https%3A%2F%2Fwww.data.jma.go.jp%2Fmulti%2Ffavicon.ico',
     );
-    fixture.componentRef.setInput('altText', 'JMA');
     fixture.detectChanges();
 
     expect(component.faviconUrl()).toContain('/api/favicons?url=');
@@ -114,7 +106,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should show letter fallback on error', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     component.handleError();
@@ -130,7 +121,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should show letter fallback via DOM error event on img', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     const img = fixture.nativeElement.querySelector('img');
@@ -147,7 +137,6 @@ describe('StoryFaviconComponent', () => {
       'preferredFaviconUrl',
       '/api/favicons?url=https%3A%2F%2Fwww.data.jma.go.jp%2Fmulti%2Ffavicon.ico',
     );
-    fixture.componentRef.setInput('altText', 'JMA');
     fixture.detectChanges();
 
     component.handleError();
@@ -165,7 +154,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should recover from a Google error when a preferred favicon arrives later', () => {
     fixture.componentRef.setInput('url', 'https://www.data.jma.go.jp/multi/quake/article.html');
-    fixture.componentRef.setInput('altText', 'JMA');
     fixture.detectChanges();
 
     component.handleError();
@@ -184,7 +172,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should show letter fallback when Google returns a 16x16 globe', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     component.handleLoad({ target: { naturalWidth: 16, naturalHeight: 16 } } as unknown as Event);
@@ -196,7 +183,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should keep image visible when a properly sized favicon loads', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     component.handleLoad({ target: { naturalWidth: 64, naturalHeight: 64 } } as unknown as Event);
@@ -212,7 +198,6 @@ describe('StoryFaviconComponent', () => {
       'preferredFaviconUrl',
       '/api/favicons?url=https%3A%2F%2Fexample.com%2Ffavicon.ico',
     );
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     component.handleLoad({ target: { naturalWidth: 16, naturalHeight: 16 } } as unknown as Event);
@@ -224,7 +209,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should reset error state when url input changes', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     component.handleError();
@@ -240,7 +224,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should allow favicon to load after error recovery on new url', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     // Error on URL A
@@ -267,7 +250,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should reset error state on recovery trigger', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     // Trigger an error
@@ -286,7 +268,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should remount a restored broken favicon image on recovery', async () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     const imgBefore = fixture.nativeElement.querySelector('img') as HTMLImageElement;
@@ -306,7 +287,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should not auto-clear a new error without a new recovery trigger', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     thumbnailRecoveryStub.recoveryVersion.set(1);
@@ -321,7 +301,6 @@ describe('StoryFaviconComponent', () => {
 
   it('should not change state on recovery when no error', async () => {
     fixture.componentRef.setInput('url', 'https://example.com');
-    fixture.componentRef.setInput('altText', 'Example');
     fixture.detectChanges();
 
     // No error — img should be showing

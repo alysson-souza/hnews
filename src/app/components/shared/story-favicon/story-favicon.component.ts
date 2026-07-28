@@ -21,7 +21,7 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
         [src]="faviconUrl()"
         width="64"
         height="64"
-        [alt]="altText()"
+        alt=""
         class="w-full h-full object-contain"
         decoding="async"
         (error)="handleError()"
@@ -52,7 +52,6 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
 export class StoryFaviconComponent {
   readonly url = input<string>();
   readonly preferredFaviconUrl = input<string | null>(null);
-  readonly altText = input.required<string>();
   private recovery = inject(ThumbnailRecoveryService);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private lastHandledRecoveryVersion = 0;

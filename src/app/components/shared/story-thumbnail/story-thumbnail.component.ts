@@ -48,7 +48,7 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
             @if (ogImageMounted()) {
               <img
                 [src]="ogImageUrl()"
-                [alt]="'Preview for ' + storyTitle()"
+                alt=""
                 [attr.title]="ogTooltip()"
                 class="og-image"
                 [class.object-left-top]="isGithubImage()"
@@ -59,11 +59,7 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
             }
           } @else {
             <!-- Favicon fallback -->
-            <app-story-favicon
-              [url]="storyUrl()"
-              [preferredFaviconUrl]="faviconUrl()"
-              [altText]="'Favicon for ' + storyTitle()"
-            />
+            <app-story-favicon [url]="storyUrl()" [preferredFaviconUrl]="faviconUrl()" />
           }
         </a>
       }
