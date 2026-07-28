@@ -10,6 +10,7 @@ import {
   isSafePublicUrl,
   isValidDomain,
   jsonResponse,
+  matchFaviconHref,
   matchHtmlTitle,
   matchMetaContent,
   MAX_IMAGE_SIZE,
@@ -322,6 +323,45 @@ describe('matchMetaContent', () => {
   it('handles extra attributes in the meta tag', () => {
     const html = '<meta data-rh="true" property="og:title" content="Title" data-other="x">';
     expect(matchMetaContent(html, 'og:title')).toBe('Title');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// matchFaviconHref
+// ---------------------------------------------------------------------------
+
+describe('matchFaviconHref', () => {
+  it('extracts a standard icon link', () => {
+    expect(matchFaviconHref('<link rel="icon" href="../favicon.ico">')).toBe('../favicon.ico');
+  });
+
+  it('handles href before rel and shortcut icon tokens', () => {
+    expect(matchFaviconHref("<link href='/favicon.ico' rel='shortcut icon'>")).toBe('/favicon.ico');
+  });
+
+  it('falls back to an Apple touch icon', () => {
+    expect(matchFaviconHref('<link rel="apple-touch-icon" href="/touch.png">')).toBe('/touch.png');
+  });
+
+  it('prefers a standard icon over an earlier Apple touch icon', () => {
+    const html = `
+      <link rel="apple-touch-icon" href="/touch.png">
+      <link rel="icon" href="/favicon.png">
+    `;
+    expect(matchFaviconHref(html)).toBe('/favicon.png');
+  });
+
+  it('skips explicit and extension-based SVG icons', () => {
+    const html = `
+      <link rel="icon" type="image/svg+xml" href="/icon">
+      <link rel="icon" href="/icon.svg?v=1">
+      <link rel="icon" href="/favicon.png">
+    `;
+    expect(matchFaviconHref(html)).toBe('/favicon.png');
+  });
+
+  it('returns null when no supported icon is declared', () => {
+    expect(matchFaviconHref('<link rel="stylesheet" href="/styles.css">')).toBeNull();
   });
 });
 

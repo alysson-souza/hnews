@@ -8,6 +8,8 @@ import { ThumbnailRecoveryService } from './thumbnail-recovery.service';
 interface OgImageCacheEntry {
   /** The proxied OG image URL, or null if no image was found. */
   imageUrl: string | null;
+  /** The proxied page-declared favicon URL, or null if none was found. */
+  faviconUrl?: string | null;
   /** The og:title from the article, or null. */
   title: string | null;
   /** The og:description from the article, or null. */
@@ -17,6 +19,7 @@ interface OgImageCacheEntry {
 /** Data passed to observe() callbacks. */
 export interface OgImageResult {
   imageUrl: string | null;
+  faviconUrl: string | null;
   title: string | null;
   description: string | null;
 }
@@ -25,11 +28,21 @@ function sameOgImageResult(
   a: OgImageResult | null | undefined,
   b: OgImageResult | null | undefined,
 ): boolean {
-  return a?.imageUrl === b?.imageUrl && a?.title === b?.title && a?.description === b?.description;
+  return (
+    a?.imageUrl === b?.imageUrl &&
+    a?.faviconUrl === b?.faviconUrl &&
+    a?.title === b?.title &&
+    a?.description === b?.description
+  );
 }
 
 function isRetryableFallbackResult(result: OgImageResult | null | undefined): boolean {
-  return result?.imageUrl === null && result?.title === null && result?.description === null;
+  return (
+    result?.imageUrl === null &&
+    result?.faviconUrl === null &&
+    result?.title === null &&
+    result?.description === null
+  );
 }
 
 type OgImageFetchOutcome =
@@ -43,6 +56,7 @@ type OgImageFetchOutcome =
     };
 
 const RETRYABLE_FALLBACK_TTL = 60 * 60 * 1000;
+const OG_METADATA_CACHE_VERSION = 2;
 
 /**
  * Client-side validation that the article URL is a public HTTP(S) URL.
@@ -138,7 +152,12 @@ export class OgImageService {
     articleUrl: string,
     callback: (result: OgImageResult) => void,
   ): () => void {
-    const nullResult: OgImageResult = { imageUrl: null, title: null, description: null };
+    const nullResult: OgImageResult = {
+      imageUrl: null,
+      faviconUrl: null,
+      title: null,
+      description: null,
+    };
 
     // Skip invalid URLs entirely
     if (!isValidArticleUrl(articleUrl)) {
@@ -286,7 +305,7 @@ export class OgImageService {
     force: boolean,
     generation: number,
   ): Promise<void> {
-    const cacheKey = `og:${articleUrl}`;
+    const cacheKey = `og:v${OG_METADATA_CACHE_VERSION}:${articleUrl}`;
     const existingStableResult = this.resolvedResults.get(articleUrl) ?? null;
     let deliveredStableResult = existingStableResult;
 
@@ -297,6 +316,7 @@ export class OgImageService {
       if (cached) {
         const cachedResult: OgImageResult = {
           imageUrl: cached.imageUrl,
+          faviconUrl: cached.faviconUrl ?? null,
           title: cached.title,
           description: cached.description,
         };
@@ -355,7 +375,7 @@ export class OgImageService {
         if (!contentType.includes('application/json') && res.status === 404) {
           return {
             kind: 'stable',
-            result: { imageUrl: null, title: null, description: null },
+            result: { imageUrl: null, faviconUrl: null, title: null, description: null },
             ttl: RETRYABLE_FALLBACK_TTL,
           };
         }
@@ -365,13 +385,14 @@ export class OgImageService {
       if (!contentType.includes('application/json')) {
         return {
           kind: 'stable',
-          result: { imageUrl: null, title: null, description: null },
+          result: { imageUrl: null, faviconUrl: null, title: null, description: null },
           ttl: RETRYABLE_FALLBACK_TTL,
         };
       }
 
       const data = (await res.json()) as {
         imageUrl: string | null;
+        faviconUrl: string | null;
         title: string | null;
         description: string | null;
       };
@@ -380,6 +401,9 @@ export class OgImageService {
         result: {
           imageUrl: data.imageUrl
             ? `/api/og-image-proxy?url=${encodeURIComponent(data.imageUrl)}`
+            : null,
+          faviconUrl: data.faviconUrl
+            ? `/api/favicons?url=${encodeURIComponent(data.faviconUrl)}`
             : null,
           title: data.title || null,
           description: data.description || null,

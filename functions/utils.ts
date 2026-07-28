@@ -131,6 +131,41 @@ export function matchHtmlTitle(html: string): string | null {
   return match?.[1]?.trim() || null;
 }
 
+function matchHtmlAttribute(tag: string, name: string): string | null {
+  const pattern = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>]+))`, 'i');
+  const match = tag.match(pattern);
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? null;
+}
+
+export function matchFaviconHref(html: string): string | null {
+  let appleTouchIcon: string | null = null;
+
+  for (const match of html.matchAll(/<link\b[^>]*>/gi)) {
+    const tag = match[0];
+    const rel = matchHtmlAttribute(tag, 'rel');
+    const href = matchHtmlAttribute(tag, 'href');
+    if (!rel || !href) continue;
+
+    const relTokens = rel.toLowerCase().split(/\s+/).filter(Boolean);
+    const type = matchHtmlAttribute(tag, 'type')?.toLowerCase() ?? '';
+    const isSvg = type === 'image/svg+xml' || /\.svg(?:[?#]|$)/i.test(href);
+    if (isSvg) continue;
+
+    if (relTokens.includes('icon')) {
+      return href;
+    }
+
+    if (
+      appleTouchIcon === null &&
+      (relTokens.includes('apple-touch-icon') || relTokens.includes('apple-touch-icon-precomposed'))
+    ) {
+      appleTouchIcon = href;
+    }
+  }
+
+  return appleTouchIcon;
+}
+
 // ---------------------------------------------------------------------------
 // URL resolution
 // ---------------------------------------------------------------------------
@@ -254,6 +289,7 @@ export function jsonResponse(
 
 export interface OgMeta {
   imageUrl: string | null;
+  faviconUrl: string | null;
   title: string | null;
   description: string | null;
 }

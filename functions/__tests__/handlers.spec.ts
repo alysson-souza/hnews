@@ -72,9 +72,11 @@ function ogHtml(opts: {
   ogDescription?: string;
   twImage?: string;
   title?: string;
+  linkTags?: string[];
 }): string {
   const parts: string[] = ['<html><head>'];
   if (opts.title) parts.push(`<title>${opts.title}</title>`);
+  if (opts.linkTags) parts.push(...opts.linkTags);
   if (opts.ogImage) parts.push(`<meta property="og:image" content="${opts.ogImage}">`);
   if (opts.ogTitle) parts.push(`<meta property="og:title" content="${opts.ogTitle}">`);
   if (opts.ogDescription)
@@ -123,7 +125,12 @@ describe('handleOgImageApi', () => {
     const res = await handleOgImageApi(makeUrl('/api/og-image'));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body).toEqual({ imageUrl: null });
+    expect(body).toEqual({
+      imageUrl: null,
+      faviconUrl: null,
+      title: null,
+      description: null,
+    });
   });
 
   it('returns 400 for unsafe article URL (private IP)', async () => {
@@ -132,7 +139,12 @@ describe('handleOgImageApi', () => {
     );
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body).toEqual({ imageUrl: null });
+    expect(body).toEqual({
+      imageUrl: null,
+      faviconUrl: null,
+      title: null,
+      description: null,
+    });
   });
 
   it('returns 400 for unsafe article URL (non-HTTP scheme)', async () => {
@@ -159,6 +171,7 @@ describe('handleOgImageApi', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.imageUrl).toBe('https://cdn.example.com/og.jpg');
+    expect(body.faviconUrl).toBeNull();
     expect(body.title).toBe('Test Article');
     expect(body.description).toBe('A test description');
   });
@@ -300,6 +313,96 @@ describe('handleOgImageApi', () => {
 
     const body = await res.json();
     expect(body.imageUrl).toBe('https://blog.example.com/static/og.jpg');
+  });
+
+  it('resolves a page-declared favicon against the article URL', async () => {
+    const html = ogHtml({
+      linkTags: ['<link rel="icon" href="../favicon.ico">'],
+    });
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response(html, {
+          status: 200,
+          headers: { 'content-type': 'text/html' },
+        }),
+      ),
+    );
+
+    const res = await handleOgImageApi(
+      makeUrl('/api/og-image', {
+        url: 'https://www.data.jma.go.jp/multi/quake/quake_detail.html',
+      }),
+    );
+
+    const body = await res.json();
+    expect(body.faviconUrl).toBe('https://www.data.jma.go.jp/multi/favicon.ico');
+  });
+
+  it('resolves favicon URLs against the final redirected article URL', async () => {
+    const html = ogHtml({
+      linkTags: ['<link href="favicon.png" rel="shortcut icon">'],
+    });
+    const response = new Response(html, {
+      status: 200,
+      headers: { 'content-type': 'text/html' },
+    });
+    Object.defineProperty(response, 'url', {
+      configurable: true,
+      value: 'https://example.com/final/article.html',
+    });
+    vi.stubGlobal('fetch', mockFetch(response));
+
+    const res = await handleOgImageApi(
+      makeUrl('/api/og-image', { url: 'https://example.com/redirect' }),
+    );
+
+    const body = await res.json();
+    expect(body.faviconUrl).toBe('https://example.com/final/favicon.png');
+  });
+
+  it('returns an Apple touch icon when no standard icon is declared', async () => {
+    const html = ogHtml({
+      linkTags: ['<link rel="apple-touch-icon" href="/apple-touch-icon.png">'],
+    });
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response(html, {
+          status: 200,
+          headers: { 'content-type': 'text/html' },
+        }),
+      ),
+    );
+
+    const res = await handleOgImageApi(
+      makeUrl('/api/og-image', { url: 'https://example.com/article' }),
+    );
+
+    const body = await res.json();
+    expect(body.faviconUrl).toBe('https://example.com/apple-touch-icon.png');
+  });
+
+  it('nullifies a discovered favicon URL that fails the SSRF check', async () => {
+    const html = ogHtml({
+      linkTags: ['<link rel="icon" href="http://169.254.169.254/favicon.ico">'],
+    });
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response(html, {
+          status: 200,
+          headers: { 'content-type': 'text/html' },
+        }),
+      ),
+    );
+
+    const res = await handleOgImageApi(
+      makeUrl('/api/og-image', { url: 'https://example.com/article' }),
+    );
+
+    const body = await res.json();
+    expect(body.faviconUrl).toBeNull();
   });
 
   it('decodes HTML entities in title and description', async () => {
@@ -585,6 +688,47 @@ describe('handleFavicons', () => {
     expect(await res.text()).toBe('Missing domain parameter');
   });
 
+  it('proxies a safe discovered favicon URL directly', async () => {
+    const imageData = new Uint8Array([0x00, 0x00, 0x01, 0x00]);
+    const fetchSpy = vi.fn().mockResolvedValue(
+      new Response(bodyStream(imageData), {
+        status: 200,
+        headers: {
+          'content-type': 'image/x-icon',
+          'content-length': String(imageData.length),
+        },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const res = await handleFavicons(
+      makeUrl('/api/favicons', {
+        url: 'https://www.data.jma.go.jp/multi/favicon.ico',
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://www.data.jma.go.jp/multi/favicon.ico',
+      expect.objectContaining({
+        redirect: 'follow',
+        headers: { accept: 'image/*' },
+      }),
+    );
+    expect(new Uint8Array(await res.arrayBuffer())).toEqual(imageData);
+  });
+
+  it('returns 400 for an unsafe discovered favicon URL', async () => {
+    const res = await handleFavicons(
+      makeUrl('/api/favicons', {
+        url: 'http://169.254.169.254/favicon.ico',
+      }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe('Invalid url');
+  });
+
   it('returns 400 for invalid domain (has protocol)', async () => {
     const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'https://example.com' }));
     expect(res.status).toBe(400);
@@ -728,6 +872,28 @@ describe('handleFavicons', () => {
     const res = await handleFavicons(makeUrl('/api/favicons', { domain: 'example.com' }));
 
     expect(res.headers.get('cache-control')).toBe('public, max-age=2592000');
+  });
+
+  it('rejects a discovered favicon that exceeds the size limit header', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch(
+        new Response(bodyStream(new Uint8Array([0x89, 0x50, 0x4e, 0x47])), {
+          status: 200,
+          headers: {
+            'content-type': 'image/png',
+            'content-length': String(5 * 1024 * 1024 + 1),
+          },
+        }),
+      ),
+    );
+
+    const res = await handleFavicons(
+      makeUrl('/api/favicons', { url: 'https://example.com/favicon.png' }),
+    );
+
+    expect(res.status).toBe(413);
+    expect(await res.text()).toBe('Image too large');
   });
 
   it('sets CORS headers on error responses', async () => {

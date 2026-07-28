@@ -45,20 +45,20 @@ describe('StoryFaviconComponent', () => {
     expect(component.faviconUrl()).toBe('/api/favicons?domain=google.com');
   });
 
-  it('should strip subdomains for favicon lookup', () => {
+  it('should preserve subdomains for favicon lookup', () => {
     fixture.componentRef.setInput('url', 'https://edition.cnn.com/2026/02/25/politics/some-story');
     fixture.componentRef.setInput('altText', 'CNN');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('/api/favicons?domain=cnn.com');
+    expect(component.faviconUrl()).toBe('/api/favicons?domain=edition.cnn.com');
   });
 
-  it('should preserve compound country-code TLDs (co.uk)', () => {
+  it('should preserve a full country-code hostname', () => {
     fixture.componentRef.setInput('url', 'https://news.bbc.co.uk/some/path');
     fixture.componentRef.setInput('altText', 'BBC');
     fixture.detectChanges();
 
-    expect(component.faviconUrl()).toBe('/api/favicons?domain=bbc.co.uk');
+    expect(component.faviconUrl()).toBe('/api/favicons?domain=news.bbc.co.uk');
   });
 
   it('should return default asset if no domain found', () => {
@@ -97,6 +97,21 @@ describe('StoryFaviconComponent', () => {
     expect(letter).toBeFalsy();
   });
 
+  it('should prefer a page-declared favicon URL', () => {
+    fixture.componentRef.setInput('url', 'https://www.data.jma.go.jp/multi/quake/article.html');
+    fixture.componentRef.setInput(
+      'preferredFaviconUrl',
+      '/api/favicons?url=https%3A%2F%2Fwww.data.jma.go.jp%2Fmulti%2Ffavicon.ico',
+    );
+    fixture.componentRef.setInput('altText', 'JMA');
+    fixture.detectChanges();
+
+    expect(component.faviconUrl()).toContain('/api/favicons?url=');
+    expect(fixture.nativeElement.querySelector('img').getAttribute('src')).toContain(
+      '/api/favicons?url=',
+    );
+  });
+
   it('should show letter fallback on error', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
     fixture.componentRef.setInput('altText', 'Example');
@@ -126,6 +141,47 @@ describe('StoryFaviconComponent', () => {
     expect(fixture.nativeElement.querySelector('div')).toBeTruthy();
   });
 
+  it('should fall back from a failed preferred favicon to Google, then to the letter', () => {
+    fixture.componentRef.setInput('url', 'https://www.data.jma.go.jp/multi/quake/article.html');
+    fixture.componentRef.setInput(
+      'preferredFaviconUrl',
+      '/api/favicons?url=https%3A%2F%2Fwww.data.jma.go.jp%2Fmulti%2Ffavicon.ico',
+    );
+    fixture.componentRef.setInput('altText', 'JMA');
+    fixture.detectChanges();
+
+    component.handleError();
+    fixture.detectChanges();
+
+    expect(component.faviconUrl()).toBe('/api/favicons?domain=data.jma.go.jp');
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+
+    component.handleError();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('div').textContent.trim()).toBe('D');
+  });
+
+  it('should recover from a Google error when a preferred favicon arrives later', () => {
+    fixture.componentRef.setInput('url', 'https://www.data.jma.go.jp/multi/quake/article.html');
+    fixture.componentRef.setInput('altText', 'JMA');
+    fixture.detectChanges();
+
+    component.handleError();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
+
+    fixture.componentRef.setInput(
+      'preferredFaviconUrl',
+      '/api/favicons?url=https%3A%2F%2Fwww.data.jma.go.jp%2Fmulti%2Ffavicon.ico',
+    );
+    fixture.detectChanges();
+
+    expect(component.faviconUrl()).toContain('/api/favicons?url=');
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+  });
+
   it('should show letter fallback when Google returns a 16x16 globe', () => {
     fixture.componentRef.setInput('url', 'https://example.com');
     fixture.componentRef.setInput('altText', 'Example');
@@ -144,6 +200,22 @@ describe('StoryFaviconComponent', () => {
     fixture.detectChanges();
 
     component.handleLoad({ target: { naturalWidth: 64, naturalHeight: 64 } } as unknown as Event);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('img')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('div')).toBeFalsy();
+  });
+
+  it('should keep a genuine 16x16 publisher favicon visible', () => {
+    fixture.componentRef.setInput('url', 'https://example.com/article');
+    fixture.componentRef.setInput(
+      'preferredFaviconUrl',
+      '/api/favicons?url=https%3A%2F%2Fexample.com%2Ffavicon.ico',
+    );
+    fixture.componentRef.setInput('altText', 'Example');
+    fixture.detectChanges();
+
+    component.handleLoad({ target: { naturalWidth: 16, naturalHeight: 16 } } as unknown as Event);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('img')).toBeTruthy();

@@ -130,7 +130,9 @@ describe('OgImageService', () => {
 
     fetchSpy = vi
       .fn()
-      .mockResolvedValue(makeFetchResponse({ imageUrl: null, title: null, description: null }));
+      .mockResolvedValue(
+        makeFetchResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }),
+      );
     vi.stubGlobal('fetch', fetchSpy);
 
     cacheStub = new CacheManagerServiceStub();
@@ -164,6 +166,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'ftp://example.com', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -174,6 +177,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://192.168.1.1/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -184,6 +188,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://localhost:3000', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -194,6 +199,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://intranet/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -204,6 +210,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://app.internal/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -214,6 +221,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://mybox.local/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -224,6 +232,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://app.localhost/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -234,6 +243,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'http://user:pass@example.com', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -244,6 +254,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'not-a-url', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -254,6 +265,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'https://example.com:3000/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -264,6 +276,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'https://metadata.google.internal/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -301,6 +314,7 @@ describe('OgImageService', () => {
       service.observe(document.createElement('div'), 'https://example.com/page', cb);
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
@@ -360,6 +374,7 @@ describe('OgImageService', () => {
       fetchSpy.mockResolvedValueOnce(
         makeFetchResponse({
           imageUrl: 'https://img.example.com/og.jpg',
+          faviconUrl: null,
           title: 'Example',
           description: 'Desc',
         }),
@@ -376,6 +391,7 @@ describe('OgImageService', () => {
         '/api/og-image-proxy?url=' + encodeURIComponent('https://img.example.com/og.jpg');
       expect(cb1).toHaveBeenCalledWith({
         imageUrl: expectedProxy,
+        faviconUrl: null,
         title: 'Example',
         description: 'Desc',
       });
@@ -387,6 +403,7 @@ describe('OgImageService', () => {
 
       expect(cb2).toHaveBeenCalledWith({
         imageUrl: expectedProxy,
+        faviconUrl: null,
         title: 'Example',
         description: 'Desc',
       });
@@ -415,6 +432,7 @@ describe('OgImageService', () => {
       fetchSpy.mockResolvedValueOnce(
         makeFetchResponse({
           imageUrl: 'https://img.example.com/og.jpg',
+          faviconUrl: null,
           title: 'T',
           description: 'D',
         }),
@@ -460,6 +478,7 @@ describe('OgImageService', () => {
       fetchSpy.mockResolvedValueOnce(
         makeFetchResponse({
           imageUrl: 'https://cdn.example.com/img.png',
+          faviconUrl: null,
           title: 'Article Title',
           description: 'Article Description',
         }),
@@ -471,19 +490,44 @@ describe('OgImageService', () => {
       MockIntersectionObserver.instances[0].triggerEntry(el, true);
       await flush();
 
-      expect(cacheStub.get).toHaveBeenCalledWith('ogImage', `og:${url}`);
-      expect(cacheStub.set).toHaveBeenCalledWith('ogImage', `og:${url}`, {
+      expect(cacheStub.get).toHaveBeenCalledWith('ogImage', `og:v2:${url}`);
+      expect(cacheStub.set).toHaveBeenCalledWith('ogImage', `og:v2:${url}`, {
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/img.png'),
+        faviconUrl: null,
         title: 'Article Title',
         description: 'Article Description',
       });
       expect(cb).toHaveBeenCalledWith({
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/img.png'),
+        faviconUrl: null,
         title: 'Article Title',
         description: 'Article Description',
       });
+    });
+
+    it('normalizes a cached legacy entry without favicon metadata', async () => {
+      const el = document.createElement('div');
+      const url = 'https://example.com/legacy-article';
+      cacheStub.get.mockResolvedValueOnce({
+        imageUrl: null,
+        title: 'Cached title',
+        description: null,
+      });
+
+      const cb = vi.fn();
+      service.observe(el, url, cb);
+      MockIntersectionObserver.instances[0].triggerEntry(el, true);
+      await flush();
+
+      expect(cb).toHaveBeenCalledWith({
+        imageUrl: null,
+        faviconUrl: null,
+        title: 'Cached title',
+        description: null,
+      });
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
 
     it('skips non-intersecting entries', async () => {
@@ -505,7 +549,7 @@ describe('OgImageService', () => {
       const url = 'https://example.com/article';
 
       fetchSpy.mockResolvedValueOnce(
-        makeFetchResponse({ imageUrl: null, title: null, description: null }),
+        makeFetchResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }),
       );
 
       service.observe(el, url, vi.fn());
@@ -524,7 +568,7 @@ describe('OgImageService', () => {
       const url = 'https://example.com/article';
 
       fetchSpy.mockResolvedValue(
-        makeFetchResponse({ imageUrl: null, title: 'T', description: null }),
+        makeFetchResponse({ imageUrl: null, faviconUrl: null, title: 'T', description: null }),
       );
 
       service.observe(el1, url, vi.fn());
@@ -550,6 +594,7 @@ describe('OgImageService', () => {
       fetchSpy.mockResolvedValueOnce(
         makeFetchResponse({
           imageUrl: 'https://cdn.example.com/img.png',
+          faviconUrl: null,
           title: 'Title',
           description: null,
         }),
@@ -568,6 +613,7 @@ describe('OgImageService', () => {
       const expected = {
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/img.png'),
+        faviconUrl: null,
         title: 'Title',
         description: null,
       };
@@ -588,6 +634,7 @@ describe('OgImageService', () => {
       fetchSpy.mockResolvedValueOnce(
         makeFetchResponse({
           imageUrl: 'https://cdn.example.com/image.jpg',
+          faviconUrl: null,
           title: null,
           description: null,
         }),
@@ -606,12 +653,18 @@ describe('OgImageService', () => {
       );
     });
 
-    it('returns null imageUrl when API returns null imageUrl', async () => {
+    it('wraps a discovered favicon URL with the favicon proxy endpoint', async () => {
       const el = document.createElement('div');
-      const url = 'https://example.com/article';
+      const url = 'https://www.data.jma.go.jp/multi/quake/article.html';
+      const discoveredUrl = 'https://www.data.jma.go.jp/multi/favicon.ico';
 
       fetchSpy.mockResolvedValueOnce(
-        makeFetchResponse({ imageUrl: null, title: 'T', description: 'D' }),
+        makeFetchResponse({
+          imageUrl: null,
+          faviconUrl: discoveredUrl,
+          title: null,
+          description: null,
+        }),
       );
 
       const cb = vi.fn();
@@ -621,6 +674,28 @@ describe('OgImageService', () => {
 
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: `/api/favicons?url=${encodeURIComponent(discoveredUrl)}`,
+        title: null,
+        description: null,
+      });
+    });
+
+    it('returns null imageUrl when API returns null imageUrl', async () => {
+      const el = document.createElement('div');
+      const url = 'https://example.com/article';
+
+      fetchSpy.mockResolvedValueOnce(
+        makeFetchResponse({ imageUrl: null, faviconUrl: null, title: 'T', description: 'D' }),
+      );
+
+      const cb = vi.fn();
+      service.observe(el, url, cb);
+      MockIntersectionObserver.instances[0].triggerEntry(el, true);
+      await flush();
+
+      expect(cb).toHaveBeenCalledWith({
+        imageUrl: null,
+        faviconUrl: null,
         title: 'T',
         description: 'D',
       });
@@ -641,14 +716,16 @@ describe('OgImageService', () => {
 
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
       expect(cacheStub.set).toHaveBeenCalledWith(
         'ogImage',
-        `og:${url}`,
+        `og:v2:${url}`,
         {
           imageUrl: null,
+          faviconUrl: null,
           title: null,
           description: null,
         },
@@ -675,14 +752,16 @@ describe('OgImageService', () => {
 
       expect(cb).toHaveBeenCalledWith({
         imageUrl: null,
+        faviconUrl: null,
         title: null,
         description: null,
       });
       expect(cacheStub.set).toHaveBeenCalledWith(
         'ogImage',
-        `og:${url}`,
+        `og:v2:${url}`,
         {
           imageUrl: null,
+          faviconUrl: null,
           title: null,
           description: null,
         },
@@ -729,6 +808,7 @@ describe('OgImageService', () => {
       fetchSpy.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(
         makeFetchResponse({
           imageUrl: 'https://cdn.example.com/after-recovery.jpg',
+          faviconUrl: null,
           title: 'Recovered',
           description: 'Recovered description',
         }),
@@ -750,6 +830,7 @@ describe('OgImageService', () => {
         imageUrl:
           '/api/og-image-proxy?url=' +
           encodeURIComponent('https://cdn.example.com/after-recovery.jpg'),
+        faviconUrl: null,
         title: 'Recovered',
         description: 'Recovered description',
       });
@@ -760,14 +841,14 @@ describe('OgImageService', () => {
       const url = 'https://example.com/article';
 
       fetchSpy.mockResolvedValueOnce(
-        makeFetchResponse({ imageUrl: null, title: null, description: null }),
+        makeFetchResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }),
       );
 
       service.observe(el, url, vi.fn());
       MockIntersectionObserver.instances[0].triggerEntry(el, true);
       await flush();
 
-      expect(cacheStub.get).toHaveBeenCalledWith('ogImage', 'og:https://example.com/article');
+      expect(cacheStub.get).toHaveBeenCalledWith('ogImage', 'og:v2:https://example.com/article');
     });
 
     it('calls fetch with correct API URL', async () => {
@@ -775,7 +856,7 @@ describe('OgImageService', () => {
       const url = 'https://example.com/article?foo=bar';
 
       fetchSpy.mockResolvedValueOnce(
-        makeFetchResponse({ imageUrl: null, title: null, description: null }),
+        makeFetchResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }),
       );
 
       service.observe(el, url, vi.fn());
@@ -799,7 +880,14 @@ describe('OgImageService', () => {
         () =>
           new Promise<Response>((resolve) => {
             resolvers.push(() =>
-              resolve(makeFetchResponse({ imageUrl: null, title: null, description: null })),
+              resolve(
+                makeFetchResponse({
+                  imageUrl: null,
+                  faviconUrl: null,
+                  title: null,
+                  description: null,
+                }),
+              ),
             );
           }),
       );
@@ -838,7 +926,14 @@ describe('OgImageService', () => {
         () =>
           new Promise<Response>((resolve) => {
             resolvers.push(() =>
-              resolve(makeFetchResponse({ imageUrl: null, title: null, description: null })),
+              resolve(
+                makeFetchResponse({
+                  imageUrl: null,
+                  faviconUrl: null,
+                  title: null,
+                  description: null,
+                }),
+              ),
             );
           }),
       );
@@ -883,6 +978,7 @@ describe('OgImageService', () => {
               resolve(
                 makeFetchResponse({
                   imageUrl: 'https://cdn.example.com/shared.jpg',
+                  faviconUrl: null,
                   title: 'Shared',
                   description: null,
                 }),
@@ -914,12 +1010,14 @@ describe('OgImageService', () => {
       expect(cb1).toHaveBeenCalledWith({
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/shared.jpg'),
+        faviconUrl: null,
         title: 'Shared',
         description: null,
       });
       expect(cb2).toHaveBeenCalledWith({
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/shared.jpg'),
+        faviconUrl: null,
         title: 'Shared',
         description: null,
       });
@@ -937,7 +1035,14 @@ describe('OgImageService', () => {
         () =>
           new Promise<Response>((resolve) => {
             resolvers.push(() =>
-              resolve(makeFetchResponse({ imageUrl: null, title: null, description: null })),
+              resolve(
+                makeFetchResponse({
+                  imageUrl: null,
+                  faviconUrl: null,
+                  title: null,
+                  description: null,
+                }),
+              ),
             );
           }),
       );
@@ -978,6 +1083,7 @@ describe('OgImageService', () => {
               resolve(
                 makeFetchResponse({
                   imageUrl: 'https://cdn.example.com/recovered.jpg',
+                  faviconUrl: null,
                   title: 'Recovered',
                   description: null,
                 }),
@@ -1012,6 +1118,7 @@ describe('OgImageService', () => {
       expect(callbacks[5]).toHaveBeenCalledWith({
         imageUrl:
           '/api/og-image-proxy?url=' + encodeURIComponent('https://cdn.example.com/recovered.jpg'),
+        faviconUrl: null,
         title: 'Recovered',
         description: null,
       });

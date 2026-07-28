@@ -10,6 +10,7 @@ import {
   isSafePublicUrl,
   isValidDomain,
   jsonResponse,
+  matchFaviconHref,
   matchHtmlTitle,
   matchMetaContent,
   MAX_IMAGE_SIZE,
@@ -289,7 +290,7 @@ function isTransientArticleFetchStatus(status: number): boolean {
 }
 
 export async function fetchArticleOgMeta(articleUrl: string): Promise<ArticleOgMetaResult> {
-  const empty: OgMeta = { imageUrl: null, title: null, description: null };
+  const empty: OgMeta = { imageUrl: null, faviconUrl: null, title: null, description: null };
 
   let parsed: URL;
   try {
@@ -340,6 +341,15 @@ export async function fetchArticleOgMeta(articleUrl: string): Promise<ArticleOgM
     const ogImage = matchMetaContent(htmlChunk, 'og:image');
     const twImage = matchMetaContent(htmlChunk, 'twitter:image');
     const candidate = ogImage || twImage;
+    const faviconHref = matchFaviconHref(htmlChunk);
+    let resolvedPageUrl = parsed;
+    if (res.url) {
+      try {
+        resolvedPageUrl = new URL(res.url);
+      } catch {
+        // Keep the requested article URL as the resolution base.
+      }
+    }
 
     // Title: og:title → twitter:title → <title>
     const ogTitle =
@@ -356,7 +366,10 @@ export async function fetchArticleOgMeta(articleUrl: string): Promise<ArticleOgM
     return {
       kind: 'stable',
       meta: {
-        imageUrl: candidate ? resolveImageUrl(candidate, parsed) : null,
+        imageUrl: candidate ? resolveImageUrl(candidate, resolvedPageUrl) : null,
+        faviconUrl: faviconHref
+          ? resolveImageUrl(decodeEntities(faviconHref), resolvedPageUrl)
+          : null,
         title: ogTitle ? truncate(decodeEntities(ogTitle), 200) : null,
         description: ogDesc ? truncate(decodeEntities(ogDesc), 300) : null,
       },
@@ -438,19 +451,23 @@ export function injectMeta(
 export async function handleOgImageApi(reqUrl: URL): Promise<Response> {
   const articleUrl = reqUrl.searchParams.get('url');
   if (!articleUrl) {
-    return jsonResponse({ imageUrl: null }, 400);
+    return jsonResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }, 400);
   }
 
   if (!isSafePublicUrl(articleUrl)) {
-    return jsonResponse({ imageUrl: null }, 400);
+    return jsonResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }, 400);
   }
 
   try {
     const result = await fetchArticleOgMeta(articleUrl);
     if (result.kind === 'transientFailure') {
-      return jsonResponse({ imageUrl: null, title: null, description: null }, 503, {
-        'cache-control': 'no-store',
-      });
+      return jsonResponse(
+        { imageUrl: null, faviconUrl: null, title: null, description: null },
+        503,
+        {
+          'cache-control': 'no-store',
+        },
+      );
     }
 
     const ogMeta = result.meta;
@@ -459,12 +476,15 @@ export async function handleOgImageApi(reqUrl: URL): Promise<Response> {
     if (ogMeta.imageUrl && !isSafePublicUrl(ogMeta.imageUrl)) {
       ogMeta.imageUrl = null;
     }
+    if (ogMeta.faviconUrl && !isSafePublicUrl(ogMeta.faviconUrl)) {
+      ogMeta.faviconUrl = null;
+    }
 
     return jsonResponse(ogMeta, 200, {
       'cache-control': 'public, max-age=604800', // 7 days
     });
   } catch {
-    return jsonResponse({ imageUrl: null, title: null, description: null }, 503, {
+    return jsonResponse({ imageUrl: null, faviconUrl: null, title: null, description: null }, 503, {
       'cache-control': 'no-store',
     });
   }
@@ -579,31 +599,41 @@ export async function handleOgImageProxy(reqUrl: URL): Promise<Response> {
 // ---------------------------------------------------------------------------
 
 /**
+ * GET /api/favicons?url=<favicon-url>
  * GET /api/favicons?domain=<domain>
- * Proxies favicon requests through Google's favicon service to avoid
- * rate-limiting and content blocker issues.
+ * Proxies discovered favicon URLs directly, with Google's favicon service as
+ * the compatibility fallback for domain-only requests.
  */
 export async function handleFavicons(reqUrl: URL): Promise<Response> {
+  const faviconUrl = reqUrl.searchParams.get('url');
   const domain = reqUrl.searchParams.get('domain');
-  if (!domain) {
-    return new Response('Missing domain parameter', { status: 400, headers: CORS_HEADERS });
-  }
+  let upstreamUrl: string;
 
-  if (!isValidDomain(domain)) {
-    return new Response('Invalid domain', { status: 400, headers: CORS_HEADERS });
+  if (faviconUrl) {
+    const parsedFaviconUrl = isSafePublicUrl(faviconUrl);
+    if (!parsedFaviconUrl) {
+      return new Response('Invalid url', { status: 400, headers: CORS_HEADERS });
+    }
+    upstreamUrl = parsedFaviconUrl.toString();
+  } else {
+    if (!domain) {
+      return new Response('Missing domain parameter', { status: 400, headers: CORS_HEADERS });
+    }
+    if (!isValidDomain(domain)) {
+      return new Response('Invalid domain', { status: 400, headers: CORS_HEADERS });
+    }
+    upstreamUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
   }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
 
   try {
-    const res = await fetch(
-      `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`,
-      {
-        signal: controller.signal,
-        headers: { accept: 'image/*' },
-      },
-    );
+    const res = await fetch(upstreamUrl, {
+      signal: controller.signal,
+      redirect: 'follow',
+      headers: { accept: 'image/*' },
+    });
 
     if (!res.ok || !res.body) {
       return new Response('Upstream error', { status: 502, headers: CORS_HEADERS });
@@ -618,13 +648,38 @@ export async function handleFavicons(reqUrl: URL): Promise<Response> {
       return new Response('SVG not allowed', { status: 400, headers: CORS_HEADERS });
     }
 
-    const body = await res.arrayBuffer();
+    const contentLength = Number(res.headers.get('content-length') || 0);
+    if (contentLength > MAX_IMAGE_SIZE) {
+      return new Response('Image too large', { status: 413, headers: CORS_HEADERS });
+    }
+
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let totalBytes = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done || !value) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_IMAGE_SIZE) {
+        reader.cancel();
+        return new Response('Image too large', { status: 413, headers: CORS_HEADERS });
+      }
+      chunks.push(value);
+    }
+
+    const body = new Uint8Array(totalBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
 
     return new Response(body, {
       status: 200,
       headers: {
         'content-type': contentType,
-        'content-length': String(body.byteLength),
+        'content-length': String(totalBytes),
         'cache-control': 'public, max-age=2592000', // 30 days
         'x-content-type-options': 'nosniff',
         'content-disposition': 'inline',

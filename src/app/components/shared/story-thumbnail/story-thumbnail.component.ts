@@ -59,7 +59,11 @@ import { ThumbnailRecoveryService } from '@services/thumbnail-recovery.service';
             }
           } @else {
             <!-- Favicon fallback -->
-            <app-story-favicon [url]="storyUrl()" [altText]="'Favicon for ' + storyTitle()" />
+            <app-story-favicon
+              [url]="storyUrl()"
+              [preferredFaviconUrl]="faviconUrl()"
+              [altText]="'Favicon for ' + storyTitle()"
+            />
           }
         </a>
       }
@@ -101,6 +105,8 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
 
   /** The resolved OG image URL (proxied), or null to show favicon. */
   readonly ogImageUrl = signal<string | null>(null);
+  /** The resolved page-declared favicon URL (proxied), or null to use Google. */
+  readonly faviconUrl = signal<string | null>(null);
   /** The og:title from the article. */
   readonly ogTitle = signal<string | null>(null);
   /** The og:description from the article. */
@@ -170,6 +176,7 @@ export class StoryThumbnailComponent implements OnInit, OnDestroy {
       this.cleanupObserver = this.ogImageService.observe(el, url, (result: OgImageResult) => {
         this.ogImageLoadFailed.set(false);
         this.ogImageUrl.set(result.imageUrl);
+        this.faviconUrl.set(result.faviconUrl);
         this.ogTitle.set(result.title);
         this.ogDescription.set(result.description);
       });

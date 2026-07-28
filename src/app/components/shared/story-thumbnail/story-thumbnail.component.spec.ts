@@ -181,6 +181,7 @@ describe('StoryThumbnailComponent', () => {
 
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=https%3A%2F%2Fcdn.example.com%2Fog.jpg',
+        faviconUrl: null,
         title: 'Article Title',
         description: 'Article Description',
       });
@@ -202,6 +203,7 @@ describe('StoryThumbnailComponent', () => {
 
       ogImageStub.resolve(url, {
         imageUrl: null,
+        faviconUrl: null,
         title: 'Title',
         description: null,
       });
@@ -211,6 +213,28 @@ describe('StoryThumbnailComponent', () => {
       const favicon = fixture.nativeElement.querySelector('app-story-favicon');
       expect(img).toBeFalsy();
       expect(favicon).toBeTruthy();
+    });
+
+    it('passes a discovered favicon URL to the favicon component', async () => {
+      const url = 'https://www.data.jma.go.jp/multi/quake/article.html';
+      const faviconUrl = '/api/favicons?url=https%3A%2F%2Fwww.data.jma.go.jp%2Fmulti%2Ffavicon.ico';
+      fixture.componentRef.setInput('storyTitle', 'JMA Story');
+      fixture.componentRef.setInput('storyUrl', url);
+      fixture.detectChanges();
+
+      await Promise.resolve();
+
+      ogImageStub.resolve(url, {
+        imageUrl: null,
+        faviconUrl,
+        title: 'JMA Story',
+        description: null,
+      });
+      fixture.detectChanges();
+
+      const favicon = fixture.nativeElement.querySelector('app-story-favicon');
+      expect(favicon).toBeTruthy();
+      expect(favicon.querySelector('img').getAttribute('src')).toBe(faviconUrl);
     });
 
     it('cleans up observer on destroy', async () => {
@@ -243,6 +267,7 @@ describe('StoryThumbnailComponent', () => {
       // Deliver OG image
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=broken',
+        faviconUrl: null,
         title: 'OG Title',
         description: 'OG Desc',
       });
@@ -268,6 +293,7 @@ describe('StoryThumbnailComponent', () => {
 
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=broken',
+        faviconUrl: null,
         title: 'OG Title',
         description: 'OG Desc',
       });
@@ -295,6 +321,7 @@ describe('StoryThumbnailComponent', () => {
 
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=broken',
+        faviconUrl: null,
         title: 'OG Title',
         description: 'OG Desc',
       });
@@ -327,6 +354,7 @@ describe('StoryThumbnailComponent', () => {
 
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=broken',
+        faviconUrl: null,
         title: 'OG Title',
         description: 'OG Desc',
       });
@@ -444,6 +472,7 @@ describe('StoryThumbnailComponent', () => {
 
       ogImageStub.resolve(url, {
         imageUrl: '/api/og-image-proxy?url=https%3A%2F%2Fexample.com%2Fog.jpg',
+        faviconUrl: null,
         title: null,
         description: null,
       });
