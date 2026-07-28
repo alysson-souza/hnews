@@ -49,6 +49,9 @@ export class StoryListStore {
   private readonly loadedStoryIds = signal<number[]>([]);
   /** Current filter mode */
   readonly filterMode = signal<StoryFilterMode>(this.filterPrefs.filterMode());
+  /** True while the initial result set for a newly selected filter is being prepared */
+  private readonly filteringState = signal<boolean>(false);
+  readonly filtering = this.filteringState.asReadonly();
 
   /** Visible stories after applying the current filter */
   readonly visibleStories: Signal<HNItem[]> = computed(() =>
@@ -106,6 +109,7 @@ export class StoryListStore {
       this.currentLoadSubscription?.unsubscribe();
       this.currentPaginationSubscription?.unsubscribe();
       this.currentBackgroundRefreshSubscription?.unsubscribe();
+      this.filteringState.set(false);
       this.updateSubs.forEach((sub) => sub.unsubscribe());
       this.updateSubs.clear();
     });
@@ -140,6 +144,7 @@ export class StoryListStore {
     this.currentPaginationSubscription = null;
     this.currentBackgroundRefreshSubscription?.unsubscribe();
     this.currentBackgroundRefreshSubscription = null;
+    this.filteringState.set(false);
     this.refreshing.set(false);
     this.backgroundRefreshing.set(false);
 
@@ -218,7 +223,7 @@ export class StoryListStore {
    * Triggers additional fetching if needed for filtered modes.
    */
   setFilterMode(mode: StoryFilterMode): void {
-    if (this.filterMode() === mode) {
+    if (this.filtering() || this.filterMode() === mode) {
       return;
     }
 
@@ -229,13 +234,20 @@ export class StoryListStore {
       return;
     }
 
+    const shouldPrepare = this.shouldPrepareFilter(mode);
+    if (shouldPrepare) {
+      // Set this before changing the mode so Angular never renders the
+      // intermediate ranking from the smaller, currently loaded pool.
+      this.filteringState.set(true);
+    }
+
     // Normal path when not loading
     this.filterMode.set(mode);
     this.filterPrefs.setFilterMode(mode);
 
     // Check if we need to fetch more stories for filtered modes
-    if (mode !== 'default' && this.loadedStories().length < this.getRequiredPoolSize(mode)) {
-      this.fetchMoreForFilter();
+    if (shouldPrepare) {
+      this.fetchMoreForFilter(true);
     }
 
     this.saveCurrentState();
@@ -249,15 +261,16 @@ export class StoryListStore {
     // Check if there's a pending filter change (user clicked filter during load)
     const preferredMode = this.pendingFilterMode ?? this.filterPrefs.filterMode();
     this.pendingFilterMode = null; // Clear the queue
+    const shouldPrepare = this.shouldPrepareFilter(preferredMode);
 
+    if (shouldPrepare) {
+      this.filteringState.set(true);
+    }
     this.filterMode.set(preferredMode);
 
     // Check if we need more data for the preferred filter
-    if (
-      preferredMode !== 'default' &&
-      this.loadedStories().length < this.getRequiredPoolSize(preferredMode)
-    ) {
-      this.fetchMoreForFilter();
+    if (shouldPrepare) {
+      this.fetchMoreForFilter(true);
     }
   }
 
@@ -287,11 +300,24 @@ export class StoryListStore {
     return this.pageSize();
   }
 
+  /** True when selecting a filter requires another network batch before it can be revealed. */
+  private shouldPrepareFilter(mode: StoryFilterMode): boolean {
+    return (
+      mode !== 'default' &&
+      !this.networkState.isOffline() &&
+      this.loadedStories().length < this.getRequiredPoolSize(mode) &&
+      this.fetchedCount() < this.totalStoryIds().length
+    );
+  }
+
   /**
    * Fetches more stories to support filtered modes.
    */
-  private fetchMoreForFilter(): void {
+  private fetchMoreForFilter(isFilterTransition = false): void {
     if (this.networkState.isOffline()) {
+      if (isFilterTransition) {
+        this.filteringState.set(false);
+      }
       return;
     }
 
@@ -299,6 +325,9 @@ export class StoryListStore {
     const fetched = this.fetchedCount();
 
     if (fetched >= totalIds.length) {
+      if (isFilterTransition) {
+        this.filteringState.set(false);
+      }
       return; // No more to fetch
     }
 
@@ -317,6 +346,9 @@ export class StoryListStore {
         finalize(() => {
           if (thisSequence === this.initSequence) {
             this.loading.set(false);
+            if (isFilterTransition) {
+              this.filteringState.set(false);
+            }
           }
         }),
       )

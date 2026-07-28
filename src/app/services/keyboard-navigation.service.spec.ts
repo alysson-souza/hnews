@@ -15,7 +15,10 @@ describe('KeyboardNavigationService', () => {
   let mockCommandRegistry: MockedObject<CommandRegistryService>;
   let mockScrollService: MockedObject<ScrollService>;
   let mockNavigationHistory: MockedObject<NavigationHistoryService>;
-  let mockStoryListStore: { toggleFilterMode: ReturnType<typeof vi.fn> };
+  let mockStoryListStore: {
+    filtering: ReturnType<typeof vi.fn>;
+    toggleFilterMode: ReturnType<typeof vi.fn>;
+  };
   let registeredCommands: Record<string, () => void | Promise<void>>;
 
   beforeEach(() => {
@@ -36,6 +39,7 @@ describe('KeyboardNavigationService', () => {
       pushCurrentState: vi.fn(),
     } as unknown as MockedObject<NavigationHistoryService>;
     mockStoryListStore = {
+      filtering: vi.fn().mockReturnValue(false),
       toggleFilterMode: vi.fn(),
     };
 
@@ -119,6 +123,14 @@ describe('KeyboardNavigationService', () => {
 
     it('should not toggle the feed filter on saved stories', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/saved', writable: true });
+
+      registeredCommands['story.toggleFilter']();
+
+      expect(mockStoryListStore.toggleFilterMode).not.toHaveBeenCalled();
+    });
+
+    it('should not toggle the feed filter while a filter result is being prepared', () => {
+      mockStoryListStore.filtering.mockReturnValue(true);
 
       registeredCommands['story.toggleFilter']();
 

@@ -11,12 +11,15 @@ import { SidebarService } from '@services/sidebar.service';
 import { DeviceService } from '@services/device.service';
 import { PageLifecycleService } from '@services/page-lifecycle.service';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
+import { getFilterCutoffTimestamp } from '@models/story-filter';
 
 interface TestItem {
   id: number;
   type: string;
   title: string;
+  time: number;
+  score: number;
 }
 
 /** Test double for HackernewsService */
@@ -53,8 +56,18 @@ class MockHNService {
   }
 
   getItems(ids: number[]) {
-    const items: TestItem[] = ids.map((id) => ({ id, type: 'story', title: `Story ${id}` }));
-    return of(items);
+    return of(this.makeItems(ids));
+  }
+
+  makeItems(ids: number[]): TestItem[] {
+    const cutoff = getFilterCutoffTimestamp();
+    return ids.map((id) => ({
+      id,
+      type: 'story',
+      title: `Story ${id}`,
+      time: cutoff + id * 100,
+      score: id * 10,
+    }));
   }
 
   getItemUpdates(id: number) {
@@ -384,6 +397,51 @@ describe('StoryList', () => {
       await fixture.whenStable();
 
       expect(fixture.componentInstance.skeletonArray()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    });
+  });
+
+  describe('filter transition', () => {
+    it('shows only skeletons until the complete Top 50% pool is ready', async () => {
+      mockHNService.storyIds = Array.from({ length: 80 }, (_, index) => index + 1);
+      const expandedPool = new Subject<TestItem[]>();
+      const getItems = mockHNService.getItems.bind(mockHNService);
+      vi.spyOn(mockHNService, 'getItems').mockImplementation((ids) =>
+        ids[0] > 30 ? expandedPool.asObservable() : getItems(ids),
+      );
+
+      fixture = TestBed.createComponent(StoryList);
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelectorAll('[data-story-id]')).toHaveLength(30);
+
+      fixture.componentInstance.onFilterModeChange('topHalf');
+      await fixture.whenStable();
+
+      const preparingStatus = fixture.nativeElement.querySelector(
+        '[aria-label="Preparing Top 50% stories"]',
+      );
+      const filterButtons = Array.from(
+        fixture.nativeElement.querySelectorAll('app-segmented-control button'),
+      ) as HTMLButtonElement[];
+
+      expect(preparingStatus).not.toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('[data-story-id]')).toHaveLength(0);
+      expect(fixture.nativeElement.querySelectorAll('app-story-item')).toHaveLength(30);
+      expect(fixture.nativeElement.querySelector('.load-more-btn')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.loading-wrap')).toBeNull();
+      expect(filterButtons.every((button) => button.disabled)).toBe(true);
+
+      expandedPool.next(
+        mockHNService.makeItems(Array.from({ length: 50 }, (_, index) => index + 31)),
+      );
+      expandedPool.complete();
+      await fixture.whenStable();
+
+      expect(
+        fixture.nativeElement.querySelector('[aria-label="Preparing Top 50% stories"]'),
+      ).toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('[data-story-id]').length).toBeGreaterThan(0);
+      expect(filterButtons.every((button) => !button.disabled)).toBe(true);
     });
   });
 });

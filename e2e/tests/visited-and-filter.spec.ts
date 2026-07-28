@@ -74,6 +74,46 @@ test.describe('Visited Stories and Filtering', () => {
       await expect(topHalfTab).toHaveAttribute('aria-selected', 'true');
     });
 
+    test('should reveal Top 50% only after the complete pool is prepared', async ({
+      storiesPage,
+      page,
+    }) => {
+      await storiesPage.navigateToTop();
+
+      let releaseExpandedPool = () => {};
+      const expandedPoolGate = new Promise<void>((resolve) => {
+        releaseExpandedPool = resolve;
+      });
+      const itemRoute = '**/v0/item/*.json';
+      await page.route(itemRoute, async (route) => {
+        await expandedPoolGate;
+        await route.continue();
+      });
+
+      try {
+        const topHalfTab = page.getByRole('tab', { name: 'Top 50%' });
+        await topHalfTab.click();
+
+        const preparingStatus = page.getByRole('status', {
+          name: 'Preparing Top 50% stories',
+        });
+        await expect(topHalfTab).toHaveAttribute('aria-selected', 'true');
+        await expect(topHalfTab).toBeDisabled();
+        await expect(preparingStatus).toBeVisible();
+        await expect(storiesPage.storyItems).toHaveCount(0);
+        await expect(page.getByText('Loading more stories...')).toHaveCount(0);
+
+        releaseExpandedPool();
+
+        await expect(preparingStatus).toBeHidden();
+        await expect(topHalfTab).toBeEnabled();
+        await expect.poll(() => storiesPage.storyItems.count()).toBeGreaterThan(0);
+      } finally {
+        releaseExpandedPool();
+        await page.unroute(itemRoute);
+      }
+    });
+
     test('should return to Default filter', async ({ storiesPage, page }) => {
       await storiesPage.navigateToTop();
 

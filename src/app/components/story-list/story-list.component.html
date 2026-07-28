@@ -16,12 +16,13 @@
       <app-segmented-control
         [options]="filterOptions"
         [value]="filterMode()"
+        [disabled]="filtering()"
         (valueChange)="onFilterModeChange($event)"
       />
     </div>
 
     <!-- New Stories Indicator -->
-    @if (newStoriesAvailable() > 0 && !refreshing()) {
+    @if (newStoriesAvailable() > 0 && !refreshing() && !filtering()) {
       <button
         (click)="loadNewStories()"
         class="new-stories-indicator"
@@ -38,8 +39,13 @@
     }
 
     <!-- Loading State with Skeletons -->
-    @if ((loading() && stories().length === 0) || refreshing()) {
-      <div class="stories-space" role="status" aria-live="polite" aria-label="Loading Stories">
+    @if ((loading() && stories().length === 0) || refreshing() || filtering()) {
+      <div
+        class="stories-space"
+        role="status"
+        aria-live="polite"
+        [attr.aria-label]="filtering() ? 'Preparing Top 50% stories' : 'Loading Stories'"
+      >
         @for (i of skeletonArray(); track i) {
           <app-story-item [loading]="true" />
         }
@@ -47,7 +53,7 @@
     }
 
     <!-- Error State -->
-    @if (error()) {
+    @if (error() && !filtering()) {
       <div class="alert-error">
         <p>{{ error() }}</p>
         <button (click)="refresh()" class="alert-link">Try again</button>
@@ -55,7 +61,7 @@
     }
 
     <!-- Filter Empty State -->
-    @if (isFilteredEmpty() && !loading()) {
+    @if (isFilteredEmpty() && !loading() && !filtering()) {
       <div class="filter-empty" role="status" aria-live="polite">
         <p class="filter-empty-title">No matching stories</p>
         <p class="filter-empty-text">{{ getFilterEmptyMessage() }}</p>
@@ -64,7 +70,7 @@
     }
 
     <!-- Stories List -->
-    @if (!isFilteredEmpty()) {
+    @if (!isFilteredEmpty() && !filtering()) {
       <div class="stories-space">
         @for (story of stories(); track story.id; let i = $index) {
           <app-story-item
@@ -80,14 +86,16 @@
     }
 
     <!-- Offline empty state (no cached stories) -->
-    @if (isOffline() && stories().length === 0 && !loading() && !isFilteredEmpty()) {
+    @if (
+      isOffline() && stories().length === 0 && !loading() && !filtering() && !isFilteredEmpty()
+    ) {
       <div class="empty">
         <p>No saved results</p>
       </div>
     }
 
     <!-- Load More Button -->
-    @if (hasMore() && !loading() && !isFilteredEmpty()) {
+    @if (hasMore() && !loading() && !filtering() && !isFilteredEmpty()) {
       <div class="text-center mt-6">
         <app-button
           (clicked)="loadMore()"
@@ -102,7 +110,7 @@
     }
 
     <!-- Loading More Indicator -->
-    @if (loading() && stories().length > 0) {
+    @if (loading() && stories().length > 0 && !filtering()) {
       <div class="loading-wrap">
         <div class="loading-spin"></div>
         <span class="loading-text">Loading more stories...</span>
@@ -110,7 +118,7 @@
     }
 
     <!-- No More Stories -->
-    @if (!hasMore() && stories().length > 0 && !isFilteredEmpty()) {
+    @if (!hasMore() && stories().length > 0 && !filtering() && !isFilteredEmpty()) {
       <div class="empty">
         <p>No more stories to load</p>
       </div>

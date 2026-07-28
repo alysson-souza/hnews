@@ -120,6 +120,7 @@ export class StoryList implements OnInit, OnDestroy {
 
   // Filter state
   filterMode = this.store.filterMode;
+  filtering = this.store.filtering;
   isFilteredEmpty = this.store.isFilteredEmpty;
 
   // Filter options for segmented control

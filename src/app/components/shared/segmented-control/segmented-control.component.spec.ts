@@ -77,4 +77,28 @@ describe('SegmentedControlComponent', () => {
       expect(spy).toHaveBeenCalledWith('default');
     });
   });
+
+  describe('disabled state', () => {
+    it('should expose busy and disabled state without emitting changes', async () => {
+      const spy = vi.fn();
+      fixture.componentInstance.valueChange.subscribe(spy);
+
+      fixture.componentRef.setInput('disabled', true);
+      await fixture.whenStable();
+
+      const container = fixture.debugElement.query(By.css('[role="tablist"]'));
+      const buttons = fixture.debugElement.queryAll(By.css('button.segment-button'));
+
+      expect(container.nativeElement.getAttribute('aria-busy')).toBe('true');
+      for (const button of buttons) {
+        expect(button.nativeElement.disabled).toBe(true);
+        expect(button.nativeElement.getAttribute('aria-disabled')).toBe('true');
+      }
+
+      fixture.componentInstance.selectOption('top50');
+      fixture.componentInstance.handleKeydown(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
 });

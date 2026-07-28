@@ -136,6 +136,17 @@ class MockNetworkStateService {
   }
 }
 
+function makeStories(ids: number[]): HNItem[] {
+  const cutoff = getFilterCutoffTimestamp();
+  return ids.map((id) => ({
+    id,
+    type: 'story',
+    title: `Story ${id}`,
+    time: cutoff + id * 100,
+    score: id * 10,
+  }));
+}
+
 describe('StoryListStore', () => {
   let store: StoryListStore;
   let mockHN: MockHNService;
@@ -372,6 +383,7 @@ describe('StoryListStore', () => {
 
       store.setFilterMode('topHalf');
       expect(store.filterMode()).toBe('topHalf');
+      await Promise.resolve();
 
       store.resetFilter();
       expect(store.filterMode()).toBe('default');
@@ -380,6 +392,103 @@ describe('StoryListStore', () => {
     it('isFilteredEmpty returns true when filter produces no results', () => {
       // Initially no stories loaded
       expect(store.isFilteredEmpty()).toBe(false);
+    });
+
+    it('keeps the filter transition active until the expanded pool is complete', async () => {
+      store.init('top', 4);
+      await Promise.resolve();
+      const expandedPool = new Subject<HNItem[]>();
+      vi.spyOn(mockHN, 'getItems').mockReturnValueOnce(expandedPool.asObservable());
+
+      store.setFilterMode('topHalf');
+
+      expect(store.filterMode()).toBe('topHalf');
+      expect(store.filtering()).toBe(true);
+      expect(store.loading()).toBe(true);
+
+      expandedPool.next(makeStories([5, 6, 7, 8, 9, 10]));
+
+      expect(store.filtering()).toBe(true);
+      expect(store.stories().map((story) => story.id)).toContain(10);
+
+      expandedPool.complete();
+
+      expect(store.filtering()).toBe(false);
+      expect(store.loading()).toBe(false);
+    });
+
+    it('reveals the best available filtered result when preparation fails', async () => {
+      store.init('top', 4);
+      await Promise.resolve();
+      vi.spyOn(mockHN, 'getItems').mockReturnValueOnce(
+        throwError(() => new Error('Filter preparation failed')),
+      );
+
+      store.setFilterMode('topHalf');
+
+      expect(store.filterMode()).toBe('topHalf');
+      expect(store.filtering()).toBe(false);
+      expect(store.loading()).toBe(false);
+      expect(store.stories().length).toBeGreaterThan(0);
+    });
+
+    it('cancels preparation and clears filtering when the feed is reinitialized', async () => {
+      store.init('top', 4);
+      await Promise.resolve();
+      const expandedPool = new Subject<HNItem[]>();
+      vi.spyOn(mockHN, 'getItems').mockReturnValueOnce(expandedPool.asObservable());
+
+      store.setFilterMode('topHalf');
+      expect(store.filtering()).toBe(true);
+
+      store.init('best', 4);
+
+      expect(expandedPool.observed).toBe(false);
+      expect(store.filtering()).toBe(false);
+    });
+
+    it('ignores further filter changes while preparation is active', async () => {
+      store.init('top', 4);
+      await Promise.resolve();
+      const expandedPool = new Subject<HNItem[]>();
+      vi.spyOn(mockHN, 'getItems').mockReturnValueOnce(expandedPool.asObservable());
+
+      store.setFilterMode('topHalf');
+      store.setFilterMode('default');
+
+      expect(store.filterMode()).toBe('topHalf');
+      expect(store.filtering()).toBe(true);
+
+      expandedPool.complete();
+    });
+
+    it('filters immediately without preparation while offline', async () => {
+      store.init('top', 4);
+      await Promise.resolve();
+      mockNetwork.setOffline(true);
+
+      store.setFilterMode('topHalf');
+
+      expect(store.filterMode()).toBe('topHalf');
+      expect(store.filtering()).toBe(false);
+      expect(store.loading()).toBe(false);
+    });
+
+    it('filters immediately when the required pool is already loaded', async () => {
+      const ids = Array.from({ length: 80 }, (_, index) => index + 1);
+      vi.spyOn(mockHN, 'getTopStories').mockReturnValue(of(ids));
+      store.init('top', 30);
+      await Promise.resolve();
+      store.loadMore();
+      await Promise.resolve();
+
+      expect(store.stories().length).toBe(60);
+
+      store.setFilterMode('topHalf');
+
+      expect(store.filterMode()).toBe('topHalf');
+      expect(store.filtering()).toBe(false);
+      expect(store.loading()).toBe(false);
     });
   });
 

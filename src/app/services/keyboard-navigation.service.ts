@@ -294,7 +294,7 @@ export class KeyboardNavigationService {
   }
 
   private toggleStoryFilter(): void {
-    if (this.currentTab() === 'saved') {
+    if (this.currentTab() === 'saved' || this.storyListStore.filtering()) {
       return;
     }
 

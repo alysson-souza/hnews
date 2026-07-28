@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Component, output, input } from '@angular/core';
+import { booleanAttribute, Component, output, input } from '@angular/core';
 
 export interface SegmentOption {
   value: string;
@@ -11,14 +11,16 @@ export interface SegmentOption {
   selector: 'app-segmented-control',
   imports: [],
   template: `
-    <div class="segmented-control-container" role="tablist">
+    <div class="segmented-control-container" role="tablist" [attr.aria-busy]="disabled()">
       @for (option of options(); track option) {
         <button
           type="button"
           tabindex="0"
+          [disabled]="disabled()"
           [class.active]="value() === option.value"
           [attr.role]="'tab'"
           [attr.aria-selected]="value() === option.value"
+          [attr.aria-disabled]="disabled()"
           [attr.aria-label]="option.label"
           (click)="selectOption(option.value)"
           (keydown)="handleKeydown($event)"
@@ -51,19 +53,27 @@ export interface SegmentOption {
       .segment-button.active {
         @apply bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm;
       }
+
+      .segment-button:disabled {
+        @apply cursor-wait opacity-70;
+      }
     `,
   ],
 })
 export class SegmentedControlComponent {
   readonly options = input<SegmentOption[]>([]);
   readonly value = input<string>('');
+  readonly disabled = input(false, { transform: booleanAttribute });
   readonly valueChange = output<string>();
 
   selectOption(value: string): void {
+    if (this.disabled()) return;
     this.valueChange.emit(value);
   }
 
   handleKeydown(event: KeyboardEvent): void {
+    if (this.disabled()) return;
+
     const optionValues = this.options().map((o) => o.value);
     const currentIndex = optionValues.indexOf(this.value());
 
