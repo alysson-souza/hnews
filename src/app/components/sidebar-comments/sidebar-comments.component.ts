@@ -29,7 +29,6 @@ import {
 import { CommentThreadToolbarComponent } from '../comment-tools/comment-thread-toolbar.component';
 import { CommentThreadIndexService } from '@services/comment-thread-index.service';
 import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-navigation.service';
-import { DeviceService } from '@services/device.service';
 import { CommentSkeletonComponent } from '../comment-skeleton/comment-skeleton.component';
 
 @Component({
@@ -415,7 +414,6 @@ export class SidebarCommentsComponent {
   private sidebarPanelRef = viewChild<ElementRef<HTMLElement>>('sidebarPanel');
   sidebarService = inject(SidebarService);
   private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
-  deviceService = inject(DeviceService);
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private commentSortService = inject(CommentSortService);
@@ -604,15 +602,18 @@ export class SidebarCommentsComponent {
       }
     });
 
-    // Lock body scroll when sidebar is open on mobile devices
-    effect(() => {
-      const open = this.sidebarService.isOpen();
-      const mobile = this.deviceService.isMobile();
-      if (open && mobile) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
+    // Lock page scrolling while the sidebar is open so only its scroll container is active
+    effect((onCleanup) => {
+      if (!this.sidebarService.isOpen()) {
+        return;
       }
+
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      onCleanup(() => {
+        document.body.style.overflow = previousOverflow;
+      });
     });
   }
 

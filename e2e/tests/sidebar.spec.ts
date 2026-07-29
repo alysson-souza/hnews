@@ -98,6 +98,101 @@ test.describe('Sidebar Comments Panel', () => {
     });
   });
 
+  test('should lock page scrolling while keeping the sidebar independently scrollable', async ({
+    storiesPage,
+    sidebarPage,
+    page,
+  }) => {
+    await page.setViewportSize({ width: 870, height: 720 });
+    await storiesPage.navigateToTop();
+    await expect(storiesPage.storyItems.first()).toBeVisible();
+
+    const documentIsScrollable = await page.evaluate(() => {
+      const scrollingElement = document.scrollingElement!;
+      return scrollingElement.scrollHeight > scrollingElement.clientHeight;
+    });
+    expect(documentIsScrollable).toBe(true);
+
+    const commentLinks = storiesPage.storyItems.locator('.story-comments');
+    const linkCount = await commentLinks.count();
+    let targetLinkIndex = -1;
+
+    for (let index = 0; index < linkCount; index++) {
+      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+      const countMatch = text.match(/\d+/);
+      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+      if (commentCount > 20) {
+        targetLinkIndex = index;
+        break;
+      }
+    }
+
+    test.skip(targetLinkIndex < 0, 'No story with enough comments for scrollbar regression');
+
+    await page.setViewportSize({ width: 1024, height: 720 });
+    await page.waitForTimeout(300);
+    await commentLinks.nth(targetLinkIndex).click();
+    await expect(sidebarPage.commentThreads.first()).toBeVisible();
+
+    await page.setViewportSize({ width: 870, height: 720 });
+    await page.waitForTimeout(300);
+
+    const sidebarIsScrollable = await sidebarPage.commentsPanel.evaluate(
+      (commentsPanel) => commentsPanel.scrollHeight > commentsPanel.clientHeight,
+    );
+    test.skip(
+      !sidebarIsScrollable,
+      'Sidebar comments panel is not scrollable enough for scrollbar regression',
+    );
+
+    const panelRight = await sidebarPage.panel.evaluate(
+      (panel) => panel.getBoundingClientRect().right,
+    );
+    const commentsLayout = await sidebarPage.commentsPanel.evaluate((commentsPanel) => ({
+      right: commentsPanel.getBoundingClientRect().right,
+      marginRight: getComputedStyle(commentsPanel).marginRight,
+      bodyOverflow: getComputedStyle(document.body).overflow,
+    }));
+
+    expect(Math.abs(panelRight - commentsLayout.right)).toBeLessThanOrEqual(1);
+    expect(commentsLayout.marginRight).toBe('0px');
+    expect(commentsLayout.bodyOverflow).toBe('hidden');
+
+    const pageScrollY = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(100, 360);
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(100);
+    expect(Math.abs((await page.evaluate(() => window.scrollY)) - pageScrollY)).toBeLessThanOrEqual(
+      1,
+    );
+
+    const sidebarScrollTop = await sidebarPage.commentsPanel.evaluate((commentsPanel) => {
+      commentsPanel.scrollTop = Math.min(
+        300,
+        commentsPanel.scrollHeight - commentsPanel.clientHeight,
+      );
+      return commentsPanel.scrollTop;
+    });
+
+    expect(sidebarScrollTop).toBeGreaterThan(0);
+    expect(Math.abs((await page.evaluate(() => window.scrollY)) - pageScrollY)).toBeLessThanOrEqual(
+      1,
+    );
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+
+    expect(await sidebarPage.isClosed()).toBe(true);
+    expect(await page.locator('body').evaluate((body) => getComputedStyle(body).overflow)).not.toBe(
+      'hidden',
+    );
+
+    await page.mouse.move(100, 360);
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(100);
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(pageScrollY);
+  });
+
   test('should center the header title in the sidebar panel', async ({
     storiesPage,
     sidebarPage,
