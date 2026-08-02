@@ -317,36 +317,9 @@
         </div>
       }
 
-      <!-- Import/Export and Clear All Actions -->
-      <div class="tag-action-buttons">
-        <app-button
-          (clicked)="exportTags()"
-          variant="secondary"
-          size="sm"
-          ariaLabel="Export user tags"
-          [disabled]="tags().length === 0"
-        >
-          <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
-          Export
-        </app-button>
-        <app-button
-          (clicked)="fileInput.click()"
-          variant="secondary"
-          size="sm"
-          ariaLabel="Import user tags"
-        >
-          <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
-          Import
-        </app-button>
-        <input
-          #fileInput
-          type="file"
-          accept=".json"
-          (change)="importTags($event)"
-          class="hidden"
-          aria-hidden="true"
-        />
-        @if (tags().length > 0) {
+      <!-- Clear All Actions (export/import live in the Backup section) -->
+      @if (tags().length > 0) {
+        <div class="tag-action-buttons">
           <app-button
             (clicked)="clearAll()"
             variant="danger"
@@ -356,8 +329,8 @@
             <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
             Clear Tags
           </app-button>
-        }
-      </div>
+        </div>
+      }
     </section>
 
     <hr class="section-divider" />
@@ -372,40 +345,13 @@
         </div>
       }
 
-      <div class="saved-stories-row">
-        <div class="saved-stories-count" aria-live="polite">
-          <span class="saved-stories-count-value">{{ savedStoriesCount() }}</span>
+      <div class="data-summary-row">
+        <div class="data-count" aria-live="polite">
+          <span class="data-count-value">{{ savedStoriesCount() }}</span>
           <span>{{ savedStoriesCount() === 1 ? 'story' : 'stories' }}</span>
         </div>
-        <div class="saved-stories-actions">
-          <app-button
-            (clicked)="exportSavedStories()"
-            variant="secondary"
-            size="sm"
-            ariaLabel="Export saved stories"
-            [disabled]="savedStoriesCount() === 0"
-          >
-            <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
-            Export
-          </app-button>
-          <app-button
-            (clicked)="savedStoriesFileInput.click()"
-            variant="secondary"
-            size="sm"
-            ariaLabel="Import saved stories"
-          >
-            <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
-            Import
-          </app-button>
-          <input
-            #savedStoriesFileInput
-            type="file"
-            accept=".json"
-            (change)="importSavedStories($event)"
-            class="hidden"
-            aria-hidden="true"
-          />
-          @if (savedStoriesCount() > 0) {
+        @if (savedStoriesCount() > 0) {
+          <div class="data-actions">
             <app-button
               (clicked)="clearSavedStories()"
               variant="danger"
@@ -415,7 +361,57 @@
               <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
               Clear Saved
             </app-button>
-          }
+          </div>
+        }
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- Backup -->
+    <section class="setting-section" role="region" aria-label="Backup and Restore">
+      <h2 class="settings-category-label">Backup</h2>
+
+      @if (backupMessage()) {
+        <div [class]="backupError() ? 'alert-danger' : 'alert-success'">{{ backupMessage() }}</div>
+      }
+
+      <div class="data-summary-row">
+        <div class="data-count" aria-live="polite">
+          <span class="data-count-value">{{ tagCount() }}</span>
+          <span>{{ tagCount() === 1 ? 'tag' : 'tags' }}</span>
+          <span aria-hidden="true">·</span>
+          <span class="data-count-value">{{ savedStoriesCount() }}</span>
+          <span>{{ savedStoriesCount() === 1 ? 'saved story' : 'saved stories' }}</span>
+        </div>
+        <div class="data-actions">
+          <app-button
+            (clicked)="exportBackup()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Export backup"
+            [disabled]="isBackupEmpty()"
+          >
+            <ng-icon name="solarExportLinear" class="hidden sm:inline mr-2" />
+            Export
+          </app-button>
+          <app-button
+            (clicked)="backupFileInput.click()"
+            variant="secondary"
+            size="sm"
+            ariaLabel="Import backup"
+          >
+            <ng-icon name="solarImportLinear" class="hidden sm:inline mr-2" />
+            Import
+          </app-button>
+          <input
+            #backupFileInput
+            type="file"
+            accept=".json,application/json"
+            (change)="importBackup($event)"
+            class="hidden"
+            aria-hidden="true"
+          />
         </div>
       </div>
     </section>

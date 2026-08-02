@@ -201,14 +201,7 @@ describe('SavedStoriesComponent', () => {
   });
 
   it('renders imported ID-only records with a fallback story row', async () => {
-    savedStories.importSavedStories(
-      JSON.stringify({
-        schema: 'hnews.savedStories',
-        version: 1,
-        exportedAt: 1700000000000,
-        stories: [{ id: 4, savedAt: 1700000000000 }],
-      }),
-    );
+    savedStories.importRecords([{ id: 4, savedAt: 1700000000000 }]);
 
     createComponent();
     await fixture.whenStable();

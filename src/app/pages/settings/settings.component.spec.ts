@@ -19,10 +19,11 @@ import { UserSettingsService } from '@services/user-settings.service';
 import { UserTagsService } from '@services/user-tags.service';
 import { SettingsComponent } from './settings.component';
 
-describe('SettingsComponent saved stories controls', () => {
+describe('SettingsComponent backup controls', () => {
   let fixture: ComponentFixture<SettingsComponent>;
   let component: SettingsComponent;
   let savedStories: SavedStoriesService;
+  let tags: UserTagsService;
 
   beforeEach(async () => {
     window.localStorage.clear();
@@ -34,23 +35,6 @@ describe('SettingsComponent saved stories controls', () => {
         {
           provide: HackernewsService,
           useValue: { getStoryWithAllComments: vi.fn().mockReturnValue(of(null)) },
-        },
-        {
-          provide: UserTagsService,
-          useValue: {
-            getAllTags: vi.fn().mockReturnValue([]),
-            getPaginatedTags: vi.fn().mockReturnValue({
-              tags: [],
-              totalCount: 0,
-              totalPages: 0,
-              currentPage: 1,
-            }),
-            exportTags: vi.fn().mockReturnValue('{}'),
-            importTags: vi.fn().mockReturnValue(true),
-            removeTag: vi.fn(),
-            setNotes: vi.fn(),
-            clearAllTags: vi.fn(),
-          },
         },
         {
           provide: CacheManagerService,
@@ -99,6 +83,7 @@ describe('SettingsComponent saved stories controls', () => {
     }).compileComponents();
 
     savedStories = TestBed.inject(SavedStoriesService);
+    tags = TestBed.inject(UserTagsService);
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
@@ -110,20 +95,35 @@ describe('SettingsComponent saved stories controls', () => {
     window.localStorage.clear();
   });
 
-  function savedExportButton(): HTMLButtonElement {
+  function backupExportButton(): HTMLButtonElement {
     return fixture.nativeElement.querySelector(
-      'button[aria-label="Export saved stories"]',
+      'button[aria-label="Export backup"]',
     ) as HTMLButtonElement;
   }
 
-  it('disables saved-story export when there are no saved stories', async () => {
+  function changeEventFor(json: string): Event {
+    const file = new File([json], 'backup.json', { type: 'application/json' });
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', { value: [file] });
+    return { target: input } as unknown as Event;
+  }
+
+  it('disables backup export while there is nothing to back up', async () => {
+    await fixture.whenStable();
+
+    expect(component.isBackupEmpty()).toBe(true);
+    expect(backupExportButton().disabled).toBe(true);
+  });
+
+  it('enables backup export once either dataset has data', async () => {
+    tags.setTag('dang', 'HN Moderator');
     await fixture.whenStable();
 
     expect(component.savedStoriesCount()).toBe(0);
-    expect(savedExportButton().disabled).toBe(true);
+    expect(backupExportButton().disabled).toBe(false);
   });
 
-  it('exports saved stories with the expected filename', async () => {
+  it('exports a backup with the expected filename', async () => {
     savedStories.save({
       id: 1,
       type: 'story',
@@ -132,52 +132,76 @@ describe('SettingsComponent saved stories controls', () => {
     });
     await fixture.whenStable();
 
-    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:saved');
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:backup');
     const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const anchorDownload = vi.spyOn(HTMLAnchorElement.prototype, 'download', 'set');
     vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
 
-    component.exportSavedStories();
+    component.exportBackup();
 
     expect(createObjectUrl).toHaveBeenCalled();
+    expect(anchorDownload).toHaveBeenCalledWith('hnews-backup-1700000000000.json');
     expect(click).toHaveBeenCalled();
-    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:saved');
-    expect(component.savedStoriesMessage()).toBe('Saved stories exported successfully');
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:backup');
+    expect(component.backupMessage()).toBe('Backup exported successfully');
   });
 
-  it('imports valid saved stories and shows result counts', async () => {
+  it('imports a unified backup and reports both datasets', async () => {
+    const json = JSON.stringify({
+      schema: 'hnews.backup',
+      version: 1,
+      exportedAt: 1700000000000,
+      data: {
+        userTags: [{ username: 'dang', tag: 'HN Moderator' }],
+        savedStories: [{ id: 2, savedAt: 1700000000000 }],
+      },
+    });
+
+    await component.importBackup(changeEventFor(json));
+
+    expect(component.backupError()).toBe(false);
+    expect(component.backupMessage()).toBe(
+      'Imported. Tags: 1 new, 0 updated, 0 skipped · Stories: 1 new, 0 updated, 0 skipped',
+    );
+    expect(tags.getTag('dang')?.tag).toBe('HN Moderator');
+    expect(savedStories.isSaved(2)).toBe(true);
+  });
+
+  it('imports a legacy saved stories file and reports only that dataset', async () => {
     const json = JSON.stringify({
       schema: 'hnews.savedStories',
       version: 1,
       exportedAt: 1700000000000,
-      stories: [{ id: 2, savedAt: 1700000000000 }],
-    });
-    const file = new File([json], 'saved.json', { type: 'application/json' });
-    const input = document.createElement('input');
-    Object.defineProperty(input, 'files', { value: [file] });
-
-    component.importSavedStories({ target: input } as unknown as Event);
-    await vi.waitFor(() => {
-      expect(component.savedStoriesMessage()).toBe(
-        'Saved stories imported: 1 new, 0 updated, 0 skipped',
-      );
+      stories: [{ id: 3, savedAt: 1700000000000 }],
     });
 
-    expect(savedStories.isSaved(2)).toBe(true);
+    await component.importBackup(changeEventFor(json));
+
+    expect(component.backupMessage()).toBe('Imported. Stories: 1 new, 0 updated, 0 skipped');
+    expect(savedStories.isSaved(3)).toBe(true);
   });
 
-  it('shows an error for invalid saved-story imports', async () => {
-    const file = new File(['not json'], 'bad.json', { type: 'application/json' });
-    const input = document.createElement('input');
-    Object.defineProperty(input, 'files', { value: [file] });
+  it('shows why an import was rejected', async () => {
+    await component.importBackup(changeEventFor('not json'));
 
-    component.importSavedStories({ target: input } as unknown as Event);
-    await vi.waitFor(() => {
-      expect(component.savedStoriesError()).toBe(true);
+    expect(component.backupError()).toBe(true);
+    expect(component.backupMessage()).toBe('Import failed: Unrecognized backup file.');
+  });
+
+  it('shows a distinct message for a backup from a newer version', async () => {
+    const json = JSON.stringify({
+      schema: 'hnews.backup',
+      version: 99,
+      exportedAt: 1700000000000,
+      data: { userTags: [] },
     });
 
-    expect(component.savedStoriesMessage()).toBe(
-      'Failed to import saved stories. Please check the file format.',
+    await component.importBackup(changeEventFor(json));
+
+    expect(component.backupError()).toBe(true);
+    expect(component.backupMessage()).toBe(
+      'Import failed: Backup was created by a newer version of hnews.',
     );
   });
 

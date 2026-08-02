@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Alysson Souza
 import { Injectable, inject, signal } from '@angular/core';
 import { take } from 'rxjs/operators';
+import type { ImportCounts } from '@models/backup';
 import { HNItem, mapToHNItem } from '@models/hn';
 import { HackernewsService } from '@services/hackernews.service';
 import { IndexedDBService } from '@services/indexed-db.service';
@@ -12,22 +13,7 @@ export interface SavedStoryRecord {
   story?: HNItem;
 }
 
-export interface SavedStoriesExport {
-  schema: 'hnews.savedStories';
-  version: 1;
-  exportedAt: number;
-  stories: SavedStoryRecord[];
-}
-
-export interface SavedStoriesImportResult {
-  imported: number;
-  updated: number;
-  skipped: number;
-}
-
 const STORAGE_KEY = 'hn_saved_stories_v1';
-const EXPORT_SCHEMA = 'hnews.savedStories';
-const EXPORT_VERSION = 1;
 
 @Injectable({ providedIn: 'root' })
 export class SavedStoriesService {
@@ -128,25 +114,20 @@ export class SavedStoriesService {
     }
   }
 
-  exportSavedStories(): string {
-    const data: SavedStoriesExport = {
-      schema: EXPORT_SCHEMA,
-      version: EXPORT_VERSION,
-      exportedAt: Date.now(),
-      stories: this.getAll(),
-    };
-    return JSON.stringify(data, null, 2);
-  }
-
-  importSavedStories(json: string): SavedStoriesImportResult {
-    const result: SavedStoriesImportResult = { imported: 0, updated: 0, skipped: 0 };
-    const parsed = parseExport(json);
-    if (!parsed) {
-      throw new Error('Invalid saved stories export');
+  /**
+   * Merges backup records into the local saved stories, keyed by story id.
+   *
+   * Throws only when handed something that is not an array; individual malformed
+   * records are counted as skipped so one bad entry cannot discard a whole file.
+   */
+  importRecords(rawRecords: unknown): ImportCounts {
+    const result: ImportCounts = { imported: 0, updated: 0, skipped: 0 };
+    if (!Array.isArray(rawRecords)) {
+      throw new Error('Invalid saved stories data');
     }
 
     const incoming = new Map<number, SavedStoryRecord>();
-    for (const record of parsed.stories) {
+    for (const record of rawRecords) {
       const normalized = normalizeRecord(record);
       if (!normalized) {
         result.skipped++;
@@ -240,27 +221,7 @@ export class SavedStoriesService {
   }
 }
 
-function parseExport(json: string): SavedStoriesExport | null {
-  try {
-    const parsed = JSON.parse(json) as Partial<SavedStoriesExport> | unknown;
-    if (!isRecordContainer(parsed)) {
-      return null;
-    }
-    if (parsed.schema !== EXPORT_SCHEMA || parsed.version !== EXPORT_VERSION) {
-      return null;
-    }
-    return parsed as SavedStoriesExport;
-  } catch {
-    return null;
-  }
-}
-
-function isRecordContainer(value: unknown): value is {
-  schema?: unknown;
-  version?: unknown;
-  exportedAt?: unknown;
-  stories: unknown[];
-} {
+function isRecordContainer(value: unknown): value is { stories: unknown[] } {
   return (
     !!value && typeof value === 'object' && Array.isArray((value as { stories?: unknown }).stories)
   );

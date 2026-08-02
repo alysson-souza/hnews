@@ -210,8 +210,8 @@ describe('UserTagsService', () => {
     });
 
     it('tags without notes should still work (backwards compat)', () => {
-      // Seed old-format data (no notes key) via importTags
-      const oldData = JSON.stringify([
+      // Seed old-format data (no notes key)
+      service.importTagRecords([
         {
           username: 'old-user',
           tag: 'OG',
@@ -220,8 +220,6 @@ describe('UserTagsService', () => {
           updatedAt: Date.now(),
         },
       ]);
-
-      service.importTags(oldData);
 
       expect(service.getTag('old-user')?.tag).toBe('OG');
       expect(service.getTag('old-user')?.notes).toBeUndefined();
@@ -262,7 +260,7 @@ describe('UserTagsService', () => {
     });
 
     it('should import tags with notes', () => {
-      const json = JSON.stringify([
+      service.importTagRecords([
         {
           username: 'imported-user',
           tag: 'Imported',
@@ -273,13 +271,11 @@ describe('UserTagsService', () => {
         },
       ]);
 
-      service.importTags(json);
-
       expect(service.getTag('imported-user')?.notes).toBe('Has notes');
     });
 
     it('should import tags without notes (backwards compat)', () => {
-      const json = JSON.stringify([
+      service.importTagRecords([
         {
           username: 'old-import',
           tag: 'Old',
@@ -289,8 +285,6 @@ describe('UserTagsService', () => {
         },
       ]);
 
-      service.importTags(json);
-
       expect(service.getTag('old-import')?.tag).toBe('Old');
       expect(service.getTag('old-import')?.notes).toBeUndefined();
     });
@@ -298,9 +292,7 @@ describe('UserTagsService', () => {
     it('should export tags with notes', () => {
       service.setTag('alice', 'Expert', undefined, 'Great contributor');
 
-      const exported = JSON.parse(service.exportTags());
-
-      expect(exported[0].notes).toBe('Great contributor');
+      expect(service.exportTagRecords()[0].notes).toBe('Great contributor');
     });
   });
 
@@ -343,15 +335,14 @@ describe('UserTagsService', () => {
   });
 
   describe('export strips color', () => {
-    it('should not include color in exported JSON', () => {
+    it('should not include color in exported records', () => {
       service.setTag('alice', 'Expert');
-      const exported = JSON.parse(service.exportTags());
-      expect(exported[0].color).toBeUndefined();
+      expect(service.exportTagRecords()[0].color).toBeUndefined();
     });
 
     it('should still include other fields in export', () => {
       service.setTag('alice', 'Expert', undefined, 'A note');
-      const exported = JSON.parse(service.exportTags());
+      const exported = service.exportTagRecords();
       expect(exported[0].username).toBe('alice');
       expect(exported[0].tag).toBe('Expert');
       expect(exported[0].notes).toBe('A note');
@@ -361,7 +352,7 @@ describe('UserTagsService', () => {
 
   describe('import ignores color', () => {
     it('should ignore imported color and assign an accessible one', () => {
-      const json = JSON.stringify([
+      service.importTagRecords([
         {
           username: 'imported',
           tag: 'Tag',
@@ -370,25 +361,111 @@ describe('UserTagsService', () => {
           updatedAt: Date.now(),
         },
       ]);
-      service.importTags(json);
       const color = service.getTag('imported')!.color!;
       expect(color).not.toBe('#FAEA49');
       expect(contrastWithWhite(color)).toBeGreaterThanOrEqual(4.5);
     });
 
     it('should assign accessible color when imported tag has no color', () => {
-      const json = JSON.stringify([
-        {
-          username: 'no-color',
-          tag: 'Tag',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        },
+      service.importTagRecords([
+        { username: 'no-color', tag: 'Tag', createdAt: Date.now(), updatedAt: Date.now() },
       ]);
-      service.importTags(json);
       const color = service.getTag('no-color')!.color!;
       expect(color).toMatch(/^#[0-9A-F]{6}$/i);
       expect(contrastWithWhite(color)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('keeps the local color when an import overwrites an existing tag', () => {
+      service.setTag('alice', 'Expert');
+      const original = service.getTag('alice')!.color!;
+
+      service.importTagRecords([
+        { username: 'alice', tag: 'Guru', createdAt: 1, updatedAt: 2, color: '#FAEA49' },
+      ]);
+
+      expect(service.getTag('alice')?.tag).toBe('Guru');
+      expect(service.getTag('alice')?.color).toBe(original);
+    });
+
+    it('gives every newly imported tag a distinct hue', () => {
+      service.setTag('alice', 'Expert');
+
+      service.importTagRecords([
+        { username: 'alice', tag: 'Guru' },
+        { username: 'bob', tag: 'Dev' },
+        { username: 'carol', tag: 'Dev' },
+        { username: 'dave', tag: 'Dev' },
+      ]);
+
+      const colors = ['bob', 'carol', 'dave'].map((name) => service.getTag(name)!.color!);
+      expect(new Set(colors).size).toBe(3);
+    });
+  });
+
+  describe('importTagRecords', () => {
+    it('reports imported and updated counts', () => {
+      service.setTag('alice', 'Expert');
+
+      const result = service.importTagRecords([
+        { username: 'alice', tag: 'Guru', createdAt: 1, updatedAt: 2 },
+        { username: 'bob', tag: 'Dev', createdAt: 1, updatedAt: 2 },
+      ]);
+
+      expect(result).toEqual({ imported: 1, updated: 1, skipped: 0 });
+      expect(service.getTag('alice')?.tag).toBe('Guru');
+    });
+
+    it('counts an unchanged record as skipped', () => {
+      service.setTag('alice', 'Expert');
+      const exported = service.exportTagRecords();
+
+      expect(service.importTagRecords(exported)).toEqual({
+        imported: 0,
+        updated: 0,
+        skipped: 1,
+      });
+    });
+
+    it('skips malformed records instead of discarding the whole file', () => {
+      const result = service.importTagRecords([
+        { username: 'alice', tag: 'Expert' },
+        { username: '', tag: 'No username' },
+        { username: 'bob' },
+        'not an object',
+        null,
+      ]);
+
+      expect(result).toEqual({ imported: 1, updated: 0, skipped: 4 });
+      expect(service.getTag('alice')?.tag).toBe('Expert');
+    });
+
+    it('keeps the last entry when a username repeats in one file', () => {
+      const result = service.importTagRecords([
+        { username: 'alice', tag: 'First' },
+        { username: 'alice', tag: 'Last' },
+      ]);
+
+      expect(result).toEqual({ imported: 1, updated: 0, skipped: 1 });
+      expect(service.getTag('alice')?.tag).toBe('Last');
+    });
+
+    it('falls back to the current time for non-numeric timestamps', () => {
+      service.importTagRecords([
+        { username: 'alice', tag: 'Expert', createdAt: 'nope', updatedAt: null },
+      ]);
+
+      expect(service.getTag('alice')?.createdAt).toBeTypeOf('number');
+      expect(service.getTag('alice')?.updatedAt).toBeTypeOf('number');
+    });
+
+    it('throws when handed something that is not an array', () => {
+      expect(() => service.importTagRecords({ tags: [] })).toThrow('Invalid user tags data');
+    });
+
+    it('tracks the tag count reactively', () => {
+      expect(service.tagCount()).toBe(0);
+      service.importTagRecords([{ username: 'alice', tag: 'Expert' }]);
+      expect(service.tagCount()).toBe(1);
     });
   });
 

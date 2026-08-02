@@ -22,14 +22,6 @@ const story = (id: number, overrides: Partial<HNItem> = {}): HNItem => ({
   ...overrides,
 });
 
-const exportJson = (records: unknown[]): string =>
-  JSON.stringify({
-    schema: 'hnews.savedStories',
-    version: 1,
-    exportedAt: 1700000300,
-    stories: records,
-  });
-
 const bulkResult = (id: number, commentIds: number[] = []): BulkLoadResult => ({
   story: story(id),
   commentsMap: new Map(commentIds.map((cid) => [cid, story(cid, { type: 'comment' })])),
@@ -179,7 +171,7 @@ describe('SavedStoriesService', () => {
   it('warms comments for imported records', () => {
     hackernews.getStoryWithAllComments.mockReturnValue(of(bulkResult(50, [51])));
 
-    service.importSavedStories(exportJson([{ id: 50, savedAt: 1700000000000, story: story(50) }]));
+    service.importRecords([{ id: 50, savedAt: 1700000000000, story: story(50) }]);
 
     expect(hackernews.getStoryWithAllComments).toHaveBeenCalledWith(50);
     expect(indexedDB.setSavedItems).toHaveBeenCalledTimes(1);
@@ -198,31 +190,21 @@ describe('SavedStoriesService', () => {
     expect(reloaded.getAll()[0].story?.title).toBe('Story 2');
   });
 
-  it('exports a versioned saved stories envelope newest first', () => {
+  it('returns records newest first', () => {
     service.save(story(1));
     vi.setSystemTime(1700000005000);
     service.save(story(2));
-    vi.setSystemTime(1700000010000);
 
-    const exported = JSON.parse(service.exportSavedStories());
-
-    expect(exported).toMatchObject({
-      schema: 'hnews.savedStories',
-      version: 1,
-      exportedAt: 1700000010000,
-    });
-    expect(exported.stories.map((record: { id: number }) => record.id)).toEqual([2, 1]);
+    expect(service.getAll().map((record) => record.id)).toEqual([2, 1]);
   });
 
   it('merges imports by ID and preserves existing snapshots', () => {
     service.save(story(1, { title: 'Local title' }));
 
-    const result = service.importSavedStories(
-      exportJson([
-        { id: 1, savedAt: 1600000000000, story: story(1, { title: 'Imported title' }) },
-        { id: 2, savedAt: 1600000100000, story: story(2) },
-      ]),
-    );
+    const result = service.importRecords([
+      { id: 1, savedAt: 1600000000000, story: story(1, { title: 'Imported title' }) },
+      { id: 2, savedAt: 1600000100000, story: story(2) },
+    ]);
 
     expect(result).toEqual({ imported: 1, updated: 1, skipped: 0 });
     expect(service.getAll()).toEqual([
@@ -236,21 +218,17 @@ describe('SavedStoriesService', () => {
     TestBed.resetTestingModule();
     service = TestBed.inject(SavedStoriesService);
 
-    const result = service.importSavedStories(
-      exportJson([{ id: 3, savedAt: 1700000000000, story: story(3) }]),
-    );
+    const result = service.importRecords([{ id: 3, savedAt: 1700000000000, story: story(3) }]);
 
     expect(result).toEqual({ imported: 0, updated: 1, skipped: 0 });
     expect(service.getAll()[0].story).toEqual(story(3));
   });
 
   it('counts duplicate imported IDs as skipped while keeping the earliest savedAt', () => {
-    const result = service.importSavedStories(
-      exportJson([
-        { id: 4, savedAt: 1700000100000, story: story(4) },
-        { id: 4, savedAt: 1600000100000, story: story(4, { title: 'Earlier duplicate' }) },
-      ]),
-    );
+    const result = service.importRecords([
+      { id: 4, savedAt: 1700000100000, story: story(4) },
+      { id: 4, savedAt: 1600000100000, story: story(4, { title: 'Earlier duplicate' }) },
+    ]);
 
     expect(result).toEqual({ imported: 1, updated: 0, skipped: 1 });
     expect(service.getAll()[0]).toEqual({
@@ -260,21 +238,17 @@ describe('SavedStoriesService', () => {
     });
   });
 
-  it('throws for invalid JSON and invalid export envelopes', () => {
-    expect(() => service.importSavedStories('{')).toThrow('Invalid saved stories export');
-    expect(() => service.importSavedStories(JSON.stringify({ stories: [] }))).toThrow(
-      'Invalid saved stories export',
-    );
+  it('throws when the imported payload is not an array', () => {
+    expect(() => service.importRecords({ stories: [] })).toThrow('Invalid saved stories data');
+    expect(() => service.importRecords(null)).toThrow('Invalid saved stories data');
   });
 
   it('skips invalid records', () => {
-    const result = service.importSavedStories(
-      exportJson([
-        { id: Number.NaN, savedAt: 1700000000000 },
-        { id: 5, savedAt: 1700000000000, story: story(999) },
-        { id: 6, savedAt: 'bad', story: story(6) },
-      ]),
-    );
+    const result = service.importRecords([
+      { id: Number.NaN, savedAt: 1700000000000 },
+      { id: 5, savedAt: 1700000000000, story: story(999) },
+      { id: 6, savedAt: 'bad', story: story(6) },
+    ]);
 
     expect(result).toEqual({ imported: 2, updated: 0, skipped: 1 });
     expect(service.getAll().map((record) => record.id)).toEqual([5, 6]);

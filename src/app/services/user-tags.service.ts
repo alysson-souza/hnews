@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
+import type { ImportCounts } from '@models/backup';
 
 export interface UserTag {
   username: string;
@@ -17,6 +18,7 @@ export interface UserTag {
 export class UserTagsService {
   private readonly STORAGE_KEY = 'hn_user_tags';
   private tagsMap = signal<Map<string, UserTag>>(new Map());
+  readonly tagCount = computed(() => this.tagsMap().size);
 
   constructor() {
     this.loadTags();
@@ -220,46 +222,70 @@ export class UserTagsService {
     return 1.05 / (luminance + 0.05);
   }
 
-  exportTags(): string {
+  /** Backup payload for this dataset. Colors are local-only, so they stay out. */
+  exportTagRecords(): UserTag[] {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const tags = this.getAllTags().map(({ color, ...rest }) => rest);
-    return JSON.stringify(tags, null, 2);
+    return this.getAllTags().map(({ color, ...rest }) => rest);
   }
 
-  importTags(jsonString: string): boolean {
-    try {
-      const tags: UserTag[] = JSON.parse(jsonString);
-
-      // Validate structure
-      if (!Array.isArray(tags)) {
-        throw new Error('Invalid format: expected an array');
-      }
-
-      for (const tag of tags) {
-        if (!tag.username || !tag.tag) {
-          throw new Error('Invalid tag format');
-        }
-      }
-
-      // Merge with existing tags
-      const newMap = new Map(this.tagsMap());
-      tags.forEach((tag) => {
-        newMap.set(tag.username, {
-          ...tag,
-          createdAt: tag.createdAt || Date.now(),
-          updatedAt: tag.updatedAt || Date.now(),
-          color: this.generateAccessibleColor(newMap.size),
-          notes: tag.notes || undefined,
-        });
-      });
-
-      this.tagsMap.set(newMap);
-      this.saveTags();
-      return true;
-    } catch (error) {
-      console.error('Failed to import tags:', error);
-      return false;
+  /**
+   * Merges backup records into the local tags, keyed by username.
+   *
+   * Throws only when handed something that is not an array; individual malformed
+   * records are counted as skipped so one bad entry cannot discard a whole file.
+   */
+  importTagRecords(records: unknown): ImportCounts {
+    const result: ImportCounts = { imported: 0, updated: 0, skipped: 0 };
+    if (!Array.isArray(records)) {
+      throw new Error('Invalid user tags data');
     }
+
+    const incoming = new Map<string, UserTag>();
+    for (const record of records) {
+      const normalized = normalizeTag(record);
+      if (!normalized) {
+        result.skipped++;
+        continue;
+      }
+
+      // Later entries win, so an earlier duplicate is dropped.
+      if (incoming.has(normalized.username)) {
+        result.skipped++;
+      }
+      incoming.set(normalized.username, normalized);
+    }
+
+    const tags = new Map(this.tagsMap());
+    // Advance the hue once per newly added tag; feeding the map size in would
+    // repeat hues whenever an import only overwrites existing usernames.
+    let hueIndex = tags.size;
+    for (const tag of incoming.values()) {
+      const existing = tags.get(tag.username);
+      // Backups never carry a color, so an already-tagged user keeps the chip
+      // color they are used to seeing.
+      const merged: UserTag = {
+        ...tag,
+        color: existing?.color ?? this.generateAccessibleColor(hueIndex++),
+      };
+
+      if (!existing) {
+        tags.set(tag.username, merged);
+        result.imported++;
+        continue;
+      }
+
+      if (tagsEqual(existing, merged)) {
+        result.skipped++;
+        continue;
+      }
+
+      tags.set(tag.username, merged);
+      result.updated++;
+    }
+
+    this.tagsMap.set(tags);
+    this.saveTags();
+    return result;
   }
 
   clearAllTags(): void {
@@ -269,4 +295,41 @@ export class UserTagsService {
     this.tagsMap.set(new Map());
     window.localStorage.removeItem(this.STORAGE_KEY);
   }
+}
+
+function normalizeTag(value: unknown): UserTag | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const raw = value as Partial<UserTag>;
+  const username = typeof raw.username === 'string' ? raw.username.trim() : '';
+  const tag = typeof raw.tag === 'string' ? raw.tag.trim() : '';
+  if (!username || !tag) {
+    return null;
+  }
+
+  const now = Date.now();
+  return {
+    username,
+    tag,
+    notes: typeof raw.notes === 'string' ? raw.notes.trim() || undefined : undefined,
+    createdAt: isFiniteTimestamp(raw.createdAt) ? raw.createdAt : now,
+    updatedAt: isFiniteTimestamp(raw.updatedAt) ? raw.updatedAt : now,
+  };
+}
+
+function tagsEqual(a: UserTag, b: UserTag): boolean {
+  return (
+    a.username === b.username &&
+    a.tag === b.tag &&
+    a.notes === b.notes &&
+    a.color === b.color &&
+    a.createdAt === b.createdAt &&
+    a.updatedAt === b.updatedAt
+  );
+}
+
+function isFiniteTimestamp(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }

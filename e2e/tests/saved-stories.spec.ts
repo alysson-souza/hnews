@@ -28,33 +28,64 @@ test.describe('Saved stories', () => {
     await expect(page.getByText('No saved stories')).toBeVisible();
   });
 
-  test('imports and exports saved stories from settings', async ({ page }) => {
+  test('imports a legacy saved stories file and exports a unified backup', async ({ page }) => {
     await page.goto('/settings');
-    const savedSection = page.getByRole('region', { name: 'Saved Stories Management' });
-    await expect(savedSection.getByRole('button', { name: 'Export saved stories' })).toBeDisabled();
+    await page.evaluate(() => localStorage.removeItem('hn_user_tags'));
+    await page.reload();
 
-    const importJson = JSON.stringify({
+    const backupSection = page.getByRole('region', { name: 'Backup and Restore' });
+    await expect(backupSection.getByRole('button', { name: 'Export backup' })).toBeDisabled();
+
+    const legacyJson = JSON.stringify({
       schema: 'hnews.savedStories',
       version: 1,
       exportedAt: Date.now(),
       stories: [{ id: 8863, savedAt: Date.now() }],
     });
 
-    await savedSection.locator('input[type="file"]').setInputFiles({
+    await backupSection.locator('input[type="file"]').setInputFiles({
       name: 'saved.json',
       mimeType: 'application/json',
-      buffer: Buffer.from(importJson),
+      buffer: Buffer.from(legacyJson),
     });
 
     await expect(
-      savedSection.getByText('Saved stories imported: 1 new, 0 updated, 0 skipped'),
+      backupSection.getByText('Imported. Stories: 1 new, 0 updated, 0 skipped'),
     ).toBeVisible();
-    await expect(savedSection.getByRole('button', { name: 'Export saved stories' })).toBeEnabled();
+    await expect(backupSection.getByRole('button', { name: 'Export backup' })).toBeEnabled();
 
+    await page.goto('/saved');
+    await expect(page.locator('app-story-item')).toHaveCount(1);
+
+    await page.goto('/settings');
     const downloadPromise = page.waitForEvent('download');
-    await savedSection.getByRole('button', { name: 'Export saved stories' }).click();
+    await backupSection.getByRole('button', { name: 'Export backup' }).click();
     const download = await downloadPromise;
 
-    expect(download.suggestedFilename()).toMatch(/^hnews-saved-stories-\d+\.json$/);
+    expect(download.suggestedFilename()).toMatch(/^hnews-backup-\d+\.json$/);
+  });
+
+  test('imports a legacy user tags file from the backup section', async ({ page }) => {
+    await page.goto('/settings');
+    await page.evaluate(() => localStorage.removeItem('hn_user_tags'));
+    await page.reload();
+
+    const backupSection = page.getByRole('region', { name: 'Backup and Restore' });
+    const legacyTags = JSON.stringify([
+      { username: 'dang', tag: 'HN Moderator', createdAt: 1, updatedAt: 2 },
+    ]);
+
+    await backupSection.locator('input[type="file"]').setInputFiles({
+      name: 'tags.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(legacyTags),
+    });
+
+    await expect(
+      backupSection.getByText('Imported. Tags: 1 new, 0 updated, 0 skipped'),
+    ).toBeVisible();
+
+    const tagsSection = page.getByRole('region', { name: 'User Tags Management' });
+    await expect(tagsSection.getByText('HN Moderator')).toBeVisible();
   });
 });

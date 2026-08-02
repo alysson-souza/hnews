@@ -15,6 +15,9 @@ import { KeyboardNavigationService } from '@services/keyboard-navigation.service
 import { ScrollService } from '@services/scroll.service';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
 import { SavedStoriesService } from '@services/saved-stories.service';
+import { BackupService } from '@services/backup.service';
+import { downloadJsonFile } from '@services/file-transfer.util';
+import { BackupImportResult, ImportCounts } from '@models/backup';
 import { PrivacyService } from '@models/privacy-redirect';
 import { AppButtonComponent } from '@components/shared/app-button/app-button.component';
 import { CardComponent } from '@components/shared/card/card.component';
@@ -338,19 +341,20 @@ import {
         @apply flex flex-wrap items-center justify-center sm:justify-end gap-2;
       }
 
-      .saved-stories-row {
+      /* Shared by the Saved Stories and Backup sections */
+      .data-summary-row {
         @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
       }
 
-      .saved-stories-count {
+      .data-count {
         @apply flex items-baseline gap-2 text-sm text-gray-600 dark:text-gray-400;
       }
 
-      .saved-stories-count-value {
+      .data-count-value {
         @apply font-mono text-base font-semibold tabular-nums text-gray-900 dark:text-gray-100;
       }
 
-      .saved-stories-actions {
+      .data-actions {
         @apply flex flex-wrap items-center gap-2;
       }
     `,
@@ -368,6 +372,7 @@ export class SettingsComponent implements OnInit {
   private scrollService = inject(ScrollService);
   privacyRedirectService = inject(PrivacyRedirectService);
   private savedStories = inject(SavedStoriesService);
+  private backup = inject(BackupService);
 
   tags = signal<UserTag[]>([]);
   message = signal<string>('');
@@ -400,9 +405,13 @@ export class SettingsComponent implements OnInit {
   cacheError = signal(false);
   savedStoriesMessage = signal<string>('');
   savedStoriesError = signal(false);
+  backupMessage = signal<string>('');
+  backupError = signal(false);
 
   openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
-  savedStoriesCount = computed(() => this.savedStories.records().size);
+  savedStoriesCount = this.backup.savedStoryCount;
+  tagCount = this.backup.tagCount;
+  isBackupEmpty = this.backup.isEmpty;
 
   // Privacy redirect computed signals
   privacyRedirectEnabled = computed(() => this.privacyRedirectService.settings().enabled);
@@ -533,34 +542,6 @@ export class SettingsComponent implements OnInit {
     this.updatePaginatedTags();
   }
 
-  exportTags(): void {
-    const json = this.tagsService.exportTags();
-    this.downloadJsonFile(`hn-user-tags-${Date.now()}.json`, json);
-    this.showMessage('Tags exported successfully', false);
-  }
-
-  importTags(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      if (this.tagsService.importTags(content)) {
-        this.loadTags();
-        this.clearSearch(); // Clear search when importing new tags
-        this.showMessage('Tags imported successfully', false);
-      } else {
-        this.showMessage('Failed to import tags. Please check the file format.', true);
-      }
-    };
-    reader.readAsText(file);
-
-    input.value = '';
-  }
-
   removeTag(username: string): void {
     this.tagsService.removeTag(username);
     this.loadTags();
@@ -603,16 +584,6 @@ export class SettingsComponent implements OnInit {
     this.userSettings.setSetting('openCommentsInSidebar', newValue);
   }
 
-  private downloadJsonFile(filename: string, json: string): void {
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   private flashMessage(
     messageSignal: WritableSignal<string>,
     errorSignal: WritableSignal<boolean>,
@@ -628,44 +599,37 @@ export class SettingsComponent implements OnInit {
     this.flashMessage(this.message, this.isError, msg, error);
   }
 
-  exportSavedStories(): void {
-    const json = this.savedStories.exportSavedStories();
-    this.downloadJsonFile(`hnews-saved-stories-${Date.now()}.json`, json);
-    this.showSavedStoriesMessage('Saved stories exported successfully', false);
+  exportBackup(): void {
+    downloadJsonFile(`hnews-backup-${Date.now()}.json`, this.backup.exportBackup());
+    this.showBackupMessage('Backup exported successfully', false);
   }
 
-  importSavedStories(event: Event): void {
+  async importBackup(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    // Reset first so picking the same file again still fires a change event.
+    input.value = '';
 
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      try {
-        const result = this.savedStories.importSavedStories(content);
-        this.keyboardNavService.clearSelection();
-        this.showSavedStoriesMessage(
-          `Saved stories imported: ${result.imported} new, ${result.updated} updated, ${result.skipped} skipped`,
-          false,
-        );
-      } catch {
-        this.showSavedStoriesMessage(
-          'Failed to import saved stories. Please check the file format.',
-          true,
-        );
+    try {
+      const result = this.backup.importBackup(await file.text());
+      if (result.userTags) {
+        this.loadTags();
+        this.clearSearch(); // Imported tags may not match the active search
       }
-    };
-    reader.onerror = () => {
-      this.showSavedStoriesMessage(
-        'Failed to import saved stories. Please check the file format.',
-        true,
-      );
-    };
-    reader.readAsText(file);
+      if (result.savedStories) {
+        this.keyboardNavService.clearSelection();
+      }
+      this.showBackupMessage(formatImportResult(result), false);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Could not read the file';
+      this.showBackupMessage(`Import failed: ${reason}.`, true);
+    }
+  }
 
-    input.value = '';
+  private showBackupMessage(msg: string, error: boolean): void {
+    this.flashMessage(this.backupMessage, this.backupError, msg, error);
   }
 
   clearSavedStories(): void {
@@ -758,4 +722,20 @@ export class SettingsComponent implements OnInit {
     if (seconds < 60) return `${seconds}s`;
     return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   }
+}
+
+// Only reports the sections the imported file actually contained.
+function formatImportResult(result: BackupImportResult): string {
+  const parts: string[] = [];
+  if (result.userTags) {
+    parts.push(`Tags: ${formatCounts(result.userTags)}`);
+  }
+  if (result.savedStories) {
+    parts.push(`Stories: ${formatCounts(result.savedStories)}`);
+  }
+  return `Imported. ${parts.join(' · ')}`;
+}
+
+function formatCounts(counts: ImportCounts): string {
+  return `${counts.imported} new, ${counts.updated} updated, ${counts.skipped} skipped`;
 }
