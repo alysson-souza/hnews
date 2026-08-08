@@ -81,6 +81,26 @@ describe('BackupService', () => {
     expect(service.exportBackup()).not.toContain('color');
   });
 
+  it('leaves an empty dataset out of the file', () => {
+    tags.setTag('dang', 'HN Moderator');
+
+    const exported = JSON.parse(service.exportBackup());
+
+    expect(exported.data.userTags).toHaveLength(1);
+    expect(exported.data).not.toHaveProperty('savedStories');
+  });
+
+  it('reports only the datasets an exported backup carried', () => {
+    tags.setTag('dang', 'HN Moderator');
+    const backup = service.exportBackup();
+    tags.clearAllTags();
+
+    const result = service.importBackup(backup);
+
+    expect(result.userTags).toEqual({ imported: 1, updated: 0, skipped: 0 });
+    expect(result.savedStories).toBeUndefined();
+  });
+
   it('restores an exported backup after everything is cleared', () => {
     seed();
     const backup = service.exportBackup();

@@ -6,6 +6,7 @@ import {
   BACKUP_VERSION,
   LEGACY_SAVED_STORIES_SCHEMA,
   LEGACY_SAVED_STORIES_VERSION,
+  type BackupData,
   type BackupFile,
   type BackupImportResult,
 } from '@models/backup';
@@ -37,15 +38,28 @@ export class BackupService {
   readonly savedStoryCount = computed(() => this.savedStories.records().size);
   readonly isEmpty = computed(() => this.tagCount() === 0 && this.savedStoryCount() === 0);
 
+  /**
+   * Writes the unified format, carrying only the datasets that have records.
+   * An empty section would otherwise make an import report a dataset the file
+   * never really contained, and act on it. Callers gate on `isEmpty`, so a file
+   * with no sections at all is never produced.
+   */
   exportBackup(): string {
+    const data: BackupData = {};
+    const userTags = this.tags.exportTagRecords();
+    if (userTags.length > 0) {
+      data.userTags = userTags;
+    }
+    const savedStories = this.savedStories.getAll();
+    if (savedStories.length > 0) {
+      data.savedStories = savedStories;
+    }
+
     const backup: BackupFile = {
       schema: BACKUP_SCHEMA,
       version: BACKUP_VERSION,
       exportedAt: Date.now(),
-      data: {
-        userTags: this.tags.exportTagRecords(),
-        savedStories: this.savedStories.getAll(),
-      },
+      data,
     };
     return JSON.stringify(backup, null, 2);
   }
