@@ -79,6 +79,10 @@ import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigatio
         @apply relative z-10;
       }
 
+      .comment-card {
+        padding-bottom: calc(var(--thread-gap) - 4px);
+      }
+
       .content {
         @apply relative;
         margin-top: calc(var(--thread-gap) / 3);

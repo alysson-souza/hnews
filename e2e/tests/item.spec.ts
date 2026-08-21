@@ -27,6 +27,73 @@ test.describe('Item Page', () => {
   });
 
   test.describe('Comments', () => {
+    test('should balance the visible bottom and side insets of comment text', async ({ page }) => {
+      await page.route('https://hn.algolia.com/api/v1/items/910001', async (route) => {
+        await route.fulfill({
+          json: {
+            id: 910001,
+            created_at: '2026-08-21T10:00:00.000Z',
+            created_at_i: 1_787_306_400,
+            type: 'story',
+            author: 'story_author',
+            title: 'Comment spacing fixture',
+            url: null,
+            text: null,
+            points: 1,
+            parent_id: null,
+            story_id: null,
+            children: [
+              {
+                id: 910002,
+                created_at: '2026-08-21T10:01:00.000Z',
+                created_at_i: 1_787_306_460,
+                type: 'comment',
+                author: 'comment_author',
+                title: null,
+                url: null,
+                text: 'A two-line comment makes the lower line-box whitespace visible below the text.',
+                points: null,
+                parent_id: 910001,
+                story_id: 910001,
+                children: [],
+              },
+            ],
+          },
+          headers: { 'Access-Control-Allow-Origin': '*' },
+        });
+      });
+
+      await page.goto('/item/910001');
+
+      const card = page
+        .locator('app-comment-thread > app-thread-gutter > .thread-container > .comment-card')
+        .first();
+      await expect(card.locator('.comment-body')).toContainText('A two-line comment');
+
+      const visibleInsets = await card.evaluate((element) => {
+        const textNode = element.querySelector('.comment-body')?.firstChild;
+        if (!textNode?.textContent) {
+          throw new Error('Expected the comment body to contain text');
+        }
+
+        const cardRect = element.getBoundingClientRect();
+        const firstCharacter = document.createRange();
+        firstCharacter.setStart(textNode, 0);
+        firstCharacter.setEnd(textNode, 1);
+
+        const lastCharacter = document.createRange();
+        lastCharacter.setStart(textNode, textNode.textContent.length - 1);
+        lastCharacter.setEnd(textNode, textNode.textContent.length);
+
+        return {
+          bottom: cardRect.bottom - lastCharacter.getBoundingClientRect().bottom,
+          left: firstCharacter.getBoundingClientRect().left - cardRect.left,
+        };
+      });
+
+      expect(Math.abs(visibleInsets.bottom - visibleInsets.left)).toBeLessThanOrEqual(2);
+    });
+
     test('should display comments', async ({ itemPage }) => {
       await itemPage.navigateToItem(40224596);
       await itemPage.page.waitForTimeout(2000);
