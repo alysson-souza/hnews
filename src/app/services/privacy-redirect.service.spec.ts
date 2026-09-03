@@ -1,45 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { PRIVACY_REDIRECT_REGISTRY } from '@models/privacy-redirect';
 import { PrivacyRedirectService } from './privacy-redirect.service';
-import { LibreDirectApiClient } from '@data/libredirect-api.client';
-import { LibreDirectInstances } from '@models/privacy-redirect';
+
+const SETTINGS_STORAGE_KEY = 'privacy.redirect.settings.v1';
 
 describe('PrivacyRedirectService', () => {
   let service: PrivacyRedirectService;
-  let mockApiClient: {
-    fetchInstances: ReturnType<typeof vi.fn>;
-    getClearnetInstances: ReturnType<typeof vi.fn>;
-    clearCache: ReturnType<typeof vi.fn>;
-  };
-
-  const mockInstances: LibreDirectInstances = {
-    nitter: {
-      clearnet: ['https://nitter.example.com', 'https://nitter2.example.com'],
-      tor: [],
-      i2p: [],
-      loki: [],
-    },
-  };
 
   beforeEach(() => {
     localStorage.clear();
-
-    mockApiClient = {
-      fetchInstances: vi.fn().mockReturnValue(of(mockInstances)),
-      getClearnetInstances: vi.fn().mockReturnValue(['https://nitter.example.com']),
-      clearCache: vi.fn(),
-    };
-
     TestBed.configureTestingModule({
-      providers: [
-        PrivacyRedirectService,
-        { provide: LibreDirectApiClient, useValue: mockApiClient },
-      ],
+      providers: [PrivacyRedirectService],
     });
-
     service = TestBed.inject(PrivacyRedirectService);
   });
 
@@ -47,221 +22,100 @@ describe('PrivacyRedirectService', () => {
     localStorage.clear();
   });
 
-  describe('initialization', () => {
-    it('should fetch instances on init when enabled by default', () => {
-      // Default is now enabled, so it should auto-fetch
-      expect(mockApiClient.fetchInstances).toHaveBeenCalled();
-    });
-
-    it('should start with enabled state by default', () => {
+  describe('settings', () => {
+    it('starts enabled and redirects immediately', () => {
       expect(service.settings().enabled).toBe(true);
-    });
-  });
-
-  describe('setEnabled', () => {
-    it('should enable redirects and fetch instances', () => {
-      service.setEnabled(true);
-
-      expect(service.settings().enabled).toBe(true);
-      expect(mockApiClient.fetchInstances).toHaveBeenCalled();
+      expect(service.transformUrl('https://x.com/user')).toBe('https://twitterviewer.net/user');
     });
 
-    it('should disable redirects', () => {
-      service.setEnabled(true);
+    it('persists master changes', () => {
       service.setEnabled(false);
 
       expect(service.settings().enabled).toBe(false);
+      expect(JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) ?? '{}')).toMatchObject({
+        enabled: false,
+      });
     });
 
-    it('should persist settings to localStorage', () => {
-      // Toggle off then on to ensure a write happens
-      service.setEnabled(false);
-      service.setEnabled(true);
+    it('synchronizes settings changes from another tab', () => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: SETTINGS_STORAGE_KEY,
+          newValue: JSON.stringify({
+            enabled: false,
+          }),
+        }),
+      );
 
-      const stored = localStorage.getItem('privacy.redirect.settings.v1');
-      expect(stored).not.toBeNull();
-      expect(JSON.parse(stored!).enabled).toBe(true);
-    });
-  });
-
-  describe('setServiceEnabled', () => {
-    it('should enable/disable individual services', () => {
-      service.setEnabled(true);
-
-      expect(service.settings().services.twitter).toBe(true);
-
-      service.setServiceEnabled('twitter', false);
-      expect(service.settings().services.twitter).toBe(false);
-
-      service.setServiceEnabled('twitter', true);
-      expect(service.settings().services.twitter).toBe(true);
+      expect(service.settings().enabled).toBe(false);
     });
   });
 
   describe('transformUrl', () => {
-    beforeEach(() => {
-      service.setEnabled(true);
+    it.each([
+      ['https://twitter.com/user', 'https://twitterviewer.net/user'],
+      ['https://twitter.com/user/status/123', 'https://twitterviewer.net/user/status/123'],
+      ['https://x.com/user', 'https://twitterviewer.net/user'],
+      ['https://x.com/user/status/123', 'https://twitterviewer.net/user/status/123'],
+    ])('rewrites %s to %s', (url, expected) => {
+      expect(service.transformUrl(url)).toBe(expected);
     });
 
-    it('should transform Twitter URL to Nitter', () => {
-      const result = service.transformUrl('https://twitter.com/user/status/123');
-
-      expect(result).toContain('nitter.example.com');
-      expect(result).toContain('/user/status/123');
+    it('preserves query strings and fragments', () => {
+      expect(service.transformUrl('https://x.com/user/status/123?ref=hn#replies')).toBe(
+        'https://twitterviewer.net/user/status/123?ref=hn#replies',
+      );
     });
 
-    it('should transform X.com URL to Nitter', () => {
-      const result = service.transformUrl('https://x.com/user/status/123');
+    it('returns the original URL when the master toggle is disabled', () => {
+      const url = 'https://twitter.com/user/status/123';
 
-      expect(result).toContain('nitter.example.com');
-    });
-
-    it('should not transform non-matching URLs', () => {
-      const url = 'https://example.com/page';
-      const result = service.transformUrl(url);
-
-      expect(result).toBe(url);
-    });
-
-    it('should not transform when service is disabled', () => {
-      service.setServiceEnabled('twitter', false);
-
-      const url = 'https://twitter.com/user';
-      const result = service.transformUrl(url);
-
-      expect(result).toBe(url);
-    });
-
-    it('should return original URL when redirects are disabled', () => {
       service.setEnabled(false);
 
-      const url = 'https://twitter.com/user';
-      const result = service.transformUrl(url);
+      expect(service.transformUrl(url)).toBe(url);
+    });
 
-      expect(result).toBe(url);
+    it.each([
+      'https://example.com/page',
+      'https://twitter.com/',
+      'https://x.com/',
+      'https://t.co/abc123',
+      'https://pbs.twimg.com/media/image.jpg',
+      'https://video.twimg.com/video.mp4',
+      'https://platform.twitter.com/embed/Tweet.html?id=123',
+      'https://platform.x.com/embed/Tweet.html?id=123',
+    ])('leaves unsupported URL unchanged: %s', (url) => {
+      expect(service.transformUrl(url)).toBe(url);
     });
   });
 
   describe('wouldRedirect', () => {
-    beforeEach(() => {
-      service.setEnabled(true);
-    });
-
-    it('should return true for matching Twitter URLs', () => {
-      // Verify service has initialized properly
-      expect(service.registry).toBeDefined();
-      expect(service.registry.length).toBeGreaterThan(0);
-
+    it('classifies supported and unsupported URLs', () => {
       expect(service.wouldRedirect('https://twitter.com/user')).toBe(true);
-      expect(service.wouldRedirect('https://x.com/user')).toBe(true);
+      expect(service.wouldRedirect('https://x.com/user/status/123')).toBe(true);
+      expect(service.wouldRedirect('https://t.co/abc123')).toBe(false);
     });
 
-    it('should return false for non-matching URLs', () => {
-      expect(service.wouldRedirect('https://example.com')).toBe(false);
-    });
-
-    it('should return false when disabled', () => {
+    it('honors the master toggle', () => {
       service.setEnabled(false);
-
       expect(service.wouldRedirect('https://twitter.com/user')).toBe(false);
+
+      service.setEnabled(true);
     });
   });
 
   describe('getMatchingService', () => {
-    beforeEach(() => {
-      service.setEnabled(true);
+    it('returns the Twitter Viewer configuration', () => {
+      expect(service.getMatchingService('https://x.com/user/status/123')).toEqual(
+        PRIVACY_REDIRECT_REGISTRY[0],
+      );
     });
 
-    it('should return config for matching Twitter URL', () => {
-      const config = service.getMatchingService('https://twitter.com/user');
+    it('returns null for unsupported or disabled URLs', () => {
+      expect(service.getMatchingService('https://t.co/abc123')).toBeNull();
 
-      expect(config).not.toBeNull();
-      expect(config?.service).toBe('twitter');
-      expect(config?.frontend).toBe('nitter');
-    });
-
-    it('should return null for non-matching URL', () => {
-      const config = service.getMatchingService('https://example.com');
-      expect(config).toBeNull();
-    });
-  });
-
-  describe('error handling', () => {
-    it('should set error state on fetch failure', () => {
-      // Need fresh service with failing mock - clear and reinitialize
-      localStorage.clear();
-      mockApiClient.fetchInstances.mockReturnValue(of(null));
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          PrivacyRedirectService,
-          { provide: LibreDirectApiClient, useValue: mockApiClient },
-        ],
-      });
-
-      const freshService = TestBed.inject(PrivacyRedirectService);
-      expect(freshService.state().error).not.toBeNull();
-      expect(freshService.state().ready).toBe(false);
-    });
-
-    it('should schedule retry on error', () => {
-      // Need fresh service with failing mock
-      localStorage.clear();
-      mockApiClient.fetchInstances.mockReturnValue(of(null));
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          PrivacyRedirectService,
-          { provide: LibreDirectApiClient, useValue: mockApiClient },
-        ],
-      });
-
-      const freshService = TestBed.inject(PrivacyRedirectService);
-      expect(freshService.state().nextRetryAt).not.toBeNull();
-      expect(freshService.state().retryCount).toBe(1);
-    });
-  });
-
-  describe('refresh', () => {
-    it('should clear cache and refetch', () => {
-      service.setEnabled(true);
-
-      mockApiClient.fetchInstances.mockClear();
-      service.refresh();
-
-      expect(mockApiClient.clearCache).toHaveBeenCalled();
-      expect(mockApiClient.fetchInstances).toHaveBeenCalled();
-    });
-  });
-
-  describe('isAvailable', () => {
-    it('should be false when disabled', () => {
       service.setEnabled(false);
-      expect(service.isAvailable()).toBe(false);
-    });
-
-    it('should be true when enabled and ready', () => {
-      // Already enabled by default and instances fetched
-      expect(service.isAvailable()).toBe(true);
-    });
-
-    it('should be false when enabled but not ready', () => {
-      // Clear and set up fresh with failing API
-      localStorage.clear();
-      mockApiClient.fetchInstances.mockReturnValue(of(null));
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          PrivacyRedirectService,
-          { provide: LibreDirectApiClient, useValue: mockApiClient },
-        ],
-      });
-
-      const freshService = TestBed.inject(PrivacyRedirectService);
-      expect(freshService.isAvailable()).toBe(false);
+      expect(service.getMatchingService('https://x.com/user')).toBeNull();
     });
   });
 });

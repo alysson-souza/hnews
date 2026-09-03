@@ -9,42 +9,42 @@
       <app-theme-selector />
     </section>
 
-    <hr class="section-divider" />
+    @if (deviceService.isDesktop()) {
+      <hr class="section-divider" />
 
-    <!-- Reading Preferences -->
-    <section class="setting-section" role="region" aria-label="Reading Preferences">
-      <h2 class="settings-category-label">Reading Preferences</h2>
-      <div
-        class="setting-row cursor-pointer"
-        (click)="toggleSidebarPreference()"
-        role="button"
-        tabindex="0"
-        (keydown.enter)="toggleSidebarPreference()"
-        (keydown.space)="toggleSidebarPreference()"
-        [attr.aria-label]="
-          'Toggle open comments in sidebar on desktop. Currently ' +
-          (openCommentsInSidebar() ? 'enabled' : 'disabled')
-        "
-      >
-        <div class="setting-info">
-          <label class="setting-title" for="sidebar-toggle">
-            Open comments in sidebar on desktop
-          </label>
-          <p class="setting-description" id="sidebar-toggle-description">
-            When enabled, comments will open in a sidebar instead of navigating to a new page
-          </p>
+      <!-- Reading Preferences -->
+      <section class="setting-section" role="region" aria-label="Reading Preferences">
+        <h2 class="settings-category-label">Reading Preferences</h2>
+        <div
+          class="setting-row cursor-pointer"
+          (click)="toggleSidebarPreference()"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="toggleSidebarPreference()"
+          (keydown.space)="toggleSidebarPreference()"
+          [attr.aria-label]="
+            'Toggle open comments in sidebar. Currently ' +
+            (openCommentsInSidebar() ? 'enabled' : 'disabled')
+          "
+        >
+          <div class="setting-info">
+            <label class="setting-title" for="sidebar-toggle">Open comments in sidebar</label>
+            <p class="setting-description" id="sidebar-toggle-description">
+              When enabled, comments open beside the story instead of on a new page
+            </p>
+          </div>
+          <div (click)="$event.stopPropagation()" aria-hidden="true">
+            <app-toggle-switch
+              id="sidebar-toggle"
+              [checked]="openCommentsInSidebar()"
+              (checkedChange)="toggleSidebarPreference()"
+              ariaLabel="Toggle sidebar preference"
+              descriptionId="sidebar-toggle-description"
+            />
+          </div>
         </div>
-        <div (click)="$event.stopPropagation()" aria-hidden="true">
-          <app-toggle-switch
-            id="sidebar-toggle"
-            [checked]="openCommentsInSidebar()"
-            (checkedChange)="toggleSidebarPreference()"
-            ariaLabel="Toggle sidebar preference"
-            descriptionId="sidebar-toggle-description"
-          />
-        </div>
-      </div>
-    </section>
+      </section>
+    }
 
     <hr class="section-divider" />
 
@@ -52,107 +52,31 @@
     <section class="setting-section" role="region" aria-label="Privacy Redirects">
       <h2 class="settings-category-label">Privacy Redirects</h2>
 
-      <!-- Warning when instances not loaded -->
-      @if (privacyRedirectEnabled() && privacyRedirectState().error) {
-        <div class="privacy-warning" role="alert">
-          <ng-icon name="solarDangerTriangleLinear" class="privacy-warning-icon" />
-          <div class="privacy-warning-content">
-            <div class="privacy-warning-title">Unable to load privacy instances</div>
-            <p class="privacy-warning-text">
-              {{ privacyRedirectState().error }}
-              @if (privacyRedirectState().nextRetryAt) {
-                <span> • Retrying in {{ formatRetryTime() }}</span>
-              }
-            </p>
-            <app-button
-              (clicked)="refreshPrivacyInstances()"
-              variant="secondary"
-              size="sm"
-              class="mt-2"
-              ariaLabel="Retry loading privacy instances"
-            >
-              <ng-icon name="solarRefreshLinear" class="mr-2" />
-              Retry Now
-            </app-button>
-          </div>
-        </div>
-      }
-
       <div
         class="setting-row cursor-pointer"
-        [class.opacity-60]="privacyRedirectState().loading"
         (click)="togglePrivacyRedirect()"
         role="button"
         tabindex="0"
         (keydown.enter)="togglePrivacyRedirect()"
         (keydown.space)="togglePrivacyRedirect()"
         [attr.aria-label]="
-          'Toggle privacy redirects. Currently ' +
+          'Toggle Twitter/X redirects. Currently ' +
           (privacyRedirectEnabled() ? 'enabled' : 'disabled')
         "
       >
         <div class="setting-info">
           <label class="setting-title" for="privacy-toggle">
-            Redirect links to privacy frontends
+            Redirect Twitter/X links to Twitter Viewer
           </label>
-          <p class="setting-description" id="privacy-toggle-description">
-            When enabled, links to sites like Twitter/X will redirect to privacy-respecting
-            alternatives (e.g., Nitter). The original URL is still displayed.
-          </p>
         </div>
         <div (click)="$event.stopPropagation()" aria-hidden="true">
           <app-toggle-switch
             id="privacy-toggle"
             [checked]="privacyRedirectEnabled()"
             (checkedChange)="togglePrivacyRedirect()"
-            ariaLabel="Toggle privacy redirects"
-            descriptionId="privacy-toggle-description"
+            ariaLabel="Toggle Twitter/X redirects"
           />
         </div>
-      </div>
-
-      <!-- Service toggles — nested with left border indent -->
-      @if (privacyRedirectEnabled()) {
-        <div class="sub-settings">
-          @for (config of privacyRedirectRegistry; track config.service) {
-            <div
-              class="privacy-service-item cursor-pointer"
-              (click)="togglePrivacyService(config.service)"
-              role="button"
-              tabindex="0"
-              (keydown.enter)="togglePrivacyService(config.service)"
-              (keydown.space)="togglePrivacyService(config.service)"
-              [attr.aria-label]="
-                'Toggle ' +
-                config.displayName +
-                ' redirect. Currently ' +
-                (isServiceEnabled(config.service) ? 'enabled' : 'disabled')
-              "
-            >
-              <span class="privacy-service-name">{{ config.displayName }}</span>
-              <div (click)="$event.stopPropagation()" aria-hidden="true">
-                <app-toggle-switch
-                  [checked]="isServiceEnabled(config.service)"
-                  (checkedChange)="togglePrivacyService(config.service)"
-                  [ariaLabel]="'Toggle ' + config.displayName + ' redirect'"
-                />
-              </div>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Attribution footer -->
-      <div class="attribution-footer">
-        Instance data powered by
-        <a
-          href="https://libredirect.github.io/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="attribution-link"
-        >
-          LibRedirect
-        </a>
       </div>
     </section>
 
@@ -166,37 +90,50 @@
         <div [class]="isError() ? 'alert-danger' : 'alert-success'">{{ message() }}</div>
       }
 
-      <!-- Search and Filter -->
-      <div class="tags-search-section">
-        <div class="search-container">
-          <div class="relative">
-            <input
-              type="search"
-              [ngModel]="searchQuery()"
-              (ngModelChange)="onSearchChange($event)"
-              placeholder="Search by username, tag, or notes..."
-              aria-label="Search user tags"
-              class="search-input"
-              data-lpignore="true"
-            />
-            <ng-icon name="solarMagniferLinear" class="search-icon" />
-            @if (searchQuery()) {
-              <button (click)="clearSearch()" class="clear-search" aria-label="Clear search">
-                <ng-icon name="solarCloseCircleLinear" />
-              </button>
-            }
+      <div class="data-summary-row">
+        <div class="data-count" aria-live="polite">
+          <span class="data-count-value">{{ tagCount() }}</span>
+          <span>{{ tagCount() === 1 ? 'tag' : 'tags' }}</span>
+        </div>
+        @if (tags().length > 0) {
+          <div class="data-actions">
+            <app-button
+              (clicked)="clearAll()"
+              variant="danger"
+              size="sm"
+              ariaLabel="Clear all user tags"
+            >
+              <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
+              Clear Tags
+            </app-button>
           </div>
-          @if (searchQuery()) {
-            <div class="search-results-info">
-              Found {{ paginatedTags().totalCount }}
-              {{ paginatedTags().totalCount === 1 ? 'tag' : 'tags' }}
+        }
+      </div>
+
+      <!-- Search and Filter -->
+      @if (tags().length > 0) {
+        <div class="tags-search-section">
+          <div class="search-container">
+            <div class="relative">
+              <input
+                type="search"
+                [ngModel]="searchQuery()"
+                (ngModelChange)="onSearchChange($event)"
+                placeholder="Search by username, tag, or notes..."
+                aria-label="Search user tags"
+                class="search-input"
+                data-lpignore="true"
+              />
+              <ng-icon name="solarMagniferLinear" class="search-icon" />
               @if (searchQuery()) {
-                for "{{ searchQuery() }}"
+                <button (click)="clearSearch()" class="clear-search" aria-label="Clear search">
+                  <ng-icon name="solarCloseCircleLinear" />
+                </button>
               }
             </div>
-          }
+          </div>
         </div>
-      </div>
+      }
 
       <!-- Tags Overview -->
       @if (paginatedTags().tags.length > 0) {
@@ -290,44 +227,14 @@
         }
       } @else if (searchQuery()) {
         <div class="empty-state">
-          <ng-icon name="solarMagniferLinear" class="empty-icon" />
-          <h4 class="empty-title">No tags found</h4>
-          <p class="empty-description">
-            No tags match "{{ searchQuery() }}". Try a different search term or clear the search to
-            see all tags.
-          </p>
+          <p class="empty-description">No tags match "{{ searchQuery() }}".</p>
           <app-button
             (clicked)="clearSearch()"
             variant="secondary"
             size="sm"
             ariaLabel="Clear search"
           >
-            <ng-icon name="solarCloseCircleLinear" class="mr-2" />
             Clear Search
-          </app-button>
-        </div>
-      } @else {
-        <div class="empty-state">
-          <ng-icon name="solarTagLinear" class="empty-icon" />
-          <h4 class="empty-title">No tags yet</h4>
-          <p class="empty-description">
-            Start tagging users while browsing stories and comments. Your tags will help you
-            remember interesting contributors.
-          </p>
-        </div>
-      }
-
-      <!-- Clear All Actions (export/import live in the Backup section) -->
-      @if (tags().length > 0) {
-        <div class="tag-action-buttons">
-          <app-button
-            (clicked)="clearAll()"
-            variant="danger"
-            size="sm"
-            ariaLabel="Clear all user tags"
-          >
-            <ng-icon name="solarTrashBinTrashLinear" class="hidden sm:inline mr-2" />
-            Clear Tags
           </app-button>
         </div>
       }
@@ -420,11 +327,8 @@
 
     <!-- Cache Management -->
     <section class="setting-section" role="region" aria-label="Cache Management">
-      <h2 class="settings-category-label">Cache</h2>
-
-      <!-- Cache Statistics -->
       <div class="stats-header">
-        <span class="stats-title">Storage</span>
+        <h2 class="settings-category-label mb-0">Cache</h2>
         <app-button
           (clicked)="refreshStats()"
           variant="secondary"
@@ -468,36 +372,31 @@
       </div>
 
       <!-- Cache Actions -->
-      <div class="cache-actions-section">
-        <p class="actions-description">
-          Free up storage space by clearing cached data. The app will re-download content as needed.
-        </p>
-        <div class="action-buttons">
-          <app-button
-            (clicked)="clearCache('stories')"
-            variant="secondary"
-            size="sm"
-            ariaLabel="Clear story cache"
-          >
-            Clear Stories
-          </app-button>
-          <app-button
-            (clicked)="clearCache('images')"
-            variant="secondary"
-            size="sm"
-            ariaLabel="Clear image cache"
-          >
-            Clear Images
-          </app-button>
-          <app-button
-            (clicked)="clearCache('all')"
-            variant="danger"
-            size="sm"
-            ariaLabel="Clear all cached data"
-          >
-            Clear All Cache
-          </app-button>
-        </div>
+      <div class="action-buttons">
+        <app-button
+          (clicked)="clearCache('stories')"
+          variant="secondary"
+          size="sm"
+          ariaLabel="Clear story cache"
+        >
+          Clear Stories
+        </app-button>
+        <app-button
+          (clicked)="clearCache('images')"
+          variant="secondary"
+          size="sm"
+          ariaLabel="Clear image cache"
+        >
+          Clear Images
+        </app-button>
+        <app-button
+          (clicked)="clearCache('all')"
+          variant="danger"
+          size="sm"
+          ariaLabel="Clear all cached data"
+        >
+          Clear All Cache
+        </app-button>
       </div>
 
       @if (cacheMessage()) {

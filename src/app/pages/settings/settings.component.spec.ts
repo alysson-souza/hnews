@@ -71,12 +71,8 @@ describe('SettingsComponent backup controls', () => {
         {
           provide: PrivacyRedirectService,
           useValue: {
-            settings: signal({ enabled: false, services: {} }),
-            state: signal({ ready: true, loading: false, error: null, nextRetryAt: null }),
-            registry: [],
+            settings: signal({ enabled: false }),
             setEnabled: vi.fn(),
-            setServiceEnabled: vi.fn(),
-            refresh: vi.fn(),
           },
         },
       ],

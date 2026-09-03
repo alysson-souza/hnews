@@ -25,7 +25,7 @@ import { PrivacyRedirectService } from '@services/privacy-redirect.service';
  * - Adding the solarLinkLinear icon next to each external link
  * - Setting security attributes (target="_blank", rel attributes)
  * - Adding styling classes
- * - Applying privacy redirects when enabled (e.g., Twitter → Nitter)
+ * - Applying privacy redirects when enabled (e.g., Twitter/X → Twitter Viewer)
  *
  * This directive uses MutationObserver to handle dynamic content updates
  * from [innerHTML] bindings.

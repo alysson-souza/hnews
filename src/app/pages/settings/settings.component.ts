@@ -18,7 +18,6 @@ import { SavedStoriesService } from '@services/saved-stories.service';
 import { BackupService } from '@services/backup.service';
 import { downloadJsonFile } from '@services/file-transfer.util';
 import { BackupImportResult, ImportCounts } from '@models/backup';
-import { PrivacyService } from '@models/privacy-redirect';
 import { AppButtonComponent } from '@components/shared/app-button/app-button.component';
 import { CardComponent } from '@components/shared/card/card.component';
 import { PageContainerComponent } from '@components/shared/page-container/page-container.component';
@@ -30,7 +29,6 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  solarTagLinear,
   solarExportLinear,
   solarImportLinear,
   solarTrashBinTrashLinear,
@@ -42,7 +40,6 @@ import {
   solarCPULinear,
   solarGalleryLinear,
   solarMagniferLinear,
-  solarDangerTriangleLinear,
   solarPen2Linear,
 } from '@ng-icons/solar-icons/linear';
 
@@ -61,7 +58,6 @@ import {
   ],
   viewProviders: [
     provideIcons({
-      solarTagLinear,
       solarExportLinear,
       solarImportLinear,
       solarTrashBinTrashLinear,
@@ -73,7 +69,6 @@ import {
       solarCPULinear,
       solarGalleryLinear,
       solarMagniferLinear,
-      solarDangerTriangleLinear,
       solarPen2Linear,
     }),
   ],
@@ -84,7 +79,7 @@ import {
 
       /* ── Spacing scale ──
        * Tight:   2 (0.5rem)  — inline gaps, minor spacing
-       * Base:    4 (1rem)    — row padding, standard margins, content gaps
+       * Base:    4 (1rem)    — standard margins and content gaps
        * Section: 6 (1.5rem)  — section insets (mobile), label-to-content
        * Wide:    8 (2rem)    — section insets (desktop)
        */
@@ -102,10 +97,9 @@ import {
         @apply text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-4;
       }
 
-      /* Shared interactive row — used for toggles, tag items, privacy services, stat rows */
+      /* Shared interactive toggle row */
       .setting-row {
-        @apply flex items-start justify-between gap-4 py-3 px-4 -mx-4 rounded-xl;
-        @apply hover:bg-gray-50 dark:hover:bg-white/[0.03];
+        @apply flex items-center justify-between gap-4;
       }
 
       .setting-info {
@@ -128,52 +122,9 @@ import {
         @apply p-4 rounded-lg mb-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/30;
       }
 
-      /* Privacy sub-settings */
-      .sub-settings {
-        @apply mt-1 divide-y divide-gray-100 dark:divide-gray-700/40;
-      }
-
-      .privacy-service-item {
-        @apply flex items-center justify-between gap-4 py-3 pl-6 pr-4 -mx-4;
-        @apply hover:bg-gray-50 dark:hover:bg-white/[0.03];
-      }
-
-      .privacy-service-name {
-        @apply text-sm text-gray-600 dark:text-gray-400;
-      }
-
-      .privacy-warning {
-        @apply flex items-start gap-4 p-4 rounded-lg mb-4;
-        @apply bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/30;
-      }
-
-      .privacy-warning-icon {
-        @apply text-xl text-amber-500 flex-shrink-0 mt-0.5;
-      }
-
-      .privacy-warning-content {
-        @apply flex-1;
-      }
-
-      .privacy-warning-title {
-        @apply font-semibold mb-1;
-      }
-
-      .privacy-warning-text {
-        @apply text-sm opacity-90;
-      }
-
-      .attribution-footer {
-        @apply mt-2 text-xs text-gray-400 dark:text-gray-500;
-      }
-
-      .attribution-link {
-        @apply text-blue-600 dark:text-blue-400 hover:underline;
-      }
-
       /* Tag Management */
       .tags-search-section {
-        @apply mb-4;
+        @apply my-4;
       }
 
       .search-container {
@@ -193,10 +144,6 @@ import {
 
       .clear-search {
         @apply absolute right-3 top-3.5 w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300;
-      }
-
-      .search-results-info {
-        @apply text-sm text-gray-600 dark:text-gray-400;
       }
 
       .tags-list {
@@ -281,15 +228,7 @@ import {
 
       /* Empty State */
       .empty-state {
-        @apply text-center py-6 space-y-2;
-      }
-
-      .empty-icon {
-        @apply text-5xl text-gray-300 dark:text-slate-700 mx-auto mb-2;
-      }
-
-      .empty-title {
-        @apply text-base font-semibold text-gray-900 dark:text-gray-100;
+        @apply text-center space-y-2;
       }
 
       .empty-description {
@@ -303,10 +242,6 @@ import {
       /* Cache Management */
       .stats-header {
         @apply flex flex-wrap items-center justify-between gap-4 mb-4;
-      }
-
-      .stats-title {
-        @apply text-sm font-medium text-gray-700 dark:text-gray-300;
       }
 
       .stats-list {
@@ -327,14 +262,6 @@ import {
 
       .stat-row-value {
         @apply text-sm font-semibold text-gray-900 dark:text-gray-100 font-mono tabular-nums;
-      }
-
-      .cache-actions-section {
-        @apply space-y-4;
-      }
-
-      .actions-description {
-        @apply text-sm text-gray-500 dark:text-gray-400 leading-relaxed;
       }
 
       .action-buttons {
@@ -415,8 +342,6 @@ export class SettingsComponent implements OnInit {
 
   // Privacy redirect computed signals
   privacyRedirectEnabled = computed(() => this.privacyRedirectService.settings().enabled);
-  privacyRedirectState = computed(() => this.privacyRedirectService.state());
-  privacyRedirectRegistry = this.privacyRedirectService.registry;
 
   constructor() {
     this.loadTags();
@@ -700,27 +625,6 @@ export class SettingsComponent implements OnInit {
   togglePrivacyRedirect(): void {
     const newValue = !this.privacyRedirectEnabled();
     this.privacyRedirectService.setEnabled(newValue);
-  }
-
-  togglePrivacyService(service: PrivacyService): void {
-    const current = this.privacyRedirectService.settings().services[service];
-    this.privacyRedirectService.setServiceEnabled(service, !current);
-  }
-
-  isServiceEnabled(service: PrivacyService): boolean {
-    return this.privacyRedirectService.settings().services[service];
-  }
-
-  refreshPrivacyInstances(): void {
-    this.privacyRedirectService.refresh();
-  }
-
-  formatRetryTime(): string {
-    const state = this.privacyRedirectState();
-    if (!state.nextRetryAt) return '';
-    const seconds = Math.max(0, Math.ceil((state.nextRetryAt - Date.now()) / 1000));
-    if (seconds < 60) return `${seconds}s`;
-    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   }
 }
 
