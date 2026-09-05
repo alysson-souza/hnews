@@ -52,31 +52,24 @@
     <section class="setting-section" role="region" aria-label="Privacy Redirects">
       <h2 class="settings-category-label">Privacy Redirects</h2>
 
-      <div
-        class="setting-row cursor-pointer"
-        (click)="togglePrivacyRedirect()"
-        role="button"
-        tabindex="0"
-        (keydown.enter)="togglePrivacyRedirect()"
-        (keydown.space)="togglePrivacyRedirect()"
-        [attr.aria-label]="
-          'Toggle Twitter/X redirects. Currently ' +
-          (privacyRedirectEnabled() ? 'enabled' : 'disabled')
-        "
-      >
-        <div class="setting-info">
-          <label class="setting-title" for="privacy-toggle">
-            Redirect Twitter/X links to Twitter Viewer
-          </label>
-        </div>
-        <div (click)="$event.stopPropagation()" aria-hidden="true">
-          <app-toggle-switch
-            id="privacy-toggle"
-            [checked]="privacyRedirectEnabled()"
-            (checkedChange)="togglePrivacyRedirect()"
-            ariaLabel="Toggle Twitter/X redirects"
-          />
-        </div>
+      <div class="space-y-4">
+        @for (option of redirectOptions; track option.frontend) {
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-title">Redirect Twitter/X links to {{ option.name }}</span>
+            </div>
+            <div>
+              <app-toggle-switch
+                [id]="'privacy-' + option.frontend"
+                [checked]="
+                  privacyRedirectEnabled() && privacyRedirectFrontend() === option.frontend
+                "
+                (checkedChange)="togglePrivacyRedirect(option.frontend)"
+                [ariaLabel]="'Redirect Twitter/X links to ' + option.name"
+              />
+            </div>
+          </div>
+        }
       </div>
     </section>
 

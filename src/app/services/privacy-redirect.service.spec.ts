@@ -25,7 +25,8 @@ describe('PrivacyRedirectService', () => {
   describe('settings', () => {
     it('starts enabled and redirects immediately', () => {
       expect(service.settings().enabled).toBe(true);
-      expect(service.transformUrl('https://x.com/user')).toBe('https://twitterviewer.net/user');
+      expect(service.settings().frontend).toBe('xcancel');
+      expect(service.transformUrl('https://x.com/user')).toBe('https://xcancel.com/user');
     });
 
     it('persists master changes', () => {
@@ -53,18 +54,31 @@ describe('PrivacyRedirectService', () => {
 
   describe('transformUrl', () => {
     it.each([
-      ['https://twitter.com/user', 'https://twitterviewer.net/user'],
-      ['https://twitter.com/user/status/123', 'https://twitterviewer.net/user/status/123'],
-      ['https://x.com/user', 'https://twitterviewer.net/user'],
-      ['https://x.com/user/status/123', 'https://twitterviewer.net/user/status/123'],
+      ['https://twitter.com/user', 'https://xcancel.com/user'],
+      ['https://twitter.com/user/status/123', 'https://xcancel.com/user/status/123'],
+      ['https://x.com/user', 'https://xcancel.com/user'],
+      ['https://x.com/user/status/123', 'https://xcancel.com/user/status/123'],
     ])('rewrites %s to %s', (url, expected) => {
       expect(service.transformUrl(url)).toBe(expected);
     });
 
     it('preserves query strings and fragments', () => {
       expect(service.transformUrl('https://x.com/user/status/123?ref=hn#replies')).toBe(
-        'https://twitterviewer.net/user/status/123?ref=hn#replies',
+        'https://xcancel.com/user/status/123?ref=hn#replies',
       );
+    });
+
+    it('uses Twitter Viewer when it is selected and persists the exclusive choice', () => {
+      service.setFrontend('twitter-viewer');
+
+      expect(service.settings()).toEqual({ enabled: true, frontend: 'twitter-viewer' });
+      expect(service.transformUrl('https://x.com/user/status/123')).toBe(
+        'https://twitterviewer.net/user/status/123',
+      );
+      expect(JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) ?? '{}')).toEqual({
+        enabled: true,
+        frontend: 'twitter-viewer',
+      });
     });
 
     it('returns the original URL when the master toggle is disabled', () => {
@@ -105,7 +119,7 @@ describe('PrivacyRedirectService', () => {
   });
 
   describe('getMatchingService', () => {
-    it('returns the Twitter Viewer configuration', () => {
+    it('returns the selected XCancel configuration', () => {
       expect(service.getMatchingService('https://x.com/user/status/123')).toEqual(
         PRIVACY_REDIRECT_REGISTRY[0],
       );

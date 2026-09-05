@@ -8,7 +8,7 @@ import { PrivacyRedirectService } from '@services/privacy-redirect.service';
  * to privacy-respecting frontend alternatives.
  *
  * The original URL is displayed to users, but clicking navigates to the
- * privacy frontend (e.g., Twitter/X → Twitter Viewer).
+ * privacy frontend (e.g., Twitter/X → XCancel).
  *
  * @example
  * <a href="https://twitter.com/user" appPrivacyRedirect>Twitter Link</a>

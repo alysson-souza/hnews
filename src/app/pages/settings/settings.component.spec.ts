@@ -71,8 +71,9 @@ describe('SettingsComponent backup controls', () => {
         {
           provide: PrivacyRedirectService,
           useValue: {
-            settings: signal({ enabled: false }),
+            settings: signal({ enabled: true, frontend: 'xcancel' }),
             setEnabled: vi.fn(),
+            setFrontend: vi.fn(),
           },
         },
       ],
@@ -109,6 +110,24 @@ describe('SettingsComponent backup controls', () => {
 
     expect(component.isBackupEmpty()).toBe(true);
     expect(backupExportButton().disabled).toBe(true);
+  });
+
+  it('shows XCancel first and Twitter Viewer as exclusive redirect options', () => {
+    fixture.detectChanges();
+    const redirectSwitches = Array.from(
+      fixture.nativeElement.querySelectorAll(
+        'section[aria-label="Privacy Redirects"] button[role="switch"]',
+      ) as NodeListOf<HTMLButtonElement>,
+    );
+
+    expect(redirectSwitches.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Redirect Twitter/X links to XCancel',
+      'Redirect Twitter/X links to Twitter Viewer',
+    ]);
+    expect(redirectSwitches.map((button) => button.getAttribute('aria-checked'))).toEqual([
+      'true',
+      'false',
+    ]);
   });
 
   it('enables backup export once either dataset has data', async () => {

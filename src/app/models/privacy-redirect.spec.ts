@@ -5,6 +5,15 @@ import { PRIVACY_REDIRECT_REGISTRY } from './privacy-redirect';
 
 describe('Privacy Redirect Models', () => {
   describe('PRIVACY_REDIRECT_REGISTRY', () => {
+    it('lists XCancel as the default frontend before Twitter Viewer', () => {
+      expect(
+        PRIVACY_REDIRECT_REGISTRY.map(({ frontend, baseUrl }) => ({ frontend, baseUrl })),
+      ).toEqual([
+        { frontend: 'xcancel', baseUrl: 'https://xcancel.com/' },
+        { frontend: 'twitter-viewer', baseUrl: 'https://twitterviewer.net/' },
+      ]);
+    });
+
     it.each([
       'https://www.twitter.com/user/status/123',
       'https://mobile.twitter.com/user',
