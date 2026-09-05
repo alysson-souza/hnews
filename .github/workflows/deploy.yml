@@ -55,6 +55,21 @@ jobs:
           npm run generate:version
           npm run generate:userscript
 
+      # The E2E offline-boot suite serves a bundle from disk. It cannot reuse
+      # dist/hnews-cf, which the Playwright web server rebuilds in watch mode,
+      # nor dist/hnews-gh, which is built with a GitHub Pages base href.
+      - name: Build bundle for E2E offline suite
+        run: |
+          npx ng build --configuration production --base-href "/"
+          node ./scripts/patch-ngsw.mjs
+
+      # Runs before the deploy bundles are built: the Playwright web server
+      # rebuilds dist/hnews-cf in watch mode, which would clobber the production
+      # Cloudflare bundle. xvfb supplies a display for the offline-boot suite,
+      # which launches a headed Chromium for standalone display mode.
+      - name: E2E tests (Playwright Chromium)
+        run: xvfb-run -a npm run e2e:chromium
+
       - name: Build production bundle for GitHub Pages
         run: |
           # Determine base href for GitHub Pages based on repository
@@ -78,19 +93,6 @@ jobs:
           node ./scripts/patch-ngsw.mjs
           cp -r functions dist/hnews-cf/
           rm -rf dist/hnews-cf/functions/__tests__
-
-      # The E2E offline-boot suite serves a bundle from disk. It cannot reuse
-      # dist/hnews-cf, which the Playwright web server rebuilds in watch mode,
-      # nor dist/hnews-gh, which is built with a GitHub Pages base href.
-      - name: Build bundle for E2E offline suite
-        run: |
-          npx ng build --configuration production --base-href "/"
-          node ./scripts/patch-ngsw.mjs
-
-      # The offline-boot suite launches a headed Chromium: standalone display mode
-      # is not exposed in headless, and the runner has no display of its own.
-      - name: E2E tests (Playwright Chromium)
-        run: xvfb-run -a npm run e2e:chromium
 
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
