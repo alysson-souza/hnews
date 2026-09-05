@@ -52,21 +52,25 @@
     <section class="setting-section" role="region" aria-label="Privacy Redirects">
       <h2 class="settings-category-label">Privacy Redirects</h2>
 
-      @for (option of redirectOptions; track option.frontend) {
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-title">Redirect Twitter/X links to {{ option.name }}</span>
+      <div class="space-y-4">
+        @for (option of redirectOptions; track option.frontend) {
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-title">Redirect Twitter/X links to {{ option.name }}</span>
+            </div>
+            <div>
+              <app-toggle-switch
+                [id]="'privacy-' + option.frontend"
+                [checked]="
+                  privacyRedirectEnabled() && privacyRedirectFrontend() === option.frontend
+                "
+                (checkedChange)="togglePrivacyRedirect(option.frontend)"
+                [ariaLabel]="'Redirect Twitter/X links to ' + option.name"
+              />
+            </div>
           </div>
-          <div>
-            <app-toggle-switch
-              [id]="'privacy-' + option.frontend"
-              [checked]="privacyRedirectEnabled() && privacyRedirectFrontend() === option.frontend"
-              (checkedChange)="togglePrivacyRedirect(option.frontend)"
-              [ariaLabel]="'Redirect Twitter/X links to ' + option.name"
-            />
-          </div>
-        </div>
-      }
+        }
+      </div>
     </section>
 
     <hr class="section-divider" />
