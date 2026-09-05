@@ -1,8 +1,10 @@
 name: Deploy
 
 on:
+  # Only main pushes deploy; branch pushes would duplicate the pull_request run,
+  # which lands in a different concurrency group and so is not deduplicated.
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -14,7 +16,8 @@ permissions:
 
 concurrency:
   group: deploy-${{ github.ref_name }}
-  cancel-in-progress: false
+  # Superseded PR runs are wasted work; a main run is a deploy and must finish.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build-and-test:
