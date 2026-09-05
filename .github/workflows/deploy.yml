@@ -87,8 +87,10 @@ jobs:
           npx ng build --configuration production --base-href "/"
           node ./scripts/patch-ngsw.mjs
 
+      # The offline-boot suite launches a headed Chromium: standalone display mode
+      # is not exposed in headless, and the runner has no display of its own.
       - name: E2E tests (Playwright Chromium)
-        run: npm run e2e:chromium
+        run: xvfb-run -a npm run e2e:chromium
 
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

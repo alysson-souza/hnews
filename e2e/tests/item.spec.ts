@@ -105,6 +105,9 @@ test.describe('Item Page', () => {
         .first();
       await expect(card.locator('.comment-body')).toContainText('A two-line comment');
 
+      // Measuring against fallback font metrics reports a different descent.
+      await page.evaluate(() => document.fonts.ready);
+
       const visibleInsets = await card.evaluate((element) => {
         const textNode = element.querySelector('.comment-body')?.firstChild;
         if (!textNode?.textContent) {
