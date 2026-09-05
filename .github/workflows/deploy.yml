@@ -69,18 +69,17 @@ jobs:
           npx ng build --configuration production --base-href "/"
           node ./scripts/patch-ngsw.mjs
 
-      # PLAYWRIGHT_WEBSERVER_COMMAND replaces the default `start:cf:offline`,
-      # which rebuilds the app with `ng build --watch` while wrangler serves it.
-      # That build competes with the tests for the runner's cores and has killed
-      # workerd mid-suite, failing every remaining test with a refused
-      # connection. Serving the bundle built above needs no rebuild.
+      # e2e:gh serves the app with `ng serve` instead of the default wrangler
+      # web server. workerd has repeatedly died part-way through the suite here,
+      # failing every remaining test with a refused connection. Nothing is lost:
+      # the only suite that exercises Pages behaviour (_headers, offline boot)
+      # is cloudflare-pages-offline.spec.ts, which serves the bundle built above
+      # from its own Node server and ignores the Playwright web server.
       #
-      # xvfb provides the display the offline-boot suite needs: it launches a
-      # headed Chromium because standalone display mode is not exposed headless.
+      # xvfb provides the display that suite needs: it launches a headed
+      # Chromium because standalone display mode is not exposed headless.
       - name: E2E tests (Playwright Chromium)
-        env:
-          PLAYWRIGHT_WEBSERVER_COMMAND: npx wrangler pages dev dist/hnews/browser --port 8788
-        run: xvfb-run -a npm run e2e:chromium
+        run: xvfb-run -a npm run e2e:gh -- --project=chromium
 
       - name: Build production bundle for GitHub Pages
         run: |
