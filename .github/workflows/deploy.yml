@@ -1,8 +1,10 @@
 name: Deploy
 
 on:
+  # Only main pushes deploy; branch pushes would duplicate the pull_request run,
+  # which lands in a different concurrency group and so is not deduplicated.
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -14,7 +16,8 @@ permissions:
 
 concurrency:
   group: deploy-${{ github.ref_name }}
-  cancel-in-progress: false
+  # Superseded PR runs are wasted work; a main run is a deploy and must finish.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build-and-test:
@@ -38,35 +41,45 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Check for code changes
-        id: changes
-        run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} 2>/dev/null | grep -qvE '^(\.github/|docs/|functions/|README|LICENSE|\.md$)'; then
-            echo "code_changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "code_changed=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Lint (ESLint)
-        if: steps.changes.outputs.code_changed == 'true'
         run: npm run lint
 
       - name: Install Playwright Chromium browser
-        if: steps.changes.outputs.code_changed == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Unit tests (Vitest)
-        if: steps.changes.outputs.code_changed == 'true'
         run: npm test
 
       - name: Functions tests (Vitest)
-        if: steps.changes.outputs.code_changed == 'true'
         run: npm run test:functions
 
       - name: Generate build-time assets
         run: |
           npm run generate:version
           npm run generate:userscript
+
+      # The E2E run needs a bundle served at the site root: the Playwright web
+      # server serves this one, and the offline-boot suite reads it from disk.
+      # Neither deploy bundle works here - dist/hnews-gh is built with a GitHub
+      # Pages base href, and dist/hnews-cf is only built when the Cloudflare
+      # secrets are set. Built before the deploy bundles so the suite fails the
+      # job without waiting on two production builds.
+      - name: Build bundle for E2E
+        run: |
+          npx ng build --configuration production --base-href "/"
+          node ./scripts/patch-ngsw.mjs
+
+      # e2e:gh serves the app with `ng serve` instead of the default wrangler
+      # web server. workerd has repeatedly died part-way through the suite here,
+      # failing every remaining test with a refused connection. Nothing is lost:
+      # the only suite that exercises Pages behaviour (_headers, offline boot)
+      # is cloudflare-pages-offline.spec.ts, which serves the bundle built above
+      # from its own Node server and ignores the Playwright web server.
+      #
+      # xvfb provides the display that suite needs: it launches a headed
+      # Chromium because standalone display mode is not exposed headless.
+      - name: E2E tests (Playwright Chromium)
+        run: xvfb-run -a npm run e2e:gh -- --project=chromium
 
       - name: Build production bundle for GitHub Pages
         run: |
@@ -92,10 +105,6 @@ jobs:
           cp -r functions dist/hnews-cf/
           rm -rf dist/hnews-cf/functions/__tests__
 
-      - name: E2E tests (Playwright Chromium)
-        if: steps.changes.outputs.code_changed == 'true'
-        run: npm run e2e:chromium
-
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-pages-artifact@v4
@@ -103,7 +112,7 @@ jobs:
           path: dist/hnews-gh/browser
 
       - name: Upload Cloudflare Pages artifact
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages
@@ -127,7 +136,7 @@ jobs:
 
   deploy-cloudflare:
     name: Deploy to Cloudflare Pages
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: build-and-test
     runs-on: ubuntu-latest
     env:

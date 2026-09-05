@@ -58,6 +58,7 @@ export class ItemComponent implements OnInit, RefreshableRoute {
   private networkState = inject(NetworkStateService);
   private lastNavigationWasPopstate = false;
   private previousOnline = this.networkState.isOnline();
+  private scrollToFirstCommentTimeout: ReturnType<typeof setTimeout> | null = null;
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
@@ -151,6 +152,13 @@ export class ItemComponent implements OnInit, RefreshableRoute {
         this.refresh();
       }
       this.previousOnline = online;
+    });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.scrollToFirstCommentTimeout) {
+        clearTimeout(this.scrollToFirstCommentTimeout);
+        this.scrollToFirstCommentTimeout = null;
+      }
     });
   }
 
@@ -348,7 +356,14 @@ export class ItemComponent implements OnInit, RefreshableRoute {
       return;
     }
 
-    setTimeout(() => {
+    // A second load can land before this fires; drop the pending timer first so
+    // the stale one cannot outlive the component.
+    if (this.scrollToFirstCommentTimeout) {
+      clearTimeout(this.scrollToFirstCommentTimeout);
+    }
+
+    this.scrollToFirstCommentTimeout = setTimeout(() => {
+      this.scrollToFirstCommentTimeout = null;
       const firstComment = document.getElementById('first-comment');
       if (firstComment) {
         const heading = document.querySelector(

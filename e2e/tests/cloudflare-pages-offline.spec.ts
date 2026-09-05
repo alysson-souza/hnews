@@ -1,12 +1,13 @@
 import { chromium, expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
+import { createReadStream, existsSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { tmpdir } from 'node:os';
 
 type HeaderSet = Record<string, string>;
 
+// This suite serves a real build from disk, written by `ng build`.
 const distDir = join(process.cwd(), 'dist', 'hnews', 'browser');
 
 test.describe('Cloudflare Pages offline boot', () => {
@@ -21,6 +22,10 @@ test.describe('Cloudflare Pages offline boot', () => {
   });
 
   test.beforeAll(async () => {
+    if (!existsSync(join(distDir, '_headers'))) {
+      throw new Error(`No build found at ${distDir}. Run \`npm run build\` first.`);
+    }
+
     const app = await startCloudflareLikeServer();
     server = app.server;
     baseUrl = app.baseUrl;
