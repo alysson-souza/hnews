@@ -57,8 +57,8 @@ Store pure, presentational elements and helpers with zero business logic in a sh
 - **Shared Components**: Name shared components based on their reusable UI role.
   - _Example_: `shared/components/button/button.ts` (Class: `Button`)
   - _Example_: `shared/components/spinner/spinner.ts` (Class: `Spinner`)
-- **Shared Pipes**: Name shared pipes according to their formatting purpose.
-  - _Example_: `shared/pipes/format-date.ts` (Class: `FormatDate`)
+- **Shared Pipes**: Pipes keep their type suffix even under suffixless naming — `ng generate pipe` uses a `-` type separator by default. Name them according to their formatting purpose.
+  - _Example_: `shared/pipes/format-date-pipe.ts` (Class: `FormatDatePipe`)
 - **Shared Directives**: Name directives according to the behavior they attach to elements.
   - _Old_: `highlight.directive.ts` (Class: `HighlightDirective`)
   - _New_: `highlight.ts` (Class: `Highlight`)
