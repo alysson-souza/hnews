@@ -58,29 +58,29 @@ jobs:
           npm run generate:version
           npm run generate:userscript
 
-      # The E2E run needs a bundle served at the site root: the Playwright web
-      # server serves this one, and the offline-boot suite reads it from disk.
-      # Neither deploy bundle works here - dist/hnews-gh is built with a GitHub
-      # Pages base href, and dist/hnews-cf is only built when the Cloudflare
-      # secrets are set. Built before the deploy bundles so the suite fails the
-      # job without waiting on two production builds.
-      - name: Build bundle for E2E
+      # Built before the E2E run and unconditionally: cloudflare-pages-offline.spec.ts
+      # reads dist/hnews-cf from disk, so the suite exercises the bytes that ship.
+      # The Cloudflare secrets gate deploying, not building.
+      - name: Build production bundle for Cloudflare Pages
         run: |
-          npx ng build --configuration production --base-href "/"
-          node ./scripts/patch-ngsw.mjs
+          npm run build:e2e
+          cp -r functions dist/hnews-cf/
+          rm -rf dist/hnews-cf/functions/__tests__
 
       # e2e:gh serves the app with `ng serve` instead of the default wrangler
       # web server. workerd has repeatedly died part-way through the suite here,
       # failing every remaining test with a refused connection. Nothing is lost:
       # the only suite that exercises Pages behaviour (_headers, offline boot)
-      # is cloudflare-pages-offline.spec.ts, which serves the bundle built above
-      # from its own Node server and ignores the Playwright web server.
+      # is cloudflare-pages-offline.spec.ts, which serves dist/hnews-cf from its
+      # own Node server and ignores the Playwright web server.
       #
       # xvfb provides the display that suite needs: it launches a headed
       # Chromium because standalone display mode is not exposed headless.
       - name: E2E tests (Playwright Chromium)
         run: xvfb-run -a npm run e2e:gh -- --project=chromium
 
+      # Built after E2E because its base href differs from the deployed
+      # Cloudflare bundle, so it cannot be the bundle the suite tests.
       - name: Build production bundle for GitHub Pages
         run: |
           # Determine base href for GitHub Pages based on repository
@@ -95,15 +95,6 @@ jobs:
           echo "Building GitHub Pages bundle with base-href: $GH_BASE_HREF"
           npx ng build --configuration production --base-href "$GH_BASE_HREF" --output-path dist/hnews-gh
           node ./scripts/patch-ngsw.mjs
-
-      - name: Build production bundle for Cloudflare Pages
-        if: env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
-        run: |
-          echo "Building Cloudflare Pages bundle with base-href: /"
-          npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
-          node ./scripts/patch-ngsw.mjs
-          cp -r functions dist/hnews-cf/
-          rm -rf dist/hnews-cf/functions/__tests__
 
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
