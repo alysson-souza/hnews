@@ -9,7 +9,7 @@ metadata:
 
 # Angular Developer Guidelines
 
-1. Always analyze the project's Angular version before providing guidance, as best practices and available features can vary significantly between versions. Code samples in these references target **Angular v22 and later** unless a version is called out explicitly; notably the `Service` decorator requires v22, so use `@Injectable({ providedIn: 'root' })` on v21 and earlier. If creating a new project with Angular CLI, do not specify a version unless prompted by the user.
+1. Always analyze the project's Angular version before providing guidance, as best practices and available features can vary significantly between versions. Code samples in these references target **Angular v22 and later** unless a version is called out explicitly; notably the `Service` decorator requires v22, so use `@Injectable({providedIn: 'root'})` on v21 and earlier. If creating a new project with Angular CLI, do not specify a version unless prompted by the user.
 
 2. When generating code, follow Angular's style guide and best practices for maintainability and performance. Use the Angular CLI for scaffolding components, services, directives, pipes, and routes to ensure consistency.
 

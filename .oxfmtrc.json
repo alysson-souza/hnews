@@ -14,6 +14,7 @@
     "*.log",
     "public/version.json",
     "public/hnews-redirect.user.js",
-    "functions/types.d.ts"
+    "functions/types.d.ts",
+    ".agents/skills"
   ]
 }

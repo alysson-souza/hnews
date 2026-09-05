@@ -9,7 +9,7 @@ In Angular v22 and later, `HttpClient` is available for injection by default. Ad
 In Angular v21 and earlier, `HttpClient` is **not** provided automatically: call `provideHttpClient()` in the application config, otherwise injecting `HttpClient` throws a `NullInjectorError`. Those versions also default to the `XMLHttpRequest` backend, so opt into fetch explicitly with `provideHttpClient(withFetch())`.
 
 ```ts
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import {provideHttpClient, withInterceptors} from '@angular/common/http';
 
 export const appConfig = {
   providers: [provideHttpClient(withInterceptors([authInterceptor]))],
@@ -28,8 +28,8 @@ export const appConfig = {
 Encapsulate backend calls in injectable services, not components:
 
 ```ts
-import { HttpClient } from '@angular/common/http';
-import { Service, inject } from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Service, inject} from '@angular/core';
 
 @Service()
 export class UserService {
@@ -65,7 +65,7 @@ import {
 } from '@angular/common/http';
 
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
-  return next(req.clone({ setHeaders: { Authorization: 'Bearer token' } }));
+  return next(req.clone({setHeaders: {Authorization: 'Bearer token'}}));
 }
 
 export const appConfig = {
@@ -91,8 +91,8 @@ export const appConfig = {
 Use `httpResource` to create an asynchronous derivation that fetches data over HTTP and exposes the result as reactive signals.
 
 ```ts
-import { httpResource } from '@angular/common/http';
-import { input } from '@angular/core';
+import {httpResource} from '@angular/common/http';
+import {input} from '@angular/core';
 
 export class UserProfile {
   readonly userId = input.required<string>();

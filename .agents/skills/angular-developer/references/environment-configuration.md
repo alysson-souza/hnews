@@ -45,7 +45,7 @@ export const environment = {
 Import the environment where needed:
 
 ```ts
-import { environment } from '../environments/environment';
+import {environment} from '../environments/environment';
 
 const apiUrl = environment.apiUrl;
 ```
@@ -80,12 +80,12 @@ still map `src/assets` in `angular.json` can keep using that path.)
 ```
 
 Load the configuration before the application starts. The `Service` decorator below requires Angular
-v22 or later; on earlier versions use `@Injectable({ providedIn: 'root' })` instead.
+v22 or later; on earlier versions use `@Injectable({providedIn: 'root'})` instead.
 
 ```ts
-import { Service, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
+import {Service, inject} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {tap} from 'rxjs';
 
 interface AppConfig {
   apiUrl: string;
@@ -116,8 +116,8 @@ export class AppConfigService {
 Register the loader during application bootstrap:
 
 ```ts
-import { ApplicationConfig, provideAppInitializer, inject } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
+import {ApplicationConfig, provideAppInitializer, inject} from '@angular/core';
+import {provideHttpClient} from '@angular/common/http';
 
 export const appConfig: ApplicationConfig = {
   providers: [
