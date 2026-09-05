@@ -32,7 +32,7 @@ Houses singleton services, global state, and system-wide models.
 
 - **Services (Logic/State)**:
   - _Old_: `auth.service.ts` (Class: `AuthService`)
-  - _New_: `auth.ts` (Class: `AuthService`)
+  - _New_: `auth.ts` (Class: `Auth`)
   - _Alternative (Intent-specific)_: Use descriptive domain-purpose suffixes like `[domain]-data.ts`, `[domain]-store.ts`, or `[domain]-data-client.ts` (e.g., `auth-data.ts` / `AuthData`, `user-data-client.ts` / `UserDataClient`).
 - **Models**: Name the file after its primary identifier, like any other artifact.
   - _New_: `user.ts` (Interface: `User`)

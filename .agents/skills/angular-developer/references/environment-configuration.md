@@ -79,7 +79,8 @@ still map `src/assets` in `angular.json` can keep using that path.)
 }
 ```
 
-Load the configuration before the application starts:
+Load the configuration before the application starts. The `Service` decorator below requires Angular
+v22 or later; on earlier versions use `@Injectable({ providedIn: 'root' })` instead.
 
 ```ts
 import { Service, inject } from '@angular/core';
@@ -113,13 +114,20 @@ export class AppConfigService {
 Register the loader during application bootstrap:
 
 ```ts
-import { provideAppInitializer, inject } from '@angular/core';
+import { ApplicationConfig, provideAppInitializer, inject } from '@angular/core';
 
-provideAppInitializer(() => {
-  const config = inject(AppConfigService);
-  return config.loadConfig();
-});
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAppInitializer(() => {
+      const config = inject(AppConfigService);
+      return config.loadConfig();
+    }),
+  ],
+};
 ```
+
+`provideAppInitializer()` returns `EnvironmentProviders`; it only runs when that value is registered
+in `ApplicationConfig.providers` (or the `providers` passed to `bootstrapApplication()`).
 
 This ensures configuration is available before the application renders.
 
