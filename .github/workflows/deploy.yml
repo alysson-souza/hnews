@@ -55,19 +55,25 @@ jobs:
           npm run generate:version
           npm run generate:userscript
 
-      # Serves both the Playwright web server and the offline-boot suite, which
-      # reads a build from disk. The deploy bundles do not fit: dist/hnews-gh
-      # is built with a GitHub Pages base href, and dist/hnews-cf does not exist
-      # without the Cloudflare secrets.
+      # The E2E run needs a bundle served at the site root: the Playwright web
+      # server serves this one, and the offline-boot suite reads it from disk.
+      # Neither deploy bundle works here - dist/hnews-gh is built with a GitHub
+      # Pages base href, and dist/hnews-cf is only built when the Cloudflare
+      # secrets are set. Built before the deploy bundles so the suite fails the
+      # job without waiting on two production builds.
       - name: Build bundle for E2E
         run: |
           npx ng build --configuration production --base-href "/"
           node ./scripts/patch-ngsw.mjs
 
-      # Serves the bundle built above instead of the default web server, which
-      # runs `ng build --watch` alongside wrangler; on a two-core runner that
-      # contention kills workerd mid-suite. xvfb supplies a display for the
-      # offline-boot suite, which launches a headed Chromium for standalone mode.
+      # PLAYWRIGHT_WEBSERVER_COMMAND replaces the default `start:cf:offline`,
+      # which rebuilds the app with `ng build --watch` while wrangler serves it.
+      # That build competes with the tests for the runner's cores and has killed
+      # workerd mid-suite, failing every remaining test with a refused
+      # connection. Serving the bundle built above needs no rebuild.
+      #
+      # xvfb provides the display the offline-boot suite needs: it launches a
+      # headed Chromium because standalone display mode is not exposed headless.
       - name: E2E tests (Playwright Chromium)
         env:
           PLAYWRIGHT_WEBSERVER_COMMAND: npx wrangler pages dev dist/hnews/browser --port 8788

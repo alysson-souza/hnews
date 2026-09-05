@@ -10,8 +10,9 @@ describe('CommentTextComponent', () => {
   let fixture: ComponentFixture<CommentTextComponent>;
   let component: CommentTextComponent;
 
-  // Code highlighting rewrites the body after the directive's first pass, and the
-  // MutationObserver re-processing is debounced.
+  // Links are enhanced by EnhanceLinksDirective, which runs once on init and then
+  // again from a debounced MutationObserver. Code highlighting rewrites the body
+  // after that first pass, so the enhanced link only reappears on the later run.
   const waitForEnhancedLink = async (bodyEl: HTMLElement, timeoutMs = 2000) => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
