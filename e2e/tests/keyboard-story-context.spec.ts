@@ -149,18 +149,21 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
+    await expect(storiesPage.storyItems.first()).toBeVisible();
 
     const activeTab = page.locator('[aria-selected="true"]');
+    const topHalfTab = page.getByRole('tab', { name: 'Top 50%' });
 
     // Press f to toggle to "Top 50%"
     await page.keyboard.press('f');
-    await page.waitForTimeout(300);
     await expect(activeTab).toContainText('Top 50%');
+
+    // The shortcut is ignored while the Top 50% pool is still being prepared.
+    await expect(page.getByRole('status', { name: 'Preparing Top 50% stories' })).toBeHidden();
+    await expect(topHalfTab).toBeEnabled();
 
     // Press f again to toggle back to "Default"
     await page.keyboard.press('f');
-    await page.waitForTimeout(300);
     await expect(activeTab).toContainText('Default');
   });
 
