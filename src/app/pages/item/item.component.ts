@@ -48,7 +48,6 @@ export class ItemComponent implements OnInit, RefreshableRoute {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  private scrollToFirstCommentTimeout: ReturnType<typeof setTimeout> | null = null;
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private scrollService = inject(ScrollService);
@@ -59,6 +58,7 @@ export class ItemComponent implements OnInit, RefreshableRoute {
   private networkState = inject(NetworkStateService);
   private lastNavigationWasPopstate = false;
   private previousOnline = this.networkState.isOnline();
+  private scrollToFirstCommentTimeout: ReturnType<typeof setTimeout> | null = null;
 
   item = signal<HNItem | null>(null);
   loading = signal(true);
