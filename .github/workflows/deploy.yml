@@ -55,19 +55,22 @@ jobs:
           npm run generate:version
           npm run generate:userscript
 
-      # The E2E offline-boot suite serves a bundle from disk. It cannot reuse
-      # dist/hnews-cf, which the Playwright web server rebuilds in watch mode,
-      # nor dist/hnews-gh, which is built with a GitHub Pages base href.
-      - name: Build bundle for E2E offline suite
+      # Serves both the Playwright web server and the offline-boot suite, which
+      # reads a build from disk. The deploy bundles do not fit: dist/hnews-gh
+      # is built with a GitHub Pages base href, and dist/hnews-cf does not exist
+      # without the Cloudflare secrets.
+      - name: Build bundle for E2E
         run: |
           npx ng build --configuration production --base-href "/"
           node ./scripts/patch-ngsw.mjs
 
-      # Runs before the deploy bundles are built: the Playwright web server
-      # rebuilds dist/hnews-cf in watch mode, which would clobber the production
-      # Cloudflare bundle. xvfb supplies a display for the offline-boot suite,
-      # which launches a headed Chromium for standalone display mode.
+      # Serves the bundle built above instead of the default web server, which
+      # runs `ng build --watch` alongside wrangler; on a two-core runner that
+      # contention kills workerd mid-suite. xvfb supplies a display for the
+      # offline-boot suite, which launches a headed Chromium for standalone mode.
       - name: E2E tests (Playwright Chromium)
+        env:
+          PLAYWRIGHT_WEBSERVER_COMMAND: npx wrangler pages dev dist/hnews/browser --port 8788
         run: xvfb-run -a npm run e2e:chromium
 
       - name: Build production bundle for GitHub Pages
@@ -101,7 +104,7 @@ jobs:
           path: dist/hnews-gh/browser
 
       - name: Upload Cloudflare Pages artifact
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         uses: actions/upload-artifact@v4
         with:
           name: cloudflare-pages
@@ -125,7 +128,7 @@ jobs:
 
   deploy-cloudflare:
     name: Deploy to Cloudflare Pages
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: build-and-test
     runs-on: ubuntu-latest
     env:
