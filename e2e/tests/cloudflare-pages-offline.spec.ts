@@ -7,12 +7,8 @@ import { tmpdir } from 'node:os';
 
 type HeaderSet = Record<string, string>;
 
-// This suite serves a real build from disk. A local `ng build` writes dist/hnews;
-// CI builds the deploy bundles elsewhere and points PLAYWRIGHT_DIST_DIR at one
-// that was built with base-href "/".
-const distDir = process.env.PLAYWRIGHT_DIST_DIR
-  ? join(process.cwd(), process.env.PLAYWRIGHT_DIST_DIR)
-  : join(process.cwd(), 'dist', 'hnews', 'browser');
+// This suite serves a real build from disk, written by `ng build`.
+const distDir = join(process.cwd(), 'dist', 'hnews', 'browser');
 
 test.describe('Cloudflare Pages offline boot', () => {
   let server: Server | undefined;
@@ -27,9 +23,7 @@ test.describe('Cloudflare Pages offline boot', () => {
 
   test.beforeAll(async () => {
     if (!existsSync(join(distDir, '_headers'))) {
-      throw new Error(
-        `No build found at ${distDir}. Run \`npm run build\`, or set PLAYWRIGHT_DIST_DIR to a bundle built with base-href "/".`,
-      );
+      throw new Error(`No build found at ${distDir}. Run \`npm run build\` first.`);
     }
 
     const app = await startCloudflareLikeServer();
