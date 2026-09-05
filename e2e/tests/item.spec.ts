@@ -27,6 +27,9 @@ test.describe('Item Page', () => {
   });
 
   test.describe('Comments', () => {
+    // The service worker serves its own cached responses, which bypass page.route.
+    test.use({ serviceWorkers: 'block' });
+
     test('should balance the visible bottom and side insets of comment text', async ({ page }) => {
       await page.route('https://hn.algolia.com/api/v1/items/910001', async (route) => {
         await route.fulfill({
@@ -58,6 +61,38 @@ test.describe('Item Page', () => {
                 children: [],
               },
             ],
+          },
+          headers: { 'Access-Control-Allow-Origin': '*' },
+        });
+      });
+
+      // The story and its comment are also read from the Firebase API; without
+      // these routes the page renders the real item 910001 instead of the fixture.
+      await page.route('https://hacker-news.firebaseio.com/v0/item/910001.json', async (route) => {
+        await route.fulfill({
+          json: {
+            id: 910001,
+            type: 'story',
+            by: 'story_author',
+            time: 1_787_306_400,
+            title: 'Comment spacing fixture',
+            score: 1,
+            descendants: 1,
+            kids: [910002],
+          },
+          headers: { 'Access-Control-Allow-Origin': '*' },
+        });
+      });
+
+      await page.route('https://hacker-news.firebaseio.com/v0/item/910002.json', async (route) => {
+        await route.fulfill({
+          json: {
+            id: 910002,
+            type: 'comment',
+            by: 'comment_author',
+            time: 1_787_306_460,
+            parent: 910001,
+            text: 'A two-line comment makes the lower line-box whitespace visible below the text.',
           },
           headers: { 'Access-Control-Allow-Origin': '*' },
         });

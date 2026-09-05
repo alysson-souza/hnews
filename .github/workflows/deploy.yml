@@ -70,8 +70,9 @@ jobs:
           npx ng build --configuration production --base-href "$GH_BASE_HREF" --output-path dist/hnews-gh
           node ./scripts/patch-ngsw.mjs
 
+      # Built unconditionally: the E2E offline-boot suite serves this bundle from
+      # disk, so it must exist even when the Cloudflare deploy secrets are not set.
       - name: Build production bundle for Cloudflare Pages
-        if: env.CF_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         run: |
           echo "Building Cloudflare Pages bundle with base-href: /"
           npx ng build --configuration production --base-href "/" --output-path dist/hnews-cf
@@ -80,6 +81,10 @@ jobs:
           rm -rf dist/hnews-cf/functions/__tests__
 
       - name: E2E tests (Playwright Chromium)
+        env:
+          # The Cloudflare bundle is built with base-href "/", which the
+          # offline-boot suite serves from disk.
+          PLAYWRIGHT_DIST_DIR: dist/hnews-cf/browser
         run: npm run e2e:chromium
 
       - name: Upload GitHub Pages artifact
