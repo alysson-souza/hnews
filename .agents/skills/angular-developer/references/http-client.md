@@ -4,7 +4,9 @@ Use Angular's HTTP APIs for backend communication so requests participate in dep
 
 ## Setup
 
-In Angular v21 and later, `HttpClient` is available for injection by default. Add `provideHttpClient(...)` only when an app needs to configure HTTP features for a specific injector:
+In Angular v22 and later, `HttpClient` is available for injection by default. Add `provideHttpClient(...)` only when an app needs to configure HTTP features for a specific injector:
+
+In Angular v21 and earlier, `HttpClient` is **not** provided automatically: call `provideHttpClient()` in the application config, otherwise injecting `HttpClient` throws a `NullInjectorError`. Those versions also default to the `XMLHttpRequest` backend, so opt into fetch explicitly with `provideHttpClient(withFetch())`.
 
 ```ts
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -14,10 +16,10 @@ export const appConfig = {
 };
 ```
 
-- `HttpClient` uses the fetch backend by default.
+- In v22 and later, `HttpClient` uses the fetch backend by default; in v21 and earlier, opt in with `withFetch()`.
 - Use `withXhr()` only when upload progress events are required. Do not use `withXhr()` for server-side rendering.
 - Use `provideHttpClient(...)` for feature configuration such as interceptors, XSRF options, XHR, or parent-request delegation.
-- Calling `provideHttpClient()` with no features is not required for basic HTTP requests, but it configures the default HTTP feature set for that injector, including Angular's XSRF interceptor.
+- In v22 and later, calling `provideHttpClient()` with no features is not required for basic HTTP requests, but it configures the default HTTP feature set for that injector, including Angular's XSRF interceptor. In v21 and earlier it is required.
 - Prefer `provideHttpClient(...)` over `HttpClientModule` for feature configuration, especially with multiple injectors.
 - Use `withRequestsMadeViaParent()` when a child injector should add interceptors while still delegating to the parent HTTP chain.
 

@@ -64,13 +64,16 @@ In some scenarios, applications need to load configuration at runtime instead of
 
 This allows the same build artifact to be deployed across multiple environments without rebuilding.
 
-A common approach is to load a JSON configuration file from the `assets` folder during application
-initialization.
+A common approach is to load a JSON configuration file during application initialization. Place the
+file in the workspace's configured asset tree — in Angular CLI workspaces that is `public/` by
+default, so `public/assets/config.json` is served at `/assets/config.json`. (Older workspaces that
+still map `src/assets` in `angular.json` can keep using that path.)
 
 ### Example
 
+`public/assets/config.json`:
+
 ```json
-// src/assets/config.json
 {
   "apiUrl": "https://api.example.com"
 }
