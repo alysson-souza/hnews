@@ -9,8 +9,8 @@ Define routes in a `Routes` array and provide them using `provideRouter` in your
 ```ts
 // app.routes.ts
 export const routes: Routes = [
-  { path: '', component: HomePage },
-  { path: 'admin', component: AdminPage },
+  {path: '', component: HomePage},
+  {path: 'admin', component: AdminPage},
 ];
 
 // app.config.ts
@@ -36,6 +36,24 @@ Use `redirectTo` to point one path to another.
 ```ts
 { path: 'articles', redirectTo: '/blog' },
 { path: 'blog', component: Blog },
+```
+
+### Conditional Redirects
+
+Pass a function to `redirectTo` to apply logic when redirecting.
+
+```ts
+{
+  path: 'restaurant/:location/menu',
+  redirectTo: ({ params }) => {
+    const base = `/restaurant/${params['location']}/menu`;
+    const hour = new Date().getHours();
+
+    if (hour < 11) return `${base}/breakfast`;
+    if (hour < 17) return `${base}/lunch`;
+    return `${base}/dinner`;
+  },
+},
 ```
 
 ## Page Titles
