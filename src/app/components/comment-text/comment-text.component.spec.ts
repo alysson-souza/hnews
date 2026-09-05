@@ -10,6 +10,17 @@ describe('CommentTextComponent', () => {
   let fixture: ComponentFixture<CommentTextComponent>;
   let component: CommentTextComponent;
 
+  // The enhance-links directive processes links from a debounced MutationObserver,
+  // and code highlighting rewrites the body afterwards, which triggers another pass.
+  // Poll for the enhanced link instead of guessing a fixed delay.
+  const waitForEnhancedLink = async (bodyEl: HTMLElement, timeoutMs = 2000) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      if (bodyEl.querySelector('a.ext-link ng-icon')) return;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CommentTextComponent],
@@ -49,10 +60,9 @@ describe('CommentTextComponent', () => {
 
     // Wait for directive to process links (AfterViewInit is async)
     await fixture.whenStable();
-    // Increase delay for directive processing
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
+    await waitForEnhancedLink(bodyEl);
 
     // Blockquote grouping: two quoted <p> elements should be wrapped inside one <blockquote>
     const bq = bodyEl.querySelector('blockquote');
@@ -138,9 +148,9 @@ describe('CommentTextComponent', () => {
 
     // Wait for directive to process links
     await fixture.whenStable();
-    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const bodyEl = fixture.debugElement.query(By.css('.comment-body')).nativeElement as HTMLElement;
+    await waitForEnhancedLink(bodyEl);
 
     // Verify code block exists
     expect(bodyEl.querySelector('pre code')).not.toBeNull();
