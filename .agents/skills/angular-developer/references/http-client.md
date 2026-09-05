@@ -92,8 +92,12 @@ Use `httpResource` to create an asynchronous derivation that fetches data over H
 
 ```ts
 import {httpResource} from '@angular/common/http';
-import {input} from '@angular/core';
+import {Component, input} from '@angular/core';
 
+@Component({
+  selector: 'user-profile',
+  template: '',
+})
 export class UserProfile {
   readonly userId = input.required<string>();
   readonly user = httpResource(() => `/api/users/${this.userId()}`);

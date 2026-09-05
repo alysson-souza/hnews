@@ -25,7 +25,7 @@ against Angular v22 / `@schematics/angular` 22.0.6.
 | File | Local change |
 | :--- | :--- |
 | `SKILL.md` | States samples target v22+; `Service` needs v22 (`@Injectable` earlier). |
-| `references/http-client.md` | Gates providerless `HttpClient` and the fetch default on v22; documents `provideHttpClient()` / `withFetch()` for v21 and earlier. |
+| `references/http-client.md` | Gates providerless `HttpClient` and the fetch default on v22; documents `provideHttpClient()` / `withFetch()` for v21 and earlier; gives the `httpResource` example `@Component` metadata (upstream's plain class throws NG0203 and never registers its input). |
 | `references/environment-configuration.md` | Uses the CLI's default `public/` asset tree; moves the filename label out of the JSON block so it parses; requests `assets/config.json` relatively so it honors `<base href>`; registers `provideAppInitializer()` in `ApplicationConfig.providers` (upstream discarded the returned `EnvironmentProviders`); adds `provideHttpClient()`; notes the `Service` decorator needs v22. |
 | `references/mcp.md` | Uses the registered underscore tool names (`devserver_start`, `devserver_stop`, `devserver_wait_for_build`). |
 | `references/di-fundamentals.md` | Gives `@Component` its required metadata object. |
