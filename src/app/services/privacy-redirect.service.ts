@@ -3,6 +3,7 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import {
   PrivacyRedirectConfig,
+  PrivacyFrontend,
   PrivacyRedirectSettings,
   PRIVACY_REDIRECT_REGISTRY,
   DEFAULT_PRIVACY_SETTINGS,
@@ -73,6 +74,15 @@ export class PrivacyRedirectService {
     this.saveSettings(next);
   }
 
+  /** Select the exclusive frontend used for Twitter/X redirects. */
+  setFrontend(frontend: PrivacyFrontend): void {
+    const current = this._settings();
+    if (current.frontend === frontend && current.enabled) return;
+    const next: PrivacyRedirectSettings = { ...current, enabled: true, frontend };
+    this._settings.set(next);
+    this.saveSettings(next);
+  }
+
   /**
    * Transform a URL to its privacy-respecting alternative.
    * Returns the original URL if no redirect is enabled.
@@ -85,7 +95,7 @@ export class PrivacyRedirectService {
       return url;
     }
 
-    for (const config of this.registry) {
+    for (const config of this.activeRegistry) {
       if (config.urlPatterns.some((pattern) => pattern.test(url))) {
         return this.applyRedirect(url, config);
       }
@@ -102,7 +112,9 @@ export class PrivacyRedirectService {
       return false;
     }
 
-    return this.registry.some((config) => config.urlPatterns.some((pattern) => pattern.test(url)));
+    return this.activeRegistry.some((config) =>
+      config.urlPatterns.some((pattern) => pattern.test(url)),
+    );
   }
 
   /**
@@ -113,13 +125,18 @@ export class PrivacyRedirectService {
       return null;
     }
 
-    for (const config of this.registry) {
+    for (const config of this.activeRegistry) {
       if (config.urlPatterns.some((pattern) => pattern.test(url))) {
         return config;
       }
     }
 
     return null;
+  }
+
+  private get activeRegistry(): readonly PrivacyRedirectConfig[] {
+    const frontend = this._settings().frontend;
+    return this.registry.filter((config) => config.frontend === frontend);
   }
 
   private applyRedirect(url: string, config: PrivacyRedirectConfig): string {
@@ -156,6 +173,10 @@ export class PrivacyRedirectService {
     return {
       enabled:
         typeof override.enabled === 'boolean' ? override.enabled : DEFAULT_PRIVACY_SETTINGS.enabled,
+      frontend:
+        override.frontend === 'xxcancel' || override.frontend === 'twitter-viewer'
+          ? override.frontend
+          : DEFAULT_PRIVACY_SETTINGS.frontend,
     };
   }
 

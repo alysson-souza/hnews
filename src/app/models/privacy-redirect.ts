@@ -6,6 +6,7 @@
  * Each service maps to a specific privacy-respecting frontend.
  */
 export type PrivacyService = 'twitter' | 'youtube' | 'reddit' | 'medium' | 'instagram' | 'tiktok';
+export type PrivacyFrontend = 'xxcancel' | 'twitter-viewer';
 
 /**
  * Configuration for a privacy redirect service.
@@ -14,6 +15,7 @@ export type PrivacyService = 'twitter' | 'youtube' | 'reddit' | 'medium' | 'inst
 export interface PrivacyRedirectConfig {
   /** Unique service identifier */
   readonly service: PrivacyService;
+  readonly frontend: PrivacyFrontend;
   /** Human-readable display name */
   readonly displayName: string;
   /** Fixed destination origin */
@@ -28,6 +30,7 @@ export interface PrivacyRedirectConfig {
 export interface PrivacyRedirectSettings {
   /** Whether Twitter/X redirects are enabled */
   readonly enabled: boolean;
+  readonly frontend: PrivacyFrontend;
 }
 
 /**
@@ -35,6 +38,7 @@ export interface PrivacyRedirectSettings {
  */
 export const DEFAULT_PRIVACY_SETTINGS: PrivacyRedirectSettings = {
   enabled: true,
+  frontend: 'xxcancel',
 } as const;
 
 /**
@@ -43,6 +47,17 @@ export const DEFAULT_PRIVACY_SETTINGS: PrivacyRedirectSettings = {
 export const PRIVACY_REDIRECT_REGISTRY: readonly PrivacyRedirectConfig[] = [
   {
     service: 'twitter',
+    frontend: 'xxcancel',
+    displayName: 'Twitter/X → XCancel',
+    baseUrl: 'https://xxcancel.com/',
+    urlPatterns: [
+      /^https?:\/\/(www\.|mobile\.)?twitter\.com\/[A-Za-z0-9_]{1,15}(?:\/status\/\d+)?\/?(?:[?#].*)?$/,
+      /^https?:\/\/(www\.|mobile\.)?x\.com\/[A-Za-z0-9_]{1,15}(?:\/status\/\d+)?\/?(?:[?#].*)?$/,
+    ],
+  },
+  {
+    service: 'twitter',
+    frontend: 'twitter-viewer',
     displayName: 'Twitter/X → Twitter Viewer',
     baseUrl: 'https://twitterviewer.net/',
     urlPatterns: [

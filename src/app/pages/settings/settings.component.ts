@@ -14,6 +14,7 @@ import { CommandRegistryService } from '@services/command-registry.service';
 import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
 import { ScrollService } from '@services/scroll.service';
 import { PrivacyRedirectService } from '@services/privacy-redirect.service';
+import { PrivacyFrontend } from '@models/privacy-redirect';
 import { SavedStoriesService } from '@services/saved-stories.service';
 import { BackupService } from '@services/backup.service';
 import { downloadJsonFile } from '@services/file-transfer.util';
@@ -288,6 +289,10 @@ import {
   ],
 })
 export class SettingsComponent implements OnInit {
+  readonly redirectOptions = [
+    { frontend: 'xxcancel', name: 'XCancel' },
+    { frontend: 'twitter-viewer', name: 'Twitter Viewer' },
+  ] as const;
   private tagsService = inject(UserTagsService);
   private cacheService = inject(CacheManagerService);
   themeService = inject(ThemeService);
@@ -342,6 +347,7 @@ export class SettingsComponent implements OnInit {
 
   // Privacy redirect computed signals
   privacyRedirectEnabled = computed(() => this.privacyRedirectService.settings().enabled);
+  privacyRedirectFrontend = computed(() => this.privacyRedirectService.settings().frontend);
 
   constructor() {
     this.loadTags();
@@ -622,9 +628,13 @@ export class SettingsComponent implements OnInit {
   }
 
   // Privacy redirect methods
-  togglePrivacyRedirect(): void {
-    const newValue = !this.privacyRedirectEnabled();
-    this.privacyRedirectService.setEnabled(newValue);
+  togglePrivacyRedirect(frontend: PrivacyFrontend): void {
+    const isSelected = this.privacyRedirectEnabled() && this.privacyRedirectFrontend() === frontend;
+    if (isSelected) {
+      this.privacyRedirectService.setEnabled(false);
+      return;
+    }
+    this.privacyRedirectService.setFrontend(frontend);
   }
 }
 
