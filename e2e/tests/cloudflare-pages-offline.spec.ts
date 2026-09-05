@@ -1,14 +1,15 @@
 import { chromium, expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { tmpdir } from 'node:os';
 
 type HeaderSet = Record<string, string>;
 
-// This suite serves a real build from disk, written by `ng build`.
-const distDir = join(process.cwd(), 'dist', 'hnews', 'browser');
+// This suite serves the deployed Cloudflare bundle from disk, as written by
+// `npm run build:e2e` - the same bundle CI uploads for the Cloudflare deploy.
+const distDir = join(process.cwd(), 'dist', 'hnews-cf', 'browser');
 
 test.describe('Cloudflare Pages offline boot', () => {
   let server: Server | undefined;
@@ -22,8 +23,15 @@ test.describe('Cloudflare Pages offline boot', () => {
   });
 
   test.beforeAll(async () => {
-    if (!existsSync(join(distDir, '_headers'))) {
-      throw new Error(`No build found at ${distDir}. Run \`npm run build\` first.`);
+    // These tests exercise the offline fallback that scripts/patch-ngsw.mjs
+    // injects into ngsw-worker.js, so an unpatched bundle here - anything but
+    // build:e2e or deploy:cf - fails at offline boot rather than up front.
+    const worker = join(distDir, 'ngsw-worker.js');
+    const patched =
+      existsSync(worker) &&
+      readFileSync(worker, 'utf8').includes('self.caches.match("/index.html")');
+    if (!existsSync(join(distDir, '_headers')) || !patched) {
+      throw new Error(`No patched production build at ${distDir} - run \`npm run build:e2e\`.`);
     }
 
     const app = await startCloudflareLikeServer();
