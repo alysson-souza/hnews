@@ -356,6 +356,12 @@ export class ItemComponent implements OnInit, RefreshableRoute {
       return;
     }
 
+    // A second load can land before this fires; drop the pending timer first so
+    // the stale one cannot outlive the component.
+    if (this.scrollToFirstCommentTimeout) {
+      clearTimeout(this.scrollToFirstCommentTimeout);
+    }
+
     this.scrollToFirstCommentTimeout = setTimeout(() => {
       this.scrollToFirstCommentTimeout = null;
       const firstComment = document.getElementById('first-comment');
