@@ -5,8 +5,8 @@
   "scripts": {
     "ng": "ng",
     "start": "npm run start:cf",
-    "start:cf": "trap 'kill 0' EXIT; ng build --watch --output-path dist/hnews-cf & wrangler pages dev dist/hnews-cf/browser --live-reload --port 8788",
-    "start:cf:offline": "trap 'kill 0' EXIT; ng build --watch --output-path dist/hnews-cf & wrangler pages dev dist/hnews-cf/browser --port 8788",
+    "start:cf": "trap 'kill 0' EXIT; ng build --watch --output-path dist/hnews-dev & wrangler pages dev dist/hnews-dev/browser --live-reload --port 8788",
+    "start:cf:offline": "trap 'kill 0' EXIT; ng build --watch --output-path dist/hnews-dev & wrangler pages dev dist/hnews-dev/browser --port 8788",
     "prestart:cf": "BASE_URL=http://localhost:8788 npm run generate:version && BASE_URL=http://localhost:8788 npm run generate:userscript",
     "prestart:cf:offline": "BASE_URL=http://localhost:8788 npm run generate:version && BASE_URL=http://localhost:8788 npm run generate:userscript",
     "start:gh": "ng serve",

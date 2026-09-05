@@ -23,18 +23,15 @@ test.describe('Cloudflare Pages offline boot', () => {
   });
 
   test.beforeAll(async () => {
-    // start:cf and start:cf:offline write their `ng build --watch` output to this
-    // same directory without running scripts/patch-ngsw.mjs, whose offline
-    // fallback in ngsw-worker.js is exactly what these tests exercise. Checking
-    // for that patch catches a leftover dev-server bundle as well as no bundle.
+    // These tests exercise the offline fallback that scripts/patch-ngsw.mjs
+    // injects into ngsw-worker.js, so an unpatched bundle here - anything but
+    // build:e2e or deploy:cf - fails at offline boot rather than up front.
     const worker = join(distDir, 'ngsw-worker.js');
     const patched =
       existsSync(worker) &&
       readFileSync(worker, 'utf8').includes('self.caches.match("/index.html")');
     if (!existsSync(join(distDir, '_headers')) || !patched) {
-      throw new Error(
-        `No patched production build at ${distDir}. A dev server build leaves an unpatched service worker here - run \`npm run build:e2e\`.`,
-      );
+      throw new Error(`No patched production build at ${distDir} - run \`npm run build:e2e\`.`);
     }
 
     const app = await startCloudflareLikeServer();
