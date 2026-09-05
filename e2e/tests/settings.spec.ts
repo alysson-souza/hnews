@@ -70,6 +70,31 @@ test.describe('Settings Page', () => {
     });
   });
 
+  test.describe('Privacy Redirects', () => {
+    test('should select exactly one redirect frontend with the keyboard', async ({
+      settingsPage,
+      page,
+    }) => {
+      await expect(settingsPage.xCancelRedirectToggle).toHaveAttribute('aria-checked', 'true');
+      await expect(settingsPage.twitterViewerRedirectToggle).toHaveAttribute(
+        'aria-checked',
+        'false',
+      );
+
+      await settingsPage.twitterViewerRedirectToggle.focus();
+      await settingsPage.twitterViewerRedirectToggle.press('Space');
+
+      await expect(settingsPage.xCancelRedirectToggle).toHaveAttribute('aria-checked', 'false');
+      await expect(settingsPage.twitterViewerRedirectToggle).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      await expect
+        .poll(() => page.evaluate(() => localStorage.getItem('privacy.redirect.settings.v1')))
+        .toBe(JSON.stringify({ enabled: true, frontend: 'twitter-viewer' }));
+    });
+  });
+
   test.describe('Cache Management', () => {
     test('should clear cache', async ({ settingsPage }) => {
       if (await settingsPage.clearCacheButton.isVisible()) {

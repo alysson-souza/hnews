@@ -9,7 +9,7 @@ describe('Privacy Redirect Models', () => {
       expect(
         PRIVACY_REDIRECT_REGISTRY.map(({ frontend, baseUrl }) => ({ frontend, baseUrl })),
       ).toEqual([
-        { frontend: 'xxcancel', baseUrl: 'https://xxcancel.com/' },
+        { frontend: 'xcancel', baseUrl: 'https://xcancel.com/' },
         { frontend: 'twitter-viewer', baseUrl: 'https://twitterviewer.net/' },
       ]);
     });

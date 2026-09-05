@@ -71,7 +71,7 @@ describe('SettingsComponent backup controls', () => {
         {
           provide: PrivacyRedirectService,
           useValue: {
-            settings: signal({ enabled: true, frontend: 'xxcancel' }),
+            settings: signal({ enabled: true, frontend: 'xcancel' }),
             setEnabled: vi.fn(),
             setFrontend: vi.fn(),
           },

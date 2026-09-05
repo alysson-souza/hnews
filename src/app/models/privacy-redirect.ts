@@ -6,7 +6,7 @@
  * Each service maps to a specific privacy-respecting frontend.
  */
 export type PrivacyService = 'twitter' | 'youtube' | 'reddit' | 'medium' | 'instagram' | 'tiktok';
-export type PrivacyFrontend = 'xxcancel' | 'twitter-viewer';
+export type PrivacyFrontend = 'xcancel' | 'twitter-viewer';
 
 /**
  * Configuration for a privacy redirect service.
@@ -38,7 +38,7 @@ export interface PrivacyRedirectSettings {
  */
 export const DEFAULT_PRIVACY_SETTINGS: PrivacyRedirectSettings = {
   enabled: true,
-  frontend: 'xxcancel',
+  frontend: 'xcancel',
 } as const;
 
 /**
@@ -47,9 +47,9 @@ export const DEFAULT_PRIVACY_SETTINGS: PrivacyRedirectSettings = {
 export const PRIVACY_REDIRECT_REGISTRY: readonly PrivacyRedirectConfig[] = [
   {
     service: 'twitter',
-    frontend: 'xxcancel',
+    frontend: 'xcancel',
     displayName: 'Twitter/X → XCancel',
-    baseUrl: 'https://xxcancel.com/',
+    baseUrl: 'https://xcancel.com/',
     urlPatterns: [
       /^https?:\/\/(www\.|mobile\.)?twitter\.com\/[A-Za-z0-9_]{1,15}(?:\/status\/\d+)?\/?(?:[?#].*)?$/,
       /^https?:\/\/(www\.|mobile\.)?x\.com\/[A-Za-z0-9_]{1,15}(?:\/status\/\d+)?\/?(?:[?#].*)?$/,

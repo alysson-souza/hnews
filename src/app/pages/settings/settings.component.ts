@@ -290,7 +290,7 @@ import {
 })
 export class SettingsComponent implements OnInit {
   readonly redirectOptions = [
-    { frontend: 'xxcancel', name: 'XCancel' },
+    { frontend: 'xcancel', name: 'XCancel' },
     { frontend: 'twitter-viewer', name: 'Twitter Viewer' },
   ] as const;
   private tagsService = inject(UserTagsService);

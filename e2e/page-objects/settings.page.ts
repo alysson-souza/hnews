@@ -12,6 +12,8 @@ export class SettingsPage extends BasePage {
   readonly saveButton: Locator;
   readonly resetButton: Locator;
   readonly successMessage: Locator;
+  readonly xCancelRedirectToggle: Locator;
+  readonly twitterViewerRedirectToggle: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -27,6 +29,12 @@ export class SettingsPage extends BasePage {
     this.saveButton = page.locator('button:has-text("Save")');
     this.resetButton = page.locator('button:has-text("Reset")');
     this.successMessage = page.locator('.success, [role="alert"]:has-text("success")');
+    this.xCancelRedirectToggle = page.getByRole('switch', {
+      name: 'Redirect Twitter/X links to XCancel',
+    });
+    this.twitterViewerRedirectToggle = page.getByRole('switch', {
+      name: 'Redirect Twitter/X links to Twitter Viewer',
+    });
   }
 
   async navigateToSettings() {

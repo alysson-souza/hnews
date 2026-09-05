@@ -53,24 +53,11 @@
       <h2 class="settings-category-label">Privacy Redirects</h2>
 
       @for (option of redirectOptions; track option.frontend) {
-        <div
-          class="setting-row cursor-pointer"
-          (click)="togglePrivacyRedirect(option.frontend)"
-          (keydown.enter)="togglePrivacyRedirect(option.frontend)"
-          (keydown.space)="togglePrivacyRedirect(option.frontend)"
-          role="button"
-          tabindex="0"
-          [attr.aria-label]="'Redirect Twitter/X links to ' + option.name"
-          [attr.aria-pressed]="
-            privacyRedirectEnabled() && privacyRedirectFrontend() === option.frontend
-          "
-        >
+        <div class="setting-row">
           <div class="setting-info">
-            <label class="setting-title" [for]="'privacy-' + option.frontend">
-              Redirect Twitter/X links to {{ option.name }}
-            </label>
+            <span class="setting-title">Redirect Twitter/X links to {{ option.name }}</span>
           </div>
-          <div (click)="$event.stopPropagation()" aria-hidden="true">
+          <div>
             <app-toggle-switch
               [id]="'privacy-' + option.frontend"
               [checked]="privacyRedirectEnabled() && privacyRedirectFrontend() === option.frontend"

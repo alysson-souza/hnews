@@ -174,7 +174,7 @@ export class PrivacyRedirectService {
       enabled:
         typeof override.enabled === 'boolean' ? override.enabled : DEFAULT_PRIVACY_SETTINGS.enabled,
       frontend:
-        override.frontend === 'xxcancel' || override.frontend === 'twitter-viewer'
+        override.frontend === 'xcancel' || override.frontend === 'twitter-viewer'
           ? override.frontend
           : DEFAULT_PRIVACY_SETTINGS.frontend,
     };
