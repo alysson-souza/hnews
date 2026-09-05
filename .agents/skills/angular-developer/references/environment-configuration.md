@@ -98,7 +98,9 @@ export class AppConfigService {
   private readonly http = inject(HttpClient);
 
   loadConfig() {
-    return this.http.get<AppConfig>('/assets/config.json').pipe(
+    // Relative, so it resolves against `<base href>` and works when the app
+    // is deployed below the origin root (e.g. `/my-app/`).
+    return this.http.get<AppConfig>('assets/config.json').pipe(
       tap((data) => {
         this.config = data;
       }),
@@ -115,9 +117,12 @@ Register the loader during application bootstrap:
 
 ```ts
 import { ApplicationConfig, provideAppInitializer, inject } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Required on v21 and earlier, where `HttpClient` is not root-provided.
+    provideHttpClient(),
     provideAppInitializer(() => {
       const config = inject(AppConfigService);
       return config.loadConfig();

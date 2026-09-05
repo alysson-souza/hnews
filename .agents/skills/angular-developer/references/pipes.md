@@ -40,7 +40,7 @@ export function toKebabCase(value: string): string {
 ```
 
 ```ts
-// kebab-case.pipe.ts
+// kebab-case-pipe.ts
 import { Pipe, PipeTransform } from '@angular/core';
 import { toKebabCase } from './kebab-case';
 
