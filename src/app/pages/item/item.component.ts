@@ -48,6 +48,7 @@ export class ItemComponent implements OnInit, RefreshableRoute {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private scrollToFirstCommentTimeout: ReturnType<typeof setTimeout> | null = null;
   private hnService = inject(HackernewsService);
   private visitedService = inject(VisitedService);
   private scrollService = inject(ScrollService);
@@ -151,6 +152,13 @@ export class ItemComponent implements OnInit, RefreshableRoute {
         this.refresh();
       }
       this.previousOnline = online;
+    });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.scrollToFirstCommentTimeout) {
+        clearTimeout(this.scrollToFirstCommentTimeout);
+        this.scrollToFirstCommentTimeout = null;
+      }
     });
   }
 
@@ -348,7 +356,8 @@ export class ItemComponent implements OnInit, RefreshableRoute {
       return;
     }
 
-    setTimeout(() => {
+    this.scrollToFirstCommentTimeout = setTimeout(() => {
+      this.scrollToFirstCommentTimeout = null;
       const firstComment = document.getElementById('first-comment');
       if (firstComment) {
         const heading = document.querySelector(
