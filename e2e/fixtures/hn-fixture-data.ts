@@ -306,7 +306,7 @@ function buildUsers(dataset: HNDataset): void {
   });
 }
 
-function buildSearchPool(): AlgoliaHitRaw[] {
+function buildSearchPool(dataset: HNDataset): AlgoliaHitRaw[] {
   const now = Math.floor(Date.now() / 1000);
 
   const storyTitles = [
@@ -367,6 +367,11 @@ function buildSearchPool(): AlgoliaHitRaw[] {
     text,
     time: now - commentIndex * 3600 * 5 - 1,
   }));
+  const commentCountByStoryIndex = new Map<number, number>();
+  for (const event of commentEvents) {
+    const storyIndex = event.commentIndex % storyTitles.length;
+    commentCountByStoryIndex.set(storyIndex, (commentCountByStoryIndex.get(storyIndex) ?? 0) + 1);
+  }
 
   // Assign ids in ascending order of creation time (oldest first), exactly as
   // real HN object IDs behave, so that regardless of which hits a query
@@ -388,13 +393,25 @@ function buildSearchPool(): AlgoliaHitRaw[] {
 
   storyEvents.forEach((event) => {
     const id = storyIdByIndex.get(event.storyIndex)!;
+    const url = `https://example.com/search-story-${event.storyIndex}`;
+    const author = `search_author_${event.storyIndex % 4}`;
+
+    addStory(dataset, {
+      id,
+      title: event.title,
+      url,
+      by: author,
+      score: 50 + event.storyIndex,
+      time: event.time,
+    });
+
     hits.push({
       objectID: String(id),
       title: event.title,
-      url: `https://example.com/search-story-${event.storyIndex}`,
-      author: `search_author_${event.storyIndex % 4}`,
+      url,
+      author,
       points: 50 + event.storyIndex,
-      num_comments: event.storyIndex * 2,
+      num_comments: commentCountByStoryIndex.get(event.storyIndex) ?? 0,
       created_at_i: event.time,
       created_at: new Date(event.time * 1000).toISOString(),
       story_id: id,
@@ -405,10 +422,22 @@ function buildSearchPool(): AlgoliaHitRaw[] {
   commentEvents.forEach((event) => {
     const storyIndex = event.commentIndex % storyTitles.length;
     const storyId = storyIdByIndex.get(storyIndex)!;
+    const id = commentIdByIndex.get(event.commentIndex)!;
+    const author = `search_commenter_${event.commentIndex}`;
+
+    addComment(dataset, {
+      id,
+      parent: storyId,
+      storyId,
+      by: author,
+      time: event.time,
+      text: event.text,
+    });
+
     hits.push({
-      objectID: String(commentIdByIndex.get(event.commentIndex)),
+      objectID: String(id),
       comment_text: event.text,
-      author: `search_commenter_${event.commentIndex}`,
+      author,
       points: 5 + event.commentIndex,
       created_at_i: event.time,
       created_at: new Date(event.time * 1000).toISOString(),
@@ -436,8 +465,8 @@ export function createDefaultDataset(): HNDataset {
   buildManyTopLevelCommentsStory(dataset);
   buildFillerStories(dataset);
   buildUsers(dataset);
+  dataset.searchPool = buildSearchPool(dataset);
   recomputeDescendants(dataset);
-  dataset.searchPool = buildSearchPool();
 
   return dataset;
 }

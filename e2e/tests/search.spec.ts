@@ -81,12 +81,17 @@ test.describe('Search Page', () => {
   test('navigates to an item from a result', async ({ searchPage, page }) => {
     await searchPage.searchFor('ask hn');
 
-    const commentLink = searchPage.searchResults
-      .first()
+    const result = searchPage.searchResults.first();
+    const resultTitle = (await result.getByRole('heading').textContent())?.trim();
+    expect(resultTitle).toBeTruthy();
+
+    const commentLink = result
       .getByRole('link', { name: /comments?|View thread|View Story/ })
       .first();
     await commentLink.click();
 
     await expect(page).toHaveURL(/\/item\/\d+/);
+    await expect(page.locator('#submission-title .story-title')).toContainText(resultTitle!);
+    await expect(page.getByText('Item not found')).not.toBeVisible();
   });
 });
