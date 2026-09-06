@@ -26,7 +26,7 @@ describe('PrivacyRedirectService', () => {
     it('starts enabled and redirects immediately', () => {
       expect(service.settings().enabled).toBe(true);
       expect(service.settings().frontend).toBe('xcancel');
-      expect(service.transformUrl('https://x.com/user')).toBe('https://xcancel.com/user');
+      expect(service.transformUrl('https://x.com/user')).toBe('https://xxcancel.com/user');
     });
 
     it('persists master changes', () => {
@@ -54,17 +54,17 @@ describe('PrivacyRedirectService', () => {
 
   describe('transformUrl', () => {
     it.each([
-      ['https://twitter.com/user', 'https://xcancel.com/user'],
-      ['https://twitter.com/user/status/123', 'https://xcancel.com/user/status/123'],
-      ['https://x.com/user', 'https://xcancel.com/user'],
-      ['https://x.com/user/status/123', 'https://xcancel.com/user/status/123'],
+      ['https://twitter.com/user', 'https://xxcancel.com/user'],
+      ['https://twitter.com/user/status/123', 'https://xxcancel.com/user/status/123'],
+      ['https://x.com/user', 'https://xxcancel.com/user'],
+      ['https://x.com/user/status/123', 'https://xxcancel.com/user/status/123'],
     ])('rewrites %s to %s', (url, expected) => {
       expect(service.transformUrl(url)).toBe(expected);
     });
 
     it('preserves query strings and fragments', () => {
       expect(service.transformUrl('https://x.com/user/status/123?ref=hn#replies')).toBe(
-        'https://xcancel.com/user/status/123?ref=hn#replies',
+        'https://xxcancel.com/user/status/123?ref=hn#replies',
       );
     });
 
