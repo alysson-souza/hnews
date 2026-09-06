@@ -97,12 +97,9 @@ describe('CommentHeaderComponent', () => {
 
     const header = fixture.debugElement.query(By.css('.comment-header'))
       .nativeElement as HTMLElement;
-    const viewThreadButton = fixture.debugElement.query(By.css('.view-thread-inline'))
-      .nativeElement as HTMLButtonElement;
 
     expect(component.density()).toBe('default');
     expect(header.classList.contains('comment-header-compact')).toBe(false);
-    expect(viewThreadButton.classList.contains('view-thread-inline')).toBe(true);
   });
 
   it('forwards expand click via (expand) to parent output', () => {

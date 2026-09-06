@@ -17,8 +17,7 @@ test.describe('Userscript Page', () => {
   test('should display syntax-highlighted code block', async ({ userscriptPage }) => {
     await userscriptPage.navigateToUserscript();
     await expect(userscriptPage.codeBlock).toBeVisible();
-    const text = await userscriptPage.codeBlock.textContent();
-    expect(text?.length).toBeGreaterThan(0);
+    await expect(userscriptPage.codeBlock).toContainText('==UserScript==');
   });
 
   test('should copy userscript to clipboard', async ({ userscriptPage, page }) => {
@@ -32,7 +31,6 @@ test.describe('Userscript Page', () => {
     });
     await userscriptPage.navigateToUserscript();
     await userscriptPage.copyButton.click();
-    await page.waitForTimeout(500);
     await expect(userscriptPage.copyButton).toContainText('Copied!');
   });
 

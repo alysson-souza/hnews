@@ -36,14 +36,6 @@ describe('KeyboardContextService', () => {
     });
   });
 
-  describe('initialization', () => {
-    it('should initialize with default context when sidebar is closed', () => {
-      mockSidebarService.isOpen.mockReturnValue(false);
-      service = TestBed.inject(KeyboardContextService);
-      expect(service.currentContext()).toBe('default');
-    });
-  });
-
   describe('currentContext', () => {
     it('should return "sidebar" when sidebar is open', () => {
       mockSidebarService.isOpen.mockReturnValue(true);
@@ -231,31 +223,6 @@ describe('KeyboardContextService', () => {
       Object.defineProperty(mockRouter, 'url', { value: '/top', writable: true });
       service = TestBed.inject(KeyboardContextService);
       expect(service.isOnSettingsPage()).toBe(false);
-    });
-  });
-
-  describe('signal behavior', () => {
-    it('should have reactive computed signals', () => {
-      Object.defineProperty(mockRouter, 'url', { value: '/', writable: true });
-      service = TestBed.inject(KeyboardContextService);
-
-      // Test that these are signals (they should be callable)
-      expect(typeof service.currentContext).toBe('function');
-      expect(typeof service.isOnStoryList).toBe('function');
-      expect(typeof service.isOnItemPage).toBe('function');
-      expect(typeof service.isOnUserPage).toBe('function');
-    });
-
-    it('should compute current context based on sidebar state', () => {
-      mockSidebarService.isOpen.mockReturnValue(false);
-      Object.defineProperty(mockRouter, 'url', { value: '/', writable: true });
-      service = TestBed.inject(KeyboardContextService);
-
-      // Initial state - sidebar closed
-      expect(service.currentContext()).toBe('default');
-
-      // Note: In actual usage, when sidebar signal updates, the computed signal
-      // would automatically recompute. Testing this requires integration tests.
     });
   });
 

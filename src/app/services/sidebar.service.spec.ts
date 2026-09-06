@@ -46,19 +46,6 @@ describe('SidebarService', () => {
       expect(service.isOpen()).toBe(false);
       expect(service.currentItemId()).toBeNull();
     });
-
-    it('should subscribe to router events on construction', () => {
-      vi.spyOn(service, 'closeSidebar');
-
-      // Open sidebar first so we can verify it gets closed
-      service.openSidebar(123);
-      expect(service.isOpen()).toBe(true);
-
-      // Emit navigation event
-      mockRouter.emitNavigationEnd();
-
-      expect(service.closeSidebar).toHaveBeenCalled();
-    });
   });
 
   describe('core functionality', () => {
@@ -171,14 +158,6 @@ describe('SidebarService', () => {
       mockRouter.emitNavigationEnd(2, '/page2');
       expect(service.isOpen()).toBe(false);
     });
-
-    it('should close sidebar with different URLs', () => {
-      service.openSidebar(789);
-
-      mockRouter.emitNavigationEnd(1, '/different-page');
-
-      expect(service.isOpen()).toBe(false);
-    });
   });
 
   describe('signal behavior', () => {
@@ -196,45 +175,6 @@ describe('SidebarService', () => {
       service.closeSidebar();
       expect(service.isOpen()).toBe(false);
       expect(service.currentItemId()).toBe(789); // Still set during animation
-    });
-
-    it('should allow signal composition and computed values', () => {
-      let computedValue: string;
-
-      TestBed.runInInjectionContext(() => {
-        // Create a computed signal based on the service signals
-        const computedSignal = () => {
-          const isOpen = service.isOpen();
-          const itemId = service.currentItemId();
-          return isOpen ? `open-${itemId}` : 'closed';
-        };
-        computedValue = computedSignal();
-
-        // Initial state
-        expect(computedValue).toBe('closed');
-
-        service.openSidebar(456);
-        computedValue = computedSignal();
-        expect(computedValue).toBe('open-456');
-
-        service.closeSidebar();
-        computedValue = computedSignal();
-        expect(computedValue).toBe('closed');
-      });
-    });
-
-    it('should maintain signal consistency during operations', () => {
-      // Test toggle behavior maintains signal consistency
-      service.toggleSidebar(123);
-      expect(service.isOpen()).toBe(true);
-      expect(service.currentItemId()).toBe(123);
-
-      service.toggleSidebar(123); // Same ID should close
-      expect(service.isOpen()).toBe(false);
-
-      service.toggleSidebar(456); // Different ID should open
-      expect(service.isOpen()).toBe(true);
-      expect(service.currentItemId()).toBe(456);
     });
   });
 
@@ -284,26 +224,6 @@ describe('SidebarService', () => {
 
       expect(service.isOpen()).toBe(firstState.isOpen);
       expect(service.currentItemId()).toBe(firstState.itemId);
-    });
-
-    it('should handle navigation events when sidebar was never opened', () => {
-      expect(service.isOpen()).toBe(false);
-      expect(service.currentItemId()).toBeNull();
-
-      mockRouter.emitNavigationEnd();
-
-      expect(service.isOpen()).toBe(false);
-      expect(service.currentItemId()).toBeNull();
-    });
-
-    it('should handle multiple rapid navigation events', () => {
-      service.openSidebar(456);
-
-      mockRouter.emitNavigationEnd(1, '/page1');
-      mockRouter.emitNavigationEnd(2, '/page2');
-      mockRouter.emitNavigationEnd(3, '/page3');
-
-      expect(service.isOpen()).toBe(false);
     });
   });
 });

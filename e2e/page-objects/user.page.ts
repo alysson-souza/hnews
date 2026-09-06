@@ -2,76 +2,66 @@ import { Page, Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 
 export class UserPage extends BasePage {
-  readonly username: Locator;
-  readonly karma: Locator;
-  readonly about: Locator;
-  readonly created: Locator;
-  readonly submittedTab: Locator;
-  readonly commentsTab: Locator;
-  readonly favoritesTab: Locator;
-  readonly itemList: Locator;
+  readonly usernameHeading: Locator;
+  readonly profileCard: Locator;
+  readonly activityCard: Locator;
+  readonly activityItems: Locator;
+  readonly activityFilter: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.username = page.locator('h1').first();
-    this.karma = page.locator('[class*="karma"], dd').first();
-    this.about = page.locator('.about-prose, [class*="about-prose"]').first();
-    this.created = page.locator('[class*="created"], dd').nth(1);
-    this.submittedTab = page.locator(
-      'button:has-text("Submitted"), [role="tab"]:has-text("Submitted")',
-    );
-    this.commentsTab = page.locator(
-      'button:has-text("Comments"), [role="tab"]:has-text("Comments")',
-    );
-    this.favoritesTab = page.locator(
-      'button:has-text("Favorites"), [role="tab"]:has-text("Favorites")',
-    );
-    this.itemList = page.locator('app-story-item, app-comment-thread');
+    this.profileCard = page.locator('#user-profile');
+    this.activityCard = page.locator('.activity-card');
+    this.usernameHeading = page.locator('h1.page-title');
+    this.activityItems = this.activityCard.locator('article.activity-item');
+    this.activityFilter = this.activityCard.getByRole('tablist');
   }
 
   async navigateToUser(username: string) {
     await this.navigate(`/user/${username}`);
-    await this.waitForNetworkIdle();
   }
 
-  async getUsername(): Promise<string> {
-    return (await this.username.textContent()) ?? '';
+  async waitForProfileLoaded() {
+    await this.profileCard.waitFor({ state: 'visible' });
   }
 
-  async getKarma(): Promise<string> {
-    return (await this.karma.textContent()) ?? '';
+  async statValue(label: string): Promise<string> {
+    return (
+      (await this.profileCard
+        .locator('.stat-box')
+        .filter({ hasText: label })
+        .locator('.stat-value')
+        .textContent()) ?? ''
+    );
   }
 
   async hasAboutSection(): Promise<boolean> {
-    return await this.about.isVisible();
+    return this.profileCard.getByText('About', { exact: true }).isVisible();
   }
 
-  async getCreatedDate(): Promise<string> {
-    return (await this.created.textContent()) ?? '';
+  async switchActivityFilter(label: 'All' | 'Stories' | 'Comments') {
+    await this.activityFilter.getByRole('tab', { name: label }).click();
   }
 
-  async switchToSubmittedTab() {
-    await this.submittedTab.click();
-    await this.waitForNetworkIdle();
+  async loadedActivityCount(): Promise<number> {
+    const muted = this.activityCard.locator('.activity-header .muted').first();
+    const text = await muted.textContent().catch(() => '');
+    const match = (text ?? '').match(/Loaded\s+([\d,]+)/);
+    return match ? Number(match[1].replace(/,/g, '')) : -1;
   }
 
-  async switchToCommentsTab() {
-    await this.commentsTab.click();
-    await this.waitForNetworkIdle();
+  async activityFilterLabel(): Promise<string> {
+    const muted = this.activityCard.locator('.activity-header .muted').first();
+    return (await muted.textContent().catch(() => '')) ?? '';
   }
 
-  async switchToFavoritesTab() {
-    if (await this.favoritesTab.isVisible()) {
-      await this.favoritesTab.click();
-      await this.waitForNetworkIdle();
-    }
-  }
-
-  async getItemCount(): Promise<number> {
-    return await this.itemList.count();
-  }
-
+  /**
+   * Clicks the in-app link on an activity entry. A story entry's title link
+   * can point off-site (external `url`, opened in a new tab), so this always
+   * targets the entry's `/item/:id` link (e.g. the comments count or "View
+   * thread" link), which every activity entry has regardless of type.
+   */
   async clickItem(index: number) {
-    await this.itemList.nth(index).click();
+    await this.activityItems.nth(index).locator('a[href^="/item/"]').first().click();
   }
 }

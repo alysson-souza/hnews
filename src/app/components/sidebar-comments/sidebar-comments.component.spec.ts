@@ -90,39 +90,25 @@ describe('SidebarCommentsComponent', () => {
       markCommentsVisited: vi.fn(),
       getCommentsVisitedData: vi.fn().mockReturnValue(undefined),
     } as unknown as MockedObject<VisitedService>;
+    const sortOrderSignal = signal<CommentSortOrder>('default');
+    // Recorded outputs per non-default order — ordering semantics are
+    // specified in comment-sort.service.spec.ts; this stub only checks the
+    // component delegates to the sort service and uses its result. The
+    // default order is the native HN order, mirrored here.
+    const sortedIdsByOrder: Record<Exclude<CommentSortOrder, 'default'>, number[]> = {
+      newest: [2, 3, 1],
+      oldest: [1, 3, 2],
+      popular: [3, 1, 2],
+    };
     mockCommentSortService = {
-      setSortOrder: vi.fn(),
-      sortOrder: signal('default'),
+      setSortOrder: vi.fn((order: CommentSortOrder) => sortOrderSignal.set(order)),
+      sortOrder: sortOrderSignal,
       sortComments: vi.fn(
         (
           kids: readonly number[],
-          comments: readonly HNItem[],
+          _comments: readonly HNItem[],
           order: CommentSortOrder,
-        ): number[] => {
-          if (order === 'default' || comments.length === 0) {
-            return [...kids];
-          }
-
-          const nativeIndex = new Map(kids.map((id, index) => [id, index]));
-          return comments
-            .filter((comment) => nativeIndex.has(comment.id))
-            .sort((a, b) => {
-              let comparison = 0;
-
-              if (order === 'newest') {
-                comparison = b.time - a.time;
-              } else if (order === 'oldest') {
-                comparison = a.time - b.time;
-              } else if (order === 'popular') {
-                const aPopularity = Math.max(a.descendants ?? 0, a.kids?.length ?? 0);
-                const bPopularity = Math.max(b.descendants ?? 0, b.kids?.length ?? 0);
-                comparison = bPopularity - aPopularity;
-              }
-
-              return comparison || nativeIndex.get(a.id)! - nativeIndex.get(b.id)!;
-            })
-            .map((comment) => comment.id);
-        },
+        ): number[] => (order === 'default' ? [...kids] : (sortedIdsByOrder[order] ?? [...kids])),
       ),
     } as unknown as MockedObject<CommentSortService>;
 

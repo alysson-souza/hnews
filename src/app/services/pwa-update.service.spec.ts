@@ -1,4 +1,4 @@
-import type { Mock, MockedObject } from 'vitest';
+import type { MockedObject } from 'vitest';
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { TestBed } from '@angular/core/testing';
@@ -479,39 +479,7 @@ describe('PwaUpdateService', () => {
   });
 
   describe('integrated update detection with validation', () => {
-    let consoleSpy: Mock;
-
-    beforeEach(() => {
-      consoleSpy = vi.spyOn(console, 'log');
-    });
-
-    it('should log detailed update information when VERSION_READY is received', async () => {
-      const mockVersionEvent: VersionEvent = {
-        type: 'VERSION_READY',
-        currentVersion: {
-          hash: 'abc123',
-          appData: { version: '1.0.0', commit: 'commit1', buildTime: '2024-01-01' },
-        },
-        latestVersion: {
-          hash: 'def456',
-          appData: { version: '1.1.0', commit: 'commit2', buildTime: '2024-01-02' },
-        },
-      };
-
-      versionUpdatesSubject.next(mockVersionEvent);
-
-      // Use setTimeout to allow async validation to complete
-      vi.advanceTimersByTime(0);
-      await Promise.resolve();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: VERSION_READY detected',
-        expect.any(Object),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Version comparison', expect.any(Object));
-      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', true);
-    });
-
-    it('should ignore non-meaningful updates and log accordingly', async () => {
+    it('should ignore non-meaningful updates and keep the update indicator off', async () => {
       const mockVersionEvent: VersionEvent = {
         type: 'VERSION_READY',
         currentVersion: {
@@ -529,15 +497,6 @@ describe('PwaUpdateService', () => {
       // Use setTimeout to allow async validation to complete
       vi.advanceTimersByTime(0);
       await Promise.resolve();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: VERSION_READY detected',
-        expect.any(Object),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Version comparison', expect.any(Object));
-      expect(consoleSpy).toHaveBeenCalledWith('PWA Update: Is meaningful update?', false);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'PWA Update: Ignoring non-meaningful update (same version/commit)',
-      );
       expect(service.updateAvailable()).toBe(false);
     });
 

@@ -27,16 +27,20 @@ test.describe('Item Page', () => {
         }
       }
 
-      test.skip(!itemHref, 'No sufficiently active story found for thread navigation assertion');
+      if (!itemHref) {
+        throw new Error('Fixture data guarantees a story with >20 comments in the top feed');
+      }
 
-      await itemPage.page.goto(itemHref!);
+      await itemPage.page.goto(itemHref);
       await itemPage.page.waitForLoadState('networkidle');
       await itemPage.page.waitForTimeout(1500);
 
       const viewThreadCount = await itemPage.page
         .locator('button[title="View this thread"]')
         .count();
-      test.skip(viewThreadCount === 0, 'No view-thread actions available for this story');
+      if (viewThreadCount === 0) {
+        throw new Error('Fixture story guarantees at least one threaded (non-leaf) comment');
+      }
 
       await itemPage.page.evaluate(() => {
         window.scrollTo({ top: 1400, behavior: 'auto' });
@@ -44,7 +48,9 @@ test.describe('Item Page', () => {
       await itemPage.page.waitForTimeout(200);
 
       const previousScrollY = await itemPage.page.evaluate(() => window.scrollY);
-      test.skip(previousScrollY < 200, 'Item page is not scrollable enough for restoration check');
+      if (previousScrollY < 200) {
+        throw new Error('Fixture story has enough comments to make the item page scrollable');
+      }
 
       const clickedThreadFromViewport = await itemPage.page.evaluate(() => {
         const buttons = Array.from(
@@ -63,7 +69,9 @@ test.describe('Item Page', () => {
         visibleButton.click();
         return true;
       });
-      test.skip(!clickedThreadFromViewport, 'No in-viewport thread action available for click');
+      if (!clickedThreadFromViewport) {
+        throw new Error('Fixture story guarantees an in-viewport thread action after scrolling');
+      }
       await itemPage.page.waitForLoadState('networkidle');
 
       const threadScrollY = await itemPage.page.evaluate(() => window.scrollY);
@@ -106,7 +114,9 @@ test.describe('Item Page', () => {
         }
       }
 
-      test.skip(targetLinkIndex < 0, 'No story with comments available in current feed');
+      if (targetLinkIndex < 0) {
+        throw new Error('Fixture data guarantees a story with comments in the top feed');
+      }
 
       await commentLinks.nth(targetLinkIndex).click();
       const sidebarPanel = page.locator('.sidebar-comments-panel');
@@ -115,14 +125,18 @@ test.describe('Item Page', () => {
 
       const viewThreadButtons = sidebarPanel.locator('button[title="View this thread"]');
       const sidebarThreadButtonCount = await viewThreadButtons.count();
-      test.skip(sidebarThreadButtonCount === 0, 'No view-thread actions available in sidebar');
+      if (sidebarThreadButtonCount === 0) {
+        throw new Error('Fixture story guarantees a threaded comment visible in the sidebar');
+      }
 
       const initialSidebarScroll = await sidebarPanel.evaluate((element) => {
         const panel = element as HTMLElement;
         panel.scrollTop = Math.max(0, Math.min(600, panel.scrollHeight));
         return panel.scrollTop;
       });
-      test.skip(initialSidebarScroll < 80, 'Sidebar content is not scrollable enough');
+      if (initialSidebarScroll < 80) {
+        throw new Error('Fixture story has enough comments to make the sidebar scrollable');
+      }
 
       const scrollBeforeClick = await sidebarPanel.evaluate((element) => {
         return (element as HTMLElement).scrollTop;
@@ -150,10 +164,11 @@ test.describe('Item Page', () => {
         visibleButton.click();
         return true;
       });
-      test.skip(
-        !clickedSidebarThreadFromViewport,
-        'No in-viewport sidebar thread action available for click',
-      );
+      if (!clickedSidebarThreadFromViewport) {
+        throw new Error(
+          'Fixture story guarantees an in-viewport sidebar thread action after scrolling',
+        );
+      }
 
       const backButton = page.locator('button[aria-label="Go back to previous view"]');
       await expect(backButton).toBeVisible();

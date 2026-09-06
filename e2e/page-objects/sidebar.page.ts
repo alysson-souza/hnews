@@ -8,6 +8,12 @@ export class SidebarPage extends BasePage {
   readonly backButton: Locator;
   readonly sortDropdown: Locator;
   readonly commentThreads: Locator;
+  /**
+   * Only the top-level threads. `commentThreads` matches nested replies too, and
+   * those mount and unmount as the tree renders progressively, so its count is a
+   * moving target; the top-level list is what a restored view must match.
+   */
+  readonly topLevelCommentThreads: Locator;
   readonly loadMoreButton: Locator;
   readonly viewThreadButtons: Locator;
   readonly storySummary: Locator;
@@ -20,6 +26,9 @@ export class SidebarPage extends BasePage {
     this.backButton = page.locator('button[aria-label="Go back to previous view"]');
     this.sortDropdown = page.locator('select[aria-label="Sort comments"]');
     this.commentThreads = page.locator('.sidebar-comments-panel app-comment-thread');
+    this.topLevelCommentThreads = page.locator(
+      '.sidebar-comments-panel .comments-list > app-comment-thread',
+    );
     this.loadMoreButton = page.locator('.sidebar-comments-panel .load-more-btn');
     this.viewThreadButtons = page.locator(
       '.sidebar-comments-panel button[title="View this thread"]',

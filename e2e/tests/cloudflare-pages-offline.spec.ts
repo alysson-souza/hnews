@@ -51,10 +51,13 @@ test.describe('Cloudflare Pages offline boot', () => {
 
   test('keeps the standalone refresh button reactive during loading and refresh', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'hnews-pwa-'));
-    // Chromium only exposes standalone display mode in a real, headed app window.
+    // `--app` only reports display-mode: standalone on the full Chromium build. The
+    // default headless browser is chrome-headless-shell, which reports display-mode:
+    // browser and would silently make this a non-standalone test, so pin the channel.
     // Start on an inert in-scope page so request routes are ready before the app cold boots.
     const context = await chromium.launchPersistentContext(userDataDir, {
-      headless: false,
+      headless: true,
+      channel: 'chromium',
       args: [`--app=${baseUrl}standalone-test-shell.html`],
     });
     const [page] = context.pages();

@@ -3,7 +3,6 @@
 
 import { HNItem } from './hn';
 import {
-  StoryFilterMode,
   getFilterCutoffTimestamp,
   sortByScoreDesc,
   filterTopHalf,
@@ -191,14 +190,6 @@ describe('story-filter', () => {
   });
 
   describe('FILTER_MODE_LABELS', () => {
-    it('should have labels for all filter modes', () => {
-      const modes: StoryFilterMode[] = ['default', 'topHalf'];
-      modes.forEach((mode) => {
-        expect(FILTER_MODE_LABELS[mode]).toBeDefined();
-        expect(typeof FILTER_MODE_LABELS[mode]).toBe('string');
-      });
-    });
-
     it('should have expected label values', () => {
       expect(FILTER_MODE_LABELS.default).toBe('Default');
       expect(FILTER_MODE_LABELS.topHalf).toBe('Top 50%');

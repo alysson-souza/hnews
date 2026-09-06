@@ -438,12 +438,8 @@ describe('resolveImageUrl', () => {
     );
   });
 
-  it('returns null for invalid relative URL', () => {
-    // Using a base that would produce an invalid URL is hard,
-    // but an empty string resolves to the base
-    const result = resolveImageUrl('', base);
-    // Empty string resolves to base URL
-    expect(result).toBe('https://example.com/page/article');
+  it('resolves an empty string to the base URL', () => {
+    expect(resolveImageUrl('', base)).toBe('https://example.com/page/article');
   });
 });
 

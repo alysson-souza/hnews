@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025-2026 Alysson Souza
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { StoryList } from './story-list';
 import { StoryListStore } from '@stores/story-list.store';
@@ -274,16 +275,24 @@ describe('StoryList', () => {
   });
 
   describe('loadMore', () => {
-    it('should call store.loadMore when hasMore is true', async () => {
-      store.init('top', 30);
+    it('loads more stories when the load-more button is clicked', async () => {
+      mockHNService.storyIds = [1, 2, 3, 4, 5, 6, 7, 8];
+      const localFixture = TestBed.createComponent(StoryList);
+      localFixture.componentRef.setInput('pageSize', 3);
+      localFixture.detectChanges();
       await Promise.resolve();
+      localFixture.detectChanges();
 
-      vi.spyOn(store, 'loadMore');
-      vi.spyOn(store, 'hasMore').mockReturnValue(true);
+      expect(store.stories().length).toBe(3);
+      const loadMoreBtn = localFixture.debugElement.query(By.css('.load-more-btn button'));
+      expect(loadMoreBtn).toBeTruthy();
 
-      component.loadMore();
+      loadMoreBtn.nativeElement.click();
+      await Promise.resolve();
+      await Promise.resolve();
+      localFixture.detectChanges();
 
-      expect(store.loadMore).toHaveBeenCalled();
+      expect(store.stories().length).toBeGreaterThan(3);
     });
 
     it('should not call store.loadMore when hasMore is false', () => {
@@ -293,30 +302,6 @@ describe('StoryList', () => {
       component.loadMore();
 
       expect(store.loadMore).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('hasMore', () => {
-    it('should return true when more stories are available', () => {
-      vi.spyOn(store, 'hasMore').mockReturnValue(true);
-
-      expect(component.hasMore()).toBe(true);
-    });
-
-    it('should return false when no more stories are available', () => {
-      vi.spyOn(store, 'hasMore').mockReturnValue(false);
-
-      expect(component.hasMore()).toBe(false);
-    });
-  });
-
-  describe('loadStories', () => {
-    it('should call store.loadStories with refresh flag', () => {
-      vi.spyOn(store, 'loadStories');
-
-      component.loadStories(true);
-
-      expect(store.loadStories).toHaveBeenCalledWith(true);
     });
   });
 
@@ -366,18 +351,6 @@ describe('StoryList', () => {
       fixture.detectChanges();
 
       expect(store.init).toHaveBeenCalledWith('top', 10);
-    });
-  });
-
-  describe('ngOnDestroy', () => {
-    it('should complete destroy$ subject', () => {
-      const destroySpy = vi.spyOn(component['destroy$'], 'next');
-      const completeSpy = vi.spyOn(component['destroy$'], 'complete');
-
-      component.ngOnDestroy();
-
-      expect(destroySpy).toHaveBeenCalled();
-      expect(completeSpy).toHaveBeenCalled();
     });
   });
 

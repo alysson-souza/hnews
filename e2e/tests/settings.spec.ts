@@ -5,68 +5,38 @@ test.describe('Settings Page', () => {
     await settingsPage.navigateToSettings();
   });
 
-  test.describe('Theme Settings', () => {
-    test('should display theme toggle', async ({ settingsPage }) => {
-      if (await settingsPage.themeToggle.isVisible()) {
-        await expect(settingsPage.themeToggle).toBeVisible();
-      }
+  test.describe('Appearance', () => {
+    test('switches to the dark theme', async ({ settingsPage }) => {
+      await settingsPage.selectTheme('Dark');
+
+      await expect(settingsPage.storedTheme()).resolves.toBe('dark');
+      expect(await settingsPage.htmlHasDarkClass()).toBe(true);
     });
 
-    test('should switch to dark theme', async ({ settingsPage }) => {
-      if (await settingsPage.darkThemeOption.isVisible()) {
-        await settingsPage.selectDarkTheme();
-        const theme = await settingsPage.getCurrentTheme();
-        expect(theme).toBe('dark');
-      }
+    test('switches to the light theme', async ({ settingsPage }) => {
+      await settingsPage.selectTheme('Light');
+
+      await expect(settingsPage.storedTheme()).resolves.toBe('light');
+      expect(await settingsPage.htmlHasDarkClass()).toBe(false);
     });
 
-    test('should switch to light theme', async ({ settingsPage }) => {
-      if (await settingsPage.lightThemeOption.isVisible()) {
-        await settingsPage.selectLightTheme();
-        const theme = await settingsPage.getCurrentTheme();
-        expect(theme).toBe('light');
-      }
+    test('switches to the auto theme', async ({ settingsPage }) => {
+      await settingsPage.selectTheme('Auto');
+
+      // Auto mode removes the stored override and follows the OS preference
+      await expect(settingsPage.storedTheme()).resolves.toBeNull();
+      await expect(settingsPage.selectedTheme()).resolves.toBe('Auto');
     });
 
-    test('should switch to system theme', async ({ settingsPage }) => {
-      if (await settingsPage.systemThemeOption.isVisible()) {
-        await settingsPage.selectSystemTheme();
-        await settingsPage.page.waitForTimeout(500);
-        const theme = await settingsPage.getCurrentTheme();
-        expect(['light', 'dark', 'system']).toContain(theme);
-      }
-    });
+    test('persists the theme selection across a reload', async ({ settingsPage }) => {
+      await settingsPage.selectTheme('Dark');
 
-    test('should persist theme selection', async ({ settingsPage, page }) => {
-      if (await settingsPage.darkThemeOption.isVisible()) {
-        await settingsPage.selectDarkTheme();
-        const themeBefore = await settingsPage.getCurrentTheme();
+      await settingsPage.page.reload();
+      await settingsPage.themeGroup.waitFor({ state: 'visible' });
 
-        await page.reload();
-        await page.waitForTimeout(1000);
-
-        const themeAfter = await settingsPage.getCurrentTheme();
-        expect(themeAfter).toBe(themeBefore);
-      }
-    });
-  });
-
-  test.describe('Display Settings', () => {
-    test('should change items per page', async ({ settingsPage }) => {
-      if (await settingsPage.itemsPerPageInput.isVisible()) {
-        await settingsPage.setItemsPerPage(50);
-        await expect(settingsPage.itemsPerPageInput).toHaveValue('50');
-      }
-    });
-
-    test('should toggle auto refresh', async ({ settingsPage }) => {
-      if (await settingsPage.autoRefreshToggle.isVisible()) {
-        const initialState = await settingsPage.autoRefreshToggle.isChecked();
-        await settingsPage.toggleAutoRefresh();
-        await settingsPage.page.waitForTimeout(500);
-        const newState = await settingsPage.autoRefreshToggle.isChecked();
-        expect(newState).not.toBe(initialState);
-      }
+      await expect(settingsPage.storedTheme()).resolves.toBe('dark');
+      await expect(settingsPage.selectedTheme()).resolves.toBe('Dark');
+      expect(await settingsPage.htmlHasDarkClass()).toBe(true);
     });
   });
 
@@ -96,54 +66,37 @@ test.describe('Settings Page', () => {
   });
 
   test.describe('Cache Management', () => {
-    test('should clear cache', async ({ settingsPage }) => {
-      if (await settingsPage.clearCacheButton.isVisible()) {
-        await settingsPage.clearCache();
-        await settingsPage.page.waitForTimeout(1000);
-        await expect(settingsPage.clearCacheButton).toBeVisible();
-      }
-    });
-  });
+    test('clears all cached data and reports success', async ({ settingsPage }) => {
+      settingsPage.page.once('dialog', (dialog) => dialog.accept());
+      await settingsPage.clearAllCacheButton.click();
 
-  test.describe('Save and Reset', () => {
-    test('should save settings', async ({ settingsPage }) => {
-      if (await settingsPage.saveButton.isVisible()) {
-        await settingsPage.saveSettings();
-
-        if (await settingsPage.successMessage.isVisible()) {
-          await expect(settingsPage.successMessage).toBeVisible();
-        }
-      }
+      await expect
+        .poll(() => settingsPage.cacheMessageText())
+        .toContain('All cache cleared successfully');
     });
 
-    test('should reset settings to defaults', async ({ settingsPage }) => {
-      if (await settingsPage.resetButton.isVisible()) {
-        if (await settingsPage.darkThemeOption.isVisible()) {
-          await settingsPage.selectDarkTheme();
-          expect(await settingsPage.getCurrentTheme()).toBe('dark');
-        }
+    test('shows the cached-items statistic after a refresh', async ({
+      settingsPage,
+      storiesPage,
+    }) => {
+      // Seed IndexedDB with cached data by loading the story list, then clear it so
+      // the refresh below starts from a known-zero baseline.
+      await storiesPage.navigateToTop();
+      await settingsPage.navigateToSettings();
+      settingsPage.page.once('dialog', (dialog) => dialog.accept());
+      await settingsPage.clearAllCacheButton.click();
+      await expect
+        .poll(() => settingsPage.cacheMessageText())
+        .toContain('All cache cleared successfully');
+      await settingsPage.refreshCacheStatsButton.click();
+      await expect.poll(() => settingsPage.getCachedItemsCount()).toBe(0);
 
-        await settingsPage.resetSettings();
-        await settingsPage.page.waitForTimeout(1000);
-        await expect(settingsPage.resetButton).toBeVisible();
-      }
-    });
-  });
+      // Re-populate the cache and confirm the refreshed statistic reflects it.
+      await storiesPage.navigateToTop();
+      await settingsPage.navigateToSettings();
+      await settingsPage.refreshCacheStatsButton.click();
 
-  test.describe('Persistence', () => {
-    test('should persist settings across page reloads', async ({ settingsPage, page }) => {
-      if (await settingsPage.itemsPerPageInput.isVisible()) {
-        await settingsPage.setItemsPerPage(25);
-
-        if (await settingsPage.saveButton.isVisible()) {
-          await settingsPage.saveSettings();
-        }
-
-        await page.reload();
-        await page.waitForTimeout(1000);
-
-        await expect(settingsPage.itemsPerPageInput).toHaveValue('25');
-      }
+      await expect.poll(() => settingsPage.getCachedItemsCount()).toBeGreaterThan(0);
     });
   });
 

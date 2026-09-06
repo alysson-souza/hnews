@@ -5,10 +5,10 @@ export class SearchPage extends BasePage {
   readonly searchInput: Locator;
   readonly searchButton: Locator;
   readonly searchResults: Locator;
-  readonly sortBySelect: Locator;
-  readonly dateRangeSelect: Locator;
+  readonly resultsHeader: Locator;
   readonly typeSelect: Locator;
-  readonly noResults: Locator;
+  readonly sortSelect: Locator;
+  readonly dateRangeSelect: Locator;
   readonly loadMoreButton: Locator;
 
   constructor(page: Page) {
@@ -18,72 +18,73 @@ export class SearchPage extends BasePage {
       'app-page-container button[type="submit"][aria-label="Submit Search"]',
     );
     this.searchResults = page.locator('article.activity-item');
-    this.sortBySelect = page.locator('select[name="sortBy"], [aria-label*="Sort"]');
-    this.dateRangeSelect = page.locator('select[name="dateRange"], [aria-label*="Date"]');
-    this.typeSelect = page.locator('select[name="type"], [aria-label*="Type"]');
-    this.noResults = page.locator(':text("No results for")');
-    this.loadMoreButton = page.locator('button:has-text("Load More")');
+    this.resultsHeader = page.locator('app-result-list').getByText(/results for|No results for/);
+    this.typeSelect = page.getByRole('combobox', { name: 'Filter by type' });
+    this.sortSelect = page.getByRole('combobox', { name: 'Sort by' });
+    this.dateRangeSelect = page.getByRole('combobox', { name: 'Date range' });
+    this.loadMoreButton = page.getByRole('button', { name: 'Load More' });
   }
 
   async navigateToSearch() {
     await this.navigate('/search');
-    await this.waitForNetworkIdle();
+    await this.searchInput.waitFor({ state: 'visible' });
   }
 
   async searchFor(query: string) {
     await this.searchInput.fill(query);
     await this.searchButton.click();
-    await this.waitForNetworkIdle();
+    await this.resultsHeader.waitFor({ timeout: 15_000 });
   }
 
-  async searchWithEnter(query: string) {
-    await this.searchInput.fill(query);
-    await this.searchInput.press('Enter');
-    await this.waitForNetworkIdle();
+  private waitForSearchResponse() {
+    return this.page.waitForResponse((response) =>
+      response.url().includes('hn.algolia.com/api/v1/search'),
+    );
   }
 
-  async getSearchResultCount(): Promise<number> {
-    try {
-      await this.searchResults.first().waitFor({ timeout: 5000 });
-      return await this.searchResults.count();
-    } catch {
-      return 0;
-    }
+  async selectSort(value: 'relevance' | 'date' | 'points' | 'comments') {
+    const responsePromise = this.waitForSearchResponse();
+    await this.sortSelect.selectOption(value);
+    await responsePromise;
   }
 
-  async hasNoResults(): Promise<boolean> {
-    return await this.noResults.isVisible();
-  }
-
-  async clickSearchResult(index: number) {
-    const resultLink = this.searchResults.nth(index).locator('a').first();
-    await resultLink.click();
-  }
-
-  async getSearchResultTitle(index: number): Promise<string> {
-    const title = this.searchResults.nth(index).locator('.title, h3');
-    return (await title.textContent()) ?? '';
-  }
-
-  async changeSortBy(value: string) {
-    await this.sortBySelect.selectOption(value);
-    await this.waitForNetworkIdle();
-  }
-
-  async changeDateRange(value: string) {
+  async selectDateRange(value: 'all' | '24h' | 'week' | 'month' | 'year') {
+    const responsePromise = this.waitForSearchResponse();
     await this.dateRangeSelect.selectOption(value);
-    await this.waitForNetworkIdle();
+    await responsePromise;
   }
 
-  async changeType(value: string) {
-    await this.typeSelect.selectOption(value);
-    await this.waitForNetworkIdle();
+  async clickLoadMore() {
+    const responsePromise = this.waitForSearchResponse();
+    await this.loadMoreButton.click();
+    await responsePromise;
   }
 
-  async loadMoreResults() {
-    if (await this.loadMoreButton.isVisible()) {
-      await this.loadMoreButton.click();
-      await this.waitForNetworkIdle();
+  resultPills(): Locator {
+    return this.searchResults.locator('.type-pill');
+  }
+
+  /** Parses the numeric result count out of the "Found N results for ..." header. */
+  async getResultsCount(): Promise<number | null> {
+    const text = await this.resultsHeader.textContent({ timeout: 5_000 }).catch(() => null);
+    if (!text) return null;
+    const match = text.match(/Found\s+([\d,]+)\s+results/i);
+    return match ? Number(match[1].replace(/,/g, '')) : null;
+  }
+
+  /** Returns each visible result's HN item id, in display order, by reading its `/item/:id` link. */
+  async getResultItemIds(): Promise<number[]> {
+    const count = await this.searchResults.count();
+    const ids: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const href = await this.searchResults
+        .nth(i)
+        .locator('a[href^="/item/"]')
+        .first()
+        .getAttribute('href');
+      const match = href?.match(/\/item\/(\d+)/);
+      if (match) ids.push(Number(match[1]));
     }
+    return ids;
   }
 }
