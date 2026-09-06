@@ -76,7 +76,9 @@ test.describe('Visited Stories and Filtering', () => {
       const itemRoute = '**/v0/item/*.json';
       await page.route(itemRoute, async (route) => {
         await expandedPoolGate;
-        await route.continue();
+        // fallback() (not continue()) so the request still flows through the
+        // context-level HN fixture routes instead of reaching the network.
+        await route.fallback();
       });
 
       try {

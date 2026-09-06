@@ -77,7 +77,10 @@ test.describe('Stories Page', () => {
           return;
         }
 
-        await route.continue();
+        // Page-level handlers run before context-level ones, and continue()
+        // would send the request straight to the network, bypassing the
+        // context-level HN fixture routes. fallback() defers to them.
+        await route.fallback();
       });
 
       await page.goto('/top');

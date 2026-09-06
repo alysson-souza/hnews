@@ -122,8 +122,10 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
     await navigateToStoryWithComments(storiesPage, page);
 
     const treeitems = page.locator('[role="treeitem"]');
+    // Comments render progressively: the first treeitem can appear while only
+    // one is rendered, so wait for the second before the two-comment invariant.
     await treeitems
-      .first()
+      .nth(1)
       .waitFor({ timeout: 15000 })
       .catch(() => {});
 
@@ -152,21 +154,11 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
 
     await navigateToStoryWithComments(storiesPage, page);
 
-    const treeitems = page.locator('[role="treeitem"]');
-    await treeitems
-      .first()
-      .waitFor({ timeout: 15000 })
-      .catch(() => {});
+    // Comments render progressively: the first treeitem can appear while the
+    // leaf comments this test needs are still pending, so poll for a leaf.
+    await expect.poll(() => findLeafCommentId(page), { timeout: 15000 }).not.toBeNull();
 
-    const commentCount = await treeitems.count();
-    if (commentCount === 0) {
-      throw new Error('Fixture story guarantees comments are loaded');
-    }
-
-    const leafCommentId = await findLeafCommentId(page);
-    if (!leafCommentId) {
-      throw new Error('Fixture story guarantees a leaf comment for the collapse test');
-    }
+    const leafCommentId = (await findLeafCommentId(page))!;
 
     await selectCommentById(page, leafCommentId);
 

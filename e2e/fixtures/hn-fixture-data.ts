@@ -389,7 +389,8 @@ function buildSearchPool(dataset: HNDataset): AlgoliaHitRaw[] {
     }
   });
 
-  const hits: AlgoliaHitRaw[] = [];
+  const storyHits: AlgoliaHitRaw[] = [];
+  const commentHits: AlgoliaHitRaw[] = [];
 
   storyEvents.forEach((event) => {
     const id = storyIdByIndex.get(event.storyIndex)!;
@@ -405,7 +406,7 @@ function buildSearchPool(dataset: HNDataset): AlgoliaHitRaw[] {
       time: event.time,
     });
 
-    hits.push({
+    storyHits.push({
       objectID: String(id),
       title: event.title,
       url,
@@ -434,7 +435,7 @@ function buildSearchPool(dataset: HNDataset): AlgoliaHitRaw[] {
       text: event.text,
     });
 
-    hits.push({
+    commentHits.push({
       objectID: String(id),
       comment_text: event.text,
       author,
@@ -447,6 +448,22 @@ function buildSearchPool(dataset: HNDataset): AlgoliaHitRaw[] {
       _tags: ['comment', `author_search_commenter_${event.commentIndex}`],
     });
   });
+
+  // Interleave the comment hits among the stories so the relevance order is
+  // deliberately NOT chronological: a pool ordered purely newest-first would
+  // satisfy a descending-id assertion even when the component requests the
+  // date endpoint but ignores its response (search.spec.ts 'sorting by date
+  // reorders results by recency').
+  const hits: AlgoliaHitRaw[] = [];
+  let commentCursor = 0;
+  storyHits.forEach((storyHit, index) => {
+    hits.push(storyHit);
+    if (index % 4 === 3 && commentCursor < commentHits.length) {
+      hits.push(commentHits[commentCursor]);
+      commentCursor += 1;
+    }
+  });
+  hits.push(...commentHits.slice(commentCursor));
 
   return hits;
 }
