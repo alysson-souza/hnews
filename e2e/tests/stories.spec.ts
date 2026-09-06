@@ -28,66 +28,44 @@ test.describe('Stories Page', () => {
   });
 
   test.describe('Story List', () => {
-    test('should display story items', async ({ storiesPage }) => {
+    test('displays story titles', async ({ storiesPage }) => {
       await storiesPage.navigateToTop();
-      const count = await storiesPage.getStoryCount();
-      expect(count).toBeGreaterThan(0);
+      await expect(storiesPage.storyItems.first().locator('.story-title')).toHaveText(/\S/);
     });
 
-    test('should display story titles', async ({ storiesPage }) => {
-      await storiesPage.navigateToTop();
-      const title = await storiesPage.getStoryTitle(0);
-      expect(title).toBeTruthy();
-      expect(title.length).toBeGreaterThan(0);
-    });
-
-    test('should navigate to story details when clicked', async ({ storiesPage }) => {
-      await storiesPage.navigateToTop();
-      const storyLink = storiesPage.storyItems.first().locator('a[href*="/item/"]');
-      const href = await storyLink.getAttribute('href');
-      expect(href).toMatch(/\/item\/\d+/);
-    });
-
-    test('should load more stories when Load More is clicked', async ({ storiesPage }) => {
+    test('loads more stories when Load More is clicked', async ({ storiesPage }) => {
       await storiesPage.navigateToTop();
       const initialCount = await storiesPage.getStoryCount();
 
-      if (await storiesPage.loadMoreButton.isVisible()) {
-        await storiesPage.loadMoreStories();
-        await storiesPage.page.waitForTimeout(2000);
-        const newCount = await storiesPage.getStoryCount();
-        expect(newCount).toBeGreaterThanOrEqual(initialCount);
-      }
-    });
-  });
+      await expect(storiesPage.loadMoreButton).toBeVisible();
+      await storiesPage.loadMoreStories();
 
-  test.describe('Refresh', () => {
-    test('should refresh stories', async ({ storiesPage }) => {
-      await storiesPage.navigateToTop();
-      await storiesPage.page.waitForTimeout(1000);
-
-      if (await storiesPage.refreshButton.isVisible()) {
-        await storiesPage.refreshStories();
-        const count = await storiesPage.getStoryCount();
-        expect(count).toBeGreaterThan(0);
-      }
+      await expect
+        .poll(() => storiesPage.getStoryCount(), { timeout: 15_000 })
+        .toBeGreaterThan(initialCount);
     });
   });
 
   test.describe('Responsive Design', () => {
-    test('should display properly on mobile', async ({ storiesPage, page }) => {
-      await page.setViewportSize({ width: 375, height: 667 });
-      await storiesPage.navigateToTop();
-      const count = await storiesPage.getStoryCount();
-      expect(count).toBeGreaterThan(0);
-    });
+    for (const viewport of [
+      { name: 'mobile', width: 375, height: 667 },
+      { name: 'tablet', width: 768, height: 1024 },
+    ]) {
+      test(`renders without horizontal overflow at ${viewport.width}px`, async ({
+        storiesPage,
+        page,
+      }) => {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        await storiesPage.navigateToTop();
 
-    test('should display properly on tablet', async ({ storiesPage, page }) => {
-      await page.setViewportSize({ width: 768, height: 1024 });
-      await storiesPage.navigateToTop();
-      const count = await storiesPage.getStoryCount();
-      expect(count).toBeGreaterThan(0);
-    });
+        await expect(storiesPage.storyItems.first()).toBeVisible();
+
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(1);
+      });
+    }
 
     test('should keep the footer source icon constrained before stylesheets load', async ({
       page,
@@ -99,7 +77,10 @@ test.describe('Stories Page', () => {
           return;
         }
 
-        await route.continue();
+        // Page-level handlers run before context-level ones, and continue()
+        // would send the request straight to the network, bypassing the
+        // context-level HN fixture routes. fallback() defers to them.
+        await route.fallback();
       });
 
       await page.goto('/top');

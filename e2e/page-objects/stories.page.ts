@@ -5,16 +5,12 @@ export class StoriesPage extends BasePage {
   readonly storyItems: Locator;
   readonly loadMoreButton: Locator;
   readonly refreshButton: Locator;
-  readonly newStoriesBadge: Locator;
-  readonly navigationLinks: Locator;
 
   constructor(page: Page) {
     super(page);
     this.storyItems = page.locator('app-story-item').filter({ has: page.locator('.story-title') });
     this.loadMoreButton = page.locator('button:has-text("Load More")');
     this.refreshButton = page.locator('button[aria-label*="Refresh"]:visible');
-    this.newStoriesBadge = page.locator('.new-stories-indicator');
-    this.navigationLinks = page.locator('nav a');
   }
 
   async navigateToTop() {
@@ -70,20 +66,6 @@ export class StoriesPage extends BasePage {
   async refreshStories() {
     await this.refreshButton.click();
     await this.waitForNetworkIdle();
-  }
-
-  async hasNewStoriesBadge(): Promise<boolean> {
-    return await this.newStoriesBadge.isVisible();
-  }
-
-  async clickNavigationLink(text: string) {
-    await this.navigationLinks.filter({ hasText: text }).click();
-    await this.waitForNetworkIdle();
-  }
-
-  async upvoteStory(index: number) {
-    const upvoteButton = this.storyItems.nth(index).locator('app-upvote-button');
-    await upvoteButton.click();
   }
 
   async shiftClickCommentsLink(index: number): Promise<Page> {

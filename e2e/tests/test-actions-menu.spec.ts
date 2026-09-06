@@ -8,8 +8,29 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
 
   async function findFirstCommentsLinkWithComments(page: Page): Promise<Locator> {
     const commentLinks = page.locator('app-story-item .story-comments');
-    const linkCount = await commentLinks.count();
 
+    // The fixture story list always has a story with comments, but the story
+    // cards (and their comment counts) can still be mid-render right after a
+    // navigation/reload, so poll rather than reading the DOM once.
+    await expect
+      .poll(
+        async () => {
+          const linkCount = await commentLinks.count();
+          for (let index = 0; index < linkCount; index++) {
+            const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+            const countMatch = text.match(/\d+/);
+            const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+            if (commentCount > 0) {
+              return true;
+            }
+          }
+          return false;
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+
+    const linkCount = await commentLinks.count();
     for (let index = 0; index < linkCount; index++) {
       const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
       const countMatch = text.match(/\d+/);
@@ -19,8 +40,7 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
       }
     }
 
-    test.skip(true, 'No story with comments available');
-    throw new Error('No story with comments available');
+    throw new Error('Fixture data guarantees a story with comments in the top feed');
   }
 
   async function expectMenuInViewport(page: Page, menu: Locator): Promise<void> {
@@ -36,10 +56,18 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
   }
 
-  test('should open menu and focus first item when clicking the button', async ({ page }) => {
+  async function openActionsMenu(
+    page: Page,
+    opener: 'click' | 'Enter' | 'Space',
+  ): Promise<Locator> {
     const actionsBtn = page.locator('button.story-actions-btn').first();
-    await actionsBtn.click();
-    await page.waitForTimeout(300);
+
+    if (opener === 'click') {
+      await actionsBtn.click();
+    } else {
+      await actionsBtn.focus();
+      await page.keyboard.press(opener);
+    }
 
     const menu = page.locator('[data-testid="story-actions-menu"]').first();
     await expect(menu).toBeVisible();
@@ -48,69 +76,37 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     // First menu item should have focus
     const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'));
     expect(focusedRole).toBe('menuitem');
-  });
 
-  test('should open menu and focus first item when pressing Enter on button', async ({ page }) => {
-    const actionsBtn = page.locator('button.story-actions-btn').first();
-    await actionsBtn.focus();
+    return menu;
+  }
 
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(300);
+  for (const opener of ['click', 'Enter', 'Space'] as const) {
+    test(`opens the menu and focuses the first item via ${opener}`, async ({ page }) => {
+      await openActionsMenu(page, opener);
+    });
+  }
 
-    const menu = page.locator('[data-testid="story-actions-menu"]').first();
-    await expect(menu).toBeVisible();
-    await expectMenuInViewport(page, menu);
+  test('navigates menu items with ArrowDown and ArrowUp after opening', async ({ page }) => {
+    await openActionsMenu(page, 'click');
 
-    const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'));
-    expect(focusedRole).toBe('menuitem');
-  });
-
-  test('should open menu and focus first item when pressing Space on button', async ({ page }) => {
-    const actionsBtn = page.locator('button.story-actions-btn').first();
-    await actionsBtn.focus();
-
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-
-    const menu = page.locator('[data-testid="story-actions-menu"]').first();
-    await expect(menu).toBeVisible();
-    await expectMenuInViewport(page, menu);
-
-    const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'));
-    expect(focusedRole).toBe('menuitem');
-  });
-
-  test('should navigate menu items with ArrowDown and ArrowUp after opening', async ({ page }) => {
-    const actionsBtn = page.locator('button.story-actions-btn').first();
-    await actionsBtn.click();
-    await page.waitForTimeout(300);
-
-    // First item should be focused
-    const firstItemText = await page.evaluate(() => document.activeElement?.textContent?.trim());
+    const focusedText = () => page.evaluate(() => document.activeElement?.textContent?.trim());
+    const firstItemText = await focusedText();
 
     // ArrowDown to second item
     await page.keyboard.press('ArrowDown');
-    await page.waitForTimeout(100);
-    const secondItemText = await page.evaluate(() => document.activeElement?.textContent?.trim());
-    expect(secondItemText).not.toBe(firstItemText);
+    await expect.poll(focusedText).not.toBe(firstItemText);
+    const secondItemText = await focusedText();
 
     // ArrowUp back to first item
     await page.keyboard.press('ArrowUp');
-    await page.waitForTimeout(100);
-    const backToFirst = await page.evaluate(() => document.activeElement?.textContent?.trim());
-    expect(backToFirst).toBe(firstItemText);
+    await expect.poll(focusedText).toBe(firstItemText);
+    expect(secondItemText).not.toBe(firstItemText);
   });
 
-  test('should close menu with Escape and return focus to the story item', async ({ page }) => {
-    const actionsBtn = page.locator('button.story-actions-btn').first();
-    await actionsBtn.click();
-    await page.waitForTimeout(300);
-
-    const menu = page.locator('[data-testid="story-actions-menu"]').first();
-    await expect(menu).toBeVisible();
+  test('closes the menu with Escape and returns focus to the story item', async ({ page }) => {
+    const menu = await openActionsMenu(page, 'click');
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(200);
 
     await expect(menu).not.toBeVisible();
 
@@ -118,9 +114,7 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     await expect(storyCard).toBeFocused();
   });
 
-  test('should place the story actions button in the mobile vote header', async ({
-    page,
-  }, testInfo) => {
+  test('places the story actions button in the mobile vote header', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes('mobile'), 'Mobile-only story card layout');
 
     const firstStory = page.locator('app-story-item').first();
@@ -129,17 +123,13 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     await expect(firstStory.locator('.story-header button.story-actions-btn')).toHaveCount(0);
 
     await actionsBtn.click();
-    await page.waitForTimeout(300);
 
     const menu = page.locator('[data-testid="story-actions-menu"]').first();
     await expect(menu).toBeVisible();
     await expectMenuInViewport(page, menu);
   });
 
-  test('should open menu from the sidebar story summary', async ({
-    page,
-    sidebarPage,
-  }, testInfo) => {
+  test('opens the menu from the sidebar story summary', async ({ page, sidebarPage }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only sidebar opening path');
 
     await page.evaluate(() => {
@@ -149,13 +139,12 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
       );
     });
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.locator('app-story-item').first().waitFor({ timeout: 15_000 });
 
     const commentsLink = await findFirstCommentsLinkWithComments(page);
     await commentsLink.click();
-    await page.waitForTimeout(500);
 
-    await expect(sidebarPage.storySummary).toBeVisible();
+    await expect(sidebarPage.storySummary).toBeVisible({ timeout: 10_000 });
     const actionsBtn = sidebarPage.storySummary.locator('button.story-actions-btn');
     await actionsBtn.click();
 
@@ -166,12 +155,14 @@ test.describe('Story Actions Menu - Keyboard Interaction', () => {
     expect(focusedRole).toBe('menuitem');
   });
 
-  test('should open menu from the item page story summary', async ({ page }) => {
+  test('opens the menu from the item page story summary', async ({ page }) => {
     const commentsLink = await findFirstCommentsLinkWithComments(page);
     const href = await commentsLink.getAttribute('href');
-    test.skip(!href, 'No comments page link available');
+    if (!href) {
+      throw new Error('Fixture story guarantees a comments link with an href');
+    }
 
-    await page.goto(href!);
+    await page.goto(href);
     await page.waitForLoadState('networkidle');
 
     const summary = page.locator('app-sidebar-story-summary').first();

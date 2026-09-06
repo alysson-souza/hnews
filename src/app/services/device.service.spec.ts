@@ -76,25 +76,75 @@ describe('DeviceService', () => {
 
   describe('Platform Detection', () => {
     it('should detect macOS/iOS devices', () => {
-      service = TestBed.inject(DeviceService);
+      const originalUserAgent = window.navigator.userAgent;
+      let macService: DeviceService | undefined;
+      let windowsService: DeviceService | undefined;
+      try {
+        Object.defineProperty(window.navigator, 'userAgent', {
+          value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
+          configurable: true,
+        });
+        macService = new DeviceService();
+        expect(macService.isMacOS()).toBe(true);
+        expect(macService.getModifierKey()).toBe('Cmd');
 
-      // Service is already created with the current userAgent
-      // Just test with the current environment
-      const isMac = /Mac|iPhone|iPad|iPod/.test(window.navigator.userAgent);
-      expect(service.isMacOS()).toBe(isMac);
-      expect(service.getModifierKey()).toBe(isMac ? 'Cmd' : 'Ctrl');
+        Object.defineProperty(window.navigator, 'userAgent', {
+          value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          configurable: true,
+        });
+        windowsService = new DeviceService();
+        expect(windowsService.isMacOS()).toBe(false);
+        expect(windowsService.getModifierKey()).toBe('Ctrl');
+      } finally {
+        Object.defineProperty(window.navigator, 'userAgent', {
+          value: originalUserAgent,
+          configurable: true,
+        });
+        macService?.ngOnDestroy();
+        windowsService?.ngOnDestroy();
+      }
     });
   });
 
   describe('Keyboard Hints', () => {
     it('should show keyboard hints only on desktop', () => {
-      service = TestBed.inject(DeviceService);
+      const originalWidth = window.innerWidth;
+      const originalVisualViewport = window.visualViewport;
+      let desktopService: DeviceService | undefined;
+      let mobileService: DeviceService | undefined;
+      try {
+        Object.defineProperty(window, 'innerWidth', { value: 1280, configurable: true });
+        Object.defineProperty(window, 'visualViewport', {
+          value: {
+            width: 1280,
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          } as unknown as VisualViewport,
+          configurable: true,
+        });
+        desktopService = new DeviceService();
+        expect(desktopService.shouldShowKeyboardHints()).toBe(true);
 
-      const shouldShow = service.shouldShowKeyboardHints();
-      const isDesktop = service.isDesktop();
-
-      // Keyboard hints visibility should match desktop status
-      expect(shouldShow).toBe(isDesktop);
+        Object.defineProperty(window, 'innerWidth', { value: 375, configurable: true });
+        Object.defineProperty(window, 'visualViewport', {
+          value: {
+            width: 375,
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          } as unknown as VisualViewport,
+          configurable: true,
+        });
+        mobileService = new DeviceService();
+        expect(mobileService.shouldShowKeyboardHints()).toBe(false);
+      } finally {
+        Object.defineProperty(window, 'innerWidth', { value: originalWidth, configurable: true });
+        Object.defineProperty(window, 'visualViewport', {
+          value: originalVisualViewport,
+          configurable: true,
+        });
+        desktopService?.ngOnDestroy();
+        mobileService?.ngOnDestroy();
+      }
     });
   });
 

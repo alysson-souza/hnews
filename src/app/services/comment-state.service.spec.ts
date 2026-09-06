@@ -64,17 +64,17 @@ describe('CommentStateService', () => {
       expect(state!.loadedPages).toBe(2);
     });
 
-    it('should update lastAccessed timestamp', async () => {
-      service.setState(12345, { collapsed: true });
-      const firstTimestamp = service.getState(12345)!.lastAccessed;
-
-      // Wait a small amount to ensure timestamp changes
-      setTimeout(() => {
+    it('should update lastAccessed timestamp', () => {
+      const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1000);
+      try {
+        service.setState(12345, { collapsed: true });
+        nowSpy.mockReturnValue(2000);
         service.setState(12345, { repliesExpanded: true });
-        const secondTimestamp = service.getState(12345)!.lastAccessed;
 
-        expect(secondTimestamp).toBeGreaterThanOrEqual(firstTimestamp);
-      }, 10);
+        expect(service.getState(12345)!.lastAccessed).toBe(2000);
+      } finally {
+        nowSpy.mockRestore();
+      }
     });
 
     it('should persist to localStorage', () => {

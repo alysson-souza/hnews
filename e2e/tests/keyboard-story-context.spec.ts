@@ -101,45 +101,42 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     await page.keyboard.press('l');
     await page.waitForURL(/\/best/);
-    await expect(page).toHaveURL(/\/best/);
   });
 
   test('should navigate to previous tab with h key', async ({ storiesPage, page }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToBest();
-    await page.waitForTimeout(500);
 
     await page.keyboard.press('h');
     await page.waitForURL(/\/top/);
-    await expect(page).toHaveURL(/\/top/);
   });
 
   test('should open comments page with Shift+C', async ({ storiesPage, page }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     await setSelectedStoryIndex(page, 0);
 
     await page.keyboard.press('Shift+C');
     await page.waitForURL(/\/item\/\d+/);
-    await expect(page).toHaveURL(/\/item\/\d+/);
   });
 
   test('should refresh stories with r key', async ({ storiesPage, page }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
+    // r must trigger an actual force-refresh request to the HN API
+    const refreshRequest = page.waitForRequest((request) => request.url().includes('topstories'), {
+      timeout: 10_000,
+    });
     await page.keyboard.press('r');
-    await page.waitForTimeout(1000);
+    await refreshRequest;
 
     const count = await storiesPage.getStoryCount();
     expect(count).toBeGreaterThan(0);
@@ -174,7 +171,6 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     const initialCount = await selectLastStory(storiesPage, page);
 
@@ -193,10 +189,8 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     await page.keyboard.press('/');
-    await page.waitForTimeout(300);
 
     // The / key focuses the search input (doesn't navigate)
     const searchInput = page.locator('input[type="search"], input[placeholder*="Search" i]');
@@ -207,7 +201,6 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     await setSelectedStoryIndex(page, 0);
 
@@ -217,7 +210,6 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
 
     // Press Escape to clear selection
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
 
     // Verify selection is cleared
     await expect(selectedStory).toHaveCount(0);
@@ -227,24 +219,19 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     // Theme cycles: auto → light → dark → auto
-    // Check that localStorage value changes after pressing t
-    const initialTheme = await page.evaluate(() => window.localStorage.getItem('hnews-theme'));
+    const storedTheme = () => page.evaluate(() => window.localStorage.getItem('hnews-theme'));
+    const initialTheme = await storedTheme();
 
     await page.keyboard.press('t');
-    await page.waitForTimeout(500);
-
-    const newTheme = await page.evaluate(() => window.localStorage.getItem('hnews-theme'));
-    expect(newTheme).not.toBe(initialTheme);
+    await expect.poll(storedTheme, { timeout: 5_000 }).not.toBe(initialTheme);
   });
 
   test('should open story with Shift+O in new tab', async ({ storiesPage, page }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     const initialUrl = page.url();
     await selectStoryWithNestedLink(storiesPage, page);
@@ -261,7 +248,6 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     const initialUrl = page.url();
     await selectStoryWithNestedLink(storiesPage, page);
@@ -289,19 +275,16 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
 
     const { index } = await selectStoryWithNestedLink(storiesPage, page);
     const storyCard = storiesPage.storyItems.nth(index).locator('article.story-card');
 
     await page.keyboard.press('a');
-    await page.waitForTimeout(300);
 
     const actionsMenu = page.locator('[data-testid="story-actions-menu"]').first();
     await expect(actionsMenu).toBeVisible();
 
     await page.keyboard.press('a');
-    await page.waitForTimeout(300);
 
     await expect(actionsMenu).not.toBeVisible();
     await expect(storyCard).toBeFocused();
@@ -314,14 +297,11 @@ test.describe('Keyboard Shortcuts - Story List Context', () => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToJobs();
-    await page.waitForTimeout(500);
 
     await page.keyboard.press('l');
     await page.waitForURL(/\/saved/);
-    await expect(page).toHaveURL(/\/saved/);
 
     await page.keyboard.press('l');
     await page.waitForURL(/\/settings/);
-    await expect(page).toHaveURL(/\/settings/);
   });
 });

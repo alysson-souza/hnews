@@ -33,14 +33,4 @@ describe('RepliesCounterComponent', () => {
     expect(mockEvent.stopPropagation).toHaveBeenCalled();
     expect(component.expand.emit).toHaveBeenCalled();
   });
-
-  it('should emit expand event when button is clicked', async () => {
-    fixture.componentRef.setInput('count', 5);
-    component.expand.subscribe(() => {
-      expect(true).toBe(true);
-    });
-
-    const mockEvent = new MouseEvent('click');
-    component.onExpandClick(mockEvent);
-  });
 });

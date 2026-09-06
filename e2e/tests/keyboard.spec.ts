@@ -2,109 +2,117 @@ import { test, expect } from '../fixtures/pages.fixture';
 
 test.describe('Keyboard Shortcuts', () => {
   test.describe('Navigation Shortcuts', () => {
-    test('should navigate using keyboard shortcuts', async ({ storiesPage, page }) => {
+    test('opens the shortcuts dialog with ? and closes it with Escape', async ({
+      storiesPage,
+      page,
+    }) => {
       await storiesPage.navigateToTop();
-      await page.waitForTimeout(1000);
+      await expect(storiesPage.storyItems.first()).toBeVisible();
 
       await page.keyboard.press('?');
-      await page.waitForTimeout(500);
 
-      const helpDialog = page.locator('[role="dialog"], .help-dialog, .shortcuts-dialog');
-      if (await helpDialog.isVisible()) {
-        await expect(helpDialog).toBeVisible();
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(500);
-      } else {
-        expect(true).toBe(true);
-      }
+      const helpDialog = page.locator('[role="dialog"]');
+      await expect(helpDialog).toBeVisible();
+
+      await page.keyboard.press('Escape');
+      await expect(helpDialog).not.toBeVisible();
     });
 
-    test('should use j/k for navigation', async ({ storiesPage, page }) => {
+    test('selects stories with j and moves back with k', async ({ storiesPage, page }) => {
       await storiesPage.navigateToTop();
-      await page.waitForTimeout(1000);
+      await expect(storiesPage.storyItems.first()).toBeVisible();
+
+      const selectedStory = page.locator('.story-card-selected');
+      const selectedHref = () =>
+        selectedStory.locator('a[href*="/item/"]').first().getAttribute('href');
 
       await page.keyboard.press('j');
-      await page.waitForTimeout(200);
+      await expect(selectedStory).toHaveCount(1);
+      const firstHref = await selectedHref();
+      expect(firstHref).toMatch(/\/item\/\d+/);
 
+      // j moves the selection to the next story
+      await page.keyboard.press('j');
+      await expect.poll(async () => selectedHref(), { timeout: 5_000 }).not.toBe(firstHref);
+      const secondHref = await selectedHref();
+      expect(secondHref).not.toBe(firstHref);
+
+      // k moves the selection back to the previous story
       await page.keyboard.press('k');
-      await page.waitForTimeout(200);
-
-      const count = await storiesPage.getStoryCount();
-      expect(count).toBeGreaterThan(0);
+      await expect.poll(async () => selectedHref(), { timeout: 5_000 }).toBe(firstHref);
     });
 
-    test('should open item with Enter key', async ({ storiesPage, page }) => {
+    test('opens comments for the selected story with c', async ({
+      storiesPage,
+      sidebarPage,
+      page,
+    }) => {
       await storiesPage.navigateToTop();
-      await page.waitForTimeout(2000);
+      await expect(storiesPage.storyItems.first()).toBeVisible();
 
-      const storyLink = storiesPage.storyItems.first().locator('a[href*="/item/"]');
-      const href = await storyLink.getAttribute('href');
-      expect(href).toMatch(/\/item\/\d+/);
+      await page.keyboard.press('j');
+      await expect(page.locator('.story-card-selected')).toHaveCount(1);
+
+      await page.keyboard.press('c');
+      await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
+
+      await page.keyboard.press('Escape');
+      await expect.poll(() => sidebarPage.isOpen()).toBe(false);
     });
 
-    test('should toggle and navigate actions menu via keyboard', async ({ storiesPage, page }) => {
+    test('toggles and navigates the actions menu via keyboard', async ({ storiesPage, page }) => {
       await storiesPage.navigateToTop();
-      await page.waitForTimeout(1000);
+      await expect(storiesPage.storyItems.first()).toBeVisible();
 
-      // Toggle actions menu (auto-select first story if none selected)
+      // Toggle actions menu (auto-selects the first story if none selected)
       await page.keyboard.press('a');
-      await page.waitForTimeout(300);
 
       const actionsMenu = page.locator('[data-testid="story-actions-menu"]').first();
       await expect(actionsMenu).toBeVisible();
 
-      // Navigate down (j)
+      // Opening the menu focuses its first item asynchronously (a setTimeout(0)
+      // after the menu renders). j/k are handled by a (keydown) listener on the
+      // menu element itself, so they only take effect once focus has actually
+      // landed inside it — wait for that before sending them, otherwise the key
+      // can arrive while focus is still on the toggle button and be swallowed
+      // (or misrouted to the global j/k story-navigation shortcut instead).
+      await expect
+        .poll(() => page.evaluate(() => document.activeElement?.getAttribute('role')))
+        .toBe('menuitem');
+
+      // j/k move focus between menu entries
       await page.keyboard.press('j');
-      await page.waitForTimeout(150);
-      const activeElementText1 = await page.evaluate(() =>
-        document.activeElement?.textContent?.trim(),
-      );
-      expect(activeElementText1 && activeElementText1.length).toBeGreaterThan(0);
+      let focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'));
+      expect(focusedRole).toBe('menuitem');
 
-      // Navigate up (k)
       await page.keyboard.press('k');
-      await page.waitForTimeout(150);
-      const activeElementText2 = await page.evaluate(() =>
-        document.activeElement?.textContent?.trim(),
-      );
-      expect(activeElementText2 && activeElementText2.length).toBeGreaterThan(0);
+      focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'));
+      expect(focusedRole).toBe('menuitem');
 
-      // Close with Escape
+      // Close with Escape, re-open with a, close again with a
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(200);
       await expect(actionsMenu).not.toBeVisible();
 
-      // Re-open with 'a' and close again with 'a'
       await page.keyboard.press('a');
-      await page.waitForTimeout(300);
       await expect(actionsMenu).toBeVisible();
+
       await page.keyboard.press('a');
-      await page.waitForTimeout(200);
       await expect(actionsMenu).not.toBeVisible();
     });
   });
 
   test.describe('Theme Toggle', () => {
-    test('should toggle theme via button', async ({ page }) => {
+    test('toggles the theme from the header button', async ({ page }) => {
       await page.goto('/');
-      await page.waitForTimeout(1000);
+      const themeButton = page.locator('.theme-toggle');
+      await expect(themeButton).toBeVisible();
 
-      const html = page.locator('html');
-      const themeButton = page
-        .locator('button[aria-label*="theme" i], button:has-text("Theme")')
-        .first();
+      const storedTheme = () => page.evaluate(() => localStorage.getItem('hnews-theme'));
+      const initial = await storedTheme();
 
-      if (await themeButton.isVisible()) {
-        const initialClass = await html.getAttribute('class');
+      await themeButton.click();
 
-        await themeButton.click();
-        await page.waitForTimeout(500);
-
-        const newClass = await html.getAttribute('class');
-        expect(newClass).not.toBe(initialClass);
-      } else {
-        expect(true).toBe(true);
-      }
+      await expect.poll(storedTheme).not.toBe(initial);
     });
   });
 });

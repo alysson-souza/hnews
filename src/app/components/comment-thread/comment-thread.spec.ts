@@ -263,9 +263,11 @@ describe('CommentThread', () => {
     it('should not load comment when lazy loading', () => {
       fixture.componentRef.setInput('lazyLoad', true);
       fixture.componentRef.setInput('initialComment', undefined);
+      mockHnService.getItem.mockClear();
 
       component.ngOnInit();
 
+      expect(mockHnService.getItem).not.toHaveBeenCalled();
       expect(component.loading()).toBe(false);
     });
   });

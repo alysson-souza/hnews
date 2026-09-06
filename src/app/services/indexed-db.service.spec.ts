@@ -372,34 +372,40 @@ describe('IndexedDBService', () => {
   });
 
   describe('Storage info', () => {
-    it('should get storage size', async () => {
-      const size = await service.getStorageSize();
-      expect(typeof size).toBe('number');
-      expect(size).toBeGreaterThanOrEqual(0);
+    it('should get storage size from the storage estimate API', async () => {
+      const originalStorage = navigator.storage;
+      try {
+        Object.defineProperty(navigator, 'storage', {
+          value: { estimate: vi.fn().mockResolvedValue({ usage: 2048 }) },
+          configurable: true,
+        });
+
+        const size = await service.getStorageSize();
+        expect(size).toBe(2048);
+      } finally {
+        Object.defineProperty(navigator, 'storage', {
+          value: originalStorage,
+          configurable: true,
+        });
+      }
     });
   });
 
   describe('Store counting', () => {
     it('should count items in a store', async () => {
+      await service.clear('apiCache');
       await service.set('apiCache', 'item1', { data: 1 });
       await service.set('apiCache', 'item2', { data: 2 });
       await service.set('apiCache', 'item3', { data: 3 });
 
       const count = await service.count('apiCache');
-      expect(count).toBeGreaterThanOrEqual(0);
+      expect(count).toBe(3);
     });
 
     it('should return 0 for empty store', async () => {
       await service.clear('apiCache');
       const count = await service.count('apiCache');
       expect(count).toBe(0);
-    });
-
-    it('should use ensureDB instead of initDB', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const ensureDBSpy = vi.spyOn(service as any, 'ensureDB');
-      await service.count('apiCache');
-      expect(ensureDBSpy).toHaveBeenCalled();
     });
   });
 
@@ -487,28 +493,6 @@ describe('IndexedDBService', () => {
       // Try to get from a non-existent key
       const result = await service.get('apiCache', 'nonexistent');
       expect(result).toBeNull();
-    });
-
-    it('should handle set errors gracefully', async () => {
-      // This should not throw even if there's an error
-      let error: Error | undefined;
-      try {
-        await service.set('apiCache', 'test', { data: 'value' });
-      } catch (e) {
-        error = e as Error;
-      }
-      expect(error).toBeUndefined();
-    });
-
-    it('should handle delete errors gracefully', async () => {
-      // Deleting non-existent key should not throw
-      let error: Error | undefined;
-      try {
-        await service.delete('apiCache', 'nonexistent');
-      } catch (e) {
-        error = e as Error;
-      }
-      expect(error).toBeUndefined();
     });
   });
 });

@@ -406,12 +406,6 @@ describe('StoryThumbnailComponent', () => {
       component.ogDescription.set('OG Description');
       expect(component.ogTooltip()).toBe('OG Title\nOG Description');
     });
-
-    it('prefers OG data over story title fallback', () => {
-      component.ogTitle.set('OG Title');
-      expect(component.ogTooltip()).toBe('OG Title');
-      // Not 'Story Title'
-    });
   });
 
   // -----------------------------------------------------------------------

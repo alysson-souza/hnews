@@ -10,7 +10,7 @@ On mobile, the page behind the sidebar stops scrolling while the sidebar is open
 
 ## J / K — Move Between Comments
 
-`J` moves to the previous comment. `K` moves to the next comment. Both skip collapsed threads.
+`J` moves to the next comment. `K` moves to the previous comment. Both skip collapsed threads.
 
 The selected comment is highlighted and scrolled into view, positioned just below the sticky comments toolbar with enough clearance to visually separate them. These keys do nothing if there are no comments or if no comment is loaded.
 

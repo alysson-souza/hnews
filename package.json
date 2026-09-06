@@ -50,7 +50,8 @@
     "format:check": "oxfmt --check",
     "prepare": "husky",
     "generate:version": "node ./scripts/generate-version.mjs",
-    "generate:userscript": "node --experimental-strip-types ./scripts/generate-userscript.ts"
+    "generate:userscript": "node --experimental-strip-types ./scripts/generate-userscript.ts",
+    "e2e:live": "playwright test --config e2e/playwright.live.config.ts"
   },
   "private": true,
   "engines": {

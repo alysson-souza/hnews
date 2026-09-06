@@ -371,10 +371,9 @@ describe('StoryListStore', () => {
       store.setFilterMode('topHalf');
       await Promise.resolve();
 
-      // After topHalf filter, should show ceil(stories/2) stories
-      // Note: The filter is applied to the loaded pool
-      const filtered = store.stories();
-      expect(filtered.length).toBeLessThanOrEqual(store.visibleStories().length);
+      // topHalf loads the full fetched pool (ids 1-10), then keeps the
+      // top half by score: 5 stories, highest score first
+      expect(store.stories().map((story) => story.id)).toEqual([10, 9, 8, 7, 6]);
     });
 
     it('resets filter mode correctly', async () => {

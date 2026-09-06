@@ -381,14 +381,27 @@ describe('CacheManagerService', () => {
   });
 
   describe('Storage management', () => {
-    it('gets storage info', async () => {
-      const info = await service.getStorageInfo();
-      expect(info.used).toBeDefined();
-      expect(info.quota).toBeDefined();
-      expect(info.percentage).toBeDefined();
-      expect(typeof info.used).toBe('number');
-      expect(typeof info.quota).toBe('number');
-      expect(typeof info.percentage).toBe('number');
+    it('gets storage info from the storage estimate API', async () => {
+      const originalStorage = window.navigator.storage;
+      try {
+        Object.defineProperty(window.navigator, 'storage', {
+          value: {
+            estimate: vi.fn().mockResolvedValue({ usage: 1024, quota: 4096 }),
+          },
+          configurable: true,
+        });
+
+        const info = await service.getStorageInfo();
+
+        expect(info.used).toBe(1024);
+        expect(info.quota).toBe(4096);
+        expect(info.percentage).toBe(25);
+      } finally {
+        Object.defineProperty(window.navigator, 'storage', {
+          value: originalStorage,
+          configurable: true,
+        });
+      }
     });
 
     it('gets cache size by type', async () => {
@@ -399,6 +412,8 @@ describe('CacheManagerService', () => {
       expect(sizes.has('memory')).toBe(true);
       expect(sizes.has('indexeddb')).toBe(true);
       expect(sizes.has('localstorage')).toBe(true);
+      // The two seeded entries must be reflected in the memory estimate
+      expect(sizes.get('memory')).toBeGreaterThan(0);
     });
 
     it('gets cache statistics', async () => {
@@ -406,14 +421,8 @@ describe('CacheManagerService', () => {
       await service.set('storyList', 'top', [1, 2, 3]);
 
       const stats = await service.getStats();
-      expect(stats.indexedDB).toBeDefined();
-      expect(stats.swCache).toBeDefined();
-      expect(stats.itemCount).toBeDefined();
-      expect(stats.memoryItems).toBeDefined();
-      expect(typeof stats.indexedDB).toBe('number');
-      expect(typeof stats.swCache).toBe('number');
-      expect(typeof stats.itemCount).toBe('number');
-      expect(typeof stats.memoryItems).toBe('number');
+      expect(stats.memoryItems).toBe(2);
+      expect(stats.itemCount).toBeGreaterThan(0);
     });
   });
 
@@ -435,26 +444,39 @@ describe('CacheManagerService', () => {
   });
 
   describe('clearInflightFetches', () => {
-    it('allows a new fetch for the same key after clearing', async () => {
+    it('lets a new SWR background refresh start after clearing', async () => {
       let callCount = 0;
-      const fetcher = async () => {
+      let releaseFirstRefresh: () => void = () => {};
+      const firstRefreshGate = new Promise<void>((resolve) => {
+        releaseFirstRefresh = resolve;
+      });
+      const fetcher = vi.fn(async () => {
         callCount++;
+        if (callCount === 1) {
+          // Hold the first SWR background refresh open so it stays in-flight
+          await firstRefreshGate;
+        }
         return [1, 2, 3];
-      };
+      });
 
-      // First fetch populates cache
-      await service.getWithSWR<number[]>('storyList', 'inflight-test', fetcher);
-      expect(callCount).toBe(1);
+      // Prime the cache, then take the SWR path: returns the cached value
+      // immediately while the background refresh (fetcher call #1) is pending
+      await service.set('storyList', 'inflight-test', [0]);
+      expect(await service.getWithSWR<number[]>('storyList', 'inflight-test', fetcher)).toEqual([
+        0,
+      ]);
 
-      // Second fetch would normally deduplicate the background SWR refresh
-      // if one was already in-flight. Clear in-flight to force a new one.
+      // Without clearing, a concurrent SWR call would deduplicate onto the
+      // in-flight refresh. Clearing must allow a fresh one to start.
       service.clearInflightFetches();
+      expect(await service.getWithSWR<number[]>('storyList', 'inflight-test', fetcher)).toEqual([
+        0,
+      ]);
 
-      // Third fetch: now the SWR background refresh should fire again
-      await service.getWithSWR<number[]>('storyList', 'inflight-test', fetcher);
+      releaseFirstRefresh();
+      await Promise.resolve();
 
-      // The fetcher should have been called again for the background refresh
-      expect(callCount).toBeGreaterThanOrEqual(2);
+      expect(fetcher).toHaveBeenCalledTimes(2);
     });
 
     it('clears inflight fetches on resume', () => {
@@ -500,14 +522,6 @@ describe('CacheManagerService', () => {
       const result = await service.get<typeof data>(customType, key);
 
       expect(result).toEqual(data);
-    });
-
-    it('handles setting null data in SWR', async () => {
-      const key = 'nullTest';
-      const fetcher = () => Promise.resolve(null);
-
-      const result = await service.getWithSWR('storyList', key, fetcher);
-      expect(result).toBeNull();
     });
 
     it('handles clearAll operation', async () => {

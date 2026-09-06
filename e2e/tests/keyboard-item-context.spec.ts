@@ -22,8 +22,7 @@ async function navigateToStoryWithComments(
     }
   }
 
-  test.skip(true, 'No story with comments available in current feed');
-  throw new Error('No story with comments available in current feed');
+  throw new Error('Fixture data guarantees a story with comments in the top feed');
 }
 
 async function focusDocument(page: import('@playwright/test').Page): Promise<void> {
@@ -44,13 +43,19 @@ async function selectCommentById(
   await focusDocument(page);
 
   const treeitemCount = await page.locator('[role="treeitem"]').count();
+  let previousId: string | null = null;
   for (let index = 0; index < treeitemCount; index++) {
     await page.keyboard.press('j');
-    await expect.poll(() => getSelectedCommentId(page)).toBeTruthy();
+    // Wait for the selection to actually advance (not just be truthy) so a
+    // key press processed faster than change detection can't be mistaken
+    // for a no-op and silently skip the target comment.
+    await expect.poll(() => getSelectedCommentId(page)).not.toBe(previousId);
 
-    if ((await getSelectedCommentId(page)) === targetCommentId) {
+    const selectedId = await getSelectedCommentId(page);
+    if (selectedId === targetCommentId) {
       return targetCommentId;
     }
+    previousId = selectedId;
   }
 
   throw new Error(`Failed to select comment ${targetCommentId}`);
@@ -95,10 +100,14 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
       .catch(() => {});
 
     const commentCount = await treeitems.count();
-    test.skip(commentCount === 0, 'No comments available');
+    if (commentCount === 0) {
+      throw new Error('Fixture story guarantees comments are loaded');
+    }
 
+    // j selects the first comment (docs/comment-navigation.md: J moves to the next comment)
+    const firstCommentId = await treeitems.first().getAttribute('data-comment-id');
     await page.keyboard.press('j');
-    await page.waitForTimeout(300);
+    await expect.poll(() => getSelectedCommentId(page), { timeout: 5_000 }).toBe(firstCommentId);
 
     const selectedComment = page.locator('[role="treeitem"][aria-selected="true"]');
     await expect(selectedComment).toHaveCount(1);
@@ -113,33 +122,30 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
     await navigateToStoryWithComments(storiesPage, page);
 
     const treeitems = page.locator('[role="treeitem"]');
+    // Comments render progressively: the first treeitem can appear while only
+    // one is rendered, so wait for the second before the two-comment invariant.
     await treeitems
-      .first()
+      .nth(1)
       .waitFor({ timeout: 15000 })
       .catch(() => {});
 
     const commentCount = await treeitems.count();
-    test.skip(commentCount < 2, 'Not enough comments for k navigation');
+    if (commentCount < 2) {
+      throw new Error('Fixture story guarantees at least two comments for k navigation');
+    }
 
-    // Press j twice to select second comment
+    const firstCommentId = await treeitems.first().getAttribute('data-comment-id');
+
+    // Press j twice to select the second comment
     await page.keyboard.press('j');
-    await page.waitForTimeout(200);
+    await expect.poll(() => getSelectedCommentId(page)).toBe(firstCommentId);
+
     await page.keyboard.press('j');
-    await page.waitForTimeout(200);
+    await expect.poll(() => getSelectedCommentId(page)).not.toBe(firstCommentId);
 
-    const secondSelectedId = await page
-      .locator('[role="treeitem"][aria-selected="true"]')
-      .getAttribute('data-comment-id');
-
-    // Press k to go back to first comment
+    // k must return the selection to the first comment
     await page.keyboard.press('k');
-    await page.waitForTimeout(200);
-
-    const firstSelectedId = await page
-      .locator('[role="treeitem"][aria-selected="true"]')
-      .getAttribute('data-comment-id');
-
-    expect(firstSelectedId).not.toBe(secondSelectedId);
+    await expect.poll(() => getSelectedCommentId(page)).toBe(firstCommentId);
     await expect(page.locator('[role="treeitem"][aria-selected="true"]')).toHaveCount(1);
   });
 
@@ -148,17 +154,11 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
 
     await navigateToStoryWithComments(storiesPage, page);
 
-    const treeitems = page.locator('[role="treeitem"]');
-    await treeitems
-      .first()
-      .waitFor({ timeout: 15000 })
-      .catch(() => {});
+    // Comments render progressively: the first treeitem can appear while the
+    // leaf comments this test needs are still pending, so poll for a leaf.
+    await expect.poll(() => findLeafCommentId(page), { timeout: 15000 }).not.toBeNull();
 
-    const commentCount = await treeitems.count();
-    test.skip(commentCount === 0, 'No comments available');
-
-    const leafCommentId = await findLeafCommentId(page);
-    test.skip(!leafCommentId, 'No leaf comment available for collapse test');
+    const leafCommentId = (await findLeafCommentId(page))!;
 
     await selectCommentById(page, leafCommentId);
 
@@ -168,14 +168,12 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
 
     // Collapse with c
     await page.keyboard.press('c');
-    await page.waitForTimeout(300);
 
     await expect(selectedComment).toHaveAttribute('aria-expanded', 'false');
     await expect(selectedComment.locator(':scope > .comment-card .collapsed-text')).toBeVisible();
 
     // Expand with c again
     await page.keyboard.press('c');
-    await page.waitForTimeout(300);
 
     await expect(selectedComment).toHaveAttribute('aria-expanded', 'true');
     await expect(commentText).toBeVisible();
@@ -193,15 +191,15 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
       .catch(() => {});
 
     const hasThreads = await page.locator('button[title="View this thread"]').count();
-    test.skip(hasThreads === 0, 'No threaded comments available');
+    if (hasThreads === 0) {
+      throw new Error('Fixture story guarantees at least one threaded (non-leaf) comment');
+    }
 
     const originalUrl = page.url();
 
     await selectCommentWithThread(page);
     await page.keyboard.press('l');
-    await page.waitForTimeout(500);
-
-    await expect(page).toHaveURL(/\/item\/\d+/);
+    await page.waitForURL(/\/item\/\d+/, { timeout: 10_000 });
     expect(page.url()).not.toBe(originalUrl);
   });
 
@@ -217,27 +215,27 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
       .catch(() => {});
 
     const hasThreads = await page.locator('button[title="View this thread"]').count();
-    test.skip(hasThreads === 0, 'No threaded comments available');
+    if (hasThreads === 0) {
+      throw new Error('Fixture story guarantees at least one threaded (non-leaf) comment');
+    }
 
     await selectCommentWithThread(page);
     await page.keyboard.press('l');
-    await page.waitForTimeout(500);
+    await page.waitForURL(/\/item\/\d+/, { timeout: 10_000 });
 
     const threadUrl = page.url();
-    await expect(page).toHaveURL(/\/item\/\d+/);
 
     await page.keyboard.press('h');
-    await page.waitForTimeout(500);
-
+    await expect
+      .poll(() => page.evaluate(() => location.pathname), { timeout: 10_000 })
+      .toBe(itemHref);
     expect(page.url()).not.toBe(threadUrl);
-    await expect(page).toHaveURL(new RegExp(itemHref.replace(/\//g, '\\/')));
   });
 
   test('should go back with Escape', async ({ storiesPage, page }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop-only feature');
 
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(500);
     await focusDocument(page);
 
     await page.keyboard.press('j');
@@ -246,12 +244,8 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
     await page.keyboard.press('Shift+C');
     await page.waitForURL(/\/item\/\d+/, { timeout: 10000 });
 
-    await expect(page).toHaveURL(/\/item\/\d+/);
-
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
-
-    await expect(page).toHaveURL(/\/top/);
+    await expect(page).toHaveURL(/\/top/, { timeout: 10_000 });
   });
 
   test('should verify comments use treeitem role', async ({ storiesPage, page }, testInfo) => {
@@ -267,7 +261,9 @@ test.describe('Keyboard Shortcuts - Item/Comments Page', () => {
       .catch(() => {});
 
     const count = await treeitems.count();
-    test.skip(count === 0, 'No comments loaded for this item');
+    if (count === 0) {
+      throw new Error('Fixture story guarantees comments are loaded');
+    }
 
     // Verify treeitem attributes
     const firstTreeitem = treeitems.first();

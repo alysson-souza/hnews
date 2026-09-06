@@ -53,17 +53,6 @@ describe('CommentRepliesLoaderService', () => {
     expect(service.remainingCount()).toBe(0);
   });
 
-  it('should configure kids and reset pagination state', () => {
-    service.configureKids([1, 2, 3]);
-
-    expect(service.replies()).toEqual([]);
-    expect(service.repliesLoaded()).toBe(false);
-    expect(service.loadingReplies()).toBe(false);
-    expect(service.loadingMore()).toBe(false);
-    expect(service.hasMore()).toBe(false);
-    expect(service.remainingCount()).toBe(0);
-  });
-
   it('should mark when there are more replies than a page', () => {
     const kids = Array.from({ length: 12 }, (_, index) => index + 1);
     service.configureKids(kids);

@@ -128,35 +128,30 @@ describe('KeyboardShortcutConfigService', () => {
       expect(sidebarJ?.commandId).toBe('sidebar.nextComment');
     });
 
-    it('should prioritize global shortcuts over context shortcuts', () => {
-      // '?' is a global shortcut
-      const shortcut = service.getShortcut('?', 'default');
-
-      expect(shortcut).toBeDefined();
-      expect(shortcut?.contexts).toContain('global');
+    it('should return undefined for non-existent shortcuts', () => {
+      const shortcut = service.getShortcut('x', 'default');
+      expect(shortcut).toBeUndefined();
     });
 
-    it('should respect conditional shortcuts', () => {
-      // When update not available
+    it('should not return conditional shortcuts when condition is false', () => {
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
         value: vi.fn().mockReturnValue(false),
       });
 
-      let updateShortcut = service.getShortcut('R', 'global');
-      expect(updateShortcut).toBeUndefined();
+      const shortcut = service.getShortcut('R', 'default');
 
-      // When update available
+      expect(shortcut).toBeUndefined();
+    });
+
+    it('should return conditional shortcuts when condition is true', () => {
       Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
         value: vi.fn().mockReturnValue(true),
       });
 
-      updateShortcut = service.getShortcut('R', 'global');
-      expect(updateShortcut).toBeDefined();
-    });
+      const shortcut = service.getShortcut('R', 'default');
 
-    it('should return undefined for non-existent shortcuts', () => {
-      const shortcut = service.getShortcut('x', 'default');
-      expect(shortcut).toBeUndefined();
+      expect(shortcut).toBeDefined();
+      expect(shortcut?.commandId).toBe('global.applyUpdate');
     });
   });
 
@@ -167,16 +162,6 @@ describe('KeyboardShortcutConfigService', () => {
       expect(grouped.has('Navigation')).toBe(true);
       expect(grouped.has('Story Actions')).toBe(true);
       expect(grouped.has('General')).toBe(true);
-    });
-
-    it('should include global shortcuts in all contexts', () => {
-      const defaultGrouped = service.getShortcutsByCategory('default');
-      const sidebarGrouped = service.getShortcutsByCategory('sidebar');
-
-      const hasGeneralCategory = (map: Map<string, unknown>) => map.has('General');
-
-      expect(hasGeneralCategory(defaultGrouped)).toBe(true);
-      expect(hasGeneralCategory(sidebarGrouped)).toBe(true);
     });
 
     it('should have different categories for different contexts', () => {
@@ -217,18 +202,6 @@ describe('KeyboardShortcutConfigService', () => {
       expect(keys).toContain('j');
       expect(keys).toContain('k');
     });
-
-    it('should not include conditional shortcuts when condition is false', () => {
-      Object.defineProperty(mockPwaUpdateService, 'updateAvailable', {
-        value: vi.fn().mockReturnValue(false),
-      });
-
-      const grouped = service.getShortcutsByCategory('global');
-      const general = grouped.get('General');
-
-      const hasUpdateShortcut = general?.some((s) => s.key === 'R');
-      expect(hasUpdateShortcut).toBeFalsy();
-    });
   });
 
   describe('getCategories', () => {
@@ -240,49 +213,12 @@ describe('KeyboardShortcutConfigService', () => {
       expect(categories).toContain('General');
     });
 
-    it('should return different categories for different contexts', () => {
-      const defaultCategories = service.getCategories('default');
-      const sidebarCategories = service.getCategories('sidebar');
-      const itemPageCategories = service.getCategories('item-page');
-
-      expect(defaultCategories).toContain('Story Actions');
-      expect(sidebarCategories).toContain('Story Actions');
-      expect(itemPageCategories).toContain('Story Actions');
-
-      expect(sidebarCategories).toContain('Comment Actions');
-      expect(defaultCategories).not.toContain('Comment Actions');
-    });
-
     it('should include General category in all contexts', () => {
       const defaultCategories = service.getCategories('default');
       const sidebarCategories = service.getCategories('sidebar');
 
       expect(defaultCategories).toContain('General');
       expect(sidebarCategories).toContain('General');
-    });
-  });
-
-  describe('shortcut properties', () => {
-    it('should have all required properties for each shortcut', () => {
-      const shortcuts = service.getShortcutsForContext('default');
-
-      shortcuts.forEach((shortcut) => {
-        expect(shortcut.key).toBeDefined();
-        expect(shortcut.contexts).toBeDefined();
-        expect(shortcut.contexts.length).toBeGreaterThan(0);
-        expect(shortcut.description).toBeDefined();
-        expect(shortcut.category).toBeDefined();
-        expect(shortcut.commandId).toBeDefined();
-      });
-    });
-
-    it('should have valid command IDs', () => {
-      const shortcuts = service.getShortcutsForContext('default');
-
-      shortcuts.forEach((shortcut) => {
-        expect(typeof shortcut.commandId).toBe('string');
-        expect(shortcut.commandId.length).toBeGreaterThan(0);
-      });
     });
   });
 });

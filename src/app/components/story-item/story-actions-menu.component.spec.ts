@@ -39,12 +39,6 @@ describe('StoryActionsMenuComponent', () => {
   });
 
   describe('actions button focus accessibility', () => {
-    it('should be a native button element', () => {
-      const btn = fixture.debugElement.query(By.css('button.story-actions-btn'));
-      expect(btn).toBeTruthy();
-      expect(btn.nativeElement.tagName).toBe('BUTTON');
-    });
-
     it('should have explicit tabindex=0 for macOS/WebKit Tab focus', () => {
       const btn = fixture.debugElement.query(By.css('button.story-actions-btn'));
       expect(btn.nativeElement.getAttribute('tabindex')).toBe('0');

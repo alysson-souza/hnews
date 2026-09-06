@@ -6,7 +6,7 @@ import { SwUpdate, VersionEvent } from '@angular/service-worker';
 import { Subject } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { App } from './app';
 import { PwaUpdateService } from '@services/pwa-update.service';
@@ -675,30 +675,36 @@ describe('App', () => {
   describe('Version Info', () => {
     let fixture: ComponentFixture<App>;
     let app: App;
+    let httpMock: HttpTestingController;
 
     beforeEach(() => {
       fixture = TestBed.createComponent(App);
       app = fixture.componentInstance;
       fixture.detectChanges();
+      httpMock = TestBed.inject(HttpTestingController);
     });
 
-    it('should generate commit URL when commit SHA is not unknown', () => {
-      app.commitSha = 'abc123def456';
-      app.commitUrl =
-        app.commitSha !== 'unknown'
-          ? `https://github.com/alysson-souza/hnews/commit/${app.commitSha}`
-          : null;
-      const expectedUrl = 'https://github.com/alysson-souza/hnews/commit/abc123def456';
+    it('generates the commit URL from fetched build info', async () => {
+      httpMock.expectOne('version.json').flush({
+        version: '1.2.3',
+        buildTime: '2026-09-05T00:00:00Z',
+        commitSha: 'abc123def456',
+        commitShaShort: 'abc123d',
+      });
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-      expect(app.commitUrl).toBe(expectedUrl);
+      expect(app.commitSha).toBe('abc123def456');
+      expect(app.commitUrl).toBe('https://github.com/alysson-souza/hnews/commit/abc123def456');
     });
 
-    it('should not generate commit URL when commit SHA is unknown', () => {
-      app.commitSha = 'unknown';
-      app.commitUrl =
-        app.commitSha !== 'unknown'
-          ? `https://github.com/alysson-souza/hnews/commit/${app.commitSha}`
-          : null;
+    it('clears the commit URL when the build has no commit SHA', async () => {
+      httpMock.expectOne('version.json').flush({
+        version: '1.2.3',
+        buildTime: '2026-09-05T00:00:00Z',
+        commitSha: '',
+        commitShaShort: '',
+      });
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
       expect(app.commitUrl).toBeNull();
     });

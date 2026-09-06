@@ -91,18 +91,7 @@ describe('KeyboardShortcutsComponent', () => {
     });
   });
 
-  describe('currentContext', () => {
-    it('should expose currentContext from KeyboardContextService', () => {
-      expect(component.currentContext).toBeDefined();
-      expect(typeof component.currentContext).toBe('function');
-    });
-  });
-
   describe('shortcutsByCategory', () => {
-    it('should be a computed signal', () => {
-      expect(typeof component.shortcutsByCategory).toBe('function');
-    });
-
     it('should get shortcuts from config service', () => {
       const shortcuts = component.shortcutsByCategory();
       expect(mockShortcutConfig.getShortcutsByCategory).toHaveBeenCalled();
@@ -111,10 +100,6 @@ describe('KeyboardShortcutsComponent', () => {
   });
 
   describe('categories', () => {
-    it('should be a computed signal', () => {
-      expect(typeof component.categories).toBe('function');
-    });
-
     it('should get categories from config service', () => {
       const categories = component.categories();
       expect(mockShortcutConfig.getCategories).toHaveBeenCalled();
@@ -124,10 +109,6 @@ describe('KeyboardShortcutsComponent', () => {
   });
 
   describe('contextLabel', () => {
-    it('should be a computed signal', () => {
-      expect(typeof component.contextLabel).toBe('function');
-    });
-
     it('should return null for default context', () => {
       mockKeyboardContext.currentContext.mockReturnValue('default');
       // Re-evaluate computed signal

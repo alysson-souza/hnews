@@ -38,12 +38,6 @@ describe('UserscriptComponent', () => {
     expect(content).toContain(`// @version      ${TEST_VERSION}`);
   });
 
-  it('should compute base URL from window location', () => {
-    const baseUrl = component.baseUrl();
-    expect(baseUrl).toBeTruthy();
-    expect(typeof baseUrl).toBe('string');
-  });
-
   it('should create a Blob download when install() is called', () => {
     const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
     const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});

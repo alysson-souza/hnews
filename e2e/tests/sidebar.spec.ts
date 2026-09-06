@@ -2,6 +2,88 @@ import { type Page } from '@playwright/test';
 import { test, expect } from '../fixtures/pages.fixture';
 import { SidebarPage } from '../page-objects/sidebar.page';
 import { StoriesPage } from '../page-objects/stories.page';
+import { MANY_TOP_LEVEL_COMMENTS_STORY_TITLE } from '../fixtures/hn-fixture-data';
+
+/**
+ * Waits for a repeatedly-sampled count to stop changing, then returns it.
+ * The nested comment tree mounts progressively (each level renders once its
+ * own data resolves), so a single read taken right after some readiness
+ * signal can still be a mid-load value — this waits for two consecutive
+ * samples, a poll interval apart, to agree before treating it as settled.
+ */
+async function waitForStableCount(
+  getCount: () => Promise<number>,
+  timeoutMs = 10_000,
+  intervalMs = 200,
+): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  let previous = await getCount();
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    const current = await getCount();
+    if (current === previous) {
+      return current;
+    }
+    previous = current;
+  }
+  return previous;
+}
+
+/** Finds the index of the first story whose comments link has at least minComments comments. */
+async function findStoryWithComments(
+  storiesPage: StoriesPage,
+  minComments: number,
+): Promise<number> {
+  const commentLinks = storiesPage.storyItems.locator('.story-comments');
+  const linkCount = await commentLinks.count();
+  for (let index = 0; index < linkCount; index++) {
+    const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
+    const countMatch = text.match(/\d+/);
+    const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
+    if (commentCount >= minComments) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/** Opens the sidebar from the story list for the first story with enough comments. */
+async function openSidebarForStory(
+  storiesPage: StoriesPage,
+  sidebarPage: SidebarPage,
+  minComments = 1,
+): Promise<void> {
+  await storiesPage.navigateToTop();
+
+  const targetLinkIndex = await findStoryWithComments(storiesPage, minComments);
+  if (targetLinkIndex < 0) {
+    throw new Error(
+      `Fixture data guarantees a story with at least ${minComments} comments in the top feed`,
+    );
+  }
+
+  await storiesPage.storyItems.locator('.story-comments').nth(targetLinkIndex).click();
+  await expect.poll(() => sidebarPage.isOpen(), { timeout: 10_000 }).toBe(true);
+  await expect(sidebarPage.commentsPanel).toBeVisible();
+}
+
+/**
+ * Opens the sidebar for the dedicated fixture story with more top-level
+ * comments than the sidebar's page size, rather than the generic first
+ * story matching a comment-count threshold (which would resolve to the
+ * main fixture thread and never trigger top-level pagination).
+ */
+async function openSidebarForManyTopLevelCommentsStory(
+  storiesPage: StoriesPage,
+  sidebarPage: SidebarPage,
+): Promise<void> {
+  await storiesPage.navigateToTop();
+
+  const storyItem = storiesPage.storyItems.filter({ hasText: MANY_TOP_LEVEL_COMMENTS_STORY_TITLE });
+  await storyItem.locator('.story-comments').click();
+  await expect.poll(() => sidebarPage.isOpen(), { timeout: 10_000 }).toBe(true);
+  await expect(sidebarPage.commentsPanel).toBeVisible();
+}
 
 test.describe('Sidebar Comments Panel', () => {
   test.beforeEach(async ({ page }, testInfo) => {
@@ -15,35 +97,8 @@ test.describe('Sidebar Comments Panel', () => {
     });
   });
 
-  test('should open sidebar when clicking comments link', async ({
-    storiesPage,
-    sidebarPage,
-    page,
-  }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
-
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
-
-    expect(await sidebarPage.isOpen()).toBe(true);
-    await expect(sidebarPage.commentsPanel).toBeVisible();
+  test('should open sidebar when clicking comments link', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage);
 
     const horizontalSpacing = await sidebarPage.commentsPanel.evaluate((panel) => {
       const body = panel.querySelector('.comments-body');
@@ -113,25 +168,14 @@ test.describe('Sidebar Comments Panel', () => {
     });
     expect(documentIsScrollable).toBe(true);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 20) {
-        targetLinkIndex = index;
-        break;
-      }
+    const targetLinkIndex = await findStoryWithComments(storiesPage, 21);
+    if (targetLinkIndex < 0) {
+      throw new Error('Fixture data guarantees a story with more than 21 comments in the top feed');
     }
-
-    test.skip(targetLinkIndex < 0, 'No story with enough comments for scrollbar regression');
 
     await page.setViewportSize({ width: 1024, height: 720 });
     await page.waitForTimeout(300);
-    await commentLinks.nth(targetLinkIndex).click();
+    await storiesPage.storyItems.locator('.story-comments').nth(targetLinkIndex).click();
     await expect(sidebarPage.commentThreads.first()).toBeVisible();
 
     await page.setViewportSize({ width: 870, height: 720 });
@@ -140,10 +184,11 @@ test.describe('Sidebar Comments Panel', () => {
     const sidebarIsScrollable = await sidebarPage.commentsPanel.evaluate(
       (commentsPanel) => commentsPanel.scrollHeight > commentsPanel.clientHeight,
     );
-    test.skip(
-      !sidebarIsScrollable,
-      'Sidebar comments panel is not scrollable enough for scrollbar regression',
-    );
+    if (!sidebarIsScrollable) {
+      throw new Error(
+        'Fixture story has enough rendered comments to make the sidebar comments panel scrollable',
+      );
+    }
 
     const panelRight = await sidebarPage.panel.evaluate(
       (panel) => panel.getBoundingClientRect().right,
@@ -180,9 +225,8 @@ test.describe('Sidebar Comments Panel', () => {
     );
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
+    await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
 
-    expect(await sidebarPage.isClosed()).toBe(true);
     expect(await page.locator('body').evaluate((body) => getComputedStyle(body).overflow)).not.toBe(
       'hidden',
     );
@@ -198,29 +242,8 @@ test.describe('Sidebar Comments Panel', () => {
     sidebarPage,
     page,
   }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
+    await openSidebarForStory(storiesPage, sidebarPage);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
-
-    expect(await sidebarPage.isOpen()).toBe(true);
     const titleOffset = await page.locator('app-sidebar-comments-header').evaluate((element) => {
       const panel = document.querySelector('.sidebar-panel') as HTMLElement;
       const title = element.querySelector('.title') as HTMLElement;
@@ -239,69 +262,21 @@ test.describe('Sidebar Comments Panel', () => {
     page,
   }) => {
     await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
     await selectFirstStoryForKeyboardShortcut(page);
 
     await pressDocumentKey(page, 'c');
-    await page.waitForTimeout(500);
-
-    expect(await sidebarPage.isOpen()).toBe(true);
+    await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
   });
 
   test('should close sidebar with Escape key', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
-
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
-    expect(await sidebarPage.isOpen()).toBe(true);
+    await openSidebarForStory(storiesPage, sidebarPage);
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
-
-    expect(await sidebarPage.isClosed()).toBe(true);
+    await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
   });
 
   test('should close sidebar by clicking overlay', async ({ storiesPage, sidebarPage, page }) => {
-    // Open sidebar at desktop viewport first
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
-
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
-    expect(await sidebarPage.isOpen()).toBe(true);
+    await openSidebarForStory(storiesPage, sidebarPage);
 
     // Resize to tablet viewport to reveal the overlay (lg:hidden = hidden above 1024px)
     await page.setViewportSize({ width: 768, height: 1024 });
@@ -316,265 +291,139 @@ test.describe('Sidebar Comments Panel', () => {
       Math.max(20, Math.floor(panelBox!.x / 2)),
       Math.floor(overlayBox!.y + overlayBox!.height / 2),
     );
-    await page.waitForTimeout(500);
 
-    expect(await sidebarPage.isClosed()).toBe(true);
+    await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
   });
 
-  test('should display story summary in sidebar', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
-
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
+  test('should display story summary in sidebar', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage);
 
     await expect(sidebarPage.storySummary).toBeVisible();
   });
 
-  test('should display comments in sidebar', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
+  test('should display comments in sidebar', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(1200);
-
-    const threadCount = await sidebarPage.commentThreads.count();
-    expect(threadCount).toBeGreaterThan(0);
+    await expect(sidebarPage.commentThreads.first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('should display sort dropdown', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
-
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
+  test('should display sort dropdown', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage);
 
     await expect(sidebarPage.sortDropdown).toBeVisible();
     await expect(sidebarPage.sortDropdown).toHaveValue('default');
   });
 
-  test('should change sort order', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1000);
+  test('should reorder comments when changing sort order', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
+    await expect(sidebarPage.sortDropdown).toBeVisible();
+    await expect(sidebarPage.sortDropdown).toHaveValue('default');
 
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 0) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
+    const sidebarPermalinks = () =>
+      sidebarPage.commentsPanel
+        .locator('a[title^="Permalink for comment"]')
+        .evaluateAll((els) => els.map((el) => (el as HTMLAnchorElement).getAttribute('href')));
 
-    test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(500);
+    // Wait for comments to render before asserting on their order
+    await sidebarPage.commentsPanel
+      .locator('a[title^="Permalink for comment"]')
+      .first()
+      .waitFor({ timeout: 10_000 });
 
     await sidebarPage.sortDropdown.selectOption('newest');
-    await page.waitForTimeout(300);
-
     await expect(sidebarPage.sortDropdown).toHaveValue('newest');
+
+    // Sorting reloads the panel — wait for comments to render again
+    await expect
+      .poll(async () => (await sidebarPermalinks()).length, { timeout: 10_000 })
+      .toBeGreaterThan(1);
+    const newestOrder = await sidebarPermalinks();
+    expect(newestOrder.length).toBeGreaterThan(1);
+
+    await sidebarPage.sortDropdown.selectOption('oldest');
+    await expect(sidebarPage.sortDropdown).toHaveValue('oldest');
+    await expect
+      .poll(async () => (await sidebarPermalinks()).length, { timeout: 10_000 })
+      .toBeGreaterThan(1);
+    await expect.poll(sidebarPermalinks, { timeout: 10_000 }).not.toEqual(newestOrder);
   });
 
-  test('should navigate into thread via View this thread', async ({
-    storiesPage,
-    sidebarPage,
-    page,
-  }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1500);
+  test('should navigate into thread via View this thread', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage, 20);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 20) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with enough comments for thread navigation');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(1200);
-
-    const viewThreadCount = await sidebarPage.viewThreadButtons.count();
-    test.skip(viewThreadCount === 0, 'No view-thread buttons available in sidebar');
+    // Comments render asynchronously after the sidebar opens (fetched over the
+    // mocked network); wait for that to settle instead of counting immediately.
+    await expect
+      .poll(() => sidebarPage.viewThreadButtons.count(), { timeout: 10_000 })
+      .toBeGreaterThan(0);
 
     await sidebarPage.viewThreadButtons.first().click();
-    await page.waitForTimeout(500);
 
-    await expect(sidebarPage.backButton).toBeVisible();
+    await expect(sidebarPage.backButton).toBeVisible({ timeout: 5_000 });
   });
 
-  test('should navigate back from thread', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1500);
+  test('should navigate back from thread', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForStory(storiesPage, sidebarPage, 20);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 20) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with enough comments for thread navigation');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(1200);
-
-    const viewThreadCount = await sidebarPage.viewThreadButtons.count();
-    test.skip(viewThreadCount === 0, 'No view-thread buttons available in sidebar');
-
-    const initialThreadCount = await sidebarPage.commentThreads.count();
+    await expect
+      .poll(() => sidebarPage.viewThreadButtons.count(), { timeout: 10_000 })
+      .toBeGreaterThan(0);
+    const initialThreadCount = await waitForStableCount(() =>
+      sidebarPage.topLevelCommentThreads.count(),
+    );
+    // Guard the restore assertion below against passing on 0 === 0
+    expect(initialThreadCount).toBeGreaterThan(0);
 
     await sidebarPage.viewThreadButtons.first().click();
-    await page.waitForTimeout(500);
-    await expect(sidebarPage.backButton).toBeVisible();
+    await expect(sidebarPage.backButton).toBeVisible({ timeout: 5_000 });
 
     await sidebarPage.backButton.click();
-    await page.waitForTimeout(500);
 
-    await expect(sidebarPage.backButton).not.toBeVisible();
-    const restoredThreadCount = await sidebarPage.commentThreads.count();
-    expect(restoredThreadCount).toBeGreaterThanOrEqual(initialThreadCount);
+    await expect(sidebarPage.backButton).not.toBeVisible({ timeout: 5_000 });
+    // Returning restores the same top-level list it was opened from
+    await expect
+      .poll(() => sidebarPage.topLevelCommentThreads.count(), { timeout: 10_000 })
+      .toBe(initialThreadCount);
   });
 
   test('should navigate back from thread via h key', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1500);
+    await openSidebarForStory(storiesPage, sidebarPage, 20);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 20) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with enough comments for thread navigation');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(1200);
-
-    const viewThreadCount = await sidebarPage.viewThreadButtons.count();
-    test.skip(viewThreadCount === 0, 'No view-thread buttons available in sidebar');
+    await expect
+      .poll(() => sidebarPage.viewThreadButtons.count(), { timeout: 10_000 })
+      .toBeGreaterThan(0);
+    const initialThreadCount = await waitForStableCount(() =>
+      sidebarPage.topLevelCommentThreads.count(),
+    );
+    // Guard the restore assertion below against passing on 0 === 0
+    expect(initialThreadCount).toBeGreaterThan(0);
 
     await sidebarPage.viewThreadButtons.first().click();
-    await page.waitForTimeout(500);
-    await expect(sidebarPage.backButton).toBeVisible();
+    await expect(sidebarPage.backButton).toBeVisible({ timeout: 5_000 });
 
     await page.keyboard.press('h');
-    await page.waitForTimeout(500);
 
-    await expect(sidebarPage.backButton).not.toBeVisible();
+    await expect(sidebarPage.backButton).not.toBeVisible({ timeout: 5_000 });
+    await expect
+      .poll(() => sidebarPage.topLevelCommentThreads.count(), { timeout: 10_000 })
+      .toBe(initialThreadCount);
   });
 
-  test('should load more comments', async ({ storiesPage, sidebarPage, page }) => {
-    await storiesPage.navigateToTop();
-    await page.waitForTimeout(1500);
+  test('should load more comments', async ({ storiesPage, sidebarPage }) => {
+    await openSidebarForManyTopLevelCommentsStory(storiesPage, sidebarPage);
 
-    const commentLinks = storiesPage.storyItems.locator('.story-comments');
-    const linkCount = await commentLinks.count();
-    let targetLinkIndex = -1;
-
-    for (let index = 0; index < linkCount; index++) {
-      const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-      const countMatch = text.match(/\d+/);
-      const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-      if (commentCount > 20) {
-        targetLinkIndex = index;
-        break;
-      }
-    }
-
-    test.skip(targetLinkIndex < 0, 'No story with enough comments for load more');
-
-    await commentLinks.nth(targetLinkIndex).click();
-    await page.waitForTimeout(1200);
-
-    const loadMoreVisible = await sidebarPage.loadMoreButton.first().isVisible();
-    test.skip(!loadMoreVisible, 'No load more button visible in sidebar');
+    // Comments (and the load-more control) render asynchronously after the
+    // sidebar opens; wait for that to settle instead of checking immediately.
+    await expect(sidebarPage.loadMoreButton.first()).toBeVisible({ timeout: 10_000 });
 
     const initialCount = await sidebarPage.commentThreads.count();
 
     await sidebarPage.loadMoreButton.first().click();
-    await page.waitForTimeout(1200);
 
-    const newCount = await sidebarPage.commentThreads.count();
-    expect(newCount).toBeGreaterThanOrEqual(initialCount);
+    await expect
+      .poll(() => sidebarPage.commentThreads.count(), { timeout: 10_000 })
+      .toBeGreaterThan(initialCount);
   });
 });
 
@@ -634,15 +483,16 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
     const panelBox = await sidebarPage.panel.boundingBox();
-    test.skip(!panelBox, 'Sidebar panel was not laid out');
+    if (!panelBox) {
+      throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+    }
 
     await page.mouse.move(panelBox!.x + 8, panelBox!.y + panelBox!.height / 2);
     await page.mouse.down();
     await page.mouse.move(panelBox!.x + 170, panelBox!.y + panelBox!.height / 2, { steps: 6 });
     await page.mouse.up();
-    await page.waitForTimeout(500);
 
-    expect(await sidebarPage.isClosed()).toBe(true);
+    await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
   });
 
   test('should close full-width sidebar with a fast right swipe from the left edge', async ({
@@ -653,15 +503,16 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
     const panelBox = await sidebarPage.panel.boundingBox();
-    test.skip(!panelBox, 'Sidebar panel was not laid out');
+    if (!panelBox) {
+      throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+    }
 
     await page.mouse.move(panelBox!.x + 8, panelBox!.y + panelBox!.height / 2);
     await page.mouse.down();
     await page.mouse.move(panelBox!.x + 95, panelBox!.y + panelBox!.height / 2, { steps: 1 });
     await page.mouse.up();
-    await page.waitForTimeout(500);
 
-    expect(await sidebarPage.isClosed()).toBe(true);
+    await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
   });
 
   test('should keep the full-width sidebar open after a short left-edge drag', async ({
@@ -672,15 +523,16 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
     const panelBox = await sidebarPage.panel.boundingBox();
-    test.skip(!panelBox, 'Sidebar panel was not laid out');
+    if (!panelBox) {
+      throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+    }
 
     await page.mouse.move(panelBox!.x + 8, panelBox!.y + panelBox!.height / 2);
     await page.mouse.down();
     await page.mouse.move(panelBox!.x + 30, panelBox!.y + panelBox!.height / 2, { steps: 4 });
     await page.mouse.up();
-    await page.waitForTimeout(500);
 
-    expect(await sidebarPage.isOpen()).toBe(true);
+    await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
   });
 
   test('should close full-width sidebar with an imperfect diagonal right swipe', async ({
@@ -691,7 +543,9 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
     const panelBox = await sidebarPage.panel.boundingBox();
-    test.skip(!panelBox, 'Sidebar panel was not laid out');
+    if (!panelBox) {
+      throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+    }
 
     const startX = panelBox!.x + 8;
     const startY = panelBox!.y + panelBox!.height / 2;
@@ -701,9 +555,8 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await page.mouse.move(startX + 110, startY - 14, { steps: 3 });
     await page.mouse.move(startX + 205, startY + 36, { steps: 4 });
     await page.mouse.up();
-    await page.waitForTimeout(500);
 
-    expect(await sidebarPage.isClosed()).toBe(true);
+    await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
   });
 
   test('should keep the sidebar open after a mostly vertical edge drag', async ({
@@ -714,7 +567,9 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
     const panelBox = await sidebarPage.panel.boundingBox();
-    test.skip(!panelBox, 'Sidebar panel was not laid out');
+    if (!panelBox) {
+      throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+    }
 
     const startX = panelBox!.x + 8;
     const startY = panelBox!.y + panelBox!.height / 2;
@@ -723,9 +578,8 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
     await page.mouse.move(startX + 10, startY + 55, { steps: 3 });
     await page.mouse.move(startX + 18, startY + 130, { steps: 4 });
     await page.mouse.up();
-    await page.waitForTimeout(500);
 
-    expect(await sidebarPage.isOpen()).toBe(true);
+    await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
   });
 
   test.describe('Chromium touch input', () => {
@@ -742,13 +596,19 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
       await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
       const panelBox = await sidebarPage.panel.boundingBox();
-      test.skip(!panelBox, 'Sidebar panel was not laid out');
+      if (!panelBox) {
+        throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+      }
 
       const scrollable = await sidebarPage.commentsPanel.evaluate((element) => {
         element.scrollTop = 0;
         return element.scrollHeight > element.clientHeight + 200;
       });
-      test.skip(!scrollable, 'Sidebar comments panel is not scrollable enough');
+      if (!scrollable) {
+        throw new Error(
+          'Fixture story has enough rendered comments to make the sidebar comments panel scrollable',
+        );
+      }
 
       const client = await page.context().newCDPSession(page);
       const startX = Math.round(panelBox!.x + 8);
@@ -792,9 +652,8 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
         type: 'touchEnd',
         touchPoints: [],
       });
-      await page.waitForTimeout(500);
 
-      expect(await sidebarPage.isOpen()).toBe(true);
+      await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
     });
 
     test('should track and close during an imperfect diagonal touch swipe', async ({
@@ -805,7 +664,9 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
       await openSidebarAtMobileSize(storiesPage, sidebarPage, page);
 
       const panelBox = await sidebarPage.panel.boundingBox();
-      test.skip(!panelBox, 'Sidebar panel was not laid out');
+      if (!panelBox) {
+        throw new Error('Sidebar panel is guaranteed to be laid out once open() has resolved');
+      }
 
       const startX = Math.round(panelBox!.x + 8);
       const startY = Math.round(panelBox!.y + panelBox!.height / 2);
@@ -843,9 +704,8 @@ test.describe('Sidebar Comments Panel - mobile swipe dismissal', () => {
         type: 'touchEnd',
         touchPoints: [],
       });
-      await page.waitForTimeout(500);
 
-      expect(await sidebarPage.isClosed()).toBe(true);
+      await expect.poll(() => sidebarPage.isClosed(), { timeout: 5_000 }).toBe(true);
     });
   });
 });
@@ -858,31 +718,21 @@ async function openSidebarAtMobileSize(
 ): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 720 });
   await storiesPage.navigateToTop();
-  await page.waitForTimeout(1000);
 
-  const commentLinks = storiesPage.storyItems.locator('.story-comments');
-  const linkCount = await commentLinks.count();
-  let targetLinkIndex = -1;
-
-  for (let index = 0; index < linkCount; index++) {
-    const text = (await commentLinks.nth(index).textContent())?.trim() ?? '';
-    const countMatch = text.match(/\d+/);
-    const commentCount = countMatch ? Number.parseInt(countMatch[0], 10) : 0;
-    if (commentCount > 0) {
-      targetLinkIndex = index;
-      break;
-    }
+  const targetLinkIndex = await findStoryWithComments(storiesPage, 1);
+  if (targetLinkIndex < 0) {
+    throw new Error('Fixture data guarantees a story with comments in the top feed');
   }
 
-  test.skip(targetLinkIndex < 0, 'No story with comments available');
-
-  await commentLinks.nth(targetLinkIndex).click();
+  await storiesPage.storyItems.locator('.story-comments').nth(targetLinkIndex).click();
   await expect(sidebarPage.panel).toBeVisible();
-  expect(await sidebarPage.isOpen()).toBe(true);
+  await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
 
   await page.setViewportSize(mobileViewport);
-  await page.waitForTimeout(300);
-  expect(await sidebarPage.isOpen()).toBe(true);
+  // Resizing to a mobile viewport reflows the panel into its full-width mode;
+  // wait for that state directly instead of assuming a fixed delay always
+  // outlasts the reflow (it can lag under full-suite CPU contention).
+  await expect.poll(() => sidebarPage.isOpen(), { timeout: 5_000 }).toBe(true);
 }
 
 async function pressDocumentKey(page: Page, key: string): Promise<void> {
