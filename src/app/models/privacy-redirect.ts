@@ -49,7 +49,7 @@ export const PRIVACY_REDIRECT_REGISTRY: readonly PrivacyRedirectConfig[] = [
     service: 'twitter',
     frontend: 'xcancel',
     displayName: 'Twitter/X → XCancel',
-    baseUrl: 'https://xcancel.com/',
+    baseUrl: 'https://xxcancel.com/',
     urlPatterns: [
       /^https?:\/\/(www\.|mobile\.)?twitter\.com\/[A-Za-z0-9_]{1,15}(?:\/status\/\d+)?\/?(?:[?#].*)?$/,
       /^https?:\/\/(www\.|mobile\.)?x\.com\/[A-Za-z0-9_]{1,15}(?:\/status\/\d+)?\/?(?:[?#].*)?$/,
