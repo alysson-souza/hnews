@@ -173,3 +173,32 @@ describe('CommentRepliesLoaderService', () => {
     expect(mockHnService.getItemsPage).not.toHaveBeenCalled();
   });
 });
+
+describe('reply page recovery', () => {
+  it('keeps the failed page retryable and stops restoration at the failure', () => {
+    const getItemsPage = vi
+      .fn()
+      .mockReturnValueOnce(of([{ id: 1, type: 'comment' }]))
+      .mockReturnValueOnce(throwError(() => new Error('offline')))
+      .mockReturnValueOnce(of([{ id: 11, type: 'comment' }]))
+      .mockReturnValueOnce(of([{ id: 21, type: 'comment' }]));
+    TestBed.configureTestingModule({
+      providers: [
+        CommentRepliesLoaderService,
+        { provide: HackernewsService, useValue: { getItemsPage } },
+      ],
+    });
+    const loader = TestBed.inject(CommentRepliesLoaderService);
+    loader.configureKids(Array.from({ length: 25 }, (_, i) => i + 1));
+    const completed = vi.fn();
+    loader.loadUpToPage(2, completed);
+    expect(getItemsPage).toHaveBeenCalledTimes(2);
+    expect(completed).not.toHaveBeenCalled();
+    expect(loader.currentPage()).toBe(0);
+    expect(loader.replies().map((item) => item.id)).toEqual([1]);
+    loader.loadNextPage();
+    expect(getItemsPage.mock.calls.map((call) => call[1])).toEqual([0, 1, 1, 2]);
+    expect(loader.replies().map((item) => item.id)).toEqual([1, 11, 21]);
+    expect(completed).toHaveBeenCalledOnce();
+  });
+});

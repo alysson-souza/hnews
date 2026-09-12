@@ -94,7 +94,15 @@ import {
           }
         </div>
         <div children>
-          @if (!isCollapsed() && (replies().length > 0 || loadingReplies())) {
+          @if (!isCollapsed() && repliesError()) {
+            <div role="alert" class="text-sm text-red-600 dark:text-red-400 py-2">
+              Couldn't load replies.
+              <app-button variant="secondary" size="sm" (clicked)="retryReplies()">
+                Try again
+              </app-button>
+            </div>
+          }
+          @if (!isCollapsed() && (repliesLoaded() || loadingReplies())) {
             <div class="thread-children">
               @for (reply of replies(); track reply.id; let isFirst = $first; let isLast = $last) {
                 <app-comment-thread
@@ -258,6 +266,7 @@ export class CommentThread implements OnInit {
   readonly loadingReplies = this.repliesLoader.loadingReplies;
   readonly loadingMore = this.repliesLoader.loadingMore;
   readonly hasMoreReplies = this.repliesLoader.hasMore;
+  readonly repliesError = this.repliesLoader.error;
   private readonly currentPage = this.repliesLoader.currentPage;
 
   totalRepliesCount = computed(() => {
@@ -409,10 +418,9 @@ export class CommentThread implements OnInit {
 
   loadMoreReplies() {
     if (!this.loadingMore() && this.hasMoreReplies()) {
-      this.repliesLoader.loadNextPage();
-      // Save state after page loads
-      const newPageCount = this.currentPageValue + 2; // Current is 0-based, we just loaded next
-      this.commentStateService.setLoadedPages(this.commentId(), newPageCount);
+      this.repliesLoader.loadNextPage(() => {
+        this.commentStateService.setLoadedPages(this.commentId(), this.currentPageValue + 1);
+      });
     }
   }
 
@@ -428,12 +436,17 @@ export class CommentThread implements OnInit {
         }
       }
 
-      this.repliesLoader.loadFirstPage();
-      if (persistState) {
-        this.commentStateService.setRepliesExpanded(commentId, true);
-        this.commentStateService.setLoadedPages(commentId, 1);
-      }
+      this.repliesLoader.loadFirstPage(() => {
+        if (persistState) {
+          this.commentStateService.setRepliesExpanded(commentId, true);
+          this.commentStateService.setLoadedPages(commentId, 1);
+        }
+      });
     }
+  }
+
+  retryReplies() {
+    this.repliesLoader.retry();
   }
 
   onChevronToggle() {
