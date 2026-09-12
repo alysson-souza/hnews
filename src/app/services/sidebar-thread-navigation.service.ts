@@ -12,11 +12,13 @@ export class SidebarThreadNavigationService {
   ): void {
     const parent = this.sidebar.currentEntry();
     if (parent?.itemId === id) return;
+    const commentStates = parent?.captureCommentStates?.() ?? parent?.state.commentStates;
     this.sidebar.push(id);
     const entry = this.sidebar.currentEntry();
     if (entry) {
       entry.state.selectFirst = options?.selectFirstVisibleOnOpen ?? false;
       entry.state.scrollFirst = options?.scrollToFirstOnOpen ?? entry.state.selectFirst;
+      if (commentStates) entry.state.commentStates = new Map(commentStates);
       if (parent) entry.state.inheritedPreviousVisitedAt = parent.state.previousVisitedAt;
     }
   }

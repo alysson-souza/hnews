@@ -13,6 +13,24 @@ describe('discussion persistence', () => {
       parent: TestBed.inject(Injector),
     }).get(CommentStateService);
   }
+  it('copies displayed reply pages without turning automatic expansion into a saved preference', () => {
+    const parent = view();
+    let displayed = { collapsed: false, repliesExpanded: true, loadedPages: 2 };
+    const release = parent.registerRenderedState(11, () => displayed);
+    const child = view();
+    child.restore(parent.snapshot());
+    expect(child.getLoadedPages(11)).toBe(2);
+    expect(child.areRepliesExpanded(11)).toBe(true);
+
+    displayed = { collapsed: true, repliesExpanded: true, loadedPages: 3 };
+    release();
+    expect(parent.snapshot().get(11)?.collapsed).toBe(true);
+    expect(parent.snapshot().get(11)?.loadedPages).toBe(3);
+    expect(child.isCollapsed(11)).toBe(false);
+    expect(child.getLoadedPages(11)).toBe(2);
+    expect(view().getState(11)).toBeUndefined();
+    expect(localStorage.getItem('hn_comment_state.v1')).toBeNull();
+  });
   it('keeps edits from two retained views when a discussion is reopened', () => {
     const parent = view(),
       child = view();

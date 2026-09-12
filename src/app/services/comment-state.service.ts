@@ -24,6 +24,7 @@ export class CommentStateService {
   });
 
   private statesMap = signal(new Map<number, CommentStateEntry>());
+  private renderedStates = new Map<number, () => Omit<CommentStateEntry, 'lastAccessed'> | null>();
 
   constructor() {
     if (this.persistenceOwner) {
@@ -35,7 +36,32 @@ export class CommentStateService {
   }
 
   snapshot(): Map<number, CommentStateEntry> {
-    return new Map(this.statesMap());
+    const states = new Map(this.statesMap());
+    for (const [id, read] of this.renderedStates) {
+      const state = read();
+      if (state)
+        states.set(id, { ...state, lastAccessed: states.get(id)?.lastAccessed ?? Date.now() });
+    }
+    return states;
+  }
+
+  /** Capture displayed replies, including automatic expansion, without persisting a preference. */
+  registerRenderedState(
+    id: number,
+    read: () => Omit<CommentStateEntry, 'lastAccessed'> | null,
+  ): () => void {
+    this.renderedStates.set(id, read);
+    return () => {
+      const state = read();
+      if (state)
+        this.statesMap.update((states) =>
+          new Map(states).set(id, {
+            ...state,
+            lastAccessed: states.get(id)?.lastAccessed ?? Date.now(),
+          }),
+        );
+      this.renderedStates.delete(id);
+    };
   }
   restore(states: Map<number, CommentStateEntry>): void {
     this.statesMap.set(new Map(states));

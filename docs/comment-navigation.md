@@ -30,6 +30,8 @@ The `»` button opens the same thread and scrolls to its first comment without s
 
 One history store owns entries and the current position. Each entry saves its scroll position, keyboard selection, top-level pagination, comment expansion and loaded reply pages, loaded discussion data, and original visit timestamp. Sorting remains a shared preference. An unavailable sorting response falls back to available comment order without changing that preference.
 
+Entering a thread copies the originating discussion's displayed reply state, including automatic expansion and completed reply pages. Explicit collapses remain collapsed. Later changes stay local to each history entry, and automatic expansion is not saved as a global preference.
+
 Only the current entry and its immediate history neighbors are rendered, at most three discussions. Before an older view is released it saves its state. Neighbors are reconstructed from that state and the existing data caches. Scroll restoration waits for enough content height when comments arrive asynchronously. Once loading settles, an unreachable offset clamps to the available content. User scrolling cancels a pending restoration. Requests owned by a released view are unsubscribed so late responses cannot replace another discussion or mark it visited.
 
 ## Validation limits

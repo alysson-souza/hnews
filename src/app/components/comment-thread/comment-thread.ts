@@ -341,6 +341,19 @@ export class CommentThread implements OnInit {
   private commentIndex = inject(CommentThreadIndexService);
 
   ngOnInit() {
+    if (this.threadContext() !== 'item') {
+      this.destroyRef.onDestroy(
+        this.commentStateService.registerRenderedState(this.commentId(), () =>
+          this.commentLoaded()
+            ? {
+                collapsed: this.isCollapsed(),
+                repliesExpanded: this.repliesLoaded(),
+                loadedPages: this.repliesLoaded() ? this.currentPageValue + 1 : 0,
+              }
+            : null,
+        ),
+      );
+    }
     // If parent provided the comment, hydrate without fetching
     const initialComment = this.initialComment();
     if (initialComment) {

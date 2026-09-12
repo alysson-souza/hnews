@@ -335,6 +335,7 @@ export class DiscussionViewComponent {
     effect(() => {
       const entry = this.entry();
       untracked(() => {
+        entry.captureCommentStates = () => this.commentState.snapshot();
         if (entry.state.commentStates) this.commentState.restore(entry.state.commentStates);
         if (entry.state.item) {
           this.item.set(entry.state.item);
@@ -419,6 +420,7 @@ export class DiscussionViewComponent {
       state.visibleCount = this.visibleTopLevelCount();
       state.comments = this.allComments();
       state.commentStates = this.commentState.snapshot();
+      delete this.entry().captureCommentStates;
       this.commentIndex.releaseContext(this.context());
     });
   }

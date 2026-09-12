@@ -10,6 +10,7 @@ export interface DiscussionEntry {
   key: number;
   index: number;
   itemId: number;
+  captureCommentStates?: () => Map<number, CommentStateEntry>;
   state: {
     scrollTop: number;
     scrollAnchorId?: number;
