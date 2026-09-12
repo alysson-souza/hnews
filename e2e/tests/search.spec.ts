@@ -28,12 +28,9 @@ test.describe('Search Page', () => {
 
     await searchPage.typeSelect.selectOption('comment');
 
-    const pills = searchPage.resultPills();
-    await expect(pills.first()).toBeVisible({ timeout: 15_000 });
-    const count = await pills.count();
-    for (let i = 0; i < count; i++) {
-      await expect(pills.nth(i)).toHaveText(/Comment/);
-    }
+    // The fixture has one JavaScript comment. Wait for the filtered list instead
+    // of capturing a row count while the previous results are still displayed.
+    await expect(searchPage.resultPills()).toHaveText(['Comment']);
   });
 
   test('narrows results with a date-range filter', async ({ searchPage }) => {
