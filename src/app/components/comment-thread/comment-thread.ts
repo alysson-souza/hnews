@@ -45,6 +45,7 @@ import {
     CommentSkeletonComponent,
   ],
   providers: [CommentRepliesLoaderService],
+  host: { '[attr.aria-busy]': 'loading() || loadingReplies() || loadingMore()' },
   template: `
     @if (showLoadButton()) {
       <app-lazy-load-card [depth]="depth()" [loading]="loading()" (loadMore)="loadComment()" />
@@ -52,6 +53,7 @@ import {
       <app-comment-skeleton [depth]="depth()" />
     } @else if (comment()) {
       <app-thread-gutter
+        [threadContext]="threadContext()"
         [depth]="depth()"
         [clickable]="true"
         [collapsed]="isCollapsed()"
@@ -75,7 +77,7 @@ import {
             [isStandalonePage]="isStandalonePage()"
             [showCollapseToggle]="true"
             [collapsed]="isCollapsed() || showExpandButton()"
-            [density]="threadContext() === 'sidebar' ? 'compact' : 'default'"
+            [density]="threadContext() !== 'item' ? 'compact' : 'default'"
             (expand)="expandReplies()"
             (toggleCollapse)="onChevronToggle()"
           />
@@ -339,6 +341,19 @@ export class CommentThread implements OnInit {
   private commentIndex = inject(CommentThreadIndexService);
 
   ngOnInit() {
+    if (this.threadContext() !== 'item') {
+      this.destroyRef.onDestroy(
+        this.commentStateService.registerRenderedState(this.commentId(), () =>
+          this.commentLoaded()
+            ? {
+                collapsed: this.isCollapsed(),
+                repliesExpanded: this.repliesLoaded(),
+                loadedPages: this.repliesLoaded() ? this.currentPageValue + 1 : 0,
+              }
+            : null,
+        ),
+      );
+    }
     // If parent provided the comment, hydrate without fetching
     const initialComment = this.initialComment();
     if (initialComment) {
@@ -353,7 +368,13 @@ export class CommentThread implements OnInit {
     // Listen for keyboard actions targeting this comment
     this.interactionService.action$
       .pipe(
-        filter((action) => action.commentId === this.commentId()),
+        filter(
+          (action) =>
+            action.commentId === this.commentId() &&
+            (!action.context || action.context === this.threadContext()) &&
+            (this.threadContext() === 'item' ||
+              this.threadContext() === `sidebar-${this.sidebarService.currentEntry()?.key}`),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((action) => {
@@ -395,25 +416,28 @@ export class CommentThread implements OnInit {
   loadComment() {
     this.loading.set(true);
 
-    this.hnService.getItem(this.commentId()).subscribe({
-      next: (item) => {
-        if (item && !item.deleted) {
-          this.repliesLoader.configureKids(item.kids);
-          this.comment.set(item);
-          this.commentIndex.registerComment(this.threadContext(), item);
-          this.commentLoaded.set(true);
+    this.hnService
+      .getItem(this.commentId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (item) => {
+          if (item && !item.deleted) {
+            this.repliesLoader.configureKids(item.kids);
+            this.comment.set(item);
+            this.commentIndex.registerComment(this.threadContext(), item);
+            this.commentLoaded.set(true);
+            this.loading.set(false);
+            this.restoreCommentState();
+            this.maybeAutoExpandReplies();
+          } else {
+            this.repliesLoader.configureKids([]);
+            this.loading.set(false);
+          }
+        },
+        error: () => {
           this.loading.set(false);
-          this.restoreCommentState();
-          this.maybeAutoExpandReplies();
-        } else {
-          this.repliesLoader.configureKids([]);
-          this.loading.set(false);
-        }
-      },
-      error: () => {
-        this.loading.set(false);
-      },
-    });
+        },
+      });
   }
 
   loadMoreReplies() {
@@ -490,10 +514,7 @@ export class CommentThread implements OnInit {
       if (state.repliesExpanded && state.loadedPages > 0 && this.commentLoaded()) {
         // Load all previously loaded pages
         const targetPage = state.loadedPages - 1; // Convert to 0-based page index
-        this.repliesLoader.loadUpToPage(targetPage, () => {
-          // Update state after restoration completes to refresh lastAccessed
-          this.commentStateService.setState(this.commentId(), state);
-        });
+        this.repliesLoader.loadUpToPage(targetPage);
       }
     }
   }

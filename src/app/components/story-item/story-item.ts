@@ -140,9 +140,7 @@ export class StoryItem {
 
   readonly actionsMenu = viewChild(StoryActionsMenuComponent);
 
-  openCommentsInSidebar = computed(
-    () => this.userSettings.settings().openCommentsInSidebar && this.deviceService.isDesktop(),
-  );
+  openCommentsInSidebar = computed(() => this.userSettings.settings().openCommentsInSidebar);
 
   hasNewComments(): boolean {
     const story = this.story();

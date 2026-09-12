@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 
 export interface CommentStateEntry {
   collapsed: boolean;
@@ -17,11 +17,54 @@ export class CommentStateService {
   private readonly MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
   private readonly MAX_ENTRIES = 1000;
 
+  // Scoped discussion instances keep local reading state but share one storage writer.
+  private readonly persistenceOwner: CommentStateService | null = inject(CommentStateService, {
+    skipSelf: true,
+    optional: true,
+  });
+
   private statesMap = signal(new Map<number, CommentStateEntry>());
+  private renderedStates = new Map<number, () => Omit<CommentStateEntry, 'lastAccessed'> | null>();
 
   constructor() {
-    this.load();
-    this.cleanup();
+    if (this.persistenceOwner) {
+      this.statesMap.set(this.persistenceOwner.snapshot());
+    } else {
+      this.load();
+      this.cleanup();
+    }
+  }
+
+  snapshot(): Map<number, CommentStateEntry> {
+    const states = new Map(this.statesMap());
+    for (const [id, read] of this.renderedStates) {
+      const state = read();
+      if (state)
+        states.set(id, { ...state, lastAccessed: states.get(id)?.lastAccessed ?? Date.now() });
+    }
+    return states;
+  }
+
+  /** Capture displayed replies, including automatic expansion, without persisting a preference. */
+  registerRenderedState(
+    id: number,
+    read: () => Omit<CommentStateEntry, 'lastAccessed'> | null,
+  ): () => void {
+    this.renderedStates.set(id, read);
+    return () => {
+      const state = read();
+      if (state)
+        this.statesMap.update((states) =>
+          new Map(states).set(id, {
+            ...state,
+            lastAccessed: states.get(id)?.lastAccessed ?? Date.now(),
+          }),
+        );
+      this.renderedStates.delete(id);
+    };
+  }
+  restore(states: Map<number, CommentStateEntry>): void {
+    this.statesMap.set(new Map(states));
   }
 
   /**
@@ -47,7 +90,8 @@ export class CommentStateService {
     const newMap = new Map(this.statesMap());
     newMap.set(commentId, newState);
     this.statesMap.set(newMap);
-    this.save();
+    if (this.persistenceOwner) this.persistenceOwner.setState(commentId, partialState);
+    else this.save();
   }
 
   /**
@@ -100,7 +144,8 @@ export class CommentStateService {
     }
 
     this.statesMap.set(newMap);
-    this.save();
+    if (this.persistenceOwner) this.persistenceOwner.setCollapsedMany(commentIds, collapsed);
+    else this.save();
   }
 
   /**
@@ -122,7 +167,8 @@ export class CommentStateService {
    */
   clearAll(): void {
     this.statesMap.set(new Map());
-    this.save();
+    if (this.persistenceOwner) this.persistenceOwner.clearAll();
+    else this.save();
   }
 
   private load(): void {

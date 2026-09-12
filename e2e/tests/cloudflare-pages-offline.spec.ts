@@ -4,6 +4,8 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createDefaultDataset } from '../fixtures/hn-fixture-data';
+import { installHNRoutes } from '../fixtures/hn-routes';
 
 type HeaderSet = Record<string, string>;
 
@@ -47,6 +49,46 @@ test.describe('Cloudflare Pages offline boot', () => {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
     });
+  });
+
+  test('applies the standalone discussion top safe area once', async () => {
+    const userDataDir = await mkdtemp(join(tmpdir(), 'hnews-safe-area-'));
+    const context = await chromium.launchPersistentContext(userDataDir, {
+      headless: true,
+      channel: 'chromium',
+      viewport: { width: 390, height: 844 },
+      args: [`--app=${baseUrl}standalone-test-shell.html`],
+    });
+    try {
+      await installHNRoutes(context, createDefaultDataset());
+      await context.addInitScript(() =>
+        localStorage.setItem('user.settings.v1', JSON.stringify({ openCommentsInSidebar: true })),
+      );
+      const [page] = context.pages();
+      const client = await context.newCDPSession(page);
+      await client.send('Emulation.setSafeAreaInsetsOverride', {
+        insets: { top: 0, right: 0, bottom: 0, left: 0 },
+      });
+      await page.goto(`${baseUrl}top`);
+      await expect
+        .poll(() => page.evaluate(() => matchMedia('(display-mode: standalone)').matches))
+        .toBe(true);
+      await page.locator('.story-comments').first().click();
+      const view = page.locator('app-discussion-view[data-active="true"]');
+      await expect(view.locator('[role="treeitem"]').first()).toBeVisible();
+      await expect.poll(() => view.evaluate((element) => element.getAnimations().length)).toBe(0);
+      const close = view.getByRole('button', { name: 'Close sidebar' });
+      const baseline = (await close.boundingBox())!.y;
+      await client.send('Emulation.setSafeAreaInsetsOverride', {
+        insets: { top: 44, right: 12, bottom: 34, left: 12 },
+      });
+      await expect.poll(async () => (await close.boundingBox())!.y - baseline).toBe(44);
+      const content = await view.locator('.sidebar-comments-panel').boundingBox();
+      expect(content!.y + content!.height).toBeLessThanOrEqual(844 - 34);
+    } finally {
+      await context.close();
+      await rm(userDataDir, { recursive: true, force: true });
+    }
   });
 
   test('keeps the standalone refresh button reactive during loading and refresh', async () => {

@@ -2,6 +2,8 @@
 // Copyright (C) 2025 Alysson Souza
 import { Component, inject, computed, output, input } from '@angular/core';
 
+import { SidebarService } from '@services/sidebar.service';
+import { CommentThreadContext } from '@services/comment-thread-index.service';
 import { SidebarKeyboardNavigationService } from '@services/sidebar-keyboard-navigation.service';
 import { ItemKeyboardNavigationService } from '@services/item-keyboard-navigation.service';
 
@@ -128,6 +130,8 @@ export class ThreadGutterComponent {
   readonly unread = input(false);
   readonly toggleThread = output<void>();
 
+  readonly threadContext = input<CommentThreadContext>('item');
+  private sidebar = inject(SidebarService);
   private sidebarKeyboardNav = inject(SidebarKeyboardNavigationService);
   private itemKeyboardNav = inject(ItemKeyboardNavigationService);
 
@@ -135,9 +139,9 @@ export class ThreadGutterComponent {
   isKeyboardFocused = computed(() => {
     const commentId = this.commentId();
     if (!commentId) return false;
-    return (
-      this.sidebarKeyboardNav.isSelected()(commentId) ||
-      this.itemKeyboardNav.isSelected()(commentId)
-    );
+    return this.threadContext() === 'item'
+      ? this.itemKeyboardNav.isSelected()(commentId)
+      : this.threadContext() === `sidebar-${this.sidebar.currentEntry()?.key}` &&
+          this.sidebarKeyboardNav.isSelected()(commentId);
   });
 }

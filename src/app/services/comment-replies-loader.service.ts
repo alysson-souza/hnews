@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HNItem } from '@models/hn';
 import { HackernewsService } from './hackernews.service';
 
 @Injectable()
 export class CommentRepliesLoaderService {
+  private destroyRef = inject(DestroyRef);
   readonly pageSize = 10;
 
   private readonly hnService = inject(HackernewsService);
@@ -140,32 +142,37 @@ export class CommentRepliesLoaderService {
       this.loadingMoreState.set(true);
     }
 
-    this.hnService.getItemsPage(this.kidsIds, page, this.pageSize).subscribe({
-      next: (items) => {
-        const validReplies = items.filter((item): item is HNItem => item !== null && !item.deleted);
+    this.hnService
+      .getItemsPage(this.kidsIds, page, this.pageSize)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (items) => {
+          const validReplies = items.filter(
+            (item): item is HNItem => item !== null && !item.deleted,
+          );
 
-        if (page === 0) {
-          this.repliesState.set(validReplies);
-          this.repliesLoadedState.set(true);
-        } else {
-          this.repliesState.update((current) => [...current, ...validReplies]);
-        }
+          if (page === 0) {
+            this.repliesState.set(validReplies);
+            this.repliesLoadedState.set(true);
+          } else {
+            this.repliesState.update((current) => [...current, ...validReplies]);
+          }
 
-        this.currentPageState.set(page);
-        const totalLoaded = (page + 1) * this.pageSize;
-        this.hasMoreState.set(totalLoaded < this.kidsIds.length);
+          this.currentPageState.set(page);
+          const totalLoaded = (page + 1) * this.pageSize;
+          this.hasMoreState.set(totalLoaded < this.kidsIds.length);
 
-        this.loadingRepliesState.set(false);
-        this.loadingMoreState.set(false);
+          this.loadingRepliesState.set(false);
+          this.loadingMoreState.set(false);
 
-        onComplete?.();
-      },
-      error: () => {
-        this.loadingRepliesState.set(false);
-        this.loadingMoreState.set(false);
-        this.errorState.set(true);
-        this.pendingRetry = () => this.loadPage(page, onComplete);
-      },
-    });
+          onComplete?.();
+        },
+        error: () => {
+          this.loadingRepliesState.set(false);
+          this.loadingMoreState.set(false);
+          this.errorState.set(true);
+          this.pendingRetry = () => this.loadPage(page, onComplete);
+        },
+      });
   }
 }

@@ -583,7 +583,7 @@ describe('CommentThread', () => {
       component.loadComment();
       fixture.detectChanges();
 
-      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalledWith(2, expect.any(Function));
+      expect(mockRepliesLoader.loadUpToPage).toHaveBeenCalledWith(2);
     });
 
     it('should not restore replies if repliesExpanded is false', () => {

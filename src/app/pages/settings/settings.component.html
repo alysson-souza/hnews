@@ -9,42 +9,40 @@
       <app-theme-selector />
     </section>
 
-    @if (deviceService.isDesktop()) {
-      <hr class="section-divider" />
+    <hr class="section-divider" />
 
-      <!-- Reading Preferences -->
-      <section class="setting-section" role="region" aria-label="Reading Preferences">
-        <h2 class="settings-category-label">Reading Preferences</h2>
-        <div
-          class="setting-row cursor-pointer"
-          (click)="toggleSidebarPreference()"
-          role="button"
-          tabindex="0"
-          (keydown.enter)="toggleSidebarPreference()"
-          (keydown.space)="toggleSidebarPreference()"
-          [attr.aria-label]="
-            'Toggle open comments in sidebar. Currently ' +
-            (openCommentsInSidebar() ? 'enabled' : 'disabled')
-          "
-        >
-          <div class="setting-info">
-            <label class="setting-title" for="sidebar-toggle">Open comments in sidebar</label>
-            <p class="setting-description" id="sidebar-toggle-description">
-              When enabled, comments open beside the story instead of on a new page
-            </p>
-          </div>
-          <div (click)="$event.stopPropagation()" aria-hidden="true">
-            <app-toggle-switch
-              id="sidebar-toggle"
-              [checked]="openCommentsInSidebar()"
-              (checkedChange)="toggleSidebarPreference()"
-              ariaLabel="Toggle sidebar preference"
-              descriptionId="sidebar-toggle-description"
-            />
-          </div>
+    <!-- Reading Preferences -->
+    <section class="setting-section" role="region" aria-label="Reading Preferences">
+      <h2 class="settings-category-label">Reading Preferences</h2>
+      <div
+        class="setting-row cursor-pointer"
+        (click)="toggleSidebarPreference()"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="toggleSidebarPreference()"
+        (keydown.space)="toggleSidebarPreference()"
+        [attr.aria-label]="
+          'Toggle open comments in sidebar. Currently ' +
+          (openCommentsInSidebar() ? 'enabled' : 'disabled')
+        "
+      >
+        <div class="setting-info">
+          <label class="setting-title" for="sidebar-toggle">Open comments in sidebar</label>
+          <p class="setting-description" id="sidebar-toggle-description">
+            Comments open beside the story on desktop and full-screen on mobile
+          </p>
         </div>
-      </section>
-    }
+        <div (click)="$event.stopPropagation()" aria-hidden="true">
+          <app-toggle-switch
+            id="sidebar-toggle"
+            [checked]="openCommentsInSidebar()"
+            (checkedChange)="toggleSidebarPreference()"
+            ariaLabel="Toggle sidebar preference"
+            descriptionId="sidebar-toggle-description"
+          />
+        </div>
+      </div>
+    </section>
 
     <hr class="section-divider" />
 

@@ -12,6 +12,7 @@ export type CommentActionType =
   | 'collapseAll';
 
 export interface CommentAction {
+  context?: string;
   commentId: number;
   action: CommentActionType;
 }
@@ -28,7 +29,7 @@ export class SidebarCommentsInteractionService {
   /**
    * Dispatch an action for a specific comment
    */
-  dispatchAction(commentId: number, action: CommentActionType): void {
-    this.actionSubject.next({ commentId, action });
+  dispatchAction(commentId: number, action: CommentActionType, context?: string): void {
+    this.actionSubject.next({ commentId, action, context });
   }
 }

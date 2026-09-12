@@ -121,14 +121,14 @@ describe('StoryItem comments link behaviour', () => {
     expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 
-  it('does not mark story visited before mobile comments navigation', () => {
+  it('honors the sidebar preference on mobile without marking the story visited', () => {
     deviceService.setDesktop(false);
     const event = createMouseEvent('click', { button: 0 });
 
     component.openComments(event);
 
-    expect(event.defaultPrevented).toBe(false);
-    expect(toggleSidebarSpy).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(true);
+    expect(toggleSidebarSpy).toHaveBeenCalled();
     expect(visitedService.markStoryVisited).not.toHaveBeenCalled();
   });
 

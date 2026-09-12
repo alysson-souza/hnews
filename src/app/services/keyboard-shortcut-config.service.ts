@@ -264,7 +264,7 @@ export class KeyboardShortcutConfigService {
       contexts: ['sidebar'],
       description: 'Close sidebar',
       category: 'General',
-      commandId: 'sidebar.backOrClose',
+      commandId: 'sidebar.close',
     },
 
     // Item Page context shortcuts
