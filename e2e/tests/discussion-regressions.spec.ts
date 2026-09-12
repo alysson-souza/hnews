@@ -172,3 +172,20 @@ test('desktop switches stories in an open sidebar without sliding', async ({ pag
   );
   expect(Math.max(...offsets)).toBeLessThanOrEqual(1);
 });
+
+for (const depth of [0, 1]) {
+  test(`Escape ends a mobile discussion session at depth ${depth}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/top');
+    await page.locator('.story-comments').first().click();
+    const active = page.locator('app-discussion-view[data-active="true"]');
+    await expect(active.locator('[role="treeitem"]').first()).toBeVisible();
+    if (depth) {
+      const key = await active.getAttribute('data-entry-key');
+      await active.locator('button[title="View this thread"]').first().click();
+      await expect(active).not.toHaveAttribute('data-entry-key', key!);
+    }
+    await page.keyboard.press('Escape');
+    await expect(page.locator('app-discussion-view')).toHaveCount(0);
+  });
+}

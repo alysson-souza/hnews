@@ -500,10 +500,7 @@ export class CommentThread implements OnInit {
       if (state.repliesExpanded && state.loadedPages > 0 && this.commentLoaded()) {
         // Load all previously loaded pages
         const targetPage = state.loadedPages - 1; // Convert to 0-based page index
-        this.repliesLoader.loadUpToPage(targetPage, () => {
-          // Update state after restoration completes to refresh lastAccessed
-          this.commentStateService.setState(this.commentId(), state);
-        });
+        this.repliesLoader.loadUpToPage(targetPage);
       }
     }
   }

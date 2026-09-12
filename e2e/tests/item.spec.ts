@@ -119,7 +119,9 @@ test.describe('Item Page', () => {
       }
 
       await commentLinks.nth(targetLinkIndex).click();
-      const sidebarPanel = page.locator('.sidebar-comments-panel');
+      const sidebarPanel = page.locator(
+        'app-discussion-view[data-active="true"] .sidebar-comments-panel',
+      );
       await expect(sidebarPanel).toBeVisible();
       await page.waitForTimeout(1200);
 
@@ -142,7 +144,9 @@ test.describe('Item Page', () => {
         return (element as HTMLElement).scrollTop;
       });
       const clickedSidebarThreadFromViewport = await page.evaluate(() => {
-        const container = document.querySelector('.sidebar-comments-panel') as HTMLElement | null;
+        const container = document.querySelector(
+          'app-discussion-view[data-active="true"] .sidebar-comments-panel',
+        ) as HTMLElement | null;
         if (!container) {
           return false;
         }
@@ -170,7 +174,10 @@ test.describe('Item Page', () => {
         );
       }
 
-      const backButton = page.locator('button[aria-label="Go back to previous view"]');
+      const backButton = page.getByRole('button', {
+        name: 'Go back to previous view',
+        exact: true,
+      });
       await expect(backButton).toBeVisible();
       await page.waitForTimeout(500);
 

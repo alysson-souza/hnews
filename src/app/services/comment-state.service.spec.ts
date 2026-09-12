@@ -225,7 +225,7 @@ describe('CommentStateService', () => {
       };
       localStorageMock['hn_comment_state.v1'] = JSON.stringify(testData);
 
-      const newService = new CommentStateService();
+      const newService = TestBed.runInInjectionContext(() => new CommentStateService());
 
       expect(newService.isCollapsed(12345)).toBe(true);
       expect(newService.areRepliesExpanded(12345)).toBe(true);
@@ -239,7 +239,7 @@ describe('CommentStateService', () => {
     it('should handle corrupted localStorage data', () => {
       localStorageMock['hn_comment_state.v1'] = 'invalid json';
 
-      expect(() => new CommentStateService()).not.toThrow();
+      expect(() => TestBed.runInInjectionContext(() => new CommentStateService())).not.toThrow();
     });
 
     it('should handle invalid entry format', () => {
@@ -265,7 +265,7 @@ describe('CommentStateService', () => {
       };
       localStorageMock['hn_comment_state.v1'] = JSON.stringify(testData);
 
-      const newService = new CommentStateService();
+      const newService = TestBed.runInInjectionContext(() => new CommentStateService());
 
       expect(newService.getState(12345)).toBeDefined(); // Valid entry
       expect(newService.getState(67890)).toBeUndefined(); // Invalid entry
@@ -303,7 +303,7 @@ describe('CommentStateService', () => {
       };
       localStorageMock['hn_comment_state.v1'] = JSON.stringify(testData);
 
-      const newService = new CommentStateService();
+      const newService = TestBed.runInInjectionContext(() => new CommentStateService());
 
       expect(newService.getState(12345)).toBeUndefined(); // Old entry removed
       expect(newService.getState(67890)).toBeDefined(); // Recent entry kept
@@ -325,7 +325,7 @@ describe('CommentStateService', () => {
 
       localStorageMock['hn_comment_state.v1'] = JSON.stringify(testData);
 
-      const newService = new CommentStateService();
+      const newService = TestBed.runInInjectionContext(() => new CommentStateService());
 
       // Most recent 1000 should be kept
       expect(newService.getState(0)).toBeDefined(); // Most recent

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 
 export interface CommentStateEntry {
   collapsed: boolean;
@@ -17,11 +17,21 @@ export class CommentStateService {
   private readonly MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
   private readonly MAX_ENTRIES = 1000;
 
+  // Scoped discussion instances keep local reading state but share one storage writer.
+  private readonly persistenceOwner: CommentStateService | null = inject(CommentStateService, {
+    skipSelf: true,
+    optional: true,
+  });
+
   private statesMap = signal(new Map<number, CommentStateEntry>());
 
   constructor() {
-    this.load();
-    this.cleanup();
+    if (this.persistenceOwner) {
+      this.statesMap.set(this.persistenceOwner.snapshot());
+    } else {
+      this.load();
+      this.cleanup();
+    }
   }
 
   snapshot(): Map<number, CommentStateEntry> {
@@ -54,7 +64,8 @@ export class CommentStateService {
     const newMap = new Map(this.statesMap());
     newMap.set(commentId, newState);
     this.statesMap.set(newMap);
-    this.save();
+    if (this.persistenceOwner) this.persistenceOwner.setState(commentId, partialState);
+    else this.save();
   }
 
   /**
@@ -107,7 +118,8 @@ export class CommentStateService {
     }
 
     this.statesMap.set(newMap);
-    this.save();
+    if (this.persistenceOwner) this.persistenceOwner.setCollapsedMany(commentIds, collapsed);
+    else this.save();
   }
 
   /**
@@ -129,7 +141,8 @@ export class CommentStateService {
    */
   clearAll(): void {
     this.statesMap.set(new Map());
-    this.save();
+    if (this.persistenceOwner) this.persistenceOwner.clearAll();
+    else this.save();
   }
 
   private load(): void {

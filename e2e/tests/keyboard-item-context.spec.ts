@@ -33,7 +33,9 @@ async function focusDocument(page: import('@playwright/test').Page): Promise<voi
 }
 
 async function getSelectedCommentId(page: import('@playwright/test').Page): Promise<string | null> {
-  return page.locator('[role="treeitem"][aria-selected="true"]').getAttribute('data-comment-id');
+  return page
+    .locator('[role="treeitem"][aria-selected="true"]')
+    .evaluateAll((elements) => elements[0]?.getAttribute('data-comment-id') ?? null);
 }
 
 async function selectCommentById(
@@ -42,23 +44,23 @@ async function selectCommentById(
 ): Promise<string> {
   await focusDocument(page);
 
-  const treeitemCount = await page.locator('[role="treeitem"]').count();
-  let previousId: string | null = null;
-  for (let index = 0; index < treeitemCount; index++) {
-    await page.keyboard.press('j');
-    // Wait for the selection to actually advance (not just be truthy) so a
-    // key press processed faster than change detection can't be mistaken
-    // for a no-op and silently skip the target comment.
-    await expect.poll(() => getSelectedCommentId(page)).not.toBe(previousId);
-
+  await expect(async () => {
     const selectedId = await getSelectedCommentId(page);
-    if (selectedId === targetCommentId) {
-      return targetCommentId;
-    }
-    previousId = selectedId;
-  }
-
-  throw new Error(`Failed to select comment ${targetCommentId}`);
+    if (selectedId === targetCommentId) return;
+    // Replies can arrive between key presses and change the traversal order.
+    const ids = await page
+      .locator('[role="treeitem"]')
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute('data-comment-id')),
+      );
+    const targetIndex = ids.indexOf(targetCommentId);
+    expect(targetIndex).toBeGreaterThanOrEqual(0);
+    const currentIndex = ids.indexOf(selectedId);
+    await page.keyboard.press(currentIndex > targetIndex ? 'k' : 'j');
+    await expect.poll(() => getSelectedCommentId(page)).not.toBe(selectedId);
+    expect(await getSelectedCommentId(page)).toBe(targetCommentId);
+  }).toPass({ timeout: 15_000, intervals: [50] });
+  return targetCommentId;
 }
 
 async function selectCommentWithThread(page: import('@playwright/test').Page): Promise<string> {
