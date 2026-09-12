@@ -414,7 +414,14 @@ export class DiscussionViewComponent {
   private applyOpeningIntent(container: HTMLElement): void {
     const state = this.entry().state;
     if (!this.active() || (!state.selectFirst && !state.scrollFirst)) return;
-    const first = container.querySelector<HTMLElement>('[role="treeitem"]');
+    let first: HTMLElement | null = null;
+    for (const thread of container.querySelectorAll('.comments-list > app-comment-thread')) {
+      first = thread.querySelector<HTMLElement>('[role="treeitem"]');
+      if (first) break;
+      // Later replies can render before the first response arrives. Keep the
+      // opening intent pending until earlier comments load or prove unavailable.
+      if (thread.getAttribute('aria-busy') === 'true') return;
+    }
     if (!first) return;
     const toolbar = container.querySelector('.comments-heading');
     container.scrollTop +=
@@ -422,8 +429,7 @@ export class DiscussionViewComponent {
       container.getBoundingClientRect().top -
       (toolbar?.getBoundingClientRect().height ?? 0) -
       16;
-    if (state.selectFirst)
-      this.sidebarKeyboardNav.selectFirstVisibleComment({ scrollIntoView: false });
+    if (state.selectFirst) state.selectedCommentId.set(Number(first.dataset['commentId']));
     state.selectFirst = false;
     state.scrollFirst = false;
   }

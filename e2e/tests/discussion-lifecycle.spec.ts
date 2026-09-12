@@ -267,3 +267,56 @@ test('a new branch after Back releases the old forward discussion', async ({ pag
   await expect.poll(() => active(page).evaluate((el) => el.getBoundingClientRect().left)).toBe(0);
   await expect(active(page)).toHaveAttribute('data-entry-key', branch!);
 });
+
+for (const width of [390, 1280]) {
+  test(`keyboard subthread entry selects its first comment at ${width}px`, async ({
+    page,
+    hnDataset,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const parent = hnDataset.items.get(MAIN_STORY_ID)!.kids![0];
+    const firstReply = hnDataset.items.get(parent)!.kids![0];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route(`**/item/${firstReply}.json`, async (route) => {
+      await gate;
+      await route.fallback();
+    });
+    await page.goto('/top');
+    await page.locator('.story-comments').first().click();
+    await expect(active(page).locator('[role="treeitem"]').first()).toBeVisible();
+    await page.keyboard.press('j');
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(parent),
+    );
+    const root = await active(page).getAttribute('data-entry-key');
+    await page.keyboard.press('l');
+    await expect(active(page)).not.toHaveAttribute('data-entry-key', root!);
+    await expect(active(page).locator('[role="treeitem"]').first()).toBeVisible();
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveCount(0);
+    release();
+    await expect(active(page).locator('[role="treeitem"]').first()).toHaveAttribute(
+      'data-comment-id',
+      String(firstReply),
+    );
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(firstReply),
+    );
+    await page.keyboard.press('h');
+    await expect(active(page)).toHaveAttribute('data-entry-key', root!);
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(parent),
+    );
+    await page.keyboard.press('l');
+    await expect(active(page)).not.toHaveAttribute('data-entry-key', root!);
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(firstReply),
+    );
+  });
+}
