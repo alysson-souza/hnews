@@ -62,6 +62,12 @@ import { DiscussionViewComponent } from './discussion-view.component';
             env(safe-area-inset-left);
         }
       }
+      @media (display-mode: standalone) and (max-width: 639.98px) {
+        app-discussion-view {
+          /* The original phone header already applies the top safe-area inset. */
+          padding-top: 0;
+        }
+      }
       @media (min-width: 1024px) {
         .sidebar-panel {
           left: auto;
