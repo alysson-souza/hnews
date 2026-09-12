@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2025 Alysson Souza
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, of, from, merge, firstValueFrom } from 'rxjs';
+import { Observable, forkJoin, of, from, merge, firstValueFrom, defer } from 'rxjs';
 import { catchError, switchMap, shareReplay, map, take, finalize } from 'rxjs/operators';
 import { CacheManagerService } from './cache-manager.service';
 import { BatchedItemLoaderService } from './batched-item-loader.service';
@@ -179,7 +179,20 @@ export class HackernewsService {
       return of([]);
     }
 
-    const requests = pageIds.map((id) => this.getItem(id).pipe(take(1)));
+    // Reply pages must distinguish a failed fetch from a genuinely missing item.
+    // Keep cached replies, but bypass the batcher's best-effort error handling.
+    const requests = pageIds.map((id) =>
+      defer(async () => {
+        const cached = await this.cache.get<HNItem>(this.storyScope, id.toString());
+        if (cached != null) return cached;
+        const item = await firstValueFrom(this.hn.itemOrError(id));
+        if (item !== null) {
+          // Persistence is best-effort; storage failures must not hide fetched replies.
+          void this.cache.set(this.storyScope, id.toString(), item).catch(() => {});
+        }
+        return item;
+      }),
+    );
     return forkJoin(requests);
   }
 

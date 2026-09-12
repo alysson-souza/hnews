@@ -41,10 +41,14 @@ export class HnApiClient {
   }
 
   item(id: number): Observable<HNItem | null> {
-    return this.http.get<unknown>(`${this.API_BASE}/item/${id}.json`).pipe(
-      map((raw) => mapToHNItem(raw)),
-      catchError(() => of(null)),
-    );
+    return this.itemOrError(id).pipe(catchError(() => of(null)));
+  }
+
+  /** Preserve transport errors for callers that offer retry. */
+  itemOrError(id: number): Observable<HNItem | null> {
+    return this.http
+      .get<unknown>(`${this.API_BASE}/item/${id}.json`)
+      .pipe(map((raw) => mapToHNItem(raw)));
   }
 
   user(id: string): Observable<HNUser> {
