@@ -20,11 +20,11 @@ After backing out to the underlying page, swipe left on its noninteractive readi
 
 ## Keyboard navigation
 
-`J` and `K` move between comments, skipping collapsed descendants. Selection belongs to the active discussion. The selected comment scrolls below the sticky toolbar. Empty or unloaded discussions do not receive comment actions.
+`J` and `K` move between comments, skipping collapsed descendants. Selection belongs to the active discussion. The selected comment aligns at the top of the reading area, directly below the sticky toolbar. Empty or unloaded discussions do not receive comment actions.
 
-`L` opens the selected comment's thread when it has replies. On the item page this navigates to a new URL. In a discussion session it pushes another discussion and, once its comments render, scrolls to and selects the first comment.
+`L` opens the selected comment's thread when it has replies. On the item page this navigates to a new URL. In a discussion session it pushes another discussion and, once its comments render, waits for and selects the first available comment in discussion order, then aligns it at the top. Later responses cannot cause a faster-loading reply to be selected instead.
 
-The `»` button opens the same thread and scrolls to its first comment without selecting it. `H` returns one level and restores the previous selection and reading position. Escape closes the session. The full-view command retains `/item/:id` navigation.
+The `»` button opens the same thread and scrolls to its first comment without selecting it. `H` returns one level and aligns the previous selection at that same top position. Toolbar Back and Forward history restoration use the same alignment when a keyboard selection exists. Without a selection, navigation restores the saved reading offset. Escape closes the session. The full-view command retains `/item/:id` navigation.
 
 ## Reading state and lifetime
 

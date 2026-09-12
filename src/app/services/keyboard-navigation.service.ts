@@ -156,7 +156,9 @@ export class KeyboardNavigationService {
   }
 
   private clickLoadMoreStoriesButton(): void {
-    const loadMoreTrigger = document.querySelector('.load-more-btn') as HTMLElement | null;
+    const loadMoreTrigger = document.querySelector(
+      'app-story-list .load-more-btn',
+    ) as HTMLElement | null;
     if (!loadMoreTrigger) {
       return;
     }

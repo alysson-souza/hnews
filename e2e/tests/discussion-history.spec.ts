@@ -174,7 +174,6 @@ test('restores scroll and expanded comments after releasing older views; bounds 
     el.scrollTop = 180;
   });
   await expect.poll(() => scroll.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
-  const saved = await scroll.evaluate((el) => el.scrollTop);
   for (let i = 0; i < 3; i++) {
     if (i === 0) {
       await page.keyboard.press('l');
@@ -198,12 +197,12 @@ test('restores scroll and expanded comments after releasing older views; bounds 
     expanded,
   );
   await expect
-    .poll(() =>
-      active(page)
-        .locator('.sidebar-comments-panel')
-        .evaluate((el) => el.scrollTop),
-    )
-    .toBeCloseTo(saved, 0);
+    .poll(async () => {
+      const selected = (await active(page).locator('[aria-selected="true"]').boundingBox())!;
+      const toolbar = (await active(page).locator('.comments-heading').boundingBox())!;
+      return Math.abs(selected.y - toolbar.y - toolbar.height);
+    })
+    .toBeLessThan(1);
 });
 
 test('rotation cancels a drag and inactive screens cannot receive focus', async ({ page }) => {
@@ -518,5 +517,11 @@ test('shorter reloaded content allows a new reading position', async ({ page, hn
   await nested(page);
   await active(page).getByRole('button', { name: 'Go back to previous view' }).click();
   await expect(active(page)).toHaveAttribute('data-entry-key', rootKey!);
-  await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0);
+  await expect
+    .poll(async () => {
+      const selected = (await active(page).locator('[aria-selected="true"]').boundingBox())!;
+      const toolbar = (await active(page).locator('.comments-heading').boundingBox())!;
+      return Math.abs(selected.y - toolbar.y - toolbar.height);
+    })
+    .toBeLessThan(1);
 });

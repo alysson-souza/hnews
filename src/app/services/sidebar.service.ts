@@ -12,6 +12,7 @@ export interface DiscussionEntry {
   itemId: number;
   state: {
     scrollTop: number;
+    scrollAnchorId?: number;
     selectedCommentId: WritableSignal<number | null>;
     visibleCount: number;
     item: HNItem | null;

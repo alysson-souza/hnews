@@ -70,9 +70,9 @@ import { CommentStateService } from '@services/comment-state.service';
         class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain focus:outline-none"
         tabindex="-1"
         (scroll)="saveScroll()"
-        (wheel)="stopScrollRestoration()"
-        (touchstart)="stopScrollRestoration()"
-        (pointerdown)="stopScrollRestoration()"
+        (wheel)="stopScrollRestoration($event)"
+        (touchstart)="stopScrollRestoration($event)"
+        (pointerdown)="stopScrollRestoration($event)"
         (keydown)="onReadingKeydown($event)"
       >
         <div class="comments-body">
@@ -328,6 +328,8 @@ export class DiscussionViewComponent {
   private restoreScrollTop: number | null = null;
   private renderedEntryKey: number | null = null;
   private wasActive = false;
+  private restoreSelection = false;
+  private readingInput = false;
 
   constructor() {
     effect(() => {
@@ -373,11 +375,18 @@ export class DiscussionViewComponent {
         const activating = active && (firstRender || !this.wasActive);
         if (!firstRender && this.wasActive && !active) this.saveScroll();
         if (firstRender || activating) this.restoreScrollTop = entry.state.scrollTop;
+        if (firstRender || activating)
+          this.restoreSelection =
+            entry.state.selectedCommentId() !== null || entry.state.scrollAnchorId !== undefined;
+        if (activating) this.readingInput = false;
         this.renderedEntryKey = entry.key;
         this.wasActive = active;
         this.restoreScroll(container);
         if (activating) container.focus({ preventScroll: true });
-        if (active) this.applyOpeningIntent(container);
+        if (active) {
+          this.applyOpeningIntent(container);
+          this.restoreSelectedComment(container);
+        }
       });
     });
     afterRenderEffect((onCleanup) => {
@@ -386,10 +395,12 @@ export class DiscussionViewComponent {
       const observer = new ResizeObserver(() => {
         this.restoreScroll(container);
         this.applyOpeningIntent(container);
+        this.restoreSelectedComment(container);
       });
       const mutations = new MutationObserver(() => {
         this.restoreScroll(container);
         this.applyOpeningIntent(container);
+        this.restoreSelectedComment(container);
       });
       mutations.observe(container, {
         childList: true,
@@ -423,15 +434,24 @@ export class DiscussionViewComponent {
       if (thread.getAttribute('aria-busy') === 'true') return;
     }
     if (!first) return;
-    const toolbar = container.querySelector('.comments-heading');
-    container.scrollTop +=
-      first.getBoundingClientRect().top -
-      container.getBoundingClientRect().top -
-      (toolbar?.getBoundingClientRect().height ?? 0) -
-      16;
+    this.sidebarKeyboardNav.scrollCommentToTop(first, container);
+    this.finishScrollRestoration(container);
+    state.scrollAnchorId = Number(first.dataset['commentId']);
     if (state.selectFirst) state.selectedCommentId.set(Number(first.dataset['commentId']));
     state.selectFirst = false;
     state.scrollFirst = false;
+  }
+  private restoreSelectedComment(container: HTMLElement): void {
+    if (!this.active() || !this.restoreSelection) return;
+    const id = this.entry().state.selectedCommentId() ?? this.entry().state.scrollAnchorId;
+    const selected = container.querySelector<HTMLElement>(
+      `[role="treeitem"][data-comment-id="${id}"]`,
+    );
+    if (!selected) return;
+    this.sidebarKeyboardNav.scrollCommentToTop(selected, container);
+    this.entry().state.scrollAnchorId = id;
+    this.finishScrollRestoration(container);
+    this.restoreSelection = false;
   }
   private finishScrollRestoration(container: HTMLElement): void {
     this.restoreScrollTop = null;
@@ -445,7 +465,15 @@ export class DiscussionViewComponent {
       !this.loading() && !this.commentsLoading() && !container.querySelector('[aria-busy="true"]');
     if (maximum >= this.restoreScrollTop || settled) this.finishScrollRestoration(container);
   }
-  stopScrollRestoration(): void {
+  stopScrollRestoration(event?: Event): void {
+    if (
+      event?.type !== 'wheel' &&
+      event?.target instanceof Element &&
+      event.target.closest('button, a, input, select, textarea')
+    )
+      return;
+    this.readingInput = true;
+    this.restoreSelection = false;
     const container = this.sidebarContentRef()?.nativeElement;
     if (this.restoreScrollTop !== null && container) this.finishScrollRestoration(container);
   }
@@ -470,9 +498,13 @@ export class DiscussionViewComponent {
   }
   saveScroll(): void {
     const container = this.sidebarContentRef()?.nativeElement;
-    if (this.restoreScrollTop !== null || !container) return;
-    this.entry().state.scrollTop = container.scrollTop;
+    if (this.restoreScrollTop !== null || this.restoreSelection || !container) return;
+    const state = this.entry().state;
+    if (this.readingInput && Math.abs(state.scrollTop - container.scrollTop) >= 1)
+      state.scrollAnchorId = undefined;
+    state.scrollTop = container.scrollTop;
   }
+
   private loadItem(id: number): void {
     const inheritedPreviousVisitedAt = this.entry().state.inheritedPreviousVisitedAt;
 

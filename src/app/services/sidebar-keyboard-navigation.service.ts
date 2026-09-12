@@ -61,13 +61,26 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
       return;
     }
 
+    this.scrollCommentToTop(element, container, 'smooth');
+  }
+
+  scrollCommentToTop(
+    element: HTMLElement,
+    container: HTMLElement,
+    behavior: ScrollBehavior = 'instant',
+  ): void {
     const target = this.computeSidebarScrollTarget(element, container);
     this.ensureScrollTarget(container, target);
+    container.scrollTo({ top: target, behavior });
+    if (behavior !== 'instant') return;
 
-    container.scrollTo({
-      top: target,
-      behavior: 'smooth',
-    });
+    // Measure the pinned toolbar after scrolling; short threads can otherwise
+    // leave it constrained by the end of their content.
+    const toolbar = container.querySelector('.comments-heading');
+    const top = toolbar?.getBoundingClientRect().bottom ?? container.getBoundingClientRect().top;
+    const aligned = Math.max(0, container.scrollTop + element.getBoundingClientRect().top - top);
+    this.ensureScrollTarget(container, aligned);
+    container.scrollTo({ top: aligned, behavior: 'instant' });
   }
 
   /**
@@ -167,7 +180,7 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
     const elementRect = element.getBoundingClientRect();
 
     const targetScrollTop =
-      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
+      container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight;
 
     return Math.max(0, targetScrollTop);
   }

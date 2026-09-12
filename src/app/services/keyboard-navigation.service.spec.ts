@@ -190,9 +190,11 @@ describe('KeyboardNavigationService', () => {
 
     it('should click the nested load more button on the last story', () => {
       document.body.innerHTML = `
-        <app-button class="load-more-btn">
-          <button type="button">Load More Stories</button>
-        </app-button>
+        <app-story-list>
+          <app-button class="load-more-btn">
+            <button type="button">Load More Stories</button>
+          </app-button>
+        </app-story-list>
       `;
 
       service.setTotalItems(1);

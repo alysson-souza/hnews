@@ -320,3 +320,93 @@ for (const width of [390, 1280]) {
     );
   });
 }
+
+for (const width of [390, 1280]) {
+  test(`H returns to the drilled comment after rapid keyboard navigation at ${width}px`, async ({
+    page,
+    hnDataset,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const parent = hnDataset.items.get(MAIN_STORY_ID)!.kids![0];
+    const reply = hnDataset.items.get(parent)!.kids![0];
+    hnDataset.items.get(parent)!.text = '<p>Long parent comment.</p>'.repeat(40);
+    await open(page);
+    const root = await active(page).getAttribute('data-entry-key');
+    await page.keyboard.press('j');
+    await page.keyboard.press('j');
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(reply),
+    );
+    await page.keyboard.press('l');
+    await expect(active(page)).not.toHaveAttribute('data-entry-key', root!);
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveCount(1);
+    await page.keyboard.press('h');
+    await expect(active(page)).toHaveAttribute('data-entry-key', root!);
+    const selected = active(page).locator('[aria-selected="true"]');
+    await expect(selected).toHaveAttribute('data-comment-id', String(reply));
+    await expect(selected.locator('app-comment-header').first()).toBeInViewport();
+    await expect
+      .poll(async () => {
+        const toolbar = (await active(page).locator('.comments-heading').boundingBox())!;
+        const header = (await selected.locator('app-comment-header').first().boundingBox())!;
+        const parentBody = (await active(page)
+          .locator(`[data-comment-id="${parent}"] .comment-body`)
+          .first()
+          .boundingBox())!;
+        return (
+          header.y >= toolbar.y + toolbar.height &&
+          parentBody.y + parentBody.height <= toolbar.y + toolbar.height
+        );
+      })
+      .toBe(true);
+  });
+}
+
+for (const back of ['keyboard', 'toolbar']) {
+  test(`desktop thread navigation uses the same top alignment with ${back} Back`, async ({
+    page,
+    hnDataset,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const parent = hnDataset.items.get(MAIN_STORY_ID)!.kids![0];
+    const reply = hnDataset.items.get(parent)!.kids![0];
+    hnDataset.items.get(parent)!.text = '<p>Long parent comment.</p>'.repeat(40);
+    await open(page);
+    const root = await active(page).getAttribute('data-entry-key');
+    await page.keyboard.press('j');
+    await page.keyboard.press('j');
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(reply),
+    );
+    await active(page)
+      .locator('.sidebar-comments-panel')
+      .evaluate((el) => {
+        el.scrollTop = 0;
+      });
+    const expectAtTop = async () => {
+      await expect
+        .poll(async () => {
+          const comment = await active(page).locator('[aria-selected="true"]').boundingBox();
+          const toolbar = await active(page).locator('.comments-heading').boundingBox();
+          return comment && toolbar ? Math.abs(comment.y - toolbar.y - toolbar.height) : Infinity;
+        })
+        .toBeLessThan(1);
+    };
+    await page.keyboard.press('l');
+    await expect(active(page)).not.toHaveAttribute('data-entry-key', root!);
+    await expectAtTop();
+    if (back === 'keyboard') await page.keyboard.press('h');
+    else await active(page).getByRole('button', { name: 'Go back to previous view' }).click();
+    await expect(active(page)).toHaveAttribute('data-entry-key', root!);
+    await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+      'data-comment-id',
+      String(reply),
+    );
+    await expectAtTop();
+    await page.keyboard.press('l');
+    await expect(active(page)).not.toHaveAttribute('data-entry-key', root!);
+    await expectAtTop();
+  });
+}
