@@ -30,8 +30,12 @@ export class CommentRepliesLoaderService {
   private readonly currentPageState = signal(0);
   readonly currentPage = this.currentPageState.asReadonly();
 
+  private readonly errorState = signal(false);
+  readonly error = this.errorState.asReadonly();
+
   configureKids(ids: number[] | undefined) {
     this.kidsIds = Array.isArray(ids) ? ids : [];
+    this.errorState.set(false);
 
     this.repliesState.set([]);
     this.repliesLoadedState.set(false);
@@ -41,7 +45,7 @@ export class CommentRepliesLoaderService {
     this.hasMoreState.set(this.kidsIds.length > this.pageSize);
   }
 
-  loadFirstPage() {
+  loadFirstPage(onSuccess?: () => void) {
     if (this.loadingRepliesState() || this.repliesLoadedState()) {
       return;
     }
@@ -51,16 +55,16 @@ export class CommentRepliesLoaderService {
       return;
     }
 
-    this.loadPage(0);
+    this.loadPage(0, onSuccess);
   }
 
-  loadNextPage() {
+  loadNextPage(onSuccess?: () => void) {
     if (this.loadingMoreState() || !this.hasMoreState() || !this.repliesLoadedState()) {
       return;
     }
 
     const nextPage = this.currentPageState() + 1;
-    this.loadPage(nextPage);
+    this.loadPage(nextPage, onSuccess);
   }
 
   /**
@@ -115,6 +119,7 @@ export class CommentRepliesLoaderService {
       return;
     }
 
+    this.errorState.set(false);
     if (page === 0) {
       this.loadingRepliesState.set(true);
     } else {
@@ -144,7 +149,7 @@ export class CommentRepliesLoaderService {
       error: () => {
         this.loadingRepliesState.set(false);
         this.loadingMoreState.set(false);
-        onComplete?.();
+        this.errorState.set(true);
       },
     });
   }

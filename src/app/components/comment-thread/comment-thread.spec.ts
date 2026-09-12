@@ -34,6 +34,7 @@ class MockCacheManagerService {
 class MockCommentRepliesLoaderService {
   replies = signal<HNItem[]>([]);
   repliesLoaded = signal(false);
+  error = signal(false);
   loadingReplies = signal(false);
   loadingMore = signal(false);
   hasMore = signal(false);
@@ -634,6 +635,8 @@ describe('CommentThread', () => {
       component.expandReplies();
 
       expect(mockRepliesLoader.loadFirstPage).toHaveBeenCalled();
+      expect(mockCommentStateService.setRepliesExpanded).not.toHaveBeenCalled();
+      mockRepliesLoader.loadFirstPage.mock.calls.at(-1)?.[0]?.();
       expect(mockCommentStateService.setRepliesExpanded).toHaveBeenCalledWith(123, true);
       expect(mockCommentStateService.setLoadedPages).toHaveBeenCalledWith(123, 1);
     });
@@ -646,6 +649,9 @@ describe('CommentThread', () => {
       component.loadMoreReplies();
 
       expect(mockRepliesLoader.loadNextPage).toHaveBeenCalled();
+      expect(mockCommentStateService.setLoadedPages).not.toHaveBeenCalled();
+      mockRepliesLoader.currentPage.set(2);
+      mockRepliesLoader.loadNextPage.mock.calls.at(-1)?.[0]?.();
       expect(mockCommentStateService.setLoadedPages).toHaveBeenCalledWith(123, 3); // page 1 + 1 (next) + 1 (1-based)
     });
 

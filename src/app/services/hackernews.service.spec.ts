@@ -138,6 +138,11 @@ describe('HackernewsService data orchestration', () => {
     });
 
     cache = {
+      get: vi
+        .fn()
+        .mockImplementation(
+          async (type: string, key: string) => cacheStore.get(`${type}:${key}`) ?? null,
+        ),
       set: cacheSetSpy,
       getWithSWR: cacheGetWithSWRSpy,
       getUpdates: cacheGetUpdatesSpy,
