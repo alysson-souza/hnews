@@ -253,3 +253,34 @@ test('closing a nested mobile discussion reveals the page instead of its parent'
   expect(visibleKeys).toEqual([childKey]);
   await expect(page.locator('app-discussion-view')).toHaveCount(0);
 });
+
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 1280, height: 900 },
+]) {
+  test(`resize during close releases the discussion at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/top');
+    await page.locator('.story-comments').first().click();
+    const active = page.locator('app-discussion-view[data-active="true"]');
+    await expect(active.locator('[role="treeitem"]').first()).toBeVisible();
+    await active.getByRole('button', { name: 'Close sidebar', exact: true }).click();
+    await expect
+      .poll(() =>
+        page
+          .locator('.sidebar-panel')
+          .evaluate((element) =>
+            element
+              .getAnimations({ subtree: true })
+              .some((animation) => animation.playState === 'running'),
+          ),
+      )
+      .toBe(true);
+    await page.setViewportSize(
+      viewport.width < 1024 ? { width: 844, height: 390 } : { width: 1200, height: 800 },
+    );
+    await expect(page.locator('app-discussion-view')).toHaveCount(0);
+    await page.locator('.story-comments').first().click();
+    await expect(active.locator('[role="treeitem"]').first()).toBeVisible();
+  });
+}

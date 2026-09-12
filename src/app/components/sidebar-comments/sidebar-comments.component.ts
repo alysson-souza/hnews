@@ -109,6 +109,7 @@ export class SidebarCommentsComponent {
   } | null = null;
   private animations: Animation[] = [];
   private generation = 0;
+  private closing = false;
   private previousPositions = new Map<number, number>();
   private gestureCommitted = false;
   private readonly positions = computed(
@@ -138,6 +139,7 @@ export class SidebarCommentsComponent {
       const panel = this.panel()?.nativeElement;
       if (!entries.size) {
         if (!screens.length) return;
+        this.closing = true;
         const generation = ++this.generation;
         this.animations =
           desktop && panel
@@ -162,10 +164,10 @@ export class SidebarCommentsComponent {
           .then(() => {
             if (generation !== this.generation) return;
             this.cancel();
-            this.previousPositions.clear();
-            this.retainedEntries.set([]);
           })
-          .catch(() => {});
+          .catch(() => {
+            if (generation === this.generation) this.cancel();
+          });
         return;
       }
       this.previousPositions = new Map([...entries].map(([key, index]) => [key, index - position]));
@@ -385,11 +387,17 @@ export class SidebarCommentsComponent {
       });
   }
   private cancel = (): void => {
+    const wasClosing = this.closing;
+    this.closing = false;
     this.generation++;
     this.animations.forEach((a) => a.cancel());
     this.animations = [];
     this.pointer = null;
     this.offset.set(0);
     this.dragging.set(false);
+    if (wasClosing && this.sidebarService.entries().length === 0) {
+      this.previousPositions.clear();
+      this.retainedEntries.set([]);
+    }
   };
 }
