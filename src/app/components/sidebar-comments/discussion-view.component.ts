@@ -366,14 +366,6 @@ export class DiscussionViewComponent {
         }
       });
     });
-    effect((onCleanup) => {
-      if (!this.active()) return;
-      const entry = this.entry();
-      untracked(() => this.sidebarKeyboardNav.selectedCommentId.set(entry.state.selectedCommentId));
-      onCleanup(() => {
-        entry.state.selectedCommentId = this.sidebarKeyboardNav.selectedCommentId();
-      });
-    });
     afterRenderEffect((onCleanup) => {
       const container = this.sidebarContentRef()?.nativeElement;
       if (!container || typeof ResizeObserver === 'undefined') return;

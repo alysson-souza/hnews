@@ -12,7 +12,10 @@ export abstract class BaseCommentNavigationService {
   private readonly EXPAND_ALL_LIMIT = 100;
 
   // Currently selected comment ID
-  selectedCommentId = signal<number | null>(null);
+  private readonly selection = signal<number | null>(null);
+  get selectedCommentId() {
+    return this.selection;
+  }
 
   protected interactionService = inject(SidebarCommentsInteractionService);
   protected commandRegistry = inject(CommandRegistryService);

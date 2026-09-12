@@ -36,7 +36,9 @@ describe('SidebarKeyboardNavigationService', () => {
       close: vi.fn(),
       back: vi.fn(),
       push: vi.fn(),
-      currentEntry: vi.fn().mockReturnValue({ key: 1, state: {} }),
+      currentEntry: vi
+        .fn()
+        .mockReturnValue({ key: 1, state: { selectedCommentId: signal<number | null>(null) } }),
       closeSidebar: vi.fn(),
       goBack: vi.fn(),
       canGoBack: vi.fn(),

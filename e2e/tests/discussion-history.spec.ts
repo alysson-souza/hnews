@@ -402,3 +402,30 @@ test('retained discussions do not overwrite each other after closing and reopeni
     active(page).locator(`[role="treeitem"][data-comment-id="${commentId}"]`),
   ).toHaveAttribute('aria-expanded', 'false');
 });
+
+test('Forward restores the departing discussion selection after Back', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page);
+  await page.keyboard.press('j');
+  const parentSelection = await active(page)
+    .locator('[aria-selected="true"]')
+    .getAttribute('data-comment-id');
+  await nested(page);
+  await page.keyboard.press('j');
+  const childSelection = await active(page)
+    .locator('[aria-selected="true"]')
+    .getAttribute('data-comment-id');
+  expect(childSelection).not.toBe(parentSelection);
+  const childKey = await active(page).getAttribute('data-entry-key');
+  await active(page).getByRole('button', { name: 'Go back to previous view' }).click();
+  await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+    'data-comment-id',
+    parentSelection!,
+  );
+  await drag(page, -180);
+  await expect(active(page)).toHaveAttribute('data-entry-key', childKey!);
+  await expect(active(page).locator('[aria-selected="true"]')).toHaveAttribute(
+    'data-comment-id',
+    childSelection!,
+  );
+});

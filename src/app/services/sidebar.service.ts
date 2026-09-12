@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 Alysson Souza
-import { Injectable, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Injectable, inject, signal, computed, DestroyRef, WritableSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router } from '@angular/router';
 import { HNItem } from '@models/hn';
@@ -11,7 +11,7 @@ export interface DiscussionEntry {
   itemId: number;
   state: {
     scrollTop: number;
-    selectedCommentId: number | null;
+    selectedCommentId: WritableSignal<number | null>;
     visibleCount: number;
     item: HNItem | null;
     comments: HNItem[];
@@ -61,7 +61,7 @@ export class SidebarService {
       itemId,
       state: {
         scrollTop: 0,
-        selectedCommentId: null,
+        selectedCommentId: signal<number | null>(null),
         visibleCount: 10,
         item: null,
         comments: [],

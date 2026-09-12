@@ -74,7 +74,9 @@ describe('DiscussionViewComponent', () => {
       position: vi.fn().mockReturnValue(0),
       canGoBack: vi.fn().mockReturnValue(true),
       canGoForward: vi.fn().mockReturnValue(false),
-      currentEntry: vi.fn().mockReturnValue({ key: 1 }),
+      currentEntry: vi
+        .fn()
+        .mockReturnValue({ key: 1, state: { selectedCommentId: signal<number | null>(null) } }),
     } as unknown as MockedObject<SidebarService>;
     mockVisitedService = {
       markCommentsVisited: vi.fn(),
@@ -124,7 +126,7 @@ describe('DiscussionViewComponent', () => {
       itemId: 123,
       state: {
         scrollTop: 0,
-        selectedCommentId: null,
+        selectedCommentId: signal<number | null>(null),
         visibleCount: 10,
         item: null,
         comments: [],

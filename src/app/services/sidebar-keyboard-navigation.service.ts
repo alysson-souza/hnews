@@ -14,6 +14,10 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
   private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
   private router = inject(Router);
 
+  override get selectedCommentId() {
+    return this.sidebarService.currentEntry()?.state.selectedCommentId ?? super.selectedCommentId;
+  }
+
   protected get containerSelector(): string {
     return 'app-discussion-view[data-active="true"] .sidebar-comments-panel';
   }
