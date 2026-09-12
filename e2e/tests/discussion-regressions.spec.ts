@@ -1,9 +1,11 @@
 import { test, expect } from '../fixtures/pages.fixture';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem('user.settings.v1', JSON.stringify({ openCommentsInSidebar: true })),
-  );
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('user.settings.v1')) {
+      localStorage.setItem('user.settings.v1', JSON.stringify({ openCommentsInSidebar: true }));
+    }
+  });
 });
 
 test('desktop moves the sidebar and its contents together', async ({ page, isMobile }) => {
@@ -189,3 +191,32 @@ for (const depth of [0, 1]) {
     await expect(page.locator('app-discussion-view')).toHaveCount(0);
   });
 }
+
+for (const width of [390, 1280]) {
+  test(`Enter activates the comments link once at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/top');
+    await page.locator('.story-comments').first().press('Enter');
+    const active = page.locator('app-discussion-view[data-active="true"]');
+    await expect(active.locator('[role="treeitem"]').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/top$/);
+    await active.getByRole('button', { name: 'Close sidebar', exact: true }).click();
+    await expect(page.locator('app-discussion-view')).toHaveCount(0);
+    await page.locator('.story-comments').first().press('Enter');
+    await expect(active.locator('[role="treeitem"]').first()).toBeVisible();
+  });
+}
+
+test('Enter keeps full-page navigation when the sidebar preference is disabled', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/top');
+  await page.evaluate(() =>
+    localStorage.setItem('user.settings.v1', JSON.stringify({ openCommentsInSidebar: false })),
+  );
+  await page.reload();
+  await page.locator('.story-comments').first().press('Enter');
+  await expect(page).toHaveURL(/\/item\/\d+/);
+  await expect(page.locator('app-discussion-view')).toHaveCount(0);
+});
