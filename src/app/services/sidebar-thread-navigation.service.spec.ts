@@ -15,4 +15,15 @@ describe('thread navigation', () => {
     navigation.closeSidebar();
     expect(store.entries()).toEqual([]);
   });
+  it('does not restart opening actions when the current discussion is pushed again', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const store = TestBed.inject(SidebarService);
+    const navigation = TestBed.inject(SidebarThreadNavigationService);
+    store.open(1);
+    const entry = store.currentEntry()!;
+    navigation.pushThread(1, { selectFirstVisibleOnOpen: true });
+    expect(store.currentEntry()).toBe(entry);
+    expect(entry.state.selectFirst).toBe(false);
+    expect(entry.state.scrollFirst).not.toBe(true);
+  });
 });

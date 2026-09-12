@@ -18,6 +18,7 @@ export interface DiscussionEntry {
     comments: HNItem[];
     commentStates?: Map<number, CommentStateEntry>;
     previousVisitedAt: number | null;
+    inheritedPreviousVisitedAt?: number | null;
     visited: boolean;
     selectFirst: boolean;
     scrollFirst?: boolean;

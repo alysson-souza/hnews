@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Alysson Souza
 import {
   Component,
+  ChangeDetectorRef,
   DestroyRef,
   ElementRef,
   afterRenderEffect,
@@ -90,6 +91,9 @@ import { DiscussionViewComponent } from './discussion-view.component';
 })
 export class SidebarCommentsComponent {
   readonly sidebarService = inject(SidebarService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly mobileViewport = signal(false);
   private panel = viewChild('panel', { read: ElementRef<HTMLElement> });
   private retainedEntries = signal<DiscussionEntry[]>([]);
   readonly renderedEntries = computed(() =>
@@ -111,13 +115,56 @@ export class SidebarCommentsComponent {
   private generation = 0;
   private closing = false;
   private previousPositions = new Map<number, number>();
-  private gestureCommitted = false;
   private readonly positions = computed(
     () => new Map(this.sidebarService.entries().map((entry, index) => [entry.key, index])),
   );
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    const media = matchMedia('(max-width: 1023.98px)');
+    const updateMobile = () => this.mobileViewport.set(media.matches);
+    updateMobile();
+    media.addEventListener('change', updateMobile);
+    destroyRef.onDestroy(() => media.removeEventListener('change', updateMobile));
+    effect((onCleanup) => {
+      if (!this.sidebarService.isOpen()) return;
+      const opener = document.activeElement;
+      onCleanup(() =>
+        queueMicrotask(() => {
+          if (
+            !this.sidebarService.isOpen() &&
+            opener instanceof HTMLElement &&
+            opener.isConnected &&
+            !opener.closest('[inert]')
+          ) {
+            opener.focus({ preventScroll: true });
+          }
+        }),
+      );
+    });
+    effect((onCleanup) => {
+      if (!this.sidebarService.isOpen() || !this.mobileViewport()) return;
+      const root = this.host.nativeElement.parentElement;
+      const regions = Array.from(
+        root?.querySelectorAll<HTMLElement>(':scope > app-shell, :scope > app-scroll-to-top') ?? [],
+      );
+      const coveredFocus = regions.some((region) => region.contains(document.activeElement));
+      const originals = regions.map((region) => [region, region.inert] as const);
+      regions.forEach((region) => {
+        region.inert = true;
+      });
+      if (coveredFocus)
+        root
+          ?.querySelector<HTMLElement>(
+            'app-discussion-view[data-active="true"] .sidebar-comments-panel',
+          )
+          ?.focus({ preventScroll: true });
+      onCleanup(() =>
+        originals.forEach(([region, inert]) => {
+          region.inert = inert;
+        }),
+      );
+    });
     effect(() => {
       const entries = this.sidebarService.visibleEntries();
       const activeKey = this.sidebarService.currentEntry()?.key;
@@ -171,10 +218,6 @@ export class SidebarCommentsComponent {
         return;
       }
       this.previousPositions = new Map([...entries].map(([key, index]) => [key, index - position]));
-      if (this.gestureCommitted) {
-        this.gestureCommitted = false;
-        return;
-      }
       if (desktop && panel && !previous.size) {
         this.animations = [
           panel.animate([{ transform: 'translateX(100%)' }, { transform: 'translateX(0)' }], {
@@ -257,10 +300,15 @@ export class SidebarCommentsComponent {
       if (e.changedTouches.length) this.finish(e.changedTouches[0].identifier);
     });
     listen('touchcancel', () => this.cancel());
+    listen('visibilitychange', () => {
+      if (document.hidden) this.cancel();
+    });
+    window.addEventListener('blur', this.cancel);
     window.addEventListener('resize', this.cancel);
     window.addEventListener('orientationchange', this.cancel);
     destroyRef.onDestroy(() => {
       this.cancel();
+      window.removeEventListener('blur', this.cancel);
       window.removeEventListener('resize', this.cancel);
       window.removeEventListener('orientationchange', this.cancel);
     });
@@ -375,12 +423,21 @@ export class SidebarCommentsComponent {
     void Promise.all(this.animations.map((a) => a.finished))
       .then(() => {
         if (generation !== this.generation) return;
+        // Keep the completed animation's fill until the final DOM transforms
+        // are applied, so a frame cannot fall back to the old drag offset.
+        const completed = this.animations;
+        this.animations = [];
         this.cancel();
         if (succeeds) {
-          this.gestureCommitted = true;
           if (direction === -1) this.sidebarService.back();
           else this.sidebarService.forward();
         }
+        const position = this.sidebarService.position();
+        this.previousPositions = new Map(
+          [...this.positions()].map(([key, index]) => [key, index - position]),
+        );
+        this.changeDetector.detectChanges();
+        completed.forEach((animation) => animation.cancel());
       })
       .catch(() => {
         /* Cancelled by rotation, navigation, or another gesture. */

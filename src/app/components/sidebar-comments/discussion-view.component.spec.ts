@@ -189,6 +189,20 @@ describe('DiscussionViewComponent', () => {
     expect(mockVisitedService.markCommentsVisited).not.toHaveBeenCalled();
   });
 
+  it('keeps an explicitly inherited never-visited baseline instead of using the child visit', () => {
+    fixture.componentRef.setInput('entry', {
+      ...component.entry(),
+      state: { ...component.entry().state, inheritedPreviousVisitedAt: null },
+    });
+    mockVisitedService.getCommentsVisitedData.mockReturnValue({
+      storyId: 123,
+      visitedAt: 1000,
+      commentCount: 3,
+    });
+    fixture.detectChanges();
+    expect(component.previousVisitedAt()).toBeNull();
+  });
+
   it('keeps loaded pages and the original visit baseline during background item updates', () => {
     const response = new Subject<HNItem>();
     mockHnService.getItem.mockReturnValue(response);

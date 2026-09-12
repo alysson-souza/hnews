@@ -10,13 +10,14 @@ export class SidebarThreadNavigationService {
     id: number,
     options?: { selectFirstVisibleOnOpen?: boolean; scrollToFirstOnOpen?: boolean },
   ): void {
-    const previousVisitedAt = this.sidebar.currentEntry()?.state.previousVisitedAt ?? null;
+    const parent = this.sidebar.currentEntry();
+    if (parent?.itemId === id) return;
     this.sidebar.push(id);
     const entry = this.sidebar.currentEntry();
     if (entry) {
       entry.state.selectFirst = options?.selectFirstVisibleOnOpen ?? false;
       entry.state.scrollFirst = options?.scrollToFirstOnOpen ?? entry.state.selectFirst;
-      entry.state.previousVisitedAt = previousVisitedAt;
+      if (parent) entry.state.inheritedPreviousVisitedAt = parent.state.previousVisitedAt;
     }
   }
   goBack(): void {

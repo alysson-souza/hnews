@@ -326,6 +326,8 @@ export class DiscussionViewComponent {
   });
 
   private restoreScrollTop: number | null = null;
+  private renderedEntryKey: number | null = null;
+  private wasActive = false;
 
   constructor() {
     effect(() => {
@@ -361,17 +363,21 @@ export class DiscussionViewComponent {
       }
     });
     afterRenderEffect(() => {
+      const entry = this.entry();
       const active = this.active();
       this.loading();
       const container = this.sidebarContentRef()?.nativeElement;
       if (!container) return;
       untracked(() => {
-        this.restoreScrollTop = this.entry().state.scrollTop;
+        const firstRender = this.renderedEntryKey !== entry.key;
+        const activating = active && (firstRender || !this.wasActive);
+        if (!firstRender && this.wasActive && !active) this.saveScroll();
+        if (firstRender || activating) this.restoreScrollTop = entry.state.scrollTop;
+        this.renderedEntryKey = entry.key;
+        this.wasActive = active;
         this.restoreScroll(container);
-        if (active) {
-          container.focus({ preventScroll: true });
-          this.applyOpeningIntent(container);
-        }
+        if (activating) container.focus({ preventScroll: true });
+        if (active) this.applyOpeningIntent(container);
       });
     });
     afterRenderEffect((onCleanup) => {
@@ -457,13 +463,12 @@ export class DiscussionViewComponent {
     }
   }
   saveScroll(): void {
-    if (this.restoreScrollTop !== null) return;
-    this.entry().state.scrollTop = this.sidebarContentRef()?.nativeElement.scrollTop ?? 0;
+    const container = this.sidebarContentRef()?.nativeElement;
+    if (this.restoreScrollTop !== null || !container) return;
+    this.entry().state.scrollTop = container.scrollTop;
   }
   private loadItem(id: number): void {
-    const inheritedPreviousVisitedAt = this.commentIndex.hasComment(this.context(), id)
-      ? this.commentIndex.getPreviousVisitedAt(this.context())
-      : null;
+    const inheritedPreviousVisitedAt = this.entry().state.inheritedPreviousVisitedAt;
 
     this.loading.set(true);
     this.error.set(null);
@@ -492,10 +497,9 @@ export class DiscussionViewComponent {
             }
             this.applyCommentDisplayStrategy(item);
             const previousVisitedAt =
-              this.entry().state.previousVisitedAt ??
-              this.visitedService.getCommentsVisitedData(item.id)?.visitedAt ??
-              inheritedPreviousVisitedAt ??
-              null;
+              inheritedPreviousVisitedAt !== undefined
+                ? inheritedPreviousVisitedAt
+                : (this.visitedService.getCommentsVisitedData(item.id)?.visitedAt ?? null);
             this.previousVisitedAt.set(previousVisitedAt);
             this.commentIndex.configureContext(this.context(), item, { previousVisitedAt });
             this.entry().state.item = item;
