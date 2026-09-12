@@ -90,17 +90,21 @@ describe('BaseCommentNavigationService', () => {
 
     it('should dispatch collapse action', () => {
       service.toggleExpandSelected();
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'collapse');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'collapse', 'item');
     });
 
     it('should dispatch expandReplies action', () => {
       service.expandRepliesSelected();
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'expandReplies');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(
+        123,
+        'expandReplies',
+        'item',
+      );
     });
 
     it('should dispatch viewThread action', () => {
       service.viewThreadSelected();
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'viewThread');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(123, 'viewThread', 'item');
     });
 
     it('should not dispatch actions if no comment is selected', () => {
@@ -155,9 +159,9 @@ describe('BaseCommentNavigationService', () => {
       service.collapseAllComments();
 
       expect(commentState.setCollapsedMany).toHaveBeenCalledWith([1, 2, 3], true);
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(1, 'collapseAll');
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(2, 'collapseAll');
-      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(3, 'collapseAll');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(1, 'collapseAll', 'item');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(2, 'collapseAll', 'item');
+      expect(interactionServiceSpy.dispatchAction).toHaveBeenCalledWith(3, 'collapseAll', 'item');
     });
   });
 });

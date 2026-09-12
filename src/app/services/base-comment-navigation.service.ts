@@ -215,7 +215,7 @@ export abstract class BaseCommentNavigationService {
   toggleExpandSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null) {
-      this.interactionService.dispatchAction(selectedId, 'collapse');
+      this.interactionService.dispatchAction(selectedId, 'collapse', this.context);
     }
   }
 
@@ -225,7 +225,7 @@ export abstract class BaseCommentNavigationService {
   expandRepliesSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null) {
-      this.interactionService.dispatchAction(selectedId, 'expandReplies');
+      this.interactionService.dispatchAction(selectedId, 'expandReplies', this.context);
     }
   }
 
@@ -235,7 +235,7 @@ export abstract class BaseCommentNavigationService {
   viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null && this.commentIndex.hasChildren(this.context, selectedId)) {
-      this.interactionService.dispatchAction(selectedId, 'viewThread');
+      this.interactionService.dispatchAction(selectedId, 'viewThread', this.context);
     }
   }
 
@@ -254,13 +254,13 @@ export abstract class BaseCommentNavigationService {
   collapseAllComments(): void {
     const ids = this.getVisibleCommentIds();
     this.commentState.setCollapsedMany(ids, true);
-    ids.forEach((id) => this.interactionService.dispatchAction(id, 'collapseAll'));
+    ids.forEach((id) => this.interactionService.dispatchAction(id, 'collapseAll', this.context));
   }
 
   expandAllComments(): void {
     const ids = this.getVisibleCommentIds().slice(0, this.EXPAND_ALL_LIMIT);
     this.commentState.setCollapsedMany(ids, false);
-    ids.forEach((id) => this.interactionService.dispatchAction(id, 'expandAll'));
+    ids.forEach((id) => this.interactionService.dispatchAction(id, 'expandAll', this.context));
   }
 
   /**
@@ -338,7 +338,7 @@ export abstract class BaseCommentNavigationService {
       matchingIds[0];
 
     for (const ancestorId of this.commentIndex.getParentPath(this.context, nextId)) {
-      this.interactionService.dispatchAction(ancestorId, 'expandAll');
+      this.interactionService.dispatchAction(ancestorId, 'expandAll', this.context);
     }
 
     this.selectedCommentId.set(nextId);

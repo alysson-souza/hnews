@@ -52,6 +52,7 @@ import {
       <app-comment-skeleton [depth]="depth()" />
     } @else if (comment()) {
       <app-thread-gutter
+        [threadContext]="threadContext()"
         [depth]="depth()"
         [clickable]="true"
         [collapsed]="isCollapsed()"
@@ -75,7 +76,7 @@ import {
             [isStandalonePage]="isStandalonePage()"
             [showCollapseToggle]="true"
             [collapsed]="isCollapsed() || showExpandButton()"
-            [density]="threadContext() === 'sidebar' ? 'compact' : 'default'"
+            [density]="threadContext() !== 'item' ? 'compact' : 'default'"
             (expand)="expandReplies()"
             (toggleCollapse)="onChevronToggle()"
           />
@@ -344,7 +345,13 @@ export class CommentThread implements OnInit {
     // Listen for keyboard actions targeting this comment
     this.interactionService.action$
       .pipe(
-        filter((action) => action.commentId === this.commentId()),
+        filter(
+          (action) =>
+            action.commentId === this.commentId() &&
+            (!action.context || action.context === this.threadContext()) &&
+            (this.threadContext() === 'item' ||
+              this.threadContext() === `sidebar-${this.sidebarService.currentEntry()?.key}`),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((action) => {
@@ -386,25 +393,28 @@ export class CommentThread implements OnInit {
   loadComment() {
     this.loading.set(true);
 
-    this.hnService.getItem(this.commentId()).subscribe({
-      next: (item) => {
-        if (item && !item.deleted) {
-          this.repliesLoader.configureKids(item.kids);
-          this.comment.set(item);
-          this.commentIndex.registerComment(this.threadContext(), item);
-          this.commentLoaded.set(true);
+    this.hnService
+      .getItem(this.commentId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (item) => {
+          if (item && !item.deleted) {
+            this.repliesLoader.configureKids(item.kids);
+            this.comment.set(item);
+            this.commentIndex.registerComment(this.threadContext(), item);
+            this.commentLoaded.set(true);
+            this.loading.set(false);
+            this.restoreCommentState();
+            this.maybeAutoExpandReplies();
+          } else {
+            this.repliesLoader.configureKids([]);
+            this.loading.set(false);
+          }
+        },
+        error: () => {
           this.loading.set(false);
-          this.restoreCommentState();
-          this.maybeAutoExpandReplies();
-        } else {
-          this.repliesLoader.configureKids([]);
-          this.loading.set(false);
-        }
-      },
-      error: () => {
-        this.loading.set(false);
-      },
-    });
+        },
+      });
   }
 
   loadMoreReplies() {

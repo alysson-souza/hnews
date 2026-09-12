@@ -9,7 +9,6 @@ import { CacheManagerService } from '@services/cache-manager.service';
 import { ThemeService } from '@services/theme.service';
 import { UserSettingsService } from '@services/user-settings.service';
 import { SidebarService } from '@services/sidebar.service';
-import { DeviceService } from '@services/device.service';
 import { CommandRegistryService } from '@services/command-registry.service';
 import { KeyboardNavigationService } from '@services/keyboard-navigation.service';
 import { ScrollService } from '@services/scroll.service';
@@ -298,7 +297,6 @@ export class SettingsComponent implements OnInit {
   themeService = inject(ThemeService);
   private userSettings = inject(UserSettingsService);
   sidebarService = inject(SidebarService);
-  deviceService = inject(DeviceService);
   private commandRegistry = inject(CommandRegistryService);
   private keyboardNavService = inject(KeyboardNavigationService);
   private scrollService = inject(ScrollService);

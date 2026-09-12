@@ -4,7 +4,7 @@ import { Injectable, signal } from '@angular/core';
 
 export interface UserSettings {
   /**
-   * When true, desktop clicks on story comments open the sidebar instead of navigating directly.
+   * When true, clicks on story comments open the sidebar instead of navigating directly.
    */
   openCommentsInSidebar: boolean;
 }

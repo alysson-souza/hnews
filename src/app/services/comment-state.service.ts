@@ -24,6 +24,13 @@ export class CommentStateService {
     this.cleanup();
   }
 
+  snapshot(): Map<number, CommentStateEntry> {
+    return new Map(this.statesMap());
+  }
+  restore(states: Map<number, CommentStateEntry>): void {
+    this.statesMap.set(new Map(states));
+  }
+
   /**
    * Get the complete state for a comment.
    */

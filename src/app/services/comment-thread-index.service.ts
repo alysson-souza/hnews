@@ -3,7 +3,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HNItem } from '@models/hn';
 
-export type CommentThreadContext = 'item' | 'sidebar';
+export type CommentThreadContext = 'item' | 'sidebar' | `sidebar-${number}`;
 
 interface CommentThreadIndexState {
   rootItemId: number | null;
@@ -58,6 +58,14 @@ export class CommentThreadIndexService {
     }));
   }
 
+  releaseContext(context: CommentThreadContext): void {
+    this.states.update((states) => {
+      const next = { ...states };
+      delete next[context];
+      return next;
+    });
+  }
+
   clearContext(context: CommentThreadContext): void {
     this.states.update((states) => ({
       ...states,
@@ -71,7 +79,7 @@ export class CommentThreadIndexService {
     }
 
     this.states.update((states) => {
-      const current = states[context];
+      const current = states[context] ?? this.cloneEmptyState();
       const comments = new Map(current.comments);
       const parentByChild = new Map(current.parentByChild);
 
@@ -90,7 +98,7 @@ export class CommentThreadIndexService {
   }
 
   isUnread(context: CommentThreadContext, commentId: number): boolean {
-    const state = this.states()[context];
+    const state = this.states()[context] ?? this.cloneEmptyState();
     if (state.previousVisitedAt === null) {
       return false;
     }
@@ -100,26 +108,26 @@ export class CommentThreadIndexService {
   }
 
   hasComment(context: CommentThreadContext, commentId: number): boolean {
-    return this.states()[context].comments.has(commentId);
+    return (this.states()[context] ?? this.emptyState).comments.has(commentId);
   }
 
   getPreviousVisitedAt(context: CommentThreadContext): number | null {
-    return this.states()[context].previousVisitedAt;
+    return (this.states()[context] ?? this.emptyState).previousVisitedAt;
   }
 
   isOPReply(context: CommentThreadContext, commentId: number): boolean {
-    const state = this.states()[context];
+    const state = this.states()[context] ?? this.cloneEmptyState();
     const comment = state.comments.get(commentId);
     return !!comment?.by && !!state.storyAuthor && comment.by === state.storyAuthor;
   }
 
   hasChildren(context: CommentThreadContext, commentId: number): boolean {
-    const comment = this.states()[context].comments.get(commentId);
+    const comment = (this.states()[context] ?? this.emptyState).comments.get(commentId);
     return (comment?.kids?.length ?? 0) > 0;
   }
 
   getParentPath(context: CommentThreadContext, commentId: number): number[] {
-    const state = this.states()[context];
+    const state = this.states()[context] ?? this.cloneEmptyState();
     const path: number[] = [];
     let current = state.parentByChild.get(commentId);
 

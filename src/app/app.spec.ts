@@ -512,7 +512,7 @@ describe('App', () => {
     it('should close sidebar on Escape when sidebar is open', () => {
       mockKeyboardContextService.currentContext.set('sidebar');
       vi.spyOn(app.sidebarService, 'isOpen').mockReturnValue(true);
-      vi.spyOn(app.sidebarService, 'closeSidebar');
+      vi.spyOn(app.sidebarService, 'close');
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const mockTarget = document.createElement('div');
@@ -520,7 +520,7 @@ describe('App', () => {
 
       app.handleKeyboardEvent(event);
 
-      expect(app.sidebarService.closeSidebar).toHaveBeenCalled();
+      expect(app.sidebarService.close).toHaveBeenCalled();
     });
 
     it('should close mobile search on Escape', () => {

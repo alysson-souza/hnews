@@ -13,30 +13,13 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
   private sidebarService = inject(SidebarService);
   private sidebarThreadNavigation = inject(SidebarThreadNavigationService);
   private router = inject(Router);
-  private pendingKeyboardSelect = false;
-
-  constructor() {
-    super();
-
-    this.sidebarThreadNavigation.registerSelectionCallbacks({
-      captureSelectedCommentId: () => this.selectedCommentId(),
-      restoreSelectedCommentId: (commentId) => this.restoreSelectedComment(commentId),
-      selectFirstVisibleComment: () => {
-        this.scrollSidebarToFirstVisible();
-        if (this.pendingKeyboardSelect) {
-          this.pendingKeyboardSelect = false;
-          this.selectFirstVisibleComment({ scrollIntoView: false });
-        }
-      },
-    });
-  }
 
   protected get containerSelector(): string {
-    return '.sidebar-comments-panel';
+    return 'app-discussion-view[data-active="true"] .sidebar-comments-panel';
   }
 
   protected get context() {
-    return 'sidebar' as const;
+    return `sidebar-${this.sidebarService.currentEntry()?.key ?? 0}` as const;
   }
 
   protected registerCommands(): void {
@@ -89,7 +72,6 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
   override viewThreadSelected(): void {
     const selectedId = this.selectedCommentId();
     if (selectedId !== null && this.commentIndex.hasChildren(this.context, selectedId)) {
-      this.pendingKeyboardSelect = true;
       this.sidebarThreadNavigation.pushThread(selectedId, { selectFirstVisibleOnOpen: true });
     }
   }
@@ -98,6 +80,10 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
    * Go back in sidebar history and restore selection
    */
   goBack(): void {
+    if (matchMedia('(min-width: 1024px)').matches && this.sidebarService.position() === 0) {
+      this.closeSidebar();
+      return;
+    }
     if (this.sidebarService.canGoBack()) {
       void this.sidebarThreadNavigation.goBack();
     }
@@ -180,55 +166,5 @@ export class SidebarKeyboardNavigationService extends BaseCommentNavigationServi
       container.scrollTop + (elementRect.top - containerRect.top) - toolbarHeight - 16;
 
     return Math.max(0, targetScrollTop);
-  }
-
-  /**
-   * Scroll sidebar container to the first visible comment, accounting for sticky toolbar.
-   * Retries up to 20 times (2s total) for async comment rendering.
-   * Does NOT set keyboard selection — only scrolls for visibility.
-   */
-  private scrollSidebarToFirstVisible(retries = 20): void {
-    const container = document.querySelector(this.containerSelector) as HTMLElement | null;
-    if (!container) return;
-
-    const firstComment = container.querySelector('[role="treeitem"]') as HTMLElement | null;
-    if (!firstComment) {
-      if (retries > 0) {
-        setTimeout(() => this.scrollSidebarToFirstVisible(retries - 1), 100);
-      }
-      return;
-    }
-
-    const target = this.computeSidebarScrollTarget(firstComment, container);
-    this.ensureScrollTarget(container, target);
-
-    container.scrollTo({
-      top: target,
-      behavior: 'smooth',
-    });
-  }
-
-  private restoreSelectedComment(commentId: number | null): void {
-    if (commentId === null) {
-      this.clearSelection();
-      return;
-    }
-
-    this.selectedCommentId.set(commentId);
-    const element = this.findElementById(commentId);
-    if (element && !this.isElementVisibleInSidebar(element)) {
-      void this.scrollSelectedIntoView();
-    }
-  }
-
-  private isElementVisibleInSidebar(element: HTMLElement): boolean {
-    const container = document.querySelector(this.containerSelector) as HTMLElement | null;
-    if (!container) {
-      return true;
-    }
-
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    return elementRect.bottom > containerRect.top && elementRect.top < containerRect.bottom;
   }
 }

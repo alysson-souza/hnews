@@ -32,6 +32,11 @@ describe('SidebarKeyboardNavigationService', () => {
       scrollElementIntoView: vi.fn(),
     } as unknown as MockedObject<ScrollService>;
     mockSidebarService = {
+      position: vi.fn().mockReturnValue(1),
+      close: vi.fn(),
+      back: vi.fn(),
+      push: vi.fn(),
+      currentEntry: vi.fn().mockReturnValue({ key: 1, state: {} }),
       closeSidebar: vi.fn(),
       goBack: vi.fn(),
       canGoBack: vi.fn(),
@@ -137,18 +142,26 @@ describe('SidebarKeyboardNavigationService', () => {
     it('should dispatch collapse action', () => {
       service.selectedCommentId.set(123);
       service.toggleExpandSelected();
-      expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(123, 'collapse');
+      expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(
+        123,
+        'collapse',
+        'sidebar-1',
+      );
     });
 
     it('should dispatch expandReplies action', () => {
       service.selectedCommentId.set(123);
       service.expandRepliesSelected();
-      expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(123, 'expandReplies');
+      expect(mockInteractionService.dispatchAction).toHaveBeenCalledWith(
+        123,
+        'expandReplies',
+        'sidebar-1',
+      );
     });
 
     it('should save state and open thread when viewing thread', () => {
       commentIndex.configureContext(
-        'sidebar',
+        'sidebar-1',
         { id: 100, type: 'story', by: 'op', time: 100 },
         {
           comments: [{ id: 123, type: 'comment', by: 'alice', time: 1, kids: [456] }],
@@ -156,41 +169,41 @@ describe('SidebarKeyboardNavigationService', () => {
       );
       service.selectedCommentId.set(123);
       service.viewThreadSelected();
-      expect(mockSidebarService.openSidebarWithSlideAnimation).toHaveBeenCalledWith(123);
+      expect(mockSidebarService.push).toHaveBeenCalledWith(123);
     });
 
     it('should not open thread if no comment selected', () => {
       service.selectedCommentId.set(null);
       service.viewThreadSelected();
-      expect(mockSidebarService.openSidebarWithSlideAnimation).not.toHaveBeenCalled();
+      expect(mockSidebarService.push).not.toHaveBeenCalled();
     });
   });
 
   describe('sidebar control', () => {
     it('should close sidebar', () => {
       service.closeSidebar();
-      expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+      expect(mockSidebarService.close).toHaveBeenCalled();
       expect(service.selectedCommentId()).toBeNull();
     });
 
     it('should go back', () => {
       mockSidebarService.canGoBack.mockReturnValue(true);
       service.goBack();
-      expect(mockSidebarService.goBack).toHaveBeenCalled();
+      expect(mockSidebarService.back).toHaveBeenCalled();
     });
 
     it('should handle back or close - go back', () => {
       mockSidebarService.canGoBack.mockReturnValue(true);
       service.handleBackOrClose();
-      expect(mockSidebarService.goBack).toHaveBeenCalled();
-      expect(mockSidebarService.closeSidebar).not.toHaveBeenCalled();
+      expect(mockSidebarService.back).toHaveBeenCalled();
+      expect(mockSidebarService.close).not.toHaveBeenCalled();
     });
 
     it('should handle back or close - close', () => {
       mockSidebarService.canGoBack.mockReturnValue(false);
       service.handleBackOrClose();
-      expect(mockSidebarService.goBack).not.toHaveBeenCalled();
-      expect(mockSidebarService.closeSidebar).toHaveBeenCalled();
+      expect(mockSidebarService.back).not.toHaveBeenCalled();
+      expect(mockSidebarService.close).toHaveBeenCalled();
     });
   });
 
@@ -199,7 +212,10 @@ describe('SidebarKeyboardNavigationService', () => {
     const panel = document.createElement('div');
     panel.className = 'sidebar-comments-panel';
     if (document.body) {
-      document.body.appendChild(panel);
+      const screen = document.createElement('app-discussion-view');
+      screen.dataset['active'] = 'true';
+      screen.appendChild(panel);
+      document.body.appendChild(screen);
     }
     return panel;
   }

@@ -43,13 +43,13 @@ describe('SidebarCommentsHeaderComponent', () => {
     fixture.componentRef.setInput('itemId', 123);
     fixture.detectChanges();
 
-    const actionBtn = fixture.debugElement.query(By.css('.action-btn'));
+    const actionBtn = fixture.debugElement.query(By.css('a.action-btn'));
     expect(actionBtn).toBeTruthy();
     expect(actionBtn.attributes['href']).toContain('/item/123');
   });
 
   it('should not render open in full view button when itemId is not provided', () => {
-    const actionBtn = fixture.debugElement.query(By.css('.action-btn'));
+    const actionBtn = fixture.debugElement.query(By.css('a.action-btn'));
     expect(actionBtn).toBeFalsy();
   });
 });

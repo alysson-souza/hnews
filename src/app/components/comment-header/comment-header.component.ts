@@ -197,7 +197,7 @@ export class CommentHeaderComponent {
       }
       this.itemKeyboardNav.navigateToThread(commentId);
     } else {
-      this.sidebarThreadNavigation.pushThread(commentId, { selectFirstVisibleOnOpen: true });
+      this.sidebarThreadNavigation.pushThread(commentId, { scrollToFirstOnOpen: true });
     }
   }
 }
