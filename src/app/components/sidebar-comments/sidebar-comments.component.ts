@@ -119,7 +119,9 @@ export class SidebarCommentsComponent {
     const destroyRef = inject(DestroyRef);
     effect(() => {
       const entries = this.sidebarService.visibleEntries();
-      if (entries.length) this.retainedEntries.set(entries);
+      const activeKey = this.sidebarService.currentEntry()?.key;
+      if (entries.length)
+        this.retainedEntries.set(entries.filter((entry) => entry.key === activeKey));
     });
     afterRenderEffect(() => {
       const position = this.sidebarService.position();

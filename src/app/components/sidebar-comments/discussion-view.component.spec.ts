@@ -172,6 +172,23 @@ describe('DiscussionViewComponent', () => {
     expect(mockVisitedService.markCommentsVisited).not.toHaveBeenCalled();
   });
 
+  it('retries a retained failed sort when the shared order changes', () => {
+    fixture.componentRef.setInput('active', false);
+    mockHnService.getStoryTopLevelComments.mockReturnValueOnce(
+      throwError(() => new Error('offline')),
+    );
+    mockCommentSortService.sortOrder.set('popular');
+    fixture.detectChanges();
+    expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(1);
+    expect(component.visibleCommentIds()).toEqual([1, 2, 3]);
+    mockHnService.getStoryTopLevelComments.mockReturnValue(of(mockComments));
+    mockCommentSortService.sortOrder.set('oldest');
+    fixture.detectChanges();
+    expect(mockHnService.getStoryTopLevelComments).toHaveBeenCalledTimes(2);
+    expect(component.visibleCommentIds()).toEqual([1, 3, 2]);
+    expect(mockVisitedService.markCommentsVisited).not.toHaveBeenCalled();
+  });
+
   it('keeps loaded pages and the original visit baseline during background item updates', () => {
     const response = new Subject<HNItem>();
     mockHnService.getItem.mockReturnValue(response);

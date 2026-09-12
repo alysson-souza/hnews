@@ -220,3 +220,36 @@ test('Enter keeps full-page navigation when the sidebar preference is disabled',
   await expect(page).toHaveURL(/\/item\/\d+/);
   await expect(page.locator('app-discussion-view')).toHaveCount(0);
 });
+
+test('closing a nested mobile discussion reveals the page instead of its parent', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/top');
+  await page.locator('.story-comments').first().click();
+  const active = page.locator('app-discussion-view[data-active="true"]');
+  const rootKey = await active.getAttribute('data-entry-key');
+  await active.locator('button[title="View this thread"]').first().click();
+  await expect(active).not.toHaveAttribute('data-entry-key', rootKey!);
+  const childKey = await active.getAttribute('data-entry-key');
+  await expect(active.locator('[role="treeitem"]').first()).toBeVisible();
+  const visibleKeys = await page.evaluate(async () => {
+    const keys = new Set<string>();
+    (
+      document.querySelector(
+        'app-discussion-view[data-active="true"] button[aria-label="Close sidebar"]',
+      ) as HTMLElement
+    ).click();
+    const start = performance.now();
+    while (performance.now() - start < 350) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      for (const view of document.querySelectorAll<HTMLElement>('app-discussion-view')) {
+        const rect = view.getBoundingClientRect();
+        if (rect.right > 0 && rect.left < innerWidth) keys.add(view.dataset['entryKey']!);
+      }
+    }
+    return [...keys];
+  });
+  expect(visibleKeys).toEqual([childKey]);
+  await expect(page.locator('app-discussion-view')).toHaveCount(0);
+});

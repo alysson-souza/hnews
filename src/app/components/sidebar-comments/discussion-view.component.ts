@@ -4,6 +4,7 @@ import {
   Component,
   inject,
   signal,
+  linkedSignal,
   effect,
   computed,
   ElementRef,
@@ -261,7 +262,10 @@ export class DiscussionViewComponent {
   sortOrder = this.commentSortService.sortOrder;
   allComments = signal<HNItem[]>([]);
   commentsLoading = signal(false);
-  private sortFailed = signal(false);
+  private sortFailed = linkedSignal<CommentSortOrder, boolean>({
+    source: this.sortOrder,
+    computation: () => false,
+  });
   previousVisitedAt = signal<number | null>(null);
   readonly commentSortSkeletonRows = [0, 1, 2] as const;
   private topLevelCommentsLoadedForSort = signal(false);
