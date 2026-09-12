@@ -446,8 +446,7 @@ export class CommentThread implements OnInit {
   }
 
   retryReplies() {
-    if (this.repliesLoaded()) this.loadMoreReplies();
-    else this.expandReplies();
+    this.repliesLoader.retry();
   }
 
   onChevronToggle() {

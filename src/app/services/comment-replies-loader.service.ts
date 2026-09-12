@@ -11,6 +11,7 @@ export class CommentRepliesLoaderService {
   private readonly hnService = inject(HackernewsService);
 
   private kidsIds: number[] = [];
+  private pendingRetry?: () => void;
 
   private readonly repliesState = signal<HNItem[]>([]);
   readonly replies = this.repliesState.asReadonly();
@@ -35,6 +36,7 @@ export class CommentRepliesLoaderService {
 
   configureKids(ids: number[] | undefined) {
     this.kidsIds = Array.isArray(ids) ? ids : [];
+    this.pendingRetry = undefined;
     this.errorState.set(false);
 
     this.repliesState.set([]);
@@ -46,6 +48,7 @@ export class CommentRepliesLoaderService {
   }
 
   loadFirstPage(onSuccess?: () => void) {
+    if (this.retry()) return;
     if (this.loadingRepliesState() || this.repliesLoadedState()) {
       return;
     }
@@ -59,6 +62,7 @@ export class CommentRepliesLoaderService {
   }
 
   loadNextPage(onSuccess?: () => void) {
+    if (this.retry()) return;
     if (this.loadingMoreState() || !this.hasMoreState() || !this.repliesLoadedState()) {
       return;
     }
@@ -95,6 +99,15 @@ export class CommentRepliesLoaderService {
     return Math.max(0, Math.min(this.pageSize, remaining));
   }
 
+  /** Resume the failed page with its original continuation and completion callback. */
+  retry(): boolean {
+    if (!this.pendingRetry || this.loadingRepliesState() || this.loadingMoreState()) return false;
+    const resume = this.pendingRetry;
+    this.pendingRetry = undefined;
+    resume();
+    return true;
+  }
+
   private loadPagesSequentially(currentPage: number, targetPage: number, onComplete?: () => void) {
     if (currentPage > targetPage) {
       onComplete?.();
@@ -112,6 +125,7 @@ export class CommentRepliesLoaderService {
   }
 
   private loadPage(page: number, onComplete?: () => void) {
+    this.pendingRetry = undefined;
     if (this.kidsIds.length === 0) {
       this.loadingRepliesState.set(false);
       this.loadingMoreState.set(false);
@@ -150,6 +164,7 @@ export class CommentRepliesLoaderService {
         this.loadingRepliesState.set(false);
         this.loadingMoreState.set(false);
         this.errorState.set(true);
+        this.pendingRetry = () => this.loadPage(page, onComplete);
       },
     });
   }

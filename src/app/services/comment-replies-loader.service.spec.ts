@@ -180,7 +180,8 @@ describe('reply page recovery', () => {
       .fn()
       .mockReturnValueOnce(of([{ id: 1, type: 'comment' }]))
       .mockReturnValueOnce(throwError(() => new Error('offline')))
-      .mockReturnValueOnce(of([{ id: 11, type: 'comment' }]));
+      .mockReturnValueOnce(of([{ id: 11, type: 'comment' }]))
+      .mockReturnValueOnce(of([{ id: 21, type: 'comment' }]));
     TestBed.configureTestingModule({
       providers: [
         CommentRepliesLoaderService,
@@ -196,7 +197,8 @@ describe('reply page recovery', () => {
     expect(loader.currentPage()).toBe(0);
     expect(loader.replies().map((item) => item.id)).toEqual([1]);
     loader.loadNextPage();
-    expect(getItemsPage).toHaveBeenLastCalledWith(expect.any(Array), 1, 10);
-    expect(loader.replies().map((item) => item.id)).toEqual([1, 11]);
+    expect(getItemsPage.mock.calls.map((call) => call[1])).toEqual([0, 1, 1, 2]);
+    expect(loader.replies().map((item) => item.id)).toEqual([1, 11, 21]);
+    expect(completed).toHaveBeenCalledOnce();
   });
 });

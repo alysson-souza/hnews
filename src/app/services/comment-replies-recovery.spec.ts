@@ -57,6 +57,21 @@ describe('reply recovery through HTTP', () => {
     expect(success).toHaveBeenCalledOnce();
   });
 
+  it('delivers replies even when cache writes fail', async () => {
+    vi.spyOn(TestBed.inject(CacheManagerService), 'set').mockRejectedValue(
+      new Error('storage full'),
+    );
+    loader.configureKids([1]);
+    loader.loadFirstPage();
+    await Promise.resolve();
+    http
+      .expectOne('https://hacker-news.firebaseio.com/v0/item/1.json')
+      .flush({ id: 1, type: 'comment', time: 1 });
+    await vi.waitFor(() => expect(loader.repliesLoaded()).toBe(true));
+    expect(loader.error()).toBe(false);
+    expect(loader.replies().map((item) => item.id)).toEqual([1]);
+  });
+
   it('accepts missing and deleted replies as a successful empty page', async () => {
     loader.configureKids([1, 2]);
     loader.loadFirstPage();

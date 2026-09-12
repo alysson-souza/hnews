@@ -186,7 +186,10 @@ export class HackernewsService {
         const cached = await this.cache.get<HNItem>(this.storyScope, id.toString());
         if (cached != null) return cached;
         const item = await firstValueFrom(this.hn.itemOrError(id));
-        if (item !== null) await this.cache.set(this.storyScope, id.toString(), item);
+        if (item !== null) {
+          // Persistence is best-effort; storage failures must not hide fetched replies.
+          void this.cache.set(this.storyScope, id.toString(), item).catch(() => {});
+        }
         return item;
       }),
     );

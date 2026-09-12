@@ -43,6 +43,7 @@ class MockCommentRepliesLoaderService {
 
   configureKids = vi.fn();
   loadFirstPage = vi.fn();
+  retry = vi.fn();
   loadNextPage = vi.fn();
   loadUpToPage = vi.fn();
   remainingCount = vi.fn().mockReturnValue(0);
