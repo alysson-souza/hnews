@@ -8,6 +8,7 @@ import { CommentStateEntry } from './comment-state.service';
 
 export interface DiscussionEntry {
   key: number;
+  index: number;
   itemId: number;
   state: {
     scrollTop: number;
@@ -58,6 +59,7 @@ export class SidebarService {
     const entries = this.entries().slice(0, this.position() + 1);
     entries.push({
       key: ++this.sequence,
+      index: entries.length,
       itemId,
       state: {
         scrollTop: 0,

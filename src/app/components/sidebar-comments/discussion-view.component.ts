@@ -57,7 +57,7 @@ import { CommentStateService } from '@services/comment-state.service';
     <div class="h-full flex flex-col">
       <!-- Header -->
       <app-sidebar-comments-header
-        [canGoBack]="sidebarService.position() > 0"
+        [canGoBack]="entry().index > 0"
         [itemId]="entry().itemId"
         (dismiss)="sidebarService.close()"
         (back)="sidebarService.back()"
@@ -69,6 +69,10 @@ import { CommentStateService } from '@services/comment-state.service';
         class="sidebar-comments-panel flex-1 overflow-y-auto overscroll-contain focus:outline-none"
         tabindex="-1"
         (scroll)="saveScroll()"
+        (wheel)="stopScrollRestoration()"
+        (touchstart)="stopScrollRestoration()"
+        (pointerdown)="stopScrollRestoration()"
+        (keydown)="onReadingKeydown($event)"
       >
         <div class="comments-body">
           @if (loading()) {
@@ -373,8 +377,16 @@ export class DiscussionViewComponent {
         this.restoreScroll(container);
         this.applyOpeningIntent(container);
       });
-      const mutations = new MutationObserver(() => this.applyOpeningIntent(container));
-      mutations.observe(container, { childList: true, subtree: true });
+      const mutations = new MutationObserver(() => {
+        this.restoreScroll(container);
+        this.applyOpeningIntent(container);
+      });
+      mutations.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['aria-busy'],
+      });
       observer.observe(container.firstElementChild!);
       onCleanup(() => {
         observer.disconnect();
@@ -405,11 +417,40 @@ export class DiscussionViewComponent {
     state.selectFirst = false;
     state.scrollFirst = false;
   }
+  private finishScrollRestoration(container: HTMLElement): void {
+    this.restoreScrollTop = null;
+    this.entry().state.scrollTop = container.scrollTop;
+  }
   private restoreScroll(container: HTMLElement): void {
     if (this.restoreScrollTop === null) return;
-    container.scrollTop = this.restoreScrollTop;
-    if (container.scrollHeight - container.clientHeight >= this.restoreScrollTop)
-      this.restoreScrollTop = null;
+    const maximum = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTop = Math.min(this.restoreScrollTop, maximum);
+    const settled =
+      !this.loading() && !this.commentsLoading() && !container.querySelector('[aria-busy="true"]');
+    if (maximum >= this.restoreScrollTop || settled) this.finishScrollRestoration(container);
+  }
+  stopScrollRestoration(): void {
+    const container = this.sidebarContentRef()?.nativeElement;
+    if (this.restoreScrollTop !== null && container) this.finishScrollRestoration(container);
+  }
+  onReadingKeydown(event: KeyboardEvent): void {
+    if (
+      [
+        'ArrowUp',
+        'ArrowDown',
+        'PageUp',
+        'PageDown',
+        'Home',
+        'End',
+        ' ',
+        'j',
+        'k',
+        'J',
+        'K',
+      ].includes(event.key)
+    ) {
+      this.stopScrollRestoration();
+    }
   }
   saveScroll(): void {
     if (this.restoreScrollTop !== null) return;

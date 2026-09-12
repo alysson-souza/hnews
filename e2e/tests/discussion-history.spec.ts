@@ -157,7 +157,15 @@ test('restores scroll and expanded comments after releasing older views; bounds 
   const scroll = active(page).locator('.sidebar-comments-panel');
   await expect(active(page).locator('[role="treeitem"]')).toHaveCount(6);
   await active(page).getByRole('button', { name: 'Collapse comment', exact: true }).last().click();
-  await page.keyboard.press('j');
+  await Promise.all([
+    scroll.evaluate(
+      (element) =>
+        new Promise<void>((resolve) =>
+          element.addEventListener('scrollend', () => resolve(), { once: true }),
+        ),
+    ),
+    page.keyboard.press('j'),
+  ]);
   const selected = await active(page)
     .locator('[aria-selected="true"]')
     .getAttribute('data-comment-id');
@@ -428,4 +436,87 @@ test('Forward restores the departing discussion selection after Back', async ({ 
     'data-comment-id',
     childSelection!,
   );
+});
+
+test('each discussion keeps its own Back control during a partial swipe', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page);
+  const rootKey = await active(page).getAttribute('data-entry-key');
+  await nested(page);
+  const childKey = await active(page).getAttribute('data-entry-key');
+  const root = page.locator(`app-discussion-view[data-entry-key="${rootKey}"]`);
+  const child = page.locator(`app-discussion-view[data-entry-key="${childKey}"]`);
+  const back = 'button[aria-label="Go back to previous view"]';
+  await drag(page, 120, 'hold');
+  await expect(root.locator(back)).toHaveCount(0);
+  await expect(child.locator(back)).toHaveCount(1);
+  await child.dispatchEvent('touchcancel');
+  await child.locator(back).click();
+  await expect(active(page)).toHaveAttribute('data-entry-key', rootKey!);
+  await drag(page, -120, 'hold');
+  await expect(root.locator(back)).toHaveCount(0);
+  await expect(child.locator(back)).toHaveCount(1);
+  await root.dispatchEvent('touchcancel');
+});
+
+test('shorter reloaded content allows a new reading position', async ({ page, hnDataset }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  hnDataset.items.get(MAIN_STORY_ID)!.kids = [];
+  let parent = MAIN_STORY_ID;
+  for (let index = 0; index < 6; index++) {
+    parent = addComment(hnDataset, {
+      parent,
+      storyId: MAIN_STORY_ID,
+      text: `<p>Nested level ${index}</p>`,
+    }).id;
+  }
+  const leaf = addComment(hnDataset, {
+    parent: MAIN_STORY_ID,
+    storyId: MAIN_STORY_ID,
+    text: '<p>Long reading paragraph.</p>'.repeat(80),
+  });
+  await open(page);
+  const rootKey = await active(page).getAttribute('data-entry-key');
+  const scroll = active(page).locator('.sidebar-comments-panel');
+  await expect(active(page).locator('[role="treeitem"]')).toHaveCount(7);
+  await Promise.all([
+    scroll.evaluate(
+      (element) =>
+        new Promise<void>((resolve) =>
+          element.addEventListener('scrollend', () => resolve(), { once: true }),
+        ),
+    ),
+    page.keyboard.press('j'),
+  ]);
+  await scroll.evaluate((element) => {
+    element.scrollTop = 1800;
+  });
+  await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(1800);
+  await page.keyboard.press('l');
+  await expect(active(page)).not.toHaveAttribute('data-entry-key', rootKey!);
+  await nested(page);
+  await nested(page);
+  await expect(page.locator(`app-discussion-view[data-entry-key="${rootKey}"]`)).toHaveCount(0);
+  leaf.text = '<p>Shortened reading paragraph.</p>'.repeat(6);
+  await page.clock.setFixedTime(new Date(Date.now() + 2 * 60 * 60 * 1000));
+  for (let index = 0; index < 3; index++) {
+    const key = await active(page).getAttribute('data-entry-key');
+    await active(page).getByRole('button', { name: 'Go back to previous view' }).click();
+    await expect(active(page)).not.toHaveAttribute('data-entry-key', key!);
+  }
+  await expect(active(page)).toHaveAttribute('data-entry-key', rootKey!);
+  await expect(active(page).getByText('Shortened reading paragraph.', { exact: true })).toHaveCount(
+    6,
+  );
+  await expect
+    .poll(() => scroll.evaluate((element) => element.scrollHeight - element.clientHeight))
+    .toBeLessThan(1800);
+  await page.keyboard.press('Home');
+  await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0);
+  await page.setViewportSize({ width: 410, height: 844 });
+  await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0);
+  await nested(page);
+  await active(page).getByRole('button', { name: 'Go back to previous view' }).click();
+  await expect(active(page)).toHaveAttribute('data-entry-key', rootKey!);
+  await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0);
 });

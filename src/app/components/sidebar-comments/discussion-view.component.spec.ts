@@ -123,6 +123,7 @@ describe('DiscussionViewComponent', () => {
     component = fixture.componentInstance;
     fixture.componentRef.setInput('entry', {
       key: 1,
+      index: 0,
       itemId: 123,
       state: {
         scrollTop: 0,

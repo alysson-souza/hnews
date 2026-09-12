@@ -45,6 +45,7 @@ import {
     CommentSkeletonComponent,
   ],
   providers: [CommentRepliesLoaderService],
+  host: { '[attr.aria-busy]': 'loading() || loadingReplies() || loadingMore()' },
   template: `
     @if (showLoadButton()) {
       <app-lazy-load-card [depth]="depth()" [loading]="loading()" (loadMore)="loadComment()" />
